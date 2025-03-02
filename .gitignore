@@ -1,0 +1,15 @@
+# Node.js / Nuxt
+node_modules/
+.nuxt/
+output/
+*.log
+
+# Python / Django
+venv/
+__pycache__/
+db.sqlite3
+.env
+
+# Docker
+*.tar
+logs/
