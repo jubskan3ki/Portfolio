@@ -1,0 +1,55 @@
+# Définit l'encodage par défaut
+root = true
+
+# --- 🌐 Configuration Générale --- #
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# --- 🐍 Python (Django) --- #
+[*.py]
+indent_size = 4
+max_line_length = 88
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# --- ⚡️ JavaScript / TypeScript (Nuxt 3) --- #
+[*.{js,ts,jsx,tsx}]
+indent_size = 4
+max_line_length = 100
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# --- 🎨 Vue (Nuxt 3) --- #
+[*.vue]
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# --- 📜 JSON, YAML, Markdown --- #
+[*.{json,yml,yaml,md}]
+indent_size = 4
+trim_trailing_whitespace = false
+insert_final_newline = true
+
+# --- 📝 HTML, CSS, SCSS --- #
+[*.{html,css,scss}]
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# --- 🔧 Configuration Docker, GitHub Actions & Scripts --- #
+[*.{sh,bash}]
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[Dockerfile]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = false
+insert_final_newline = true
