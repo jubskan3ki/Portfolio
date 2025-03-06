@@ -1,15 +1,128 @@
-# Node.js / Nuxt
+# --- 🌐 Global --- #
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# --- 🐍 Python & Django --- #
+__pycache__/
+*.py[cod]
+*.sqlite3
+db.sqlite3
+*.log
+logs/
+*.pot
+*.pyc
+*.pyo
+*.pyd
+Pipfile.lock
+celerybeat-schedule
+staticfiles/
+media/
+.env
+*.env
+
+# --- ⚡️ Node.js & Nuxt.js --- #
 node_modules/
+.output/
+.npm/
+.npmrc
+.nuxtrc
 .nuxt/
 output/
+.dist/
+.cache/
+pnpm-lock.yaml
+yarn.lock
+npm-debug.log*
+pnpm-debug.log*
+.eslintcache
+.next/
 *.log
+*.gz
 
-# Python / Django
+# --- 🐳 Docker --- #
+docker-compose.override.yml
+docker-compose.override.yaml
+.dockerignore
+docker/db-data/
+docker/nginx/
+docker-logs/
+**/docker-entrypoint.sh
+
+# --- 📦 Virtualenv & Pip --- #
+.venv/
 venv/
-__pycache__/
-db.sqlite3
-.env
+env/
+.virtualenv/
+**/venv/
+**/env/
+**/.virtualenvs/
+requirements.txt
 
-# Docker
-*.tar
+# --- ⚙️ System Files --- #
+__MACOSX/
+*.bak
+*.swp
+*.swo
+*.swn
+*.tmp
+*.~lock
+ehthumbs.db
+.gitkeep
+
+# --- ⚙️ Coverage & Test Reports --- #
+.tox/
+.coverage
+coverage.xml
+htmlcov/
+junit.xml
+.nox/
+.pytest_cache/
+nosetests.xml
+
+# --- 🔐 Secrets & Credentials --- #
+secrets.json
+config.json
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.staging
+
+# --- 🌍 Logs & Debugging --- #
+*.log
 logs/
+debug.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+django.log
+
+# --- 🚀 Build & Deployment --- #
+dist/
+public/
+build/
+static/
+output/
+.nuxt/
+.nitro/
+.next/
+out/
+.cache/
+
+# --- 🖥 IDEs & Editors --- #
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# --- 🔗 Dependencies & Lockfiles --- #
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

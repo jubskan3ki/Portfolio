@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"module": "ESNext",
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"useDefineForClassFields": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"jsx": "preserve",
+		"allowJs": true,
+		"noEmit": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		},
+		"types": ["nuxt", "nuxt/schema", "@nuxt/schema", "@nuxt/types", "@types/node"]
+	},
+	"include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "nuxt.config.ts"],
+	"exclude": ["node_modules", "dist"]
+}
