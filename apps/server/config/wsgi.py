@@ -1,3 +1,5 @@
+"""Point d'entrée WSGI pour Django."""
+
 import os
 
 from django.core.wsgi import get_wsgi_application

@@ -1,0 +1,41 @@
+name: Deploy Portfolio to VPS
+
+on:
+    push:
+        branches:
+            - main # Exécute le déploiement sur chaque push sur main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 📂 Cloner le repository
+              uses: actions/checkout@v4
+
+            - name: 🔑 Configurer la connexion SSH
+              uses: webfactory/ssh-agent@v0.7.0
+              with:
+                  ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+            - name: 🚀 Déployer sur le VPS
+              run: |
+                  ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+                    set -e
+
+                    echo "📂 Aller dans le projet"
+                    cd ${{ secrets.PROJECT_PATH }}
+
+                    echo "🔄 Récupérer les dernières modifications"
+                    git reset --hard
+                    git pull origin main
+
+                    echo "🚨 Vérification du build"
+                    if ! docker compose up -d --build; then
+                        echo "Build failed! Rolling back..."
+                        git reset --hard HEAD~1
+                        docker compose up -d
+                    fi
+
+                    echo "✅ Déploiement terminé avec succès"
+                  EOF

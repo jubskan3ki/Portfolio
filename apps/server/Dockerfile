@@ -8,6 +8,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    netcat-openbsd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -34,4 +35,4 @@ ENV GUNICORN_WORKERS=3
 ENV GUNICORN_TIMEOUT=120
 
 # Lancer l'application Django avec Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "300", "--threads", "4", "--worker-class", "gthread", "config.wsgi:application"]
+CMD ["/app/server/scripts/setup.sh"]

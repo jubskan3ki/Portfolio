@@ -1,26 +1,27 @@
 # 📌 Black Configuration (Formatage du code Python)
 [tool.black]
-line-length = 88
-target-version = ['py311']
+line-length = 120
+target-version = ["py311"]
 skip-string-normalization = false
-include = '\.pyi?$'
+include = "\\.pyi?$"
 exclude = '''
 /(
     \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | env
-  | venv
-  | __pycache__
-  | _build
-  | buck-out
-  | build
-  | dist
-  | migrations
-  | staticfiles
-  | media
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | env
+    | venv
+    | __pycache__
+    | _build
+    | buck-out
+    | build
+    | dist
+    | migrations
+    | staticfiles
+    | media
+    | pyproject.toml
 )/
 '''
 
