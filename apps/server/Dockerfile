@@ -35,4 +35,4 @@ ENV GUNICORN_WORKERS=3
 ENV GUNICORN_TIMEOUT=120
 
 # Lancer l'application Django avec Gunicorn
-CMD ["/app/server/scripts/setup.sh"]
+CMD ["/app/scripts/setup.sh"]

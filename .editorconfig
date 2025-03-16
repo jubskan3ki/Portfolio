@@ -13,7 +13,7 @@ insert_final_newline = true
 # --- 🐍 Python (Django) --- #
 [*.py]
 indent_size = 4
-max_line_length = 120  # Synchronisé avec Black, Flake8 et Pylint
+max_line_length = 100  # Synchronisé avec Black, Flake8 et Pylint
 trim_trailing_whitespace = true
 insert_final_newline = true
 

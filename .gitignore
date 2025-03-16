@@ -23,6 +23,7 @@ celerybeat-schedule
 staticfiles/
 .env
 *.env
+**/migrations/
 
 # --- ⚡️ Node.js & Nuxt.js --- #
 node_modules/

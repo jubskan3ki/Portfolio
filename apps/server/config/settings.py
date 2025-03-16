@@ -177,6 +177,14 @@ TEMPLATES = [
     },
 ]
 
+# 📝 Configuration du caches
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
 # 🔐 Rest Framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -187,6 +195,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "10/hour",
+        "user": "1000/day",
+        "login": "5/minute",
+        "reset_password": "3/minute",
+    },
     "DEFAULT_PAGINATION_CLASS": "utils.pagination.CustomPagination",
     "EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler",
     "PAGE_SIZE": 10,

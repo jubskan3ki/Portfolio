@@ -3,31 +3,12 @@ Sérialisation des données de l'administrateur unique.
 """
 
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
 
-from .models import ResetPasswordCode, User
-
-
-class AdminSerializer(serializers.ModelSerializer):
-    """
-    Sérialisation des informations de l'admin (lecture seule).
-    """
-
-    class Meta:
-        model = User
-        fields = ["email"]
-
-
-class UpdateAdminSerializer(serializers.ModelSerializer):
-    """
-    Mise à jour des informations de l'admin.
-    """
-
-    class Meta:
-        model = User
-        fields = ["email"]
+from ..models import ResetPasswordCode, User
 
 
 class RequestResetPasswordSerializer(serializers.Serializer):
@@ -66,6 +47,13 @@ class ResetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField(max_length=6)
     new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        """
+        Vérifie que le mot de passe est sécurisé.
+        """
+        validate_password(value)
+        return value
 
     def validate(self, attrs):
         """

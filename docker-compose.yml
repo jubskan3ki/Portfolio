@@ -28,14 +28,8 @@ services:
         build:
             context: ./apps/server
             dockerfile: Dockerfile
-        command: >
-            sh -c "mkdir -p /app/logs &&
-                chmod -R 777 /app/logs"
-        user: "1000:1000"
         volumes:
             - ./apps/server:/app
-            - ./apps/server/logs:/app/logs
-            - ./apps/server/scripts:/app/server/scripts
         ports:
             - "${SERVER_PORT}:8000"
         depends_on:
@@ -57,6 +51,8 @@ services:
             SMTP_USER: ${SMTP_USER}
             SMTP_PASS: ${SMTP_PASS}
             EMAIL_FROM: ${EMAIL_FROM}
+            ADMIN_EMAIL: ${ADMIN_EMAIL}
+            ADMIN_PASSWORD: ${ADMIN_PASSWORD}
             JWT_SECRET_ACCESS_KEY: ${JWT_SECRET_ACCESS_KEY}
             CELERY_BROKER_URL: amqp://${ADMIN_EMAIL}:${ADMIN_PASSWORD}@rabbitmq:5672//
         healthcheck:
@@ -104,10 +100,7 @@ services:
             context: ./apps/server
             dockerfile: Dockerfile
         container_name: celery
-        command: >
-            sh -c "mkdir -p /app/logs &&
-                chmod -R 777 /app/logs &&
-                celery -A config worker --loglevel=info"
+        command: celery -A config worker --loglevel=info
         user: "1000:1000"
         volumes:
             - ./apps/server:/app
@@ -178,6 +171,20 @@ services:
         networks:
             - portfolio_net
         restart: unless-stopped
+
+    db-backup:
+        image: prodrigestivill/postgres-backup-local
+        container_name: db-backup
+        volumes:
+            - ./backups:/backups
+        environment:
+            POSTGRES_HOST: ${DB_HOST}
+            POSTGRES_DB: ${DB_NAME}
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            SCHEDULE: "@daily"
+        networks:
+            - portfolio_net
 
 volumes:
     portfolio_db:

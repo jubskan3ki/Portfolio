@@ -13,7 +13,14 @@ from django.utils.timezone import now, timedelta
 
 
 class UserManager(BaseUserManager):
+    """
+    Manager personnalisé pour le modèle User.
+    """
+
     def create_user(self, email, password=None, **extra_fields):
+        """
+        Crée et sauvegarde un utilisateur avec l'email et le mot de passe donnés.
+        """
         if not email:
             raise ValueError("L'email est obligatoire.")
         email = self.normalize_email(email)
@@ -23,6 +30,9 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
+        """
+        Crée et sauvegarde un superuser avec l'email et le mot de passe donnés.
+        """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
@@ -36,12 +46,15 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """
+    Modèle personnalisé pour les utilisateurs.
+    """
+
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-
+    is_staff = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
 
     objects = UserManager()
@@ -50,6 +63,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     class Meta:
+        """Meta options."""
+
         db_table = "users"
 
     def __str__(self) -> str:
@@ -73,6 +88,8 @@ class ResetPasswordCode(models.Model):
     objects = models.Manager()
 
     class Meta:
+        """Meta options."""
+
         db_table = "user_reset_password_codes"
 
     def is_expired(self):
