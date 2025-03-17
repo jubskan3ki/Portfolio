@@ -1,0 +1,41 @@
+stages:
+    - build
+    - deploy
+
+# Étape 1 : Build de l'image Docker
+build:
+    stage: build
+    image: docker:latest
+    services:
+        - docker:dind
+    before_script:
+        - docker info
+    script:
+        - echo "===> Build de l'image Docker en cours..."
+        - docker-compose -f docker-compose.yml build
+    tags:
+        - docker
+
+# Étape 2 : Déploiement sur ton VPS via SSH
+deploy:
+    stage: deploy
+    image: alpine:latest
+    only:
+        - main
+    before_script:
+        # Installe le client SSH
+        - apk add --no-cache openssh-client
+        # Prépare la clé SSH privée à partir de la variable GitLab
+        - mkdir -p ~/.ssh
+        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        - chmod 600 ~/.ssh/id_rsa
+        # Ajoute l'empreinte du serveur à known_hosts
+        - ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+    script:
+        - echo "===> Connexion SSH au serveur et déploiement"
+        - ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" '
+          cd /home/$SSH_USER/projects/Portfolio/ &&
+          git pull origin main &&
+          docker-compose down &&
+          docker-compose up -d --build
+          '
