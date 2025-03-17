@@ -3,10 +3,9 @@ Routes API pour la gestion des technologies et stacks.
 """
 
 from django.urls import include, path
-
 from rest_framework.routers import DefaultRouter
 
-from .views import StackViewSet
+from .views.stack import StackViewSet
 
 router = DefaultRouter()
 router.register(r"", StackViewSet, basename="stacks")
