@@ -3,10 +3,13 @@ Modèle de gestion des projets du portfolio.
 """
 
 from django.db import models
+from django.utils.text import slugify
 
 
-def project_image_upload_to(filename):
-    return f"media/projects/{filename}"
+def project_image_upload_to(instance, filename):
+    """Définit un chemin d'upload unique basé sur le slug et le timestamp."""
+    slug = slugify(instance.title)
+    return f"projects/{slug}/{filename}"
 
 
 class ProjectManager(models.Manager):
@@ -15,6 +18,9 @@ class ProjectManager(models.Manager):
     """
 
     def get_queryset(self):
+        """
+        Surcharge de la méthode get_queryset pour trier par date de création.
+        """
         return super().get_queryset().order_by("-created_at")
 
 
@@ -35,6 +41,10 @@ class Project(models.Model):
     objects = ProjectManager()
 
     class Meta:
+        """
+        Métadonnées du modèle.
+        """
+
         ordering = ["-created_at"]
         db_table = "projects"
 

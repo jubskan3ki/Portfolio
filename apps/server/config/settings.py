@@ -205,6 +205,7 @@ REST_FRAMEWORK = {
         "login": "5/minute",
         "reset_password": "3/minute",
         "stack": "5/minute",
+        "projects": "5/minute",
     },
     "DEFAULT_PAGINATION_CLASS": "utils.pagination.CustomPagination",
     "EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler",

@@ -25,3 +25,10 @@ class StackSerializer(serializers.ModelSerializer):
         if not 1 <= value <= 5:
             raise serializers.ValidationError("Le niveau de maîtrise doit être entre 1 et 5.")
         return value
+
+    def validate_image(self, value):
+        """Validation optionnelle sur le poids de l'image."""
+        max_size = 2 * 1024 * 1024  # 2MB
+        if value and value.size > max_size:
+            raise serializers.ValidationError("L'image ne doit pas dépasser 2MB.")
+        return value
