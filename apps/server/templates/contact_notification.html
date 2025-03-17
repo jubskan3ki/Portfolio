@@ -2,77 +2,131 @@
 <html lang="fr">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Nouvelle demande de contact reçue</title>
-        <style>
-            body {
-                background-color: #f4f4f4;
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 20px;
-            }
-            .content-wrapper {
-                background-color: #ffffff;
-                border-radius: 10px;
-                padding: 25px;
-                box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-                text-align: left;
-                max-width: 500px;
-                margin: auto;
-            }
-            .footer {
-                font-size: 14px;
-                color: #888;
-                text-align: center;
-                padding-top: 20px;
-            }
-            .button {
-                background-color: #007bff;
-                color: white;
-                font-size: 16px;
-                font-weight: bold;
-                padding: 12px 24px;
-                border-radius: 5px;
-                text-decoration: none;
-                display: inline-block;
-                margin-top: 20px;
-                text-align: center;
-            }
-        </style>
+        <title>📩 Nouveau message de contact</title>
     </head>
-    <body>
-        <div class="content-wrapper">
-            <h2>📩 Nouveau message de contact</h2>
-            <hr />
+    <body
+        style="
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            font-family: Lato, Roboto, sans-serif;
+        "
+    >
+        <table
+            align="center"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+                background-color: #ffffff;
+                border-radius: 12px;
+                border: 2px solid #e0e0e0;
+            "
+        >
+            <tr>
+                <td style="padding: 40px">
+                    <h1
+                        style="
+                            color: #2196f3;
+                            font-size: 26px;
+                            text-align: center;
+                            margin: 0;
+                        "
+                    >
+                        📬 Nouveau message de contact reçu
+                    </h1>
 
-            <p>Bonjour,</p>
-            <p>
-                Vous avez reçu un nouveau message via le formulaire de contact
-                de votre portfolio :
-            </p>
+                    <p style="font-size: 16px; color: #333333">
+                        <strong>Nom :</strong> {{ name }}
+                    </p>
+                    <p style="font-size: 16px; color: #333333">
+                        <strong>Email :</strong>
+                        <a href="mailto:{{ email }}" style="color: #2196f3"
+                            >{{ email }}</a
+                        >
+                    </p>
 
-            <p><strong>📛 Nom :</strong> {{ name }}</p>
-            <p>
-                <strong>📧 Email :</strong>
-                <a href="mailto:{{ email }}" style="color: #007bff"
-                    >{{ email }}</a
-                >
-            </p>
-            <p><strong>💬 Message :</strong></p>
-            <blockquote style="font-style: italic">"{{ message }}"</blockquote>
+                    <p style="font-size: 16px; color: #333333">
+                        <strong>Message :</strong>
+                    </p>
+                    <div
+                        style="
+                            background: #f1f1f1;
+                            padding: 12px 20px;
+                            border-left: 4px solid #2196f3;
+                            font-style: italic;
+                            color: #555555;
+                        "
+                    >
+                        {{ message }}
+                    </div>
 
-            <hr />
+                    <div style="text-align: center; margin-top: 24px">
+                        <a
+                            href="mailto:{{ email }}"
+                            style="
+                                background-color: #2196f3;
+                                color: #ffffff;
+                                text-decoration: none;
+                                padding: 12px 28px;
+                                border-radius: 6px;
+                                font-weight: bold;
+                                display: inline-block;
+                            "
+                        >
+                            Répondre à {{ name }}
+                        </a>
+                    </div>
 
-            <p style="text-align: center">
-                <a href="mailto:{{ email }}" class="button"
-                    >📬 Répondre maintenant</a
-                >
-            </p>
+                    <hr
+                        style="
+                            margin: 40px 0;
+                            border: none;
+                            border-top: 1px solid #e0e0e0;
+                        "
+                    />
 
-            <p class="footer">
-                Cet email a été généré automatiquement. Merci de ne pas y
-                répondre directement.
-            </p>
-        </div>
+                    <footer
+                        style="
+                            text-align: center;
+                            font-size: 12px;
+                            color: #999999;
+                        "
+                    >
+                        <p>
+                            Ce message est automatique. Ne pas y répondre
+                            directement.
+                        </p>
+                        <p>© {{ year }} Juba Aitadda. Tous droits réservés.</p>
+                        <p>
+                            <a
+                                href="https://aitaddajuba.fr/politique-confidentialite"
+                                style="color: #2196f3"
+                                >Politique de confidentialité</a
+                            >
+                        </p>
+                        <p>
+                            <a
+                                href="https://github.com/aitaddajuba"
+                                style="color: #2196f3"
+                                >GitHub</a
+                            >
+                            |
+                            <a
+                                href="https://linkedin.com/in/aitaddajuba"
+                                style="color: #2196f3"
+                                >LinkedIn</a
+                            >
+                            |
+                            <a
+                                href="mailto:contact@aitaddajuba.fr"
+                                style="color: #2196f3"
+                                >Email</a
+                            >
+                        </p>
+                    </footer>
+                </td>
+            </tr>
+        </table>
     </body>
 </html>
