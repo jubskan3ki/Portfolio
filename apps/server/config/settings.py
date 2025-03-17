@@ -207,6 +207,7 @@ REST_FRAMEWORK = {
         "stack": "3/minute",
         "projects": "3/minute",
         "experience": "3/minute",
+        "blog": "3/minute",
     },
     "DEFAULT_PAGINATION_CLASS": "utils.pagination.CustomPagination",
     "EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler",

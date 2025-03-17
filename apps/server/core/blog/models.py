@@ -3,18 +3,26 @@ Modèle de gestion des articles de blog.
 """
 
 from django.db import models
+from django.utils.text import slugify
 
 
-def blog_image_upload_to(filename):
-    return f"media/blog/{filename}"
+def blog_image_upload_to(instance, filename):
+    """
+    Chemin dynamique d'upload des images.
+    """
+    slug = slugify(instance.title)
+    return f"blog/{slug}/{filename}"
 
 
 class BlogPostManager(models.Manager):
     """
-    Manager pour gérer les articles de blog.
+    Manager personnalisé pour gérer les articles de blog.
     """
 
     def get_queryset(self):
+        """
+        Renvoie les articles de blog triés par date de création décroissante.
+        """
         return super().get_queryset().order_by("-created_at")
 
 
@@ -34,9 +42,12 @@ class BlogPost(models.Model):
     objects = BlogPostManager()
 
     class Meta:
+        """
+        Métadonnées du modèle.
+        """
+
         ordering = ["-created_at"]
         db_table = "blog_posts"
 
     def __str__(self) -> str:
-        """Retourne le titre sous forme de chaîne de caractères."""
         return str(self.title)
