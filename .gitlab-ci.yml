@@ -3,6 +3,7 @@ stages:
     - deploy
 
 # Étape 1 : Build de l'image Docker
+
 build:
     stage: build
     image: docker:latest
@@ -13,10 +14,9 @@ build:
     script:
         - echo "===> Build de l'image Docker en cours..."
         - docker-compose -f docker-compose.yml build
-    tags:
-        - docker
 
 # Étape 2 : Déploiement sur ton VPS via SSH
+
 deploy:
     stage: deploy
     image: alpine:latest
