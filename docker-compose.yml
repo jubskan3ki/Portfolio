@@ -95,17 +95,19 @@ services:
         restart: unless-stopped
 
     celery:
+        container_name: celery
         build:
             context: ./apps/server
             dockerfile: Dockerfile
-        container_name: celery
         command: celery -A config worker --loglevel=info
         user: "1000:1000"
         volumes:
             - ./apps/server:/app
         depends_on:
-            - backend
-            - rabbitmq
+            backend:
+                condition: service_started
+            rabbitmq:
+                condition: service_started
         environment:
             CELERY_BROKER_URL: amqp://${ADMIN_EMAIL}:${ADMIN_PASSWORD}@rabbitmq:5672//
         networks:

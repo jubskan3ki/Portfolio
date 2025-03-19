@@ -27,6 +27,9 @@ RUN pip install --no-cache-dir gunicorn python-dotenv
 # Copier le reste de l'application
 COPY . .
 
+# Donner les droits d'exécution au script setup.sh
+RUN chmod +x /app/scripts/setup.sh
+
 # Exposer les ports 8000 et 80
 EXPOSE 8000 80
 
@@ -34,5 +37,5 @@ EXPOSE 8000 80
 ENV GUNICORN_WORKERS=3
 ENV GUNICORN_TIMEOUT=120
 
-# Lancer l'application Django avec Gunicorn
+# Lancer l'application Django avec Gunicorn 
 CMD ["/app/scripts/setup.sh"]
