@@ -45,7 +45,6 @@ services:
             DB_PASSWORD: ${DB_PASSWORD}
             DB_HOST: ${DB_HOST}
             DB_PORT: ${DB_PORT}
-            API_BASE_URL: ${API_BASE_URL}
             SMTP_HOST: ${SMTP_HOST}
             SMTP_PORT: ${SMTP_PORT}
             SMTP_USER: ${SMTP_USER}
