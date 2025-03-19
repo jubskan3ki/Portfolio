@@ -36,7 +36,6 @@ node_modules/
 output/
 .dist/
 .cache/
-pnpm-lock.yaml
 yarn.lock
 npm-debug.log*
 pnpm-debug.log*
