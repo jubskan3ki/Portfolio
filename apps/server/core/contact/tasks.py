@@ -6,49 +6,66 @@ from celery import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils.timezone import now
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def send_contact_email(self, name, email, message):
     """
     Envoie :
-    1. Un mail à l'admin (moi-même)
+    1. Un mail à l'administrateur du site (moi-même)
     2. Un mail de confirmation à l'utilisateur
     """
-    # === Email Admin ===
+    # Récupère l'adresse admin depuis les settings
+    admin_email = settings.ADMIN_USER
+    current_year = now().year
+
+    # === Email pour l'administrateur ===
     admin_subject = f"📩 Nouveau message de contact de {name}"
-    admin_context = {"name": name, "email": email, "message": message, "year": "2025"}
+    admin_context = {
+        "name": name,
+        "email": email,
+        "message": message,
+        "year": current_year,
+    }
 
     try:
         admin_html = render_to_string("contact_notification.html", admin_context)
 
         send_mail(
             subject=admin_subject,
-            message="",
+            message=f"Nouveau message de contact de {name} ({email})\n\n{message}",
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+            recipient_list=[admin_email],
             html_message=admin_html,
             fail_silently=False,
         )
 
-        print(f"[TASK] ✅ Notification admin envoyée pour {name} ({email})")
+        print(f"[TASK] ✅ Notification admin envoyée à {admin_email} pour {name} ({email})")
 
     except Exception as exc:
         print(f"[TASK] ❌ Échec de l'envoi admin pour {email} : {str(exc)}")
         raise self.retry(exc=exc)
 
-    # === Email Utilisateur ===
+    # === Email pour l'utilisateur ===
     user_subject = "✅ Merci pour votre message !"
-    user_context = {"name": name, "year": "2025"}
+    user_context = {
+        "name": name,
+        "year": current_year,
+    }
 
     try:
         user_html = render_to_string("contact_remerciment.html", user_context)
 
         send_mail(
             subject=user_subject,
-            message=f"Bonjour {name},\n\nMerci pour votre message. Je vous répondrai rapidement !",
+            message=(
+                f"Bonjour {name},\n\n"
+                "Merci pour votre message ! Je vous répondrai rapidement.\n\n"
+                f"Bonne journée,\nL'équipe {settings.DEFAULT_FROM_EMAIL}"
+            ),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
+            recipient_list=[admin_email, email],
             html_message=user_html,
             fail_silently=False,
         )
