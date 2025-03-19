@@ -32,10 +32,15 @@ deploy:
         # Ajoute l'empreinte du serveur à known_hosts
         - ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
     script:
+        - mkdir -p ~/.ssh
+        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        - chmod 600 ~/.ssh/id_rsa
+        - ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
         - echo "===> Connexion SSH au serveur et déploiement"
         - ssh -v -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
           cd /home/$SSH_USER/projects/Portfolio/ &&
           git pull origin main &&
+          chmod +x ./apps/server/scripts/setup.sh &&
           docker-compose down &&
           docker-compose up -d --build
           "

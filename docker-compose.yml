@@ -37,6 +37,12 @@ services:
                 condition: service_healthy
         networks:
             - portfolio_net
+        entrypoint:
+            [
+                "/bin/sh",
+                "-c",
+                "chmod +x /app/scripts/setup.sh && /app/scripts/setup.sh",
+            ]
         restart: unless-stopped
         environment:
             SERVER_PORT: ${SERVER_PORT}
