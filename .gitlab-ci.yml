@@ -33,9 +33,11 @@ deploy:
         - ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
     script:
         - echo "===> Connexion SSH au serveur et déploiement"
-        - ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" '
-          cd /home/$SSH_USER/projects/Portfolio/ &&
-          git pull origin main &&
-          docker-compose down &&
-          docker-compose up -d --build
-          '
+        - ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+            cd cd ./projects/Portfolio/ &&
+            git pull origin main &&
+            docker-compose down &&
+            docker-compose up -d --build
+            "
+
+```
