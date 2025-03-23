@@ -16,9 +16,13 @@ def send_contact_email(self, name, email, message):
     1. Un mail à l'administrateur du site (moi-même)
     2. Un mail de confirmation à l'utilisateur
     """
-    # Récupère l'adresse admin depuis les settings
-    admin_email = settings.ADMIN_USER
+
+    print(f"[TASK] 🚀 Lancement de la task send_contact_email avec : name={name}, email={email}")
+
+    admin_email = settings.ADMIN_EMAIL
     current_year = now().year
+
+    print(f"[TASK] 📧 Envoi du mail ADMIN vers : {admin_email}")
 
     # === Email pour l'administrateur ===
     admin_subject = f"📩 Nouveau message de contact de {name}"
@@ -40,12 +44,13 @@ def send_contact_email(self, name, email, message):
             html_message=admin_html,
             fail_silently=False,
         )
-
         print(f"[TASK] ✅ Notification admin envoyée à {admin_email} pour {name} ({email})")
 
     except Exception as exc:
         print(f"[TASK] ❌ Échec de l'envoi admin pour {email} : {str(exc)}")
         raise self.retry(exc=exc)
+
+    print(f"[TASK] 📧 Envoi du mail UTILISATEUR vers : {email}")
 
     # === Email pour l'utilisateur ===
     user_subject = "✅ Merci pour votre message !"
@@ -69,7 +74,6 @@ def send_contact_email(self, name, email, message):
             html_message=user_html,
             fail_silently=False,
         )
-
         print(f"[TASK] ✅ Email de remerciement envoyé à {email}")
 
     except Exception as exc:

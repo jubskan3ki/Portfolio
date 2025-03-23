@@ -54,7 +54,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
 # 📧 Paramètres de l'administrateur
-ADMIN_USER = env("ADMIN_EMAIL")
+ADMIN_EMAIL = env("ADMIN_EMAIL")
 ADMIN_PASSWORD = env("ADMIN_PASSWORD")
 
 # 📧 Paramètres de l'email (Utilisation des variables d'environnement)

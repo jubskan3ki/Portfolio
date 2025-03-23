@@ -29,7 +29,10 @@ class RequestResetPasswordView(APIView):
         serializer = RequestResetPasswordSerializer(data=request.data)
         if serializer.is_valid():
             send_reset_password_email.delay(serializer.validated_data["email"])
-            return Response({"message": "Un code de réinitialisation a été envoyé."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Un code de réinitialisation a été envoyé par email."},
+                status=status.HTTP_200_OK,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -47,5 +50,8 @@ class ResetPasswordView(APIView):
         serializer = ResetPasswordSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "Mot de passe mis à jour."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Le mot de passe a été mis à jour avec succès."},
+                status=status.HTTP_200_OK,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

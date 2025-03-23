@@ -25,17 +25,17 @@ python manage.py migrate --noinput
 echo -e "${GREEN}✅ Migrations appliquées.${NC}"
 
 # Création automatique du superuser si non existant
-echo -e "${GREEN}👤 Vérification/Création du superuser ${ADMIN_USER}...${NC}"
+echo -e "${GREEN}👤 Vérification/Création du superuser ${ADMIN_EMAIL}...${NC}"
 
 python manage.py shell <<EOF
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
-if not User.objects.filter(email="${ADMIN_USER}").exists():
-    User.objects.create_superuser(email="${ADMIN_USER}", password="${ADMIN_PASSWORD}")
-    print("✅ Superuser ${ADMIN_USER} créé.")
+if not User.objects.filter(email="${ADMIN_EMAIL}").exists():
+    User.objects.create_superuser(email="${ADMIN_EMAIL}", password="${ADMIN_PASSWORD}")
+    print("✅ Superuser ${ADMIN_EMAIL} créé.")
 else:
-    print("⚠️  Superuser ${ADMIN_USER} déjà existant.")
+    print("⚠️  Superuser ${ADMIN_EMAIL} déjà existant.")
 EOF
 
 echo -e "${GREEN}✅ Superuser setup terminé.${NC}"

@@ -1,5 +1,5 @@
 """
-Modèles pour les utilisateurs.
+Modèles enrichis et optimisés pour les utilisateurs.
 """
 
 from django.contrib.auth.models import (
@@ -9,7 +9,16 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
 from django.utils.timezone import now, timedelta
+
+
+def user_avatar_upload_to(instance, filename):
+    """
+    Chemin dynamique d'upload des avatars basé sur l'email utilisateur.
+    """
+    user_slug = slugify(instance.email.split("@")[0])
+    return f"avatars/{user_slug}/{filename}"
 
 
 class UserManager(BaseUserManager):
@@ -47,15 +56,20 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
-    Modèle personnalisé pour les utilisateurs.
+    Modèle personnalisé enrichi pour les utilisateurs.
     """
 
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+    avatar = models.ImageField(upload_to=user_avatar_upload_to, blank=True, null=True)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
+    last_password_change = models.DateTimeField(blank=True, null=True)
 
     objects = UserManager()
 
@@ -66,6 +80,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Meta options."""
 
         db_table = "users"
+        ordering = ("email",)
 
     def __str__(self) -> str:
         return str(self.email)
@@ -78,7 +93,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class ResetPasswordCode(models.Model):
     """
-    Stocke un code temporaire pour la réinitialisation du mot de passe de l'admin.
+    Stocke un code temporaire pour la réinitialisation du mot de passe.
     """
 
     email = models.EmailField(unique=True)
@@ -91,6 +106,7 @@ class ResetPasswordCode(models.Model):
         """Meta options."""
 
         db_table = "user_reset_password_codes"
+        ordering = ("-created_at",)
 
     def is_expired(self):
         """

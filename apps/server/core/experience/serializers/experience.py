@@ -11,8 +11,12 @@ from ..models import Experience
 
 class ExperienceSerializer(serializers.ModelSerializer):
     """
-    Sérialiseur des expériences avec validations avancées.
+    Sérialiseur pour les expériences professionnelles et éducatives.
     """
+
+    duration = serializers.IntegerField(read_only=True)
+    is_current = serializers.BooleanField(read_only=True)
+    skills_acquired = serializers.ListField(child=serializers.CharField(), required=False, allow_empty=True)
 
     class Meta:
         """
@@ -23,16 +27,23 @@ class ExperienceSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
+            "slug",
             "company_or_school",
             "location",
             "start_date",
             "end_date",
             "description",
+            "skills_acquired",
             "experience_type",
+            "is_highlighted",
+            "website",
             "logo",
+            "duration",
+            "is_current",
             "created_at",
             "updated_at",
         ]
+        read_only_fields = ["slug", "created_at", "updated_at"]
 
     def validate_end_date(self, value):
         """
@@ -56,12 +67,17 @@ class ExperienceSerializer(serializers.ModelSerializer):
 
     def validate_logo(self, value):
         """
-        Vérifie que le fichier logo ne dépasse pas la taille maximale autorisée.
+        Vérifie que le logo ne dépasse pas 2 Mo.
         """
         max_size = 2 * 1024 * 1024
+        if value and hasattr(value, "size") and value.size > max_size:
+            raise serializers.ValidationError("Le logo ne doit pas dépasser 2 Mo.")
+        return value
 
-        if value and hasattr(value, "size"):
-            if value.size > max_size:
-                raise serializers.ValidationError("Le logo ne doit pas dépasser 2 Mo.")
-
+    def validate_skills_acquired(self, value):
+        """
+        Vérifie que les compétences fournies sont sous forme de liste.
+        """
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Les compétences doivent être fournies sous forme de liste.")
         return value

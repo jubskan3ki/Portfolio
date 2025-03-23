@@ -1,5 +1,5 @@
 """
-Sérialisation des données de l'administrateur unique.
+Sérialisation enrichie et optimisée des données de l'administrateur unique.
 """
 
 from rest_framework import serializers
@@ -9,7 +9,7 @@ from ..models import User
 
 class AdminSerializer(serializers.ModelSerializer):
     """
-    Sérialisation des informations de l'admin (lecture seule).
+    Sérialisation complète des informations de l'admin (lecture seule).
     """
 
     class Meta:
@@ -18,12 +18,21 @@ class AdminSerializer(serializers.ModelSerializer):
         """
 
         model = User
-        fields = ["email"]
+        fields = [
+            "email",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "bio",
+            "avatar",
+            "date_joined",
+            "last_password_change",
+        ]
 
 
 class UpdateAdminSerializer(serializers.ModelSerializer):
     """
-    Mise à jour des informations de l'admin.
+    Mise à jour complète des informations de l'admin.
     """
 
     class Meta:
@@ -32,4 +41,4 @@ class UpdateAdminSerializer(serializers.ModelSerializer):
         """
 
         model = User
-        fields = ["email"]
+        fields = ["email", "first_name", "last_name", "phone_number", "bio", "avatar"]

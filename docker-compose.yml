@@ -28,6 +28,7 @@ services:
         build:
             context: ./apps/server
             dockerfile: Dockerfile
+        command: /app/scripts/setup.sh
         volumes:
             - ./apps/server:/app
         ports:
@@ -35,15 +36,21 @@ services:
         depends_on:
             db:
                 condition: service_healthy
+            rabbitmq:
+                condition: service_started
         networks:
             - portfolio_net
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "3"
         entrypoint:
             [
                 "/bin/sh",
                 "-c",
                 "chmod +x /app/scripts/setup.sh && /app/scripts/setup.sh",
             ]
-        restart: unless-stopped
         environment:
             SERVER_PORT: ${SERVER_PORT}
             DB_NAME: ${DB_NAME}
@@ -67,6 +74,41 @@ services:
             timeout: 5s
             start_period: 10s
 
+    celery:
+        container_name: celery
+        build:
+            context: ./apps/server
+            dockerfile: Dockerfile
+        command: celery -A config worker --loglevel=INFO
+        volumes:
+            - ./apps/server:/app
+        depends_on:
+            backend:
+                condition: service_started
+            rabbitmq:
+                condition: service_started
+        environment:
+            CELERY_BROKER_URL: amqp://${ADMIN_EMAIL}:${ADMIN_PASSWORD}@rabbitmq:5672//
+        networks:
+            - portfolio_net
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "3"
+
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        environment:
+            RABBITMQ_DEFAULT_USER: ${ADMIN_EMAIL}
+            RABBITMQ_DEFAULT_PASS: ${ADMIN_PASSWORD}
+        networks:
+            - portfolio_net
+
     frontend:
         container_name: nuxt-app
         build:
@@ -76,7 +118,6 @@ services:
             - "${FRONTEND_PORT}:80"
         networks:
             - portfolio_net
-        restart: unless-stopped
         healthcheck:
             test: ["CMD-SHELL", "curl --fail http://localhost:80 || exit 1"]
             interval: 10s
@@ -98,51 +139,19 @@ services:
                 condition: service_healthy
         networks:
             - portfolio_net
-        restart: unless-stopped
-
-    celery:
-        container_name: celery
-        build:
-            context: ./apps/server
-            dockerfile: Dockerfile
-        command: celery -A config worker --loglevel=info
-        user: "1000:1000"
-        volumes:
-            - ./apps/server:/app
-        depends_on:
-            backend:
-                condition: service_started
-            rabbitmq:
-                condition: service_started
-        environment:
-            CELERY_BROKER_URL: amqp://${ADMIN_EMAIL}:${ADMIN_PASSWORD}@rabbitmq:5672//
-        networks:
-            - portfolio_net
-        restart: unless-stopped
-
-    rabbitmq:
-        image: rabbitmq:3-management
-        container_name: rabbitmq
-        ports:
-            - "5672:5672"
-            - "15672:15672"
-        environment:
-            RABBITMQ_DEFAULT_USER: ${ADMIN_EMAIL}
-            RABBITMQ_DEFAULT_PASS: ${ADMIN_PASSWORD}
-        networks:
-            - portfolio_net
-        restart: unless-stopped
 
     grafana:
         image: grafana/grafana:latest
         container_name: grafana
+        environment:
+            - GF_SECURITY_ADMIN_USER=${ADMIN_EMAIL}
+            - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD}
         ports:
             - "3001:3000"
         volumes:
             - grafana_data:/var/lib/grafana
         networks:
             - portfolio_net
-        restart: unless-stopped
 
     prometheus:
         image: prom/prometheus:latest
@@ -154,16 +163,26 @@ services:
             - prometheus_data:/prometheus
         networks:
             - portfolio_net
-        restart: unless-stopped
 
-    node-exporter:
-        image: prom/node-exporter:latest
-        container_name: node-exporter
+    loki:
+        image: grafana/loki:latest
+        container_name: loki
         ports:
-            - "9100:9100"
+            - "3100:3100"
+        command: -config.file=/etc/loki/local-config.yaml
         networks:
             - portfolio_net
-        restart: unless-stopped
+
+    promtail:
+        image: grafana/promtail:latest
+        container_name: promtail
+        volumes:
+            - /var/lib/docker/containers:/var/lib/docker/containers:ro
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+        command: -config.file=/etc/promtail/config.yml
+        networks:
+            - portfolio_net
 
     cadvisor:
         image: gcr.io/cadvisor/cadvisor:latest
@@ -177,7 +196,6 @@ services:
             - /var/lib/docker/:/var/lib/docker:ro
         networks:
             - portfolio_net
-        restart: unless-stopped
 
     db-backup:
         image: prodrigestivill/postgres-backup-local

@@ -12,4 +12,7 @@ router.register(r"", BlogPostViewSet, basename="blogposts")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("recent/", BlogPostViewSet.as_view({"get": "recent"}), name="blogpost-recent"),
+    path("popular/", BlogPostViewSet.as_view({"get": "popular"}), name="blogpost-popular"),
+    path("drafts/", BlogPostViewSet.as_view({"get": "drafts"}), name="blogpost-drafts"),
 ]

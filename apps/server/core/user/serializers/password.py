@@ -1,11 +1,11 @@
 """
-Sérialisation des données de l'administrateur unique.
+Sérialisation complète et sécurisée pour la réinitialisation du mot de passe de l'administrateur.
 """
 
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
-
+from django.utils import timezone
 from rest_framework import serializers
 
 from ..models import ResetPasswordCode, User
@@ -41,7 +41,7 @@ class RequestResetPasswordSerializer(serializers.Serializer):
 
 class ResetPasswordSerializer(serializers.Serializer):
     """
-    Sérialisation pour valider le code et changer le mot de passe en une seule étape.
+    Sérialisation avancée pour valider le code, vérifier la sécurité du mot de passe et effectuer la réinitialisation.
     """
 
     email = serializers.EmailField()
@@ -64,8 +64,8 @@ class ResetPasswordSerializer(serializers.Serializer):
         if reset_code.is_expired():
             raise serializers.ValidationError("Le code est expiré.")
 
-        admin = get_object_or_404(User, email=attrs["email"])
-        if admin.check_password(attrs["new_password"]):
+        user = get_object_or_404(User, email=attrs["email"])
+        if user.check_password(attrs["new_password"]):
             raise serializers.ValidationError("Le nouveau mot de passe doit être différent de l'ancien.")
 
         return attrs
@@ -74,9 +74,10 @@ class ResetPasswordSerializer(serializers.Serializer):
         """
         Met à jour le mot de passe et supprime le code utilisé.
         """
-        admin = get_object_or_404(User, email=self.validated_data["email"])
-        admin.password = make_password(self.validated_data["new_password"])
-        admin.save()
+        user = get_object_or_404(User, email=self.validated_data["email"])
+        user.password = make_password(self.validated_data["new_password"])
+        user.last_password_change = timezone.now()
+        user.save()
 
         ResetPasswordCode.objects.filter(email=self.validated_data["email"]).delete()
 

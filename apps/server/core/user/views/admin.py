@@ -31,17 +31,21 @@ class AdminLoginView(APIView):
         print(f"🛠 Tentative de login pour : {email}")
 
         if not email or not password:
-            return Response({"error": "Email et mot de passe requis."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Email et mot de passe requis."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         admin = authenticate(request=request, username=email, password=password)
 
         if not admin:
-            print(f"❌ Échec de l'auth pour : {email}")
-            return Response({"error": "Identifiants invalides."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "Identifiants invalides."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         refresh = RefreshToken.for_user(admin)
 
-        print(f"✅ Login réussi pour : {email}")
         return Response(
             {"access": str(refresh.access_token), "refresh": str(refresh)},
             status=status.HTTP_200_OK,
@@ -63,15 +67,20 @@ class AdminLogoutView(APIView):
         refresh_token = request.data.get("refresh")
 
         if not refresh_token:
-            return Response({"error": "Refresh token manquant."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Refresh token manquant."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
         except (TokenError, InvalidToken):
-            return Response({"error": "Token invalide ou déjà blacklisté."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Token invalide ou déjà blacklisté."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        print(f"[AUDIT] Déconnexion de l'utilisateur {request.user.email}.")
         return Response({"message": "Déconnexion réussie."}, status=status.HTTP_205_RESET_CONTENT)
 
 
@@ -84,17 +93,18 @@ class AdminProfileView(APIView):
         """
         Consultation des informations de l'admin.
         """
-        admin = request.user
-        serializer = AdminSerializer(admin)
-        return Response(serializer.data)
+        serializer = AdminSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
         """
         Mise à jour des informations de l'admin.
         """
-        admin = request.user
-        serializer = UpdateAdminSerializer(admin, data=request.data, partial=True)
+        serializer = UpdateAdminSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "Mise à jour réussie"}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Mise à jour réussie", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

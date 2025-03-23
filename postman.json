@@ -1,0 +1,472 @@
+{
+    "info": {
+        "_postman_id": "2a1c567f-1234-5678-9012-abcdef123456",
+        "name": "API Portfolio",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "User Management",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/user/login/",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"yourpassword\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/user/logout/",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{refresh_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Profile - Get",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/user/profile/",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Profile - Update",
+                    "request": {
+                        "method": "PATCH",
+                        "url": "{{base_url}}/api/user/profile/",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"first_name\": \"Admin\",\n  \"last_name\": \"User\",\n  \"bio\": \"Administrator profile.\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Request Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/user/request-reset-password/",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/user/reset-password/",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@example.com\",\n  \"code\": \"123456\",\n  \"new_password\": \"newsecurepassword\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Stack Management",
+            "item": [
+                {
+                    "name": "List All Stacks",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/stacks/"
+                    }
+                },
+                {
+                    "name": "Create Stack",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/stacks/",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "name",
+                                    "value": "Django",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "backend",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "proficiency",
+                                    "value": "5",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "experience_years",
+                                    "value": "3",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Python Web Framework",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "official_website",
+                                    "value": "https://www.djangoproject.com",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "type": "file",
+                                    "src": "django.png"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Stacks by Category",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/stacks/category/backend/"
+                    }
+                },
+                {
+                    "name": "Most Proficient Stacks",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/stacks/most-proficient/"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Project Management",
+            "item": [
+                {
+                    "name": "List Active Projects",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/projects/active/"
+                    }
+                },
+                {
+                    "name": "List Recent Projects",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/projects/recent/"
+                    }
+                },
+                {
+                    "name": "List Archived Projects",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/projects/archived/"
+                    }
+                },
+                {
+                    "name": "List Projects by Tag",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/projects/by-tag/?tag=portfolio"
+                    }
+                },
+                {
+                    "name": "Create Project",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/projects/",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Portfolio Website\",\n  \"description\": \"A complete portfolio.\",\n  \"status\": \"in_progress\",\n  \"priority\": 5,\n  \"tags\": [\"web\", \"portfolio\"],\n  \"github_link\": \"https://github.com/username/repo\",\n  \"live_demo\": \"https://portfolio.example.com\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Experience Management",
+            "item": [
+                {
+                    "name": "List All Experiences",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/experience/"
+                    }
+                },
+                {
+                    "name": "List Current Experiences",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/experience/current/"
+                    }
+                },
+                {
+                    "name": "List Professional Experiences",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/experience/professional/"
+                    }
+                },
+                {
+                    "name": "List Educational Experiences",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/experience/educational/"
+                    }
+                },
+                {
+                    "name": "List Highlighted Experiences",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/experience/highlighted/"
+                    }
+                },
+                {
+                    "name": "Create Experience",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/experience/",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Full Stack Developer\",\n  \"company_or_school\": \"TechCorp\",\n  \"location\": \"Paris\",\n  \"start_date\": \"2022-01-01\",\n  \"end_date\": \"2023-01-01\",\n  \"description\": \"Developed multiple web applications.\",\n  \"skills_acquired\": [\"Django\", \"React\"],\n  \"experience_type\": \"professional\",\n  \"is_highlighted\": true,\n  \"website\": \"https://techcorp.example.com\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Contact Messages",
+            "item": [
+                {
+                    "name": "Send Message",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/contact/",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"subject\": \"general\",\n  \"message\": \"Interested in your services.\",\n  \"phone_number\": \"+33123456789\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "List All Messages",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/contact/",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Unread Messages",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/contact/unread/",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Mark Message as Read",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/contact/1/mark-as-read/",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Blog Management",
+            "item": [
+                {
+                    "name": "List All Blog Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/blogposts/"
+                    }
+                },
+                {
+                    "name": "List Recent Blog Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/blogposts/recent/"
+                    }
+                },
+                {
+                    "name": "List Popular Blog Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/blogposts/popular/"
+                    }
+                },
+                {
+                    "name": "List Draft Blog Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/api/blogposts/drafts/",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Create Blog Post",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/api/blogposts/",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "My New Blog Post",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "content",
+                                    "value": "This is the content of my blog.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "draft",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "tags",
+                                    "value": "['django', 'api']",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "meta_description",
+                                    "value": "SEO description for this post",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "seo_keywords",
+                                    "value": "['blog', 'portfolio']",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": "blog-image.jpg"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        { "key": "base_url", "value": "http://localhost:8000" },
+        { "key": "access_token", "value": "" },
+        { "key": "refresh_token", "value": "" }
+    ]
+}
