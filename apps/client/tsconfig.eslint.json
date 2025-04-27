@@ -1,0 +1,24 @@
+{
+	"extends": "./tsconfig.json",
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.vue",
+		"*.vue",
+		"*.ts",
+		"server/**/*.ts",
+		"plugins/**/*.ts",
+		"composables/**/*.ts",
+		"types/**/*.ts",
+		"./*.js",
+		"./*.ts",
+		"./*.vue",
+		"./src/pages/*.vue",
+		"./src/pages/**/*.vue"
+	],
+	"exclude": ["node_modules", ".nuxt", "dist", ".output"],
+	"compilerOptions": {
+		"types": ["node", "vue"],
+		"allowJs": true
+	}
+}

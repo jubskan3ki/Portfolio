@@ -1,0 +1,119 @@
+// variables.scss
+@use 'sass:map';
+@use 'sass:color';
+
+// Typographie
+$font-family: 'Lato', sans-serif;
+$font-family-heading: 'Lato', sans-serif;
+$line-height-base: 1.5;
+$letter-spacing-base: 0.5px;
+
+// Couleurs principales
+$colors: (
+	primary: #673c5c,
+	secondary: #ac72a0,
+	danger: #ff2453,
+	warning: #e9bc0c,
+	success: #43ff64d9,
+	info: #43889d,
+	black: #111418,
+	black-light: #2b323b,
+	gray-dark: #4d586a,
+	gray: #7d8ba1,
+	gray-light: #b8c0cc,
+	white-dark: #f3f4f6,
+	white: #ffffff,
+);
+
+// Accès rapide aux couleurs principales
+$primary-color: map.get($colors, primary);
+$secondary-color: map.get($colors, secondary);
+$danger-color: map.get($colors, danger);
+$warning-color: map.get($colors, warning);
+$success-color: map.get($colors, success);
+$info-color: map.get($colors, info);
+$black: map.get($colors, black);
+$black-light: map.get($colors, black-light);
+$gray-dark: map.get($colors, gray-dark);
+$gray: map.get($colors, gray);
+$gray-light: map.get($colors, gray-light);
+$white-dark: map.get($colors, white-dark);
+$white: map.get($colors, white);
+
+// Ombres
+$box-shadow-small:
+	0 1px 3px rgba(0, 0, 0, 0.12),
+	0 1px 2px rgba(0, 0, 0, 0.08);
+$box-shadow:
+	0 1px 2px -1px rgba(0, 0, 0, 0.25),
+	0 1px 3px 0px rgba(0, 0, 0, 0.15);
+$box-shadow-medium:
+	0 4px 6px -2px rgba(0, 0, 0, 0.05),
+	0 10px 15px -3px rgba(0, 0, 0, 0.1);
+$box-shadow-large:
+	0 10px 15px -3px rgba(0, 0, 0, 0.1),
+	0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+// Espacements
+$spacing-xxs: 2px;
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 32px;
+$spacing-xl: 64px;
+$spacing-xxl: 128px;
+
+// Typographie - Tailles
+$font-sizes: (
+	large: (
+		h1: 38px,
+		h2: 32px,
+		h3: 28px,
+		h4: 24px,
+		p: 18px,
+		small: 14px,
+	),
+	medium: (
+		h1: 34px,
+		h2: 28px,
+		h3: 24px,
+		h4: 20px,
+		p: 16px,
+		small: 12px,
+	),
+	small: (
+		h1: 30px,
+		h2: 24px,
+		h3: 20px,
+		h4: 18px,
+		p: 14px,
+		small: 10px,
+	),
+);
+
+// Breakpoints
+$breakpoint-mobile: 767px;
+$breakpoint-tablet: 1023px;
+$breakpoint-desktop: 1439px;
+
+// Bordures et rayons
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 16px;
+$border-radius-full: 9999px;
+
+// Transitions
+$transition-fast: 0.2s ease;
+$transition-base: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+// Container
+$container-padding: $spacing-md;
+$container-max-width: 1280px;
+
+// Font sizes pour UI
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-md: 1rem;
+$font-size-lg: 1.25rem;
+$font-size-xl: 1.5rem;

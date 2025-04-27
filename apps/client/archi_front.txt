@@ -1,0 +1,271 @@
+﻿├── public
+│   └── favicon.ico
+│   └── _robots.txt
+├── server
+│   └── tsconfig.json
+├── src
+│   ├── assets
+│   │   ├── fonts
+│   │   ├── icons
+│   │   ├── images
+│   │   │   ├── article
+│   │   │   │   └── article-1.jpg
+│   │   │   │   └── article-2.jpg
+│   │   │   │   └── article-3.jpg
+│   │   │   │   └── article-4.jpg
+│   │   │   │   └── article-5.jpg
+│   │   │   ├── project
+│   │   │   │   └── projet-1.jpg
+│   │   │   │   └── projet-2.jpg
+│   │   │   │   └── projet-3.jpg
+│   │   │   │   └── projet-4.jpg
+│   │   │   │   └── projet-5.jpg
+│   │   │   ├── stack
+│   │   │   │   └── ansible.svg
+│   │   │   │   └── aws.svg
+│   │   │   │   └── django.svg
+│   │   │   │   └── docker.svg
+│   │   │   │   └── figma.svg
+│   │   │   │   └── flutter.svg
+│   │   │   │   └── git.svg
+│   │   │   │   └── golang.svg
+│   │   │   │   └── illustrator.svg
+│   │   │   │   └── kubernetes.svg
+│   │   │   │   └── mongodb.svg
+│   │   │   │   └── nest.svg
+│   │   │   │   └── nginx.svg
+│   │   │   │   └── node.svg
+│   │   │   │   └── photoshop.svg
+│   │   │   │   └── postgresql.svg
+│   │   │   │   └── python.svg
+│   │   │   │   └── react.svg
+│   │   │   │   └── sass.svg
+│   │   │   │   └── svelte.svg
+│   │   │   │   └── terraform.svg
+│   │   │   │   └── typescript.svg
+│   │   │   │   └── vite.svg
+│   │   │   │   └── vue.svg
+│   │   │   └── logo.ico
+│   │   │   └── logo.png
+│   │   │   └── Photo Profile.JPG
+│   ├── components
+│   │   ├── base
+│   │   │   └── BaseButton.vue
+│   │   │   └── BaseCheckbox.vue
+│   │   │   └── BaseForm.vue
+│   │   │   └── BaseFormField.vue
+│   │   │   └── BaseIcon.vue
+│   │   │   └── BaseInput.vue
+│   │   │   └── BaseLink.vue
+│   │   │   └── BaseRadio.vue
+│   │   │   └── BaseSelect.vue
+│   │   │   └── BaseSwitch.vue
+│   │   │   └── BaseTextarea.vue
+│   │   ├── feature
+│   │   │   ├── blog
+│   │   │   │   └── ArticleActiveFilters.vue
+│   │   │   │   └── ArticleCard.vue
+│   │   │   │   └── ArticleCarousel.vue
+│   │   │   │   └── ArticleCategories.vue
+│   │   │   │   └── ArticleList.vue
+│   │   │   │   └── ArticlePopular.vue
+│   │   │   │   └── ArticleTags.vue
+│   │   │   │   └── AuthorInfo.vue
+│   │   │   ├── contact
+│   │   │   │   └── ContactForm.vue
+│   │   │   │   └── ContactInfos.vue
+│   │   │   ├── experience
+│   │   │   │   └── ExperienceCard.vue
+│   │   │   │   └── ExperienceTimeline.vue
+│   │   │   ├── home
+│   │   │   │   └── ExpertiseCard.vue
+│   │   │   │   └── HeroSection.vue
+│   │   │   │   └── StatCard.vue
+│   │   │   ├── projects
+│   │   │   │   └── ProjectCard.vue
+│   │   │   │   └── ProjectCarousel.vue
+│   │   │   │   └── ProjectList.vue
+│   │   │   ├── stacks
+│   │   │   │   └── StackBadge.vue
+│   │   │   │   └── StackCard.vue
+│   │   │   │   └── StackCarousel.vue
+│   │   │   │   └── StackList.vue
+│   │   │   │   └── StackRelated.vue
+│   │   │   │   └── StackResources.vue
+│   │   │   │   └── StackTags.vue
+│   │   ├── feedback
+│   │   │   └── AlertItem.vue
+│   │   │   └── AlertList.vue
+│   │   │   └── EmptyState.vue
+│   │   │   └── ErrorMessage.vue
+│   │   │   └── Modal.vue
+│   │   │   └── Toast.vue
+│   │   ├── layouts
+│   │   │   └── Footer.vue
+│   │   │   └── FooterContact.vue
+│   │   │   └── FooterContactItem.vue
+│   │   │   └── FooterSocial.vue
+│   │   │   └── Header.vue
+│   │   │   └── Section.vue
+│   │   ├── loaders
+│   │   │   └── Loader.vue
+│   │   │   └── Skeleton.vue
+│   │   │   └── Spinner.vue
+│   │   ├── navigation
+│   │   │   └── Breadcrumb.vue
+│   │   │   └── MobileMenu.vue
+│   │   │   └── MobileMenuItem.vue
+│   │   │   └── MobileMenuToggle.vue
+│   │   │   └── NavBar.vue
+│   │   │   └── NavbarItem.vue
+│   │   │   └── Pagination.vue
+│   │   │   └── PaginationItem.vue
+│   │   │   └── SideBar.vue
+│   │   │   └── SideBarItem.vue
+│   │   │   └── Tabs.vue
+│   │   │   └── TabsItem.vue
+│   │   ├── ui
+│   │   │   └── AppLogo.vue
+│   │   │   └── Avatar.vue
+│   │   │   └── Badge.vue
+│   │   │   └── Card.vue
+│   │   │   └── CTA.vue
+│   │   │   └── Hero.vue
+│   │   │   └── PortfolioSummary.vue
+│   │   │   └── ProgressBar.vue
+│   │   │   └── RatingStars.vue
+│   │   │   └── SectionHeading.vue
+│   │   │   └── Swiper.vue
+│   │   │   └── Tooltip.vue
+│   ├── composables
+│   │   └── useAlert.ts
+│   │   └── useLoader.ts
+│   │   └── useModal.ts
+│   ├── config
+│   │   └── api.ts
+│   │   └── footer.ts
+│   │   └── images.ts
+│   │   └── navBar.ts
+│   │   └── routes.ts
+│   ├── directives
+│   │   └── clickOutside.ts
+│   ├── layouts
+│   │   └── default.vue
+│   ├── mock
+│   │   ├── blog
+│   │   │   └── articles.ts
+│   │   │   └── categories.ts
+│   │   │   └── index.ts
+│   │   │   └── tags.ts
+│   │   ├── contact
+│   │   │   └── faqs.ts
+│   │   │   └── index.ts
+│   │   ├── experience
+│   │   │   └── education.ts
+│   │   │   └── index.ts
+│   │   │   └── professional.ts
+│   │   ├── projects
+│   │   │   └── categories.ts
+│   │   │   └── index.ts
+│   │   │   └── projects.ts
+│   │   ├── stacks
+│   │   │   └── categories.ts
+│   │   │   └── index.ts
+│   │   │   └── stacks.ts
+│   │   ├── utils
+│   │   │   └── api-response.ts
+│   │   │   └── delay.ts
+│   │   │   └── generators.ts
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   ├── pages
+│   │   ├── blog
+│   │   │   └── index.vue
+│   │   │   └── [slug].vue
+│   │   ├── contact
+│   │   │   └── index.vue
+│   │   ├── experience
+│   │   │   └── index.vue
+│   │   ├── projects
+│   │   │   └── index.vue
+│   │   │   └── [slug].vue
+│   │   ├── stacks
+│   │   │   └── index.vue
+│   │   │   └── [slug].vue
+│   │   └── index.vue
+│   │   └── legal.vue
+│   │   └── privacy.vue
+│   │   └── terms.vue
+│   ├── services
+│   │   ├── api
+│   │   │   └── useBlog.ts
+│   │   │   └── useContact.ts
+│   │   │   └── useExperience.ts
+│   │   │   └── useMock.ts
+│   │   │   └── useProject.ts
+│   │   │   └── useStack.ts
+│   │   ├── plugins
+│   │   │   └── customDirectives.ts
+│   │   │   └── dayjs.ts
+│   │   │   └── meta.ts
+│   │   ├── utils
+│   │   │   └── debounce.ts
+│   │   │   └── helpers.ts
+│   │   │   └── httpClient.ts
+│   │   │   └── mock.ts
+│   │   │   └── validation.ts
+│   ├── store
+│   │   └── alert.ts
+│   │   └── loader.ts
+│   │   └── modal.ts
+│   │   └── navBar.ts
+│   ├── styles
+│   │   ├── abstracts
+│   │   │   └── functions.scss
+│   │   │   └── mixins.scss
+│   │   │   └── variables.scss
+│   │   ├── base
+│   │   │   └── animations.scss
+│   │   │   └── reset.scss
+│   │   │   └── typography.scss
+│   │   └── main.scss
+│   ├── types
+│   │   ├── config
+│   │   │   └── footer.ts
+│   │   │   └── navBar.ts
+│   │   │   └── routes.ts
+│   │   ├── feature
+│   │   │   └── blog.ts
+│   │   │   └── contact.ts
+│   │   │   └── experience.ts
+│   │   │   └── project.ts
+│   │   │   └── stacks.ts
+│   │   ├── services
+│   │   │   ├── plugins
+│   │   │   │   └── customDirectives.ts
+│   │   │   │   └── dayjs.ts
+│   │   │   │   └── meta.ts
+│   │   │   ├── utils
+│   │   │   │   └── debounce.ts
+│   │   │   │   └── helpers.ts
+│   │   │   │   └── httpClient.ts
+│   │   │   │   └── validation.ts
+│   │   ├── store
+│   │   │   └── alert.ts
+│   │   │   └── loader.ts
+│   │   │   └── modal.ts
+│   │   │   └── navBar.ts
+│   │   └── nuxt.d.ts
+└── .dockerignore
+└── .prettierrc
+└── app.vue
+└── Dockerfile
+└── error.vue
+└── eslint.config.mjs
+└── nuxt.config.ts
+└── package-lock.json
+└── package.json
+└── pnpm-lock.yaml
+└── pnpm-workspace.yaml
+└── tsconfig.eslint.json
+└── tsconfig.json

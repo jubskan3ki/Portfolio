@@ -1,0 +1,84 @@
+// functions.scss
+@use 'variables' as vars;
+@use 'sass:math';
+@use 'sass:color';
+@use 'sass:map';
+
+// Convertir px en rem
+@function rem($px) {
+	$base-font-size: 16px;
+	@return math.div($px, $base-font-size) * 1rem;
+}
+
+// Convertir px en em
+@function em($px, $context: 16px) {
+	@return math.div($px, $context) * 1em;
+}
+
+// Ajuster la luminosité d'une couleur
+@function adjust-color-brightness($color, $percentage) {
+	@if $percentage > 0 {
+		@return color.scale($color, $lightness: $percentage);
+	} @else {
+		@return color.scale($color, $lightness: $percentage);
+	}
+}
+
+// Créer une couleur avec transparence
+@function color-alpha($color, $alpha) {
+	@return rgba($color, $alpha);
+}
+
+// Génération de z-index
+$z-index-levels: (
+	dropdown: 100,
+	navbar: 200,
+	modal: 300,
+	tooltip: 400,
+);
+
+@function z($level) {
+	@if map.has-key($z-index-levels, $level) {
+		@return map.get($z-index-levels, $level);
+	}
+	@error "Unknown z-index level: #{$level}";
+}
+
+// Valider les couleurs
+@function validate-color($color) {
+	@if map.has-key(vars.$colors, $color) {
+		@return map.get(vars.$colors, $color);
+	} @else if type-of($color) == 'color' {
+		@return $color;
+	}
+	@error "Invalid color: #{$color}";
+}
+
+// Récupérer la taille de police
+@function font-size($size, $viewport: 'large') {
+	@if map.has-key(vars.$font-sizes, $viewport) {
+		$viewport-sizes: map.get(vars.$font-sizes, $viewport);
+		@if map.has-key($viewport-sizes, $size) {
+			@return map.get($viewport-sizes, $size);
+		}
+		@error "Unknown font size: #{$size}";
+	}
+	@error "Unknown viewport: #{$viewport}";
+}
+
+// Spacing utilitaire
+@function spacing($size) {
+	$spacing-map: (
+		xxs: vars.$spacing-xxs,
+		xs: vars.$spacing-xs,
+		sm: vars.$spacing-sm,
+		md: vars.$spacing-md,
+		lg: vars.$spacing-lg,
+		xl: vars.$spacing-xl,
+	);
+
+	@if map.has-key($spacing-map, $size) {
+		@return map.get($spacing-map, $size);
+	}
+	@error "Unknown spacing size: #{$size}";
+}

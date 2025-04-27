@@ -1,0 +1,148 @@
+// mixins.scss
+@use 'variables' as vars;
+@use 'sass:map';
+@use 'sass:math';
+@use 'sass:list';
+@use 'sass:color';
+
+// Mixin pour les media queries
+@mixin responsive($breakpoint) {
+	@if $breakpoint == mobile {
+		@media (max-width: vars.$breakpoint-mobile) {
+			@content;
+		}
+	} @else if $breakpoint == tablet {
+		@media (max-width: vars.$breakpoint-tablet) {
+			@content;
+		}
+	} @else if $breakpoint == tablet-only {
+		@media (min-width: (vars.$breakpoint-mobile + 1px)) and (max-width: vars.$breakpoint-tablet) {
+			@content;
+		}
+	} @else if $breakpoint == tablet-up {
+		@media (min-width: (vars.$breakpoint-mobile + 1px)) {
+			@content;
+		}
+	} @else if $breakpoint == desktop {
+		// Desktop et au-dessus
+		@media (min-width: (vars.$breakpoint-tablet + 1px)) {
+			@content;
+		}
+	} @else if $breakpoint == large-desktop {
+		// Large desktop et au-dessus
+		@media (min-width: (vars.$breakpoint-desktop + 1px)) {
+			@content;
+		}
+	}
+}
+// Mixin pour texte responsive
+@mixin responsive-text($property, $desktop-value, $tablet-value, $mobile-value) {
+	#{$property}: $desktop-value;
+
+	@include responsive(tablet) {
+		#{$property}: $tablet-value;
+	}
+
+	@include responsive(mobile) {
+		#{$property}: $mobile-value;
+	}
+}
+
+// Mixin pour flexbox
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $wrap: nowrap) {
+	display: flex;
+	flex-direction: $direction;
+	justify-content: $justify;
+	align-items: $align;
+	flex-wrap: $wrap;
+}
+
+// Mixin pour grid
+@mixin grid($columns: 1fr, $rows: auto, $gap: 0) {
+	display: grid;
+	grid-template-columns: $columns;
+	grid-template-rows: $rows;
+	gap: $gap;
+}
+
+// Mixin pour position absolue
+@mixin absolute($top: auto, $right: auto, $bottom: auto, $left: auto) {
+	position: absolute;
+	top: $top;
+	right: $right;
+	bottom: $bottom;
+	left: $left;
+}
+
+// Mixin pour transitions
+@mixin transition($properties...) {
+	$transition-list: ();
+	@each $property in $properties {
+		$transition-list: list.append($transition-list, $property 0.3s ease, comma);
+	}
+	transition: $transition-list;
+}
+
+// Mixin pour les boutons
+@mixin button-style($bg-color, $text-color, $hover-bg-color) {
+	background-color: $bg-color;
+	color: $text-color;
+	padding: vars.$spacing-sm vars.$spacing-md;
+	border-radius: 4px;
+	font-weight: 500;
+	cursor: pointer;
+	@include transition(background-color, transform);
+
+	&:hover {
+		background-color: $hover-bg-color;
+		transform: translateY(-2px);
+	}
+
+	&:active {
+		transform: translateY(0);
+	}
+}
+
+// Mixin pour les cartes
+@mixin card($padding: vars.$spacing-md, $radius: 8px, $bg-color: vars.$white) {
+	background-color: $bg-color;
+	border-radius: $radius;
+	padding: $padding;
+	box-shadow: vars.$box-shadow;
+}
+
+// Mixin pour image responsive
+@mixin responsive-image {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+// Mixin pour truncate text
+@mixin truncate($lines: 1) {
+	@if $lines == 1 {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	} @else {
+		display: -webkit-box;
+		-webkit-line-clamp: $lines;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+}
+
+// Mixin pour le mode sombre
+@mixin dark-mode {
+	@media (prefers-color-scheme: dark) {
+		@content;
+	}
+}
+
+// Mixin pour le focus accessible
+@mixin focus-outline {
+	&:focus-visible {
+		outline: 3px solid vars.$info-color;
+		outline-offset: 2px;
+	}
+}

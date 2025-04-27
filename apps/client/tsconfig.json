@@ -20,6 +20,6 @@
 		},
 		"types": ["nuxt", "nuxt/schema", "@nuxt/schema", "@nuxt/types", "@types/node"]
 	},
-	"include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "nuxt.config.ts"],
+	"include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "nuxt.config.ts", "error.vue"],
 	"exclude": ["node_modules", "dist"]
 }

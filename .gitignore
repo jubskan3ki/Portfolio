@@ -1,15 +1,32 @@
 # --- 🌐 Global --- #
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
+__MACOSX/
+*.bak
+*.tmp
 *.swp
 *.swo
 *.swn
+*.~lock
+ehthumbs.db
+*.log
+debug.log
+
+# --- 📦 Virtualenv & Pip --- #
+.venv/
+venv/
+env/
+.virtualenv/
+**/venv/
+**/env/
+**/.virtualenvs/
 
 # --- 🐍 Python & Django --- #
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+*.pot
 *.sqlite3
 db.sqlite3
 *.log
@@ -20,29 +37,38 @@ logs/
 *.pyd
 Pipfile.lock
 celerybeat-schedule
+logs/
+*.log
 staticfiles/
-.env
-*.env
 **/migrations/*
 **/media/*
+django.log
 
-# --- ⚡️ Node.js & Nuxt.js --- #
+# --- ⚡️ Node.js, Nuxt.js & Frontend --- #
 node_modules/
-.output/
 .npm/
 .npmrc
 .nuxtrc
 .nuxt/
+.output/
 output/
-.dist/
+dist/
+public/
+build/
+.next/
+out/
 .cache/
-yarn.lock
+.nitro/
+.eslintcache
+*.gz
 npm-debug.log*
 pnpm-debug.log*
 .eslintcache
 .next/
 *.log
 *.gz
+# Ignorer les assets statiques du front (ex: apps/client/public/assets/)
+**/public/assets/
 
 # --- 🐳 Docker --- #
 docker-compose.override.yml
@@ -52,6 +78,11 @@ docker/nginx/
 docker-logs/
 **/docker-entrypoint.sh
 
+# --- 🖥 IDEs & Editors --- #
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
 # --- 📦 Virtualenv & Pip --- #
 .venv/
 venv/
@@ -72,6 +103,7 @@ __MACOSX/
 ehthumbs.db
 .gitkeep
 
+
 # --- ⚙️ Coverage & Test Reports --- #
 .tox/
 .coverage
@@ -86,6 +118,7 @@ nosetests.xml
 secrets.json
 config.json
 .env
+.env.*
 .env.local
 .env.development
 .env.production

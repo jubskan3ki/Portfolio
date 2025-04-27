@@ -1,0 +1,215 @@
+// main.scss
+// Chaque module Sass est importé directement dans les fichiers qui en ont besoin
+@use 'abstracts/functions' as func;
+@use 'abstracts/mixins' as mix;
+@use 'abstracts/variables' as vars;
+@use 'base/animations' as anim;
+@use 'base/typography';
+@use 'base/reset';
+
+// Scrollbar styles
+*::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+	background-color: vars.$white-dark;
+	border-radius: vars.$border-radius-full;
+}
+
+*::-webkit-scrollbar-thumb {
+	background-color: vars.$primary-color;
+	border-radius: vars.$border-radius-full;
+
+	&:hover {
+		background-color: func.adjust-color-brightness(vars.$primary-color, -10%);
+	}
+}
+
+// Base styles
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	line-height: vars.$line-height-base;
+	letter-spacing: vars.$letter-spacing-base;
+	font-family: vars.$font-family;
+	color: vars.$black-light;
+	background-color: vars.$white;
+	overflow-x: hidden;
+}
+
+// Container utility
+.container {
+	width: 100%;
+	max-width: vars.$container-max-width;
+	padding-left: vars.$container-padding;
+	padding-right: vars.$container-padding;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+// Flex utilities
+.flex {
+	display: flex;
+
+	&--column {
+		flex-direction: column;
+	}
+
+	&--center {
+		justify-content: center;
+		align-items: center;
+	}
+
+	&--between {
+		justify-content: space-between;
+	}
+
+	&--wrap {
+		flex-wrap: wrap;
+	}
+}
+
+// Grid utilities
+.grid {
+	display: grid;
+
+	&--cols-2 {
+		grid-template-columns: repeat(2, 1fr);
+
+		@include mix.responsive(mobile) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&--cols-3 {
+		grid-template-columns: repeat(3, 1fr);
+
+		@include mix.responsive(tablet) {
+			grid-template-columns: repeat(2, 1fr);
+		}
+
+		@include mix.responsive(mobile) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&--gap {
+		gap: vars.$spacing-md;
+	}
+}
+
+// Visibility utilities
+.hidden {
+	display: none !important;
+}
+
+.visible {
+	opacity: 1;
+	visibility: visible;
+}
+
+.invisible {
+	opacity: 0;
+	visibility: hidden;
+}
+
+// Spacing utilities
+@each $name,
+	$value
+		in (
+			xxs: vars.$spacing-xxs,
+			xs: vars.$spacing-xs,
+			sm: vars.$spacing-sm,
+			md: vars.$spacing-md,
+			lg: vars.$spacing-lg,
+			xl: vars.$spacing-xl
+		)
+{
+	.mt-#{$name} {
+		margin-top: $value;
+	}
+	.mb-#{$name} {
+		margin-bottom: $value;
+	}
+	.ml-#{$name} {
+		margin-left: $value;
+	}
+	.mr-#{$name} {
+		margin-right: $value;
+	}
+	.mx-#{$name} {
+		margin-left: $value;
+		margin-right: $value;
+	}
+	.my-#{$name} {
+		margin-top: $value;
+		margin-bottom: $value;
+	}
+	.m-#{$name} {
+		margin: $value;
+	}
+
+	.pt-#{$name} {
+		padding-top: $value;
+	}
+	.pb-#{$name} {
+		padding-bottom: $value;
+	}
+	.pl-#{$name} {
+		padding-left: $value;
+	}
+	.pr-#{$name} {
+		padding-right: $value;
+	}
+	.px-#{$name} {
+		padding-left: $value;
+		padding-right: $value;
+	}
+	.py-#{$name} {
+		padding-top: $value;
+		padding-bottom: $value;
+	}
+	.p-#{$name} {
+		padding: $value;
+	}
+}
+
+// Text alignment utilities
+.text-center {
+	text-align: center;
+}
+.text-left {
+	text-align: left;
+}
+.text-right {
+	text-align: right;
+}
+
+// Font weight utilities
+.font-bold {
+	font-weight: 700;
+}
+.font-medium {
+	font-weight: 500;
+}
+.font-regular {
+	font-weight: 400;
+}
+.font-light {
+	font-weight: 300;
+}
+
+// Colors utilities
+@each $name, $value in vars.$colors {
+	// Fix pour les noms de couleur dans l'interpolation
+	.text-#{'' + $name} {
+		color: $value;
+	}
+	.bg-#{'' + $name} {
+		background-color: $value;
+	}
+}

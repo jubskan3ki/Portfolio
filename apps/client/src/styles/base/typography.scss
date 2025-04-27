@@ -1,0 +1,214 @@
+// typography.scss
+@use '../abstracts/mixins' as mix;
+@use '../abstracts/variables' as vars;
+@use '../abstracts/functions' as func;
+@use 'sass:map';
+
+// Base headings
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: vars.$font-family-heading;
+	font-weight: 700;
+	line-height: 1.2;
+	color: vars.$black;
+}
+
+h1 {
+	@include mix.responsive-text(
+		'font-size',
+		map.get(map.get(vars.$font-sizes, 'large'), 'h1'),
+		map.get(map.get(vars.$font-sizes, 'medium'), 'h1'),
+		map.get(map.get(vars.$font-sizes, 'small'), 'h1')
+	);
+}
+
+h2 {
+	@include mix.responsive-text(
+		'font-size',
+		map.get(map.get(vars.$font-sizes, 'large'), 'h2'),
+		map.get(map.get(vars.$font-sizes, 'medium'), 'h2'),
+		map.get(map.get(vars.$font-sizes, 'small'), 'h2')
+	);
+}
+
+h3 {
+	@include mix.responsive-text(
+		'font-size',
+		map.get(map.get(vars.$font-sizes, 'large'), 'h3'),
+		map.get(map.get(vars.$font-sizes, 'medium'), 'h3'),
+		map.get(map.get(vars.$font-sizes, 'small'), 'h3')
+	);
+}
+
+h4,
+th {
+	@include mix.responsive-text(
+		'font-size',
+		map.get(map.get(vars.$font-sizes, 'large'), 'h4'),
+		map.get(map.get(vars.$font-sizes, 'medium'), 'h4'),
+		map.get(map.get(vars.$font-sizes, 'small'), 'h4')
+	);
+}
+
+// Base text elements
+p,
+a,
+li,
+td {
+	@include mix.responsive-text(
+		'font-size',
+		map.get(map.get(vars.$font-sizes, 'large'), 'p'),
+		map.get(map.get(vars.$font-sizes, 'medium'), 'p'),
+		map.get(map.get(vars.$font-sizes, 'small'), 'p')
+	);
+}
+
+small {
+	// Fix: Put display before the mixin to fix mixed declarations
+	display: inline-block;
+	@include mix.responsive-text(
+		'font-size',
+		map.get(map.get(vars.$font-sizes, 'large'), 'small'),
+		map.get(map.get(vars.$font-sizes, 'medium'), 'small'),
+		map.get(map.get(vars.$font-sizes, 'small'), 'small')
+	);
+}
+
+// Links
+a {
+	color: vars.$primary-color;
+	@include mix.transition(color);
+
+	&:hover {
+		color: func.adjust-color-brightness(vars.$primary-color, -15%);
+	}
+}
+
+// Form elements
+input,
+textarea,
+select {
+	width: 100%;
+	border: none;
+	border-bottom: 1px solid vars.$gray;
+	background-color: transparent;
+
+	@include mix.transition(border-color);
+	@include mix.focus-outline;
+
+	&:focus {
+		outline: none;
+		border-color: vars.$primary-color;
+	}
+
+	@include mix.responsive-text(
+		'font-size',
+		map.get(map.get(vars.$font-sizes, 'large'), 'p'),
+		map.get(map.get(vars.$font-sizes, 'medium'), 'p'),
+		map.get(map.get(vars.$font-sizes, 'small'), 'p')
+	);
+}
+
+// Placeholder style
+::placeholder {
+	color: vars.$gray;
+	opacity: 0.7;
+}
+
+// Button styles
+button,
+.button {
+	@include mix.button-style(
+		vars.$primary-color,
+		vars.$white,
+		func.adjust-color-brightness(vars.$primary-color, -10%)
+	);
+
+	@include mix.responsive-text(
+		'font-size',
+		map.get(map.get(vars.$font-sizes, 'large'), 'p'),
+		map.get(map.get(vars.$font-sizes, 'medium'), 'p'),
+		map.get(map.get(vars.$font-sizes, 'small'), 'p')
+	);
+
+	&.button--secondary {
+		@include mix.button-style(
+			vars.$secondary-color,
+			vars.$white,
+			func.adjust-color-brightness(vars.$secondary-color, -10%)
+		);
+	}
+
+	&.button--outline {
+		background: transparent;
+		border: 2px solid vars.$primary-color;
+		color: vars.$primary-color;
+
+		&:hover {
+			background-color: vars.$primary-color;
+			color: vars.$white;
+		}
+	}
+
+	&.button--small {
+		padding: vars.$spacing-xs vars.$spacing-sm;
+		font-size: map.get(map.get(vars.$font-sizes, 'large'), 'small');
+	}
+
+	&.button--large {
+		padding: vars.$spacing-md vars.$spacing-lg;
+	}
+}
+
+// Lists
+
+ul {
+	list-style-type: disc;
+}
+
+ol {
+	list-style-type: decimal;
+}
+
+// Blockquote
+blockquote {
+	border-left: 4px solid vars.$primary-color;
+	font-style: italic;
+	color: vars.$gray-dark;
+}
+
+// Code blocks
+code {
+	font-family: monospace;
+	background-color: vars.$white-dark;
+	border-radius: vars.$border-radius-sm;
+	font-size: 0.9em;
+}
+
+pre {
+	background-color: vars.$white-dark;
+	border-radius: vars.$border-radius-md;
+	overflow-x: auto;
+
+	code {
+		background: none;
+		border-radius: 0;
+	}
+}
+
+// Text utilities
+.text-truncate {
+	@include mix.truncate(1);
+}
+
+.text-truncate-2 {
+	@include mix.truncate(2);
+}
+
+.text-truncate-3 {
+	@include mix.truncate(3);
+}
