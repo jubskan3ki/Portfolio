@@ -30,13 +30,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 44px;
-		height: 44px;
+		width: 40px;
+		height: 40px;
 		border-radius: 50%;
 		background-color: func.color-alpha(vars.$white, 0.1);
 		backdrop-filter: blur(5px);
 		transition: all 0.3s ease;
 		z-index: func.z('navbar') + 20;
+		padding: 0;
+		cursor: pointer;
 
 		@include mix.responsive(tablet-up) {
 			display: none;

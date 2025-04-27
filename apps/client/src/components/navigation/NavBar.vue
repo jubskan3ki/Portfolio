@@ -82,12 +82,18 @@
 	.navbar {
 		padding: 0;
 		transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+		width: 100%;
 
 		.container_large {
 			width: 100%;
+			max-width: 100%;
 			padding: 0 vars.$spacing-xl;
 			margin-left: auto;
 			margin-right: auto;
+
+			@include mix.responsive(mobile) {
+				padding: 0 vars.$spacing-md;
+			}
 		}
 
 		&.navbar--scrolled {
@@ -110,10 +116,18 @@
 			justify-content: space-between;
 			height: 75px;
 			transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+			@include mix.responsive(mobile) {
+				height: 65px;
+			}
 		}
 
 		&--scrolled &__container {
 			height: 75px;
+
+			@include mix.responsive(mobile) {
+				height: 65px;
+			}
 		}
 
 		&__logo {
@@ -124,6 +138,10 @@
 
 			&:hover {
 				transform: translateY(-2px);
+			}
+
+			@include mix.responsive(mobile) {
+				margin-right: 0;
 			}
 		}
 

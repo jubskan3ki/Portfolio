@@ -18,11 +18,10 @@
 				>
 					<BaseIcon :name="social.icon" :size="20" />
 				</a>
-				<BaseButton to="/contact" variant="primary" size="small"> Contact </BaseButton>
 			</template>
 		</NavBar>
 
-		<!-- Mobile Menu Toggle - maintenant masqué par CSS plutôt que ClientOnly -->
+		<!-- Mobile Menu Toggle -->
 		<MobileMenuToggle :is-active="isMobileMenuOpen" class="header__mobile-toggle" @toggle="toggleMobileMenu" />
 
 		<!-- Menu Mobile -->
@@ -31,7 +30,6 @@
 </template>
 
 <script setup lang="ts">
-	import BaseButton from '@/components/base/BaseButton.vue';
 	import BaseIcon from '@/components/base/BaseIcon.vue';
 	import MobileMenu from '@/components/navigation/MobileMenu.vue';
 	import MobileMenuToggle from '@/components/navigation/MobileMenuToggle.vue';
@@ -79,16 +77,12 @@
 
 	// Ajouter les écouteurs d'événements uniquement côté client
 	onMounted(() => {
-		if (typeof document !== 'undefined') {
-			document.addEventListener('keydown', handleEscKey);
-		}
+		document.addEventListener('keydown', handleEscKey);
 	});
 
 	// Nettoyer les écouteurs d'événements
 	onBeforeUnmount(() => {
-		if (typeof document !== 'undefined') {
-			document.removeEventListener('keydown', handleEscKey);
-		}
+		document.removeEventListener('keydown', handleEscKey);
 	});
 </script>
 
@@ -100,6 +94,7 @@
 	.header {
 		position: relative;
 		z-index: func.z('navbar');
+		width: 100%;
 
 		&__social-link {
 			display: flex;
@@ -125,12 +120,16 @@
 			position: fixed;
 			top: 15px;
 			right: 15px;
-			// Le rendre visible uniquement sur mobile via CSS
-			display: none; // Par défaut caché
+			z-index: func.z('navbar') + 30;
+			display: none;
 
 			@include mix.responsive(mobile) {
-				display: flex; // Visible uniquement sur mobile
+				display: flex;
 			}
+		}
+
+		&__mobile-menu {
+			z-index: func.z('navbar') + 20;
 		}
 	}
 </style>
