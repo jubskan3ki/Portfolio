@@ -33,10 +33,10 @@ CACHE_KEYS_SET = "api_cache_keys"
 
 # TTL differencies par endpoint (en secondes)
 CACHE_TTL_MAP: dict[str, int] = {
-    "/api/stacks/": 600,        # 10 min
-    "/api/experiences/": 600,    # 10 min
-    "/api/projects/": 600,       # 10 min
-    "/api/articles/": 300,       # 5 min
+    "/api/stacks/": 600,  # 10 min
+    "/api/experiences/": 600,  # 10 min
+    "/api/projects/": 600,  # 10 min
+    "/api/articles/": 300,  # 5 min
 }
 
 
@@ -123,18 +123,10 @@ class ConditionalCacheMiddleware(MiddlewareMixin):
 
     def __init__(self, get_response=None):
         super().__init__(get_response)
-        self.cacheable_urls = getattr(
-            settings, "API_CACHE_URLS", DEFAULT_CACHEABLE_URLS
-        )
-        self.non_cacheable_urls = getattr(
-            settings, "API_NON_CACHE_URLS", DEFAULT_NON_CACHEABLE_URLS
-        )
-        self.cache_timeout = getattr(
-            settings, "API_CACHE_TIMEOUT", DEFAULT_CACHE_TIMEOUT
-        )
-        self.ttl_map = getattr(
-            settings, "API_CACHE_TTL_MAP", CACHE_TTL_MAP
-        )
+        self.cacheable_urls = getattr(settings, "API_CACHE_URLS", DEFAULT_CACHEABLE_URLS)
+        self.non_cacheable_urls = getattr(settings, "API_NON_CACHE_URLS", DEFAULT_NON_CACHEABLE_URLS)
+        self.cache_timeout = getattr(settings, "API_CACHE_TIMEOUT", DEFAULT_CACHE_TIMEOUT)
+        self.ttl_map = getattr(settings, "API_CACHE_TTL_MAP", CACHE_TTL_MAP)
 
     def _get_ttl(self, path: str) -> int:
         """Return endpoint-specific TTL, or default."""
@@ -231,9 +223,7 @@ class ConditionalCacheMiddleware(MiddlewareMixin):
         cache_key = self._get_cache_key(request)
         cache_data = {
             "content": response.content,
-            "content_type": response.get(
-                "Content-Type", "application/json"
-            ),
+            "content_type": response.get("Content-Type", "application/json"),
             "status_code": response.status_code,
             "etag": etag,
         }

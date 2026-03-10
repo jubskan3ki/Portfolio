@@ -108,10 +108,7 @@ class WebhookDeliveryViewSet(ReadOnlyAPIViewSet):
 
     def get_queryset(self):
         """Retourne les livraisons des webhooks de l'utilisateur."""
-        return (
-            WebhookDelivery.objects.select_related("webhook")
-            .filter(webhook__created_by=self.request.user)
-        )
+        return WebhookDelivery.objects.select_related("webhook").filter(webhook__created_by=self.request.user)
 
     @action(detail=True, methods=["post"])
     def retry(self, _request: Request, _pk: int | None = None) -> Response:

@@ -140,9 +140,7 @@ def validate_image_upload(value):
     """Valide qu'un fichier uploade est une image avec extension autorisee."""
     ext = Path(value.name).suffix.lower()
     if ext not in IMAGE_EXTENSIONS:
-        raise ValidationError(
-            f"Extension '{ext}' non autorisee. Extensions acceptees: {', '.join(IMAGE_EXTENSIONS)}"
-        )
+        raise ValidationError(f"Extension '{ext}' non autorisee. Extensions acceptees: {', '.join(IMAGE_EXTENSIONS)}")
 
 
 # Plages IP privees/reservees interdites pour les webhooks (anti-SSRF)
