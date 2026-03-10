@@ -1,0 +1,74 @@
+// Gradient Utilities (Flat Style - Minimal Gradients)
+@use '../abstracts/variables' as vars;
+
+// Text gradients - KEEP for important headings (Hero, Section headings)
+.text-gradient {
+    background: linear-gradient(135deg, vars.$primary-color, vars.$secondary-color);
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    &--reverse {
+        background: linear-gradient(135deg, vars.$secondary-color, vars.$primary-color);
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    &--animated {
+        background: linear-gradient(90deg, vars.$primary-color, vars.$secondary-color, vars.$primary-color);
+        background-size: 200% auto;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradient-shift 3s linear infinite;
+    }
+}
+
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% center;
+    }
+
+    100% {
+        background-position: 200% center;
+    }
+}
+
+// Gradient overlay - KEEP for image readability
+.gradient-overlay {
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    &--bottom::after {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+    }
+
+    &--top::after {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+    }
+}
+
+// Shimmer effect - KEEP for skeleton/loading states
+.shimmer {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        transform: translateX(-100%);
+        animation: shimmer 2s infinite;
+    }
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}

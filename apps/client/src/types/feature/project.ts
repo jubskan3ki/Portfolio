@@ -1,91 +1,146 @@
-// types/feature/project.ts
+// Project Types
+import type { PaginatedResponse } from '@/types/api/common';
 
-/**
- * Types pour les fonctionnalités de projets
- */
+// Note: Import PaginatedResponse directly from @/types/api/common
 
-// Type pour un projet
+// Type pour un projet (liste)
 export interface Project {
-	id: string;
-	title: string;
-	slug: string;
-	description: string;
-	longDescription?: string;
-	image: string;
-	category: string;
-	technologies: string[] | readonly string[];
-	date: string;
-	features?: string[] | readonly string[];
-	links?: {
-		demo?: string;
-		github?: string;
-		documentation?: string;
-	};
+    id: number;
+    title: string;
+    slug: string;
+    description: string;
+    image: string;
+    category: string;
+    status: string;
+    technologies: string[];
+    date: string;
+    views: number;
 }
 
-// Type pour une catégorie de projets
+// Type pour un projet (detail)
+export interface ProjectDetail extends Project {
+    longDescription: string;
+    features: string[];
+    links: {
+        demo?: string;
+        github?: string;
+        documentation?: string;
+    };
+}
+
+// Type pour une categorie de projets
 export interface ProjectCategory {
-	id: string;
-	name: string;
-	description?: string;
-	count?: number;
-	slug?: string;
+    id: number;
+    name: string;
+    description: string;
+    slug: string;
+    count: number;
 }
 
 // Type pour un statut de projet
 export interface ProjectStatus {
-	id: string;
-	name: 'Terminé' | 'En cours' | 'Planifié' | 'Archivé';
-	color?: string;
+    id: number;
+    name: string;
+    description: string;
 }
 
-// Type pour les images de projet
-export interface ProjectImage {
-	id: string;
-	projectId: string;
-	url: string;
-	alt?: string;
-	sortOrder?: number;
-	isFeatured?: boolean;
-}
+// API Response Types
+export type ProjectsResponse = PaginatedResponse<Project>;
+export type ProjectCategoriesResponse = PaginatedResponse<ProjectCategory>;
+export type ProjectStatusesResponse = PaginatedResponse<ProjectStatus>;
 
-// Type pour un témoignage lié à un projet
-export interface ProjectTestimonial {
-	id: string;
-	projectId: string;
-	author: string;
-	role?: string;
-	company?: string;
-	avatar?: string;
-	content: string;
-	rating?: number;
-}
-
-// Type pour les statistiques d'un projet
 export interface ProjectStats {
-	viewCount: number;
-	likeCount: number;
-	commentCount: number;
-	shareCount: number;
+    totalProjects: number;
+    projectsByCategory: Array<{ category: string; count: number }>;
+    projectsByStatus: Array<{ status: string; count: number }>;
+    averageProjectsPerYear: number;
+    totalViews: number;
+    mostViewedProjects: Array<{ title: string; views: number }>;
+    projectsByYear: Array<{ year: number; count: number }>;
+    projectsByMonth: Array<{ month: string; count: number }>;
 }
 
-// Type pour les paramètres de filtre de projets
-export interface ProjectFilterParams {
-	category?: string;
-	status?: string;
-	technologies?: string[];
-	search?: string;
-	sortBy?: 'date' | 'title' | 'views';
-	sortDirection?: 'asc' | 'desc';
+// API Request Types (Create/Update)
+
+export interface ProjectCreateData {
+    title: string;
+    description: string;
+    longDescription?: string;
+    image?: string;
+    category: string | number;
+    status?: string | number;
+    technologies?: string[];
+    features?: string[];
+    links?: {
+        demo?: string;
+        github?: string;
+        documentation?: string;
+    };
 }
 
-// Type pour la réponse paginée de projets
-export interface ProjectPaginatedResponse {
-	data: Project[];
-	pagination: {
-		total: number;
-		page: number;
-		limit: number;
-		totalPages: number;
-	};
+export type ProjectUpdateData = Partial<ProjectCreateData>;
+
+export interface ProjectCategoryCreateData {
+    name: string;
+    slug?: string;
+    description?: string;
+}
+
+export type ProjectCategoryUpdateData = Partial<ProjectCategoryCreateData>;
+
+export interface ProjectStatusCreateData {
+    name: string;
+    description?: string;
+}
+
+export type ProjectStatusUpdateData = Partial<ProjectStatusCreateData>;
+
+// Props pour ProjectCard
+export interface ProjectCardProps {
+    project: Project;
+    featured?: boolean;
+    hoverable?: boolean;
+    flat?: boolean;
+    descriptionLength?: number;
+    maxTechnologies?: number;
+    customClass?: string;
+}
+
+// Filter option pour ProjectList
+interface ProjectFilterOption {
+    label: string;
+    value: string;
+}
+
+// Props pour ProjectList
+export interface ProjectListProps {
+    projects?: Project[];
+    layout?: 'grid' | 'list' | 'compact';
+    featuredProjects?: Array<string | number>;
+    showFilters?: boolean;
+    categoryFilters?: ProjectFilterOption[];
+    filterLabel?: string;
+    allFilterLabel?: string;
+    loading?: boolean;
+    error?: string;
+    retryable?: boolean;
+    retryText?: string;
+    loadingText?: string;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    currentPage?: number;
+    totalPages?: number;
+    showPagination?: boolean;
+    cardHoverable?: boolean;
+    cardFlat?: boolean;
+    cardBordered?: boolean;
+    descriptionLength?: number;
+    maxTechnologies?: number;
+    customClass?: string;
+}
+
+// Props pour ProjectCarousel
+export interface ProjectCarouselProps {
+    limit?: number;
+    autoplay?: boolean;
 }

@@ -1,6 +1,7 @@
-# --- 🌐 Global --- #
+# --- Global --- #
 .DS_Store
 Thumbs.db
+ehthumbs.db
 __MACOSX/
 *.bak
 *.tmp
@@ -8,11 +9,22 @@ __MACOSX/
 *.swo
 *.swn
 *.~lock
-ehthumbs.db
-*.log
-debug.log
 
-# --- 📦 Virtualenv & Pip --- #
+# --- Python & Django --- #
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pot
+*.sqlite3
+db.sqlite3
+Pipfile.lock
+celerybeat-schedule
+staticfiles/
+**/migrations/*
+**/media/*
+
+# --- Virtualenv & Pip --- #
 .venv/
 venv/
 env/
@@ -21,30 +33,7 @@ env/
 **/env/
 **/.virtualenvs/
 
-# --- 🐍 Python & Django --- #
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.pot
-*.sqlite3
-db.sqlite3
-*.log
-logs/
-*.pot
-*.pyc
-*.pyo
-*.pyd
-Pipfile.lock
-celerybeat-schedule
-logs/
-*.log
-staticfiles/
-**/migrations/*
-**/media/*
-django.log
-
-# --- ⚡️ Node.js, Nuxt.js & Frontend --- #
+# --- Node.js, Nuxt & Frontend --- #
 node_modules/
 .npm/
 .npmrc
@@ -53,24 +42,19 @@ node_modules/
 .output/
 output/
 dist/
-public/
 build/
 .next/
 out/
 .cache/
 .nitro/
 .eslintcache
-*.gz
 npm-debug.log*
 pnpm-debug.log*
-.eslintcache
-.next/
-*.log
-*.gz
-# Ignorer les assets statiques du front (ex: apps/client/public/assets/)
+yarn-debug.log*
+yarn-error.log*
 **/public/assets/
 
-# --- 🐳 Docker --- #
+# --- Docker --- #
 docker-compose.override.yml
 docker-compose.override.yaml
 docker/db-data/
@@ -78,33 +62,13 @@ docker/nginx/
 docker-logs/
 **/docker-entrypoint.sh
 
-# --- 🖥 IDEs & Editors --- #
+# --- IDEs & Editors --- #
 .vscode/
 .idea/
 *.sublime-workspace
 *.sublime-project
-# --- 📦 Virtualenv & Pip --- #
-.venv/
-venv/
-env/
-.virtualenv/
-**/venv/
-**/env/
-**/.virtualenvs/
 
-# --- ⚙️ System Files --- #
-__MACOSX/
-*.bak
-*.swp
-*.swo
-*.swn
-*.tmp
-*.~lock
-ehthumbs.db
-.gitkeep
-
-
-# --- ⚙️ Coverage & Test Reports --- #
+# --- Coverage & Test Reports --- #
 .tox/
 .coverage
 coverage.xml
@@ -114,44 +78,35 @@ junit.xml
 .pytest_cache/
 nosetests.xml
 
-# --- 🔐 Secrets & Credentials --- #
+# --- Secrets & Credentials --- #
 secrets.json
-config.json
 .env
 .env.*
+!.env.example
+!.env.production.example
 .env.local
 .env.development
 .env.production
 .env.test
 .env.staging
 
-# --- 🌍 Logs & Debugging --- #
+# --- Logs --- #
 *.log
 logs/
 debug.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 django.log
 
-# --- 🚀 Build & Deployment --- #
-dist/
-public/
-build/
-output/
-.nuxt/
-.nitro/
-.next/
-out/
-.cache/
-
-# --- 🖥 IDEs & Editors --- #
-.vscode/
-.idea/
-*.sublime-workspace
-*.sublime-project
-
-# --- 🔗 Dependencies & Lockfiles --- #
+# --- Dependencies Lockfiles (non-pnpm) --- #
 package-lock.json
 yarn.lock
+
+# --- Claude Code (AI tooling) --- #
+CLAUDE.md
+CONTEXT/
+claude.config.json
+.claude/
+
+# --- Lighthouse CI (results only) --- #
+**/.lighthouseci/
+lhr-*.html
+lhr-*.json

@@ -1,148 +1,487 @@
-// mixins.scss
-@use 'variables' as vars;
-@use 'sass:map';
-@use 'sass:math';
+// Mixins utilitaires
+
 @use 'sass:list';
-@use 'sass:color';
+@use 'variables' as vars;
+@use 'functions' as func;
 
-// Mixin pour les media queries
+// Responsive - Consistent breakpoint handling
+// Device ranges: mobile (0-767), tablet (768-1023), desktop (1024-1279), wide (1280+)
+//
+// Available options:
+// - mobile: 0-767px (mobile only)
+// - mobile-up: 768px+ (tablet and above)
+// - tablet: 0-1023px (mobile + tablet) - for backwards compatibility
+// - tablet-only: 768-1023px (tablet only)
+// - tablet-up / desktop: 1024px+ (desktop and above)
+// - desktop-only: 1024-1279px (desktop only)
+// - wide: 1280px+ (wide screens)
 @mixin responsive($breakpoint) {
-	@if $breakpoint == mobile {
-		@media (max-width: vars.$breakpoint-mobile) {
-			@content;
-		}
-	} @else if $breakpoint == tablet {
-		@media (max-width: vars.$breakpoint-tablet) {
-			@content;
-		}
-	} @else if $breakpoint == tablet-only {
-		@media (min-width: (vars.$breakpoint-mobile + 1px)) and (max-width: vars.$breakpoint-tablet) {
-			@content;
-		}
-	} @else if $breakpoint == tablet-up {
-		@media (min-width: (vars.$breakpoint-mobile + 1px)) {
-			@content;
-		}
-	} @else if $breakpoint == desktop {
-		// Desktop et au-dessus
-		@media (min-width: (vars.$breakpoint-tablet + 1px)) {
-			@content;
-		}
-	} @else if $breakpoint == large-desktop {
-		// Large desktop et au-dessus
-		@media (min-width: (vars.$breakpoint-desktop + 1px)) {
-			@content;
-		}
-	}
-}
-// Mixin pour texte responsive
-@mixin responsive-text($property, $desktop-value, $tablet-value, $mobile-value) {
-	#{$property}: $desktop-value;
-
-	@include responsive(tablet) {
-		#{$property}: $tablet-value;
-	}
-
-	@include responsive(mobile) {
-		#{$property}: $mobile-value;
-	}
-}
-
-// Mixin pour flexbox
-@mixin flex($direction: row, $justify: flex-start, $align: stretch, $wrap: nowrap) {
-	display: flex;
-	flex-direction: $direction;
-	justify-content: $justify;
-	align-items: $align;
-	flex-wrap: $wrap;
+    @if $breakpoint == mobile {
+        // Target: 0 - 767px (mobile only)
+        @media (max-width: vars.$breakpoint-mobile) {
+            @content;
+        }
+    } @else if $breakpoint == mobile-up {
+        // Target: 768px+ (tablet and above)
+        @media (min-width: (vars.$breakpoint-mobile + 1px)) {
+            @content;
+        }
+    } @else if $breakpoint == tablet {
+        // Target: 0 - 1023px (mobile + tablet) - backwards compatible
+        @media (max-width: vars.$breakpoint-tablet) {
+            @content;
+        }
+    } @else if $breakpoint == tablet-only {
+        // Target: 768px - 1023px (tablet only)
+        @media (min-width: (vars.$breakpoint-mobile + 1px)) and (max-width: vars.$breakpoint-tablet) {
+            @content;
+        }
+    } @else if $breakpoint == tablet-up {
+        // Target: 1024px+ (desktop and above) - same as desktop
+        @media (min-width: (vars.$breakpoint-tablet + 1px)) {
+            @content;
+        }
+    } @else if $breakpoint == desktop {
+        // Target: 1024px+ (desktop and above)
+        @media (min-width: (vars.$breakpoint-tablet + 1px)) {
+            @content;
+        }
+    } @else if $breakpoint == desktop-only {
+        // Target: 1024px - 1279px (desktop only, not wide)
+        @media (min-width: (vars.$breakpoint-tablet + 1px)) and (max-width: vars.$breakpoint-desktop) {
+            @content;
+        }
+    } @else if $breakpoint == wide {
+        // Target: 1280px+ (wide screens)
+        @media (min-width: (vars.$breakpoint-desktop + 1px)) {
+            @content;
+        }
+    }
 }
 
-// Mixin pour grid
-@mixin grid($columns: 1fr, $rows: auto, $gap: 0) {
-	display: grid;
-	grid-template-columns: $columns;
-	grid-template-rows: $rows;
-	gap: $gap;
+// Flexbox
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $gap: 0) {
+    display: flex;
+    flex-direction: $direction;
+    justify-content: $justify;
+    align-items: $align;
+
+    @if $gap != 0 {
+        gap: $gap;
+    }
 }
 
-// Mixin pour position absolue
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+// Grid
+@mixin grid($columns: 1fr, $gap: 0) {
+    display: grid;
+    grid-template-columns: $columns;
+
+    @if $gap != 0 {
+        gap: $gap;
+    }
+}
+
+// Positionnement
 @mixin absolute($top: auto, $right: auto, $bottom: auto, $left: auto) {
-	position: absolute;
-	top: $top;
-	right: $right;
-	bottom: $bottom;
-	left: $left;
+    position: absolute;
+    top: $top;
+    right: $right;
+    bottom: $bottom;
+    left: $left;
 }
 
-// Mixin pour transitions
+@mixin absolute-fill {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+// Transitions
 @mixin transition($properties...) {
-	$transition-list: ();
-	@each $property in $properties {
-		$transition-list: list.append($transition-list, $property 0.3s ease, comma);
-	}
-	transition: $transition-list;
+    $value: ();
+
+    @each $prop in $properties {
+        $value: list.append($value, $prop 300ms ease-out, comma);
+    }
+
+    transition: $value;
 }
 
-// Mixin pour les boutons
-@mixin button-style($bg-color, $text-color, $hover-bg-color) {
-	background-color: $bg-color;
-	color: $text-color;
-	padding: vars.$spacing-sm vars.$spacing-md;
-	border-radius: 4px;
-	font-weight: 500;
-	cursor: pointer;
-	@include transition(background-color, transform);
-
-	&:hover {
-		background-color: $hover-bg-color;
-		transform: translateY(-2px);
-	}
-
-	&:active {
-		transform: translateY(0);
-	}
+// Carte
+@mixin card($padding: vars.$spacing-xxxxs) {
+    background-color: vars.$white;
+    border-radius: vars.$border-radius-lg;
+    padding: $padding;
+    box-shadow: vars.$box-shadow;
 }
 
-// Mixin pour les cartes
-@mixin card($padding: vars.$spacing-md, $radius: 8px, $bg-color: vars.$white) {
-	background-color: $bg-color;
-	border-radius: $radius;
-	padding: $padding;
-	box-shadow: vars.$box-shadow;
-}
-
-// Mixin pour image responsive
-@mixin responsive-image {
-	max-width: 100%;
-	height: auto;
-	display: block;
-}
-
-// Mixin pour truncate text
+// Troncature de texte
 @mixin truncate($lines: 1) {
-	@if $lines == 1 {
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	} @else {
-		display: -webkit-box;
-		-webkit-line-clamp: $lines;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
+    @if $lines == 1 {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    } @else {
+        display: -webkit-box;
+        -webkit-line-clamp: $lines;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 }
 
-// Mixin pour le mode sombre
-@mixin dark-mode {
-	@media (prefers-color-scheme: dark) {
-		@content;
-	}
+// Form field chrome (label, required indicator, messages)
+// Use inside a BEM block to generate &__label, &__required, &__message
+@mixin form-field-chrome {
+    &__label {
+        display: block;
+        margin-bottom: vars.$spacing-xxs;
+        font-weight: vars.$font-weight-medium;
+        color: vars.$text-primary;
+    }
+
+    &__required {
+        color: vars.$danger-color;
+        margin-left: 2px;
+    }
+
+    &__message {
+        margin-top: vars.$spacing-xxs;
+
+        &--error {
+            color: vars.$danger-color;
+        }
+
+        &--success {
+            color: vars.$success-color;
+        }
+
+        &--hint {
+            color: vars.$text-muted;
+        }
+    }
 }
 
-// Mixin pour le focus accessible
+// Form field state (error/success) — for text inputs (input, select, textarea)
+@mixin form-field-state($field-selector, $color) {
+    #{$field-selector} {
+        border-color: $color;
+        background-color: func.color-alpha($color, 0.03);
+
+        &:focus {
+            box-shadow: 0 0 0 3px func.color-alpha($color, 0.12);
+        }
+    }
+}
+
+// Disabled state — unified across all form controls
+@mixin form-disabled($opacity: 0.7) {
+    opacity: $opacity;
+    cursor: not-allowed;
+}
+
+// Accessibilite
 @mixin focus-outline {
-	&:focus-visible {
-		outline: 3px solid vars.$info-color;
-		outline-offset: 2px;
-	}
+    &:focus-visible {
+        outline: 2px solid vars.$primary-color;
+        outline-offset: 2px;
+    }
+}
+
+@mixin visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+// Boutons
+@mixin button-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: vars.$font-weight-medium;
+    border-radius: vars.$border-radius-md;
+    cursor: pointer;
+    transition: all 200ms ease-out;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+@mixin button-style($bg-color, $text-color, $hover-color) {
+    background-color: $bg-color;
+    color: $text-color;
+    padding: vars.$spacing-xxxxs vars.$spacing-xxxxs;
+    border-radius: vars.$border-radius-md;
+
+    &:hover:not(:disabled) {
+        background-color: $hover-color;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $bg-color;
+        outline-offset: 2px;
+    }
+}
+
+// Image responsive
+@mixin responsive-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+// Masquer scrollbar
+@mixin hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+// Glassmorphism
+@mixin glass($blur: vars.$glass-blur, $bg: vars.$glass-bg-light) {
+    background: $bg;
+    backdrop-filter: blur($blur);
+    border: 1px solid vars.$glass-border;
+    box-shadow: vars.$glass-shadow;
+}
+
+@mixin glass-card($blur: vars.$glass-blur, $padding: vars.$spacing-xxxxs) {
+    @include glass($blur);
+
+    padding: $padding;
+    border-radius: vars.$border-radius-lg;
+}
+
+@mixin glass-panel {
+    @include glass(vars.$glass-blur-lg, vars.$glass-bg-heavy);
+
+    border-radius: vars.$border-radius-xl;
+}
+
+@mixin glass-dark($blur: vars.$glass-blur) {
+    background: vars.$glass-bg-dark;
+    backdrop-filter: blur($blur);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+// Pattern de points
+@mixin dots-pattern($color: vars.$dots-color, $size: vars.$dots-size, $spacing: vars.$dots-spacing) {
+    background-image: radial-gradient($color $size, transparent $size);
+    background-size: $spacing $spacing;
+}
+
+@mixin dots-overlay($color: vars.$dots-color, $size: vars.$dots-size, $spacing: vars.$dots-spacing) {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    @include dots-pattern($color, $size, $spacing);
+
+    pointer-events: none;
+    z-index: 0;
+}
+
+@mixin dots-animated($duration: 20s) {
+    @include dots-pattern;
+
+    animation: dots-float $duration linear infinite;
+}
+
+// Tilt et parallax
+@mixin tilt-card {
+    transform-style: preserve-3d;
+    perspective: vars.$tilt-perspective;
+    transition: vars.$tilt-transition;
+    will-change: transform;
+
+    &:hover {
+        transform: scale(vars.$tilt-scale-hover);
+    }
+}
+
+@mixin tilt-content($depth: vars.$parallax-depth-1) {
+    transform: translateZ($depth);
+    transition: transform 0.3s ease-out;
+}
+
+@mixin parallax-container {
+    position: relative;
+    transform-style: preserve-3d;
+    perspective: vars.$tilt-perspective-lg;
+}
+
+@mixin parallax-layer($depth: 0) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: translateZ($depth);
+}
+
+@mixin float-animation($duration: 6s, $distance: 10px) {
+    animation: float-up-down $duration ease-in-out infinite;
+
+    @keyframes float-up-down {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-$distance);
+        }
+    }
+}
+
+// Admin
+@mixin admin-card($padding: vars.$spacing-xxs) {
+    background: vars.$admin-card-bg;
+    border-radius: vars.$border-radius-lg;
+    padding: $padding;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid vars.$admin-border;
+}
+
+@mixin admin-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: vars.$spacing-xxxxs;
+    padding: vars.$spacing-xxxxs vars.$spacing-xxxxs;
+    color: vars.$admin-sidebar-text;
+    border-radius: vars.$border-radius-md;
+    transition: background-color 0.2s ease-out;
+
+    &:hover {
+        background-color: vars.$admin-sidebar-hover;
+    }
+
+    &.active {
+        background-color: vars.$admin-sidebar-active;
+    }
+}
+
+@mixin admin-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: vars.$spacing-md;
+
+    @include responsive(mobile) {
+        grid-template-columns: 1fr;
+    }
+}
+
+@mixin admin-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: vars.$spacing-lg;
+    gap: vars.$spacing-md;
+    flex-wrap: wrap;
+}
+
+@mixin admin-page-title {
+    margin-bottom: vars.$spacing-xxxs;
+}
+
+@mixin admin-page-subtitle {
+    color: vars.$text-muted;
+}
+
+@mixin cell-title-row {
+    display: flex;
+    align-items: center;
+    gap: vars.$spacing-xs;
+}
+
+@mixin cell-title-image($size: 44px) {
+    width: $size;
+    height: $size;
+    border-radius: vars.$border-radius-md;
+    object-fit: cover;
+    border: 1px solid vars.$admin-border;
+    transition: transform vars.$transition-fast;
+}
+
+@mixin cell-title-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+}
+
+@mixin cell-title-text {
+    font-weight: vars.$font-weight-medium;
+    color: vars.$text-primary;
+}
+
+@mixin cell-title-slug {
+    color: vars.$text-muted;
+    font-family: monospace;
+}
+
+@mixin admin-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+        padding: vars.$spacing-xxxxs vars.$spacing-xxxxs;
+        text-align: left;
+        border-bottom: 1px solid vars.$admin-border;
+    }
+
+    th {
+        font-weight: vars.$font-weight-semibold;
+        color: vars.$text-secondary;
+        text-transform: uppercase;
+        letter-spacing: vars.$letter-spacing-wide;
+    }
+
+    tbody tr:hover {
+        background-color: vars.$bg-secondary;
+    }
+}
+
+// Card hover lift effect (used across card components)
+@mixin card-hover-lift($distance: -4px, $shadow: vars.$box-shadow-medium) {
+    transition:
+        transform vars.$transition-base,
+        box-shadow vars.$transition-base;
+
+    &:hover {
+        transform: translateY($distance);
+        box-shadow: $shadow;
+    }
+}
+
+// Staggered fade-in animation (uses --index CSS var per item)
+@mixin staggered-fade-in($delay-per-item: 60ms, $duration: 0.5s) {
+    opacity: 0;
+    animation: fadeInUp $duration ease forwards;
+    animation-delay: calc(var(--index, 0) * $delay-per-item);
 }

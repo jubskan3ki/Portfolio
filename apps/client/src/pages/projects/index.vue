@@ -1,391 +1,472 @@
 <template>
-	<div class="projects-page">
-		<!-- En-tête des projets avec le composant Hero -->
-		<Hero
-			title="Mes Projets"
-			description="Découvrez les projets sur lesquels j'ai travaillé, des applications web aux solutions DevOps."
-			variant="primary"
-			:show-title-underline="true"
-		/>
+    <div class="projects-page">
+        <!-- Hero -->
+        <Hero
+            title="Mes Projets"
+            description="Explorez mes réalisations, des applications web innovantes aux solutions DevOps robustes."
+            badge="Portfolio"
+            variant="primary"
+        >
+            <template #stats>
+                <StatCard
+                    v-for="stat in statsCards"
+                    :key="stat.label"
+                    :value="stat.value"
+                    :label="stat.label"
+                    :icon="stat.icon"
+                    variant="primary"
+                />
+            </template>
+        </Hero>
 
-		<Section class="projects-section">
-			<div class="container">
-				<!-- Filtres de projets améliorés mais simples -->
-				<div class="projects-filters">
-					<div class="projects-filters__row flex">
-						<!-- Filtre par catégorie -->
-						<div class="projects-filters__select">
-							<BaseSelect v-model="selectedCategory" :options="categoryOptions" label="Catégorie" />
-						</div>
+        <!-- Main -->
+        <Main variant="default" size="large">
+            <!-- Filters -->
+            <div class="projects-filters">
+                <!-- Search -->
+                <div class="projects-filters__search">
+                    <SearchInput
+                        v-model="searchQuery"
+                        placeholder="Rechercher un projet..."
+                        shortcut="P"
+                        @clear="searchQuery = ''"
+                    />
+                </div>
 
-						<!-- Filtre par technologie (corrigé) -->
-						<div class="projects-filters__select">
-							<BaseSelect v-model="selectedTechnology" :options="techOptions" label="Technologie" />
-						</div>
+                <!-- Category Select -->
+                <BaseSelect
+                    v-model="selectedCategory"
+                    :options="categoryOptions"
+                    placeholder="Catégorie"
+                    class="projects-filters__select"
+                />
 
-						<!-- Actions de filtres -->
-						<div class="projects-filters__actions">
-							<BaseButton
-								v-if="hasActiveFilters"
-								variant="secondary"
-								class="projects-filters__reset-btn"
-								@click="resetFilters"
-							>
-								<BaseIcon name="x-circle" :size="16" class="mr-xs" />
-								Réinitialiser les filtres
-							</BaseButton>
-						</div>
-					</div>
+                <!-- Technologies MultiSelect -->
+                <BaseMultiSelect
+                    v-model="selectedTechs"
+                    :options="techOptions"
+                    placeholder="Technologies..."
+                    class="projects-filters__multiselect"
+                />
 
-					<!-- Affichage des filtres actifs -->
-					<div v-if="hasActiveFilters" class="projects-filters__active">
-						<div class="active-filters-label">Filtres actifs:</div>
-						<div class="active-filters-tags">
-							<div v-if="selectedCategory" class="active-filter">
-								<span>{{ getCategoryName(selectedCategory) }}</span>
-								<BaseIcon
-									name="close"
-									:size="14"
-									class="active-filter__remove"
-									@click="selectedCategory = ''"
-								/>
-							</div>
-							<div v-if="selectedTechnology" class="active-filter">
-								<span>{{ getTechName(selectedTechnology) }}</span>
-								<BaseIcon
-									name="close"
-									:size="14"
-									class="active-filter__remove"
-									@click="selectedTechnology = ''"
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
+                <!-- Reset -->
+                <button v-if="hasActiveFilters" type="button" class="projects-filters__reset" @click="resetFilters">
+                    <BaseIcon name="x" :size="14" />
+                    Réinitialiser
+                </button>
+            </div>
 
-				<!-- État de chargement -->
-				<div v-if="isLoading" class="projects-loader flex flex--center">
-					<Spinner type="circle" size="large" label="Chargement des projets..." />
-				</div>
+            <!-- Content -->
+            <ClientOnly>
+                <!-- Loading -->
+                <div v-if="isLoading && !hasProjects" class="projects-grid">
+                    <div v-for="i in 6" :key="i" class="project-skeleton">
+                        <div class="project-skeleton__image"></div>
+                        <div class="project-skeleton__body">
+                            <div class="project-skeleton__title"></div>
+                            <div class="project-skeleton__text"></div>
+                            <div class="project-skeleton__tags">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <div class="project-skeleton__footer"></div>
+                        </div>
+                    </div>
+                </div>
 
-				<!-- État vide -->
-				<div v-else-if="filteredProjects.length === 0" class="projects-empty flex flex--center">
-					<EmptyState
-						title="Aucun projet trouvé"
-						description="Aucun projet ne correspond aux critères de filtrage actuels."
-						action-text="Réinitialiser les filtres"
-						@action="resetFilters"
-					/>
-				</div>
+                <!-- Empty -->
+                <EmptyState
+                    v-else-if="!hasProjects"
+                    icon="folder-open"
+                    :title="hasActiveFilters ? 'Aucun projet trouvé' : 'Aucun projet disponible'"
+                    :description="
+                        hasActiveFilters ? 'Essayez de modifier vos filtres' : 'Les projets seront bientôt disponibles.'
+                    "
+                    :action-text="hasActiveFilters ? 'Réinitialiser' : undefined"
+                    @action="resetFilters"
+                />
 
-				<!-- Mode liste -->
-				<div v-else class="projects-list">
-					<ProjectList :projects="filteredProjects" class="animate-fade-in-up" />
-				</div>
-			</div>
+                <!-- Grid -->
+                <div v-else class="projects-grid">
+                    <ProjectCard
+                        v-for="(project, index) in allProjects"
+                        :key="project.id"
+                        :project="project"
+                        :style="{ '--i': index }"
+                        class="projects-grid__item"
+                    />
+                </div>
 
-			<!-- Pagination -->
-			<Pagination
-				v-if="totalPages > 1"
-				:current-page="currentPage"
-				:total-pages="totalPages"
-				class="projects-pagination mt-xl"
-				@page-change="handlePageChange"
-			/>
-		</Section>
+                <!-- Load More -->
+                <div v-if="hasProjects && hasNextPage" ref="targetRef" class="projects-more">
+                    <button v-if="!isFetchingNextPage" type="button" class="projects-more__btn" @click="loadMore">
+                        Voir plus
+                        <BaseIcon name="chevron-down" :size="16" />
+                    </button>
+                    <Spinner v-else size="sm" />
+                </div>
 
-		<!-- Call-to-action -->
-		<CTA
-			title="Vous avez un projet en tête ?"
-			description="Je serais ravi de discuter de vos idées et de voir comment je peux vous aider à concrétiser votre vision."
-			type="card"
-			variant="light"
-			:primary-button="{
-				label: 'Me contacter',
-				to: ROUTES.CONTACT,
-				variant: 'secondary',
-				icon: 'mail',
-				size: 'large',
-			}"
-			:secondary-button="{
-				label: 'Voir mon parcours',
-				to: ROUTES.EXPERIENCE,
-				variant: 'outline',
-				icon: 'experience',
-				size: 'large',
-			}"
-		/>
-	</div>
+                <template #fallback>
+                    <div class="projects-grid">
+                        <div v-for="i in 6" :key="i" class="project-skeleton">
+                            <div class="project-skeleton__image"></div>
+                            <div class="project-skeleton__body">
+                                <div class="project-skeleton__title"></div>
+                                <div class="project-skeleton__text"></div>
+                                <div class="project-skeleton__tags">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <div class="project-skeleton__footer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </ClientOnly>
+        </Main>
+
+        <!-- CTA -->
+        <CTA
+            title="Un projet en tête ?"
+            description="Discutons de vos idées et voyons comment transformer votre vision en réalité."
+            variant="primary"
+            :primary-button="{
+                label: 'Me contacter',
+                to: ROUTES.CONTACT.path,
+                icon: 'mail',
+            }"
+            :secondary-button="{
+                label: 'Mes compétences',
+                to: ROUTES.STACKS.path,
+            }"
+        />
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseButton from '@/components/base/BaseButton.vue';
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import BaseSelect from '@/components/base/BaseSelect.vue';
-	import ProjectList from '@/components/feature/projects/ProjectList.vue';
-	import EmptyState from '@/components/feedback/EmptyState.vue';
-	import Section from '@/components/layouts/Section.vue';
-	import Spinner from '@/components/loaders/Spinner.vue';
-	import Pagination from '@/components/navigation/Pagination.vue';
-	import CTA from '@/components/ui/CTA.vue';
-	import Hero from '@/components/ui/Hero.vue';
-	import { ROUTES } from '@/config/routes';
-	import { useMock } from '@/services/api/useMock';
-	import type { Project, ProjectCategory } from '@/types/feature/project';
-	import type { Stack } from '@/types/feature/stacks';
-	import { computed, onMounted, ref, watch } from 'vue';
+    import { computed } from 'vue';
 
-	// Récupération des données depuis le service mock
-	const { isLoading, projects, projectCategories, stacks, fetchProjects, fetchProjectCategories, fetchStacks } =
-		useMock();
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import BaseMultiSelect from '@/components/base/BaseMultiSelect.vue';
+    import BaseSelect from '@/components/base/BaseSelect.vue';
+    import StatCard from '@/components/feature/home/StatCard.vue';
+    import ProjectCard from '@/components/feature/projects/ProjectCard.vue';
+    import EmptyState from '@/components/feedback/EmptyState.vue';
+    import Main from '@/components/layouts/Main.vue';
+    import Spinner from '@/components/loaders/Spinner.vue';
+    import CTA from '@/components/ui/CTA.vue';
+    import Hero from '@/components/ui/Hero.vue';
+    import SearchInput from '@/components/ui/search/SearchInput.vue';
+    import { useFilters } from '@/composables/data/useFilters';
+    import { useInfiniteScroll } from '@/composables/data/useInfiniteScroll';
+    import { useProjectsSeo } from '@/composables/seo/useSeo';
+    import { filterPresets } from '@/config/filterPresets';
+    import { ROUTES } from '@/config/routes';
+    import { useInfiniteProjects, useProjectCategories, useProjectStats } from '@/services/api/modules/projects';
 
-	// État local
-	const selectedCategory = ref('');
-	const selectedTechnology = ref('');
-	const currentPage = ref(1);
-	const itemsPerPage = 6;
+    import type { SelectOption } from '@/types/components/base';
+    import type { Project, ProjectCategory } from '@/types/feature/project';
 
-	// Options pour les sélecteurs
-	const categoryOptions = computed(() => {
-		return [
-			...projectCategories.value.map((category) => ({
-				value: category.id,
-				label: category.name,
-			})),
-		];
-	});
+    // SEO
+    useProjectsSeo();
 
-	// Utilisons les stacks à la place de projectTechnologies
-	const techOptions = computed(() => {
-		const baseOption = [{ value: '', label: 'Toutes les technologies' }];
+    // Filters with URL sync
+    const { filters, hasActiveFilters, reset, setFilter } = useFilters(filterPresets.projects);
 
-		if (!stacks.value || stacks.value.length === 0) {
-			return baseOption;
-		}
+    // Computed aliases for template compatibility
+    const searchQuery = computed({
+        get: () => filters.value.search,
+        set: (val: string) => setFilter('search', val),
+    });
 
-		return [
-			...baseOption,
-			...stacks.value.map((tech: Stack) => ({
-				value: tech.name, // Utiliser le nom au lieu de l'id
-				label: tech.name,
-			})),
-		];
-	});
+    const selectedCategory = computed({
+        get: () => filters.value.category,
+        set: (val: string) => setFilter('category', val),
+    });
 
-	// Fonction pour vérifier si une technologie est présente dans les technologies d'un projet
-	const hasTechnology = (project: Project, techName: string): boolean => {
-		if (!project.technologies) return false;
+    const selectedTechs = computed({
+        get: () => filters.value.technologies,
+        set: (val: string[]) => setFilter('technologies', val),
+    });
 
-		// Vérifier si technologies est un tableau
-		if (Array.isArray(project.technologies)) {
-			// Effectuer une recherche insensible à la casse
-			return project.technologies.some(
-				(tech) => typeof tech === 'string' && tech.toLowerCase() === techName.toLowerCase()
-			);
-		}
+    // API filters (adapt technologies array to comma-separated string)
+    const apiFilters = computed(() => ({
+        category: filters.value.category || undefined,
+        search: filters.value.search || undefined,
+        technologies: filters.value.technologies.length ? filters.value.technologies.join(',') : undefined,
+        ordering: filters.value.ordering,
+    }));
 
-		return false;
-	};
+    // Data fetching
+    const {
+        data: projectsData,
+        isLoading,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage,
+    } = useInfiniteProjects(apiFilters, 9);
 
-	// Projets filtrés (tous, avant pagination)
-	const filteredProjectsAll = computed(() => {
-		let result = [...projects.value];
+    const { data: categoriesData } = useProjectCategories();
+    const { data: statsData } = useProjectStats();
 
-		// Filtre par catégorie
-		if (selectedCategory.value) {
-			result = result.filter((project) => project.category === selectedCategory.value);
-		}
+    // Computed
+    const allProjects = computed(() => {
+        if (!projectsData.value?.pages) {
+            return [];
+        }
+        return projectsData.value.pages.flatMap((page) => page?.data ?? []).filter((p): p is Project => p != null);
+    });
 
-		// Filtre par technologie (corrigé)
-		if (selectedTechnology.value) {
-			result = result.filter((project) => hasTechnology(project, selectedTechnology.value));
-		}
+    const hasProjects = computed(() => allProjects.value.length > 0);
 
-		return result;
-	});
+    // Category options
+    const categoryOptions = computed<SelectOption[]>(() => {
+        const cats = (categoriesData.value?.data ?? []) as ProjectCategory[];
+        return [
+            { value: '', label: 'Toutes les catégories' },
+            ...cats.filter((c) => c.count > 0).map((c) => ({ value: String(c.id), label: c.name })),
+        ];
+    });
 
-	// Projets filtrés avec pagination
-	const filteredProjects = computed(() => {
-		const start = (currentPage.value - 1) * itemsPerPage;
-		const end = start + itemsPerPage;
-		return filteredProjectsAll.value.slice(start, end);
-	});
+    // Technology options (extracted from all projects)
+    const techOptions = computed(() => {
+        const techSet = new Set<string>();
+        for (const project of allProjects.value) {
+            for (const tech of project.technologies ?? []) {
+                techSet.add(tech);
+            }
+        }
+        return Array.from(techSet)
+            .sort()
+            .map((tech) => ({ value: tech, label: tech }));
+    });
 
-	// Total des pages pour la pagination
-	const totalPages = computed(() => {
-		return Math.ceil(filteredProjectsAll.value.length / itemsPerPage) || 1;
-	});
+    // Stats
+    const statsCards = computed(() => {
+        const stats = statsData.value;
+        return [
+            { value: stats?.totalProjects ?? 0, label: 'Projets', icon: 'folder' },
+            { value: stats?.projectsByCategory?.length ?? 0, label: 'Catégories', icon: 'layers' },
+            { value: stats?.totalViews ?? 0, label: 'Vues', icon: 'eye' },
+        ];
+    });
 
-	// Vérifier si des filtres sont actifs
-	const hasActiveFilters = computed(() => selectedCategory.value !== '' || selectedTechnology.value !== '');
+    // Methods
+    const resetFilters = () => reset();
 
-	// Fonctions utilitaires
-	const getCategoryName = (categoryId: string) => {
-		const category = projectCategories.value?.find((c: ProjectCategory) => c.id === categoryId);
-		return category ? category.name : categoryId;
-	};
+    const loadMore = () => {
+        if (hasNextPage.value && !isFetchingNextPage.value) {
+            fetchNextPage();
+        }
+    };
 
-	const getTechName = (techName: string) => {
-		// Comme on utilise le nom directement, on peut simplement le retourner
-		return techName;
-	};
-
-	// Méthodes
-	const resetFilters = () => {
-		selectedCategory.value = '';
-		selectedTechnology.value = '';
-		currentPage.value = 1;
-	};
-
-	const handlePageChange = (page: number) => {
-		currentPage.value = page;
-		// Remonter en haut de la section des projets
-		const projectsSection = document.querySelector('.projects-section');
-		if (projectsSection) {
-			projectsSection.scrollIntoView({ behavior: 'smooth' });
-		}
-	};
-
-	// Réinitialiser la page lorsque les filtres changent
-	watch([selectedCategory, selectedTechnology], () => {
-		currentPage.value = 1;
-	});
-
-	// Chargement initial des données
-	onMounted(async () => {
-		try {
-			// Charger les projets et catégories
-			await Promise.all([
-				fetchProjects(),
-				fetchProjectCategories(),
-				fetchStacks(), // Charger les stacks pour le filtre de technologies
-			]);
-		} catch (error) {
-			console.error('Error loading data:', error);
-		}
-	});
+    const canAutoLoad = computed(() => hasNextPage.value && !isFetchingNextPage.value);
+    const { targetRef } = useInfiniteScroll(loadMore, { enabled: canAutoLoad });
+    void targetRef; // Used as template ref
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.projects-page {
-		position: relative;
-	}
+    .projects-page {
+        min-height: 100vh;
+    }
 
-	.projects-section {
-		min-height: 60vh;
-		padding: vars.$spacing-xl 0;
-		background-color: func.color-alpha(vars.$white-dark, 0.6);
-	}
+    /* Filters */
+    .projects-filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: vars.$spacing-md;
+        margin-bottom: vars.$spacing-xl;
+        padding: vars.$spacing-md;
+        background: vars.$white;
+        border: 1px solid vars.$border-color;
+        border-radius: vars.$border-radius-lg;
 
-	.projects-filters {
-		margin-bottom: vars.$spacing-xl;
-		padding: vars.$spacing-md;
-		background-color: vars.$white;
-		border-radius: vars.$border-radius-md;
-		box-shadow: vars.$box-shadow-small;
+        @include mix.responsive(tablet) {
+            flex-direction: column;
+            align-items: stretch;
+        }
 
-		&__row {
-			display: flex;
-			gap: vars.$spacing-md;
-			align-items: center;
+        &__search {
+            flex: 1;
+            min-width: 200px;
 
-			@include mix.responsive(mobile) {
-				flex-direction: column;
-				align-items: stretch;
-			}
-		}
+            @include mix.responsive(tablet) {
+                width: 100%;
+            }
+        }
 
-		&__select {
-			flex: 1;
-		}
+        &__select {
+            width: 250px;
+            margin-bottom: 0;
 
-		&__actions {
-			@include mix.responsive(mobile) {
-				margin-top: vars.$spacing-sm;
-			}
-		}
+            @include mix.responsive(tablet) {
+                width: 100%;
+            }
+        }
 
-		&__reset-btn {
-			@include mix.transition(transform);
+        &__multiselect {
+            width: 250px;
+            margin-bottom: 0;
 
-			&:hover {
-				transform: translateY(-2px);
-			}
-		}
+            @include mix.responsive(tablet) {
+                width: 100%;
+            }
+        }
 
-		&__active {
-			margin-top: vars.$spacing-md;
-			padding-top: vars.$spacing-sm;
-			border-top: 1px solid func.color-alpha(vars.$gray, 0.2);
-			display: flex;
-			align-items: center;
+        &__reset {
+            display: inline-flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+            padding: vars.$spacing-xs vars.$spacing-md;
+            font-size: vars.$font-size-sm;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$danger-color;
+            background: fn.color-alpha(vars.$danger-color, 0.08);
+            border: 1px solid fn.color-alpha(vars.$danger-color, 0.2);
+            border-radius: vars.$border-radius-md;
+            cursor: pointer;
+            transition: all 0.2s ease;
 
-			@include mix.responsive(mobile) {
-				flex-direction: column;
-				align-items: flex-start;
-			}
+            &:hover {
+                background: fn.color-alpha(vars.$danger-color, 0.15);
+            }
 
-			.active-filters-label {
-				font-weight: 500;
-				margin-right: vars.$spacing-md;
-				color: vars.$gray-dark;
+            @include mix.responsive(tablet) {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    }
 
-				@include mix.responsive(mobile) {
-					margin-bottom: vars.$spacing-xs;
-				}
-			}
+    /* Grid */
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: vars.$spacing-lg;
 
-			.active-filters-tags {
-				display: flex;
-				flex-wrap: wrap;
-				gap: vars.$spacing-xs;
-			}
+        @include mix.responsive(tablet) {
+            grid-template-columns: repeat(2, 1fr);
+        }
 
-			.active-filter {
-				display: flex;
-				align-items: center;
-				padding: 4px 10px;
-				background-color: func.color-alpha(vars.$primary-color, 0.1);
-				border-radius: vars.$border-radius-full;
-				color: vars.$primary-color;
+        @include mix.responsive(mobile) {
+            grid-template-columns: 1fr;
+        }
 
-				&__remove {
-					margin-left: vars.$spacing-xs;
-					cursor: pointer;
-					opacity: 0.7;
+        &__item {
+            animation: fadeUp 0.4s ease forwards;
+            animation-delay: calc(var(--i, 0) * 50ms);
+            opacity: 0;
+        }
+    }
 
-					&:hover {
-						opacity: 1;
-					}
-				}
-			}
-		}
-	}
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-	.projects-loader,
-	.projects-empty {
-		min-height: 300px;
-		background-color: func.color-alpha(vars.$white, 0.7);
-		border-radius: vars.$border-radius-lg;
-		box-shadow: vars.$box-shadow-small;
-	}
+    /* Skeleton */
+    .project-skeleton {
+        background: vars.$white;
+        border: 1px solid vars.$border-color;
+        border-radius: vars.$border-radius-lg;
+        overflow: hidden;
 
-	// Styles de la pagination centrée
-	.projects-pagination {
-		display: flex;
-		justify-content: center;
-	}
+        &__image {
+            aspect-ratio: 16 / 10;
+            background: linear-gradient(90deg, vars.$gray-light 25%, vars.$white-dark 50%, vars.$gray-light 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
 
-	// Animations
-	.animate-fade-in {
-		animation: fadeIn vars.$transition-base forwards;
-	}
+        &__body {
+            padding: vars.$spacing-md;
+        }
 
-	.animate-fade-in-up {
-		animation: fadeInUp vars.$transition-base forwards;
-	}
+        &__title {
+            width: 75%;
+            height: 18px;
+            margin-bottom: vars.$spacing-xs;
+            background: vars.$gray-light;
+            border-radius: vars.$border-radius-sm;
+        }
+
+        &__text {
+            width: 100%;
+            height: 14px;
+            margin-bottom: vars.$spacing-sm;
+            background: vars.$gray-light;
+            border-radius: vars.$border-radius-sm;
+        }
+
+        &__tags {
+            display: flex;
+            gap: vars.$spacing-xxs;
+            margin-bottom: vars.$spacing-sm;
+
+            span {
+                width: 48px;
+                height: 20px;
+                background: vars.$bg-secondary;
+                border-radius: vars.$border-radius-sm;
+            }
+        }
+
+        &__footer {
+            height: 16px;
+            width: 60px;
+            margin-top: vars.$spacing-sm;
+            padding-top: vars.$spacing-sm;
+            border-top: 1px solid vars.$border-color;
+            background: vars.$gray-light;
+            border-radius: vars.$border-radius-sm;
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    /* Load More */
+    .projects-more {
+        display: flex;
+        justify-content: center;
+        margin-top: vars.$spacing-xl;
+
+        &__btn {
+            display: inline-flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            padding: vars.$spacing-sm vars.$spacing-xl;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$primary-color;
+            background: vars.$white;
+            border: 1px solid vars.$border-color;
+            border-radius: vars.$border-radius-full;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                border-color: vars.$primary-color;
+                box-shadow: 0 4px 12px fn.color-alpha(vars.$primary-color, 0.15);
+            }
+        }
+    }
 </style>

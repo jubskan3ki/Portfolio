@@ -1,17 +1,16 @@
-"""
-Routes API pour la gestion des technologies et stacks.
-"""
+"""URLs pour le module Stacks."""
 
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views.stack import StackViewSet
+from .views import CategoryViewSet, ResourceViewSet, StackViewSet, StatsView
 
 router = DefaultRouter()
-router.register(r"", StackViewSet, basename="stacks")
+router.register(r"categories", CategoryViewSet, basename="category")
+router.register(r"resources", ResourceViewSet, basename="resource")
+router.register(r"", StackViewSet, basename="stack")
 
 urlpatterns = [
+    path("stats/", StatsView.as_view(), name="stack-stats"),
     path("", include(router.urls)),
-    path("category/<str:category>/", StackViewSet.as_view({"get": "by_category"}), name="stacks-by-category"),
-    path("most-proficient/", StackViewSet.as_view({"get": "most_proficient"}), name="stacks-most-proficient"),
 ]

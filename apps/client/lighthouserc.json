@@ -1,0 +1,79 @@
+{
+    "ci": {
+        "collect": {
+            "numberOfRuns": 1,
+            "startServerCommand": "pnpm preview:lhci",
+            "startServerReadyPattern": "Listening",
+            "url": [
+                "http://127.0.0.1:4173/",
+                "http://127.0.0.1:4173/blog",
+                "http://127.0.0.1:4173/projects",
+                "http://127.0.0.1:4173/stacks",
+                "http://127.0.0.1:4173/experience",
+                "http://127.0.0.1:4173/contact",
+                "http://127.0.0.1:4173/legal",
+                "http://127.0.0.1:4173/privacy",
+                "http://127.0.0.1:4173/terms",
+                "http://127.0.0.1:4173/blog/error",
+                "http://127.0.0.1:4173/blog/cursor-windsurf-zed-ide-augmentes-ia",
+                "http://127.0.0.1:4173/stacks/vue-js",
+                "http://127.0.0.1:4173/projects/portfolio"
+            ]
+        },
+        "assert": {
+            "assertions": {
+                "categories:performance": [
+                    "warn",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:accessibility": [
+                    "warn",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:best-practices": [
+                    "warn",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "categories:seo": [
+                    "warn",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "first-contentful-paint": [
+                    "warn",
+                    {
+                        "maxNumericValue": 3100
+                    }
+                ],
+                "largest-contentful-paint": [
+                    "warn",
+                    {
+                        "maxNumericValue": 3700
+                    }
+                ],
+                "cumulative-layout-shift": [
+                    "warn",
+                    {
+                        "maxNumericValue": 0.1
+                    }
+                ],
+                "interactive": [
+                    "warn",
+                    {
+                        "maxNumericValue": 3800
+                    }
+                ]
+            }
+        },
+        "upload": {
+            "target": "temporary-public-storage"
+        }
+    }
+}

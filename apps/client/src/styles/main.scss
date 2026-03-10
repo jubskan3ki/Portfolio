@@ -1,215 +1,240 @@
 // main.scss
-// Chaque module Sass est importé directement dans les fichiers qui en ont besoin
 @use 'abstracts/functions' as func;
 @use 'abstracts/mixins' as mix;
 @use 'abstracts/variables' as vars;
-@use 'base/animations' as anim;
+@use 'base/animations';
 @use 'base/typography';
 @use 'base/reset';
 
+// Visual effects
+
 // Scrollbar styles
-*::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
+%scrollbar-base {
+    scrollbar-width: thin;
+    scrollbar-color: func.color-alpha(vars.$primary-color, 0.3) transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: func.color-alpha(vars.$primary-color, 0.25);
+        border-radius: vars.$border-radius-full;
+        transition: background 0.2s ease;
+
+        &:hover {
+            background: func.color-alpha(vars.$primary-color, 0.45);
+        }
+
+        &:active {
+            background: func.color-alpha(vars.$primary-color, 0.6);
+        }
+    }
 }
 
-*::-webkit-scrollbar-track {
-	background-color: vars.$white-dark;
-	border-radius: vars.$border-radius-full;
+html {
+    @extend %scrollbar-base;
+
+    @media (prefers-reduced-motion: no-preference) {
+        scroll-behavior: smooth;
+    }
 }
 
-*::-webkit-scrollbar-thumb {
-	background-color: vars.$primary-color;
-	border-radius: vars.$border-radius-full;
+.scrollable,
+.overflow-auto,
+.overflow-y-auto,
+.overflow-x-auto,
+pre,
+code,
+textarea {
+    @extend %scrollbar-base;
+}
 
-	&:hover {
-		background-color: func.adjust-color-brightness(vars.$primary-color, -10%);
-	}
+body::-webkit-scrollbar {
+    width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+    background: func.color-alpha(vars.$bg-secondary, 0.5);
+}
+
+body::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        180deg,
+        func.color-alpha(vars.$primary-color, 0.35) 0%,
+        func.color-alpha(vars.$primary-dark, 0.35) 100%
+    );
+    border-radius: vars.$border-radius-full;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+
+    &:hover {
+        background: linear-gradient(
+            180deg,
+            func.color-alpha(vars.$primary-color, 0.55) 0%,
+            func.color-alpha(vars.$primary-dark, 0.55) 100%
+        );
+        background-clip: padding-box;
+    }
 }
 
 // Base styles
-html {
-	scroll-behavior: smooth;
-}
-
 body {
-	line-height: vars.$line-height-base;
-	letter-spacing: vars.$letter-spacing-base;
-	font-family: vars.$font-family;
-	color: vars.$black-light;
-	background-color: vars.$white;
-	overflow-x: hidden;
+    line-height: vars.$line-height-base;
+    letter-spacing: vars.$letter-spacing-base;
+    font-family: vars.$font-family;
+    color: vars.$black-light;
+    background-color: vars.$white;
+    overflow-x: hidden;
 }
 
-// Container utility
+// Container — widely used
 .container {
-	width: 100%;
-	max-width: vars.$container-max-width;
-	padding-left: vars.$container-padding;
-	padding-right: vars.$container-padding;
-	margin-left: auto;
-	margin-right: auto;
+    width: 100%;
+    max-width: vars.$container-max-width;
+    padding-left: vars.$container-padding;
+    padding-right: vars.$container-padding;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-// Flex utilities
-.flex {
-	display: flex;
-
-	&--column {
-		flex-direction: column;
-	}
-
-	&--center {
-		justify-content: center;
-		align-items: center;
-	}
-
-	&--between {
-		justify-content: space-between;
-	}
-
-	&--wrap {
-		flex-wrap: wrap;
-	}
+// Only spacing utilities actually used in the codebase
+.mr-xs {
+    margin-right: vars.$spacing-xs;
 }
 
-// Grid utilities
-.grid {
-	display: grid;
-
-	&--cols-2 {
-		grid-template-columns: repeat(2, 1fr);
-
-		@include mix.responsive(mobile) {
-			grid-template-columns: 1fr;
-		}
-	}
-
-	&--cols-3 {
-		grid-template-columns: repeat(3, 1fr);
-
-		@include mix.responsive(tablet) {
-			grid-template-columns: repeat(2, 1fr);
-		}
-
-		@include mix.responsive(mobile) {
-			grid-template-columns: 1fr;
-		}
-	}
-
-	&--gap {
-		gap: vars.$spacing-md;
-	}
+.mt-md {
+    margin-top: vars.$spacing-md;
 }
 
-// Visibility utilities
-.hidden {
-	display: none !important;
+// Page transitions
+.page-enter-active,
+.page-leave-active {
+    transition: all 300ms ease-out;
 }
 
-.visible {
-	opacity: 1;
-	visibility: visible;
+.page-enter-from {
+    opacity: 0;
+    transform: translateY(20px);
 }
 
-.invisible {
-	opacity: 0;
-	visibility: hidden;
+.page-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
 }
 
-// Spacing utilities
-@each $name,
-	$value
-		in (
-			xxs: vars.$spacing-xxs,
-			xs: vars.$spacing-xs,
-			sm: vars.$spacing-sm,
-			md: vars.$spacing-md,
-			lg: vars.$spacing-lg,
-			xl: vars.$spacing-xl
-		)
-{
-	.mt-#{$name} {
-		margin-top: $value;
-	}
-	.mb-#{$name} {
-		margin-bottom: $value;
-	}
-	.ml-#{$name} {
-		margin-left: $value;
-	}
-	.mr-#{$name} {
-		margin-right: $value;
-	}
-	.mx-#{$name} {
-		margin-left: $value;
-		margin-right: $value;
-	}
-	.my-#{$name} {
-		margin-top: $value;
-		margin-bottom: $value;
-	}
-	.m-#{$name} {
-		margin: $value;
-	}
-
-	.pt-#{$name} {
-		padding-top: $value;
-	}
-	.pb-#{$name} {
-		padding-bottom: $value;
-	}
-	.pl-#{$name} {
-		padding-left: $value;
-	}
-	.pr-#{$name} {
-		padding-right: $value;
-	}
-	.px-#{$name} {
-		padding-left: $value;
-		padding-right: $value;
-	}
-	.py-#{$name} {
-		padding-top: $value;
-		padding-bottom: $value;
-	}
-	.p-#{$name} {
-		padding: $value;
-	}
+// Layout transition
+.layout-enter-active,
+.layout-leave-active {
+    transition: all 300ms ease-out;
 }
 
-// Text alignment utilities
-.text-center {
-	text-align: center;
-}
-.text-left {
-	text-align: left;
-}
-.text-right {
-	text-align: right;
+.layout-enter-from,
+.layout-leave-to {
+    opacity: 0;
 }
 
-// Font weight utilities
-.font-bold {
-	font-weight: 700;
-}
-.font-medium {
-	font-weight: 500;
-}
-.font-regular {
-	font-weight: 400;
-}
-.font-light {
-	font-weight: 300;
+// Fade transition
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 200ms ease-in-out;
 }
 
-// Colors utilities
-@each $name, $value in vars.$colors {
-	// Fix pour les noms de couleur dans l'interpolation
-	.text-#{'' + $name} {
-		color: $value;
-	}
-	.bg-#{'' + $name} {
-		background-color: $value;
-	}
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+// Slide up transition
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: all 300ms ease-out;
+}
+
+.slide-up-enter-from {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.slide-up-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+// Scale transition
+.scale-enter-active,
+.scale-leave-active {
+    transition: all 200ms ease-out;
+}
+
+.scale-enter-from,
+.scale-leave-to {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+// Skeleton loading
+%skeleton-base {
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    border-radius: vars.$border-radius-md;
+}
+
+.skeleton {
+    @extend %skeleton-base;
+}
+
+@keyframes skeleton-pulse {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+// Focus styles
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+// Screen reader only
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+// Text truncation
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }

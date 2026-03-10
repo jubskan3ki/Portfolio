@@ -1,18 +1,75 @@
+"""Celery configuration for portfolio project."""
+
+import logging
 import os
 
 from celery import Celery
+from celery.signals import setup_logging, task_failure, worker_ready
+from django.db import connection
+from kombu.exceptions import ConnectionError as KombuConnectionError
+from kombu.exceptions import OperationalError
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 app = Celery("portfolio")
-
-# Tu récupères la conf du settings.py Django
 app.config_from_object("django.conf:settings", namespace="CELERY")
-
-# Autodiscover les tasks dans tes apps
 app.autodiscover_tasks()
+
+logger = logging.getLogger("celery")
+
+
+@setup_logging.connect
+def config_loggers(*_args, **_kwargs):
+    """Configure logging using Django settings."""
+    import logging.config as logging_config
+
+    try:
+        import django
+
+        django.setup()
+        from django.conf import settings
+
+        if hasattr(settings, "LOGGING"):
+            logging_config.dictConfig(settings.LOGGING)
+    except (ImportError, AttributeError, OSError) as e:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="[%(asctime)s: %(levelname)s/%(name)s] %(message)s",
+        )
+        logger.warning("Fallback logging: %s", e)
+
+
+@worker_ready.connect
+def worker_ready_handler(sender, **_kwargs):
+    """Log when worker is ready."""
+    try:
+        with app.connection() as conn:
+            conn.ensure_connection(max_retries=3)
+            logger.info("Worker %s connected to broker", sender.hostname)
+    except (KombuConnectionError, OperationalError, OSError):
+        logger.exception("Worker %s connection error", sender.hostname)
+
+
+@task_failure.connect
+def handle_task_failure(task_id, exception, _traceback, _einfo, **_kwargs):
+    """Log task failures."""
+    logger.exception("Task %s failed: %s", task_id, exception)
+
+
+@app.task(bind=True, ignore_result=True)
+def debug_task(self):
+    """Debug task for testing Celery."""
+    logger.info("Debug task: %r", self.request)
+    return f"Debug completed: {self.request.id}"
 
 
 @app.task(bind=True)
-def debug_task(self):
-    print(f"Request: {self.request!r}")
+def health_check(self):
+    """Health check task."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+    except (OSError, ValueError, TypeError, AttributeError) as e:
+        return {"status": "unhealthy", "error": str(e)}
+    else:
+        return {"status": "healthy", "task_id": self.request.id}

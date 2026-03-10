@@ -1,77 +1,171 @@
-"""
-Vue CRUD pour la gestion des stacks.
-"""
+"""Views pour les stacks techniques."""
 
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
-from rest_framework.parsers import JSONParser, MultiPartParser
+from django.db.models import QuerySet
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions
+from rest_framework.decorators import action
+from rest_framework.request import Request
 from rest_framework.response import Response
 
+from core.articles.serializers import ArticleListSerializer
+from core.projects.serializers import ProjectListSerializer
+from utils.api import BaseAPIViewSet
+from utils.pagination import APIResponsePagination
+
+from ..doc import RESPONSE_400, RESPONSE_404, SCHEMA_RELATED_STACK, STACK_LIST_PARAMS, TAGS_STACKS
+from ..filters import StackFilter
 from ..models import Stack
-from ..serializers.stack import StackSerializer
+from ..serializers import StackDetailSerializer, StackListSerializer, StackWriteSerializer
+from ..services.stack import StackService
 from ..throttles import StacksThrottle
 
 
-class StackViewSet(viewsets.ModelViewSet):
-    """
-    Vue CRUD enrichie pour la gestion complète des stacks :
-    - Lecture publique avec recherche, filtrage et tri avancé.
-    - Création/Modification/Suppression réservée aux utilisateurs authentifiés.
-    """
+class StackViewSet(BaseAPIViewSet):
+    """API endpoint pour les stacks techniques."""
 
     queryset = Stack.objects.all()
-    serializer_class = StackSerializer
-    parser_classes = [MultiPartParser, JSONParser]
-    throttle_classes = [StacksThrottle]
+    serializer_class = StackDetailSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    throttle_classes = (StacksThrottle,)
+    pagination_class = APIResponsePagination
+    filterset_class = StackFilter
+    lookup_field = "slug"
 
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["category", "proficiency", "experience_years"]
-    search_fields = ["name", "description", "category"]
-    ordering_fields = ["created_at", "updated_at", "name", "proficiency", "experience_years"]
-    ordering = ["-created_at"]
+    # Configuration pour SerializerByActionMixin
+    serializer_classes = {
+        "list": StackListSerializer,
+        "by_category": StackListSerializer,
+        "create": StackWriteSerializer,
+        "update": StackWriteSerializer,
+        "partial_update": StackWriteSerializer,
+        "projects": ProjectListSerializer,
+        "articles": ArticleListSerializer,
+    }
 
-    def get_permissions(self):
-        """
-        Permissions dynamiques :
-        - Lecture publique.
-        - Écriture restreinte aux utilisateurs authentifiés.
-        """
-        if self.request.method in permissions.SAFE_METHODS:
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+    def _get_base_queryset(self) -> QuerySet[Stack]:
+        """Retourne les stacks avec relations pre-chargees."""
+        return Stack.objects.with_related()
 
-    def perform_create(self, serializer):
-        """
-        Actions spécifiques lors de la création (audit/log, etc.).
-        """
-        serializer.save()
+    @swagger_auto_schema(
+        operation_summary="Liste des stacks",
+        operation_description="Recupere la liste des stacks techniques avec filtres optionnels.",
+        manual_parameters=STACK_LIST_PARAMS,
+        responses={200: StackListSerializer(many=True)},
+        tags=TAGS_STACKS,
+    )
+    def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Liste des stacks."""
+        return super().list(request, *args, **kwargs)
 
-    def perform_update(self, serializer):
-        """
-        Actions spécifiques lors de la mise à jour.
-        """
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        """
-        Actions spécifiques lors de la suppression (archivage éventuel, logging).
-        """
-        instance.delete()
-
-    def by_category(self, request, category=None):
-        """
-        Renvoie les stacks d'une catégorie spécifique.
-        """
-        _ = request
-        queryset = self.queryset.filter(category=category)
-        serializer = self.get_serializer(queryset, many=True)
+    @swagger_auto_schema(
+        operation_summary="Details d'une stack",
+        operation_description="Recupere les details d'une stack par son slug ou ID.",
+        responses={200: StackDetailSerializer(), 404: RESPONSE_404},
+        tags=TAGS_STACKS,
+    )
+    def retrieve(self, _request: Request, *_args: object, **_kwargs: object) -> Response:
+        """Details d'une stack."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    def most_proficient(self, request):
-        """
-        Renvoie les stacks les plus maîtrisés, triés par compétence puis années d'expérience.
-        """
-        _ = request
-        queryset = self.queryset.order_by("-proficiency", "-experience_years")
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    @swagger_auto_schema(
+        operation_summary="Creer une stack",
+        operation_description="Cree une nouvelle stack technique.",
+        request_body=StackWriteSerializer,
+        responses={201: StackDetailSerializer(), 400: RESPONSE_400},
+        tags=TAGS_STACKS,
+    )
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Cree une stack."""
+        return super().create(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Modifier une stack",
+        operation_description="Met a jour completement une stack.",
+        request_body=StackWriteSerializer,
+        responses={200: StackDetailSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+        tags=TAGS_STACKS,
+    )
+    def update(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Met a jour une stack."""
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Modifier partiellement une stack",
+        operation_description="Met a jour partiellement une stack.",
+        request_body=StackWriteSerializer,
+        responses={200: StackDetailSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+        tags=TAGS_STACKS,
+    )
+    def partial_update(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Met a jour partiellement une stack."""
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Supprimer une stack",
+        operation_description="Supprime une stack existante.",
+        responses={204: "Supprime", 404: RESPONSE_404},
+        tags=TAGS_STACKS,
+    )
+    def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Supprime une stack."""
+        return super().destroy(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Stacks par categorie",
+        operation_description="Recupere les stacks d'une categorie specifique.",
+        responses={200: StackListSerializer(many=True), 404: RESPONSE_404},
+        tags=TAGS_STACKS,
+    )
+    @action(detail=False, methods=["get"], url_path="by-category/(?P<category_name>[^/.]+)")
+    def by_category(self, _request: Request, category_name: str = "") -> Response:
+        """Stacks par categorie."""
+        stacks = StackService.get_by_category(category_name)
+        return self.paginated_response(stacks, StackListSerializer)
+
+    @swagger_auto_schema(
+        operation_summary="Stacks associees",
+        operation_description="Recupere les stacks associees a une stack.",
+        responses={
+            200: openapi.Response(
+                description="Liste des stacks associees",
+                schema=openapi.Schema(type=openapi.TYPE_ARRAY, items=SCHEMA_RELATED_STACK),
+            ),
+            404: RESPONSE_404,
+        },
+        tags=TAGS_STACKS,
+    )
+    @action(detail=True, methods=["get"])
+    def related(self, _request: Request, slug: str = "") -> Response:
+        """Stacks associees."""
+        stack = StackService.get_by_slug(slug)
+        related = StackService.get_related(stack)
+        return Response(related)
+
+    @swagger_auto_schema(
+        operation_summary="Projets utilisant cette stack",
+        operation_description="Recupere les projets qui utilisent cette technologie.",
+        responses={200: ProjectListSerializer(many=True), 404: RESPONSE_404},
+        tags=TAGS_STACKS,
+    )
+    @action(detail=True, methods=["get"])
+    def projects(self, _request: Request, slug: str = "") -> Response:
+        """Projets utilisant cette stack."""
+        stack = StackService.get_by_slug(slug)
+        projects_qs = StackService.get_projects_for_stack(stack)
+        return self.paginated_response(projects_qs, ProjectListSerializer)
+
+    @swagger_auto_schema(
+        operation_summary="Articles lies a cette stack",
+        operation_description="Recupere les articles de blog lies a cette technologie.",
+        responses={200: ArticleListSerializer(many=True), 404: RESPONSE_404},
+        tags=TAGS_STACKS,
+    )
+    @action(detail=True, methods=["get"])
+    def articles(self, _request: Request, slug: str = "") -> Response:
+        """Articles lies a cette stack."""
+        stack = StackService.get_by_slug(slug)
+        articles_qs = StackService.get_articles_for_stack(stack)
+        return self.paginated_response(articles_qs, ArticleListSerializer)

@@ -1,156 +1,268 @@
 <template>
-	<div
-		:class="[
-			'card',
-			{ 'card--hoverable': hoverable },
-			{ 'card--flat': flat },
-			{ 'card--bordered': bordered },
-			customClass,
-		]"
-	>
-		<div v-if="$slots.image" class="card__image">
-			<slot name="image"></slot>
-		</div>
+    <component :is="clickable ? 'button' : 'article'" :class="cardClasses" :style="cardStyle" @click="handleClick">
+        <div v-if="accentColor" class="card__accent" aria-hidden="true"></div>
 
-		<div v-if="$slots.header || title" class="card__header">
-			<slot name="header">
-				<h3 class="card__title">{{ title }}</h3>
-				<p v-if="subtitle" class="card__subtitle">{{ subtitle }}</p>
-			</slot>
-		</div>
+        <figure v-if="$slots.image" class="card__image">
+            <slot name="image"></slot>
+        </figure>
 
-		<div class="card__body">
-			<slot></slot>
-		</div>
+        <header v-if="$slots.header || title" class="card__header">
+            <slot name="header">
+                <div class="card__header-content">
+                    <h5 v-if="title" class="card__title">{{ title }}</h5>
+                    <small v-if="subtitle" class="card__subtitle">{{ subtitle }}</small>
+                </div>
+            </slot>
+            <div v-if="$slots.actions" class="card__actions">
+                <slot name="actions"></slot>
+            </div>
+        </header>
 
-		<div v-if="$slots.footer" class="card__footer">
-			<slot name="footer"></slot>
-		</div>
-	</div>
+        <div v-if="$slots.default" class="card__body">
+            <slot></slot>
+        </div>
+
+        <footer v-if="$slots.footer" class="card__footer">
+            <slot name="footer"></slot>
+        </footer>
+    </component>
 </template>
 
 <script setup lang="ts">
-	defineProps({
-		title: {
-			type: String,
-			default: '',
-		},
-		subtitle: {
-			type: String,
-			default: '',
-		},
-		hoverable: {
-			type: Boolean,
-			default: false,
-		},
-		flat: {
-			type: Boolean,
-			default: false,
-		},
-		bordered: {
-			type: Boolean,
-			default: false,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import { computed } from 'vue';
+
+    import type { CardProps } from '@/types/components/base';
+
+    type Props = CardProps;
+
+    const props = withDefaults(defineProps<Props>(), {
+        title: '',
+        subtitle: '',
+        variant: 'default',
+        padding: 'md',
+        hoverable: false,
+        clickable: false,
+        accentColor: '',
+        fullHeight: false,
+        customClass: '',
+    });
+
+    const emit = defineEmits<{
+        click: [event: MouseEvent];
+    }>();
+
+    const cardClasses = computed(() => [
+        'card',
+        `card--${props.variant}`,
+        `card--padding-${props.padding}`,
+        {
+            'card--hoverable': props.hoverable,
+            'card--clickable': props.clickable,
+            'card--has-accent': props.accentColor,
+            'card--full-height': props.fullHeight,
+        },
+        props.customClass,
+    ]);
+
+    const cardStyle = computed(() => ({
+        '--card-accent-color': props.accentColor || undefined,
+    }));
+
+    const handleClick = (event: MouseEvent) => {
+        if (props.clickable) {
+            emit('click', event);
+        }
+    };
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.card {
-		background-color: vars.$white;
-		border-radius: vars.$border-radius-md;
-		overflow: hidden;
-		position: relative;
-		transition: all vars.$transition-base;
+    .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        background-color: vars.$white;
+        border-radius: vars.$border-radius-xl;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        overflow: hidden;
 
-		// Par défaut, avec ombre
-		&:not(.card--flat):not(.card--bordered) {
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-		}
+        // Reset button styles when clickable
+        &--clickable {
+            border: none;
+            text-align: left;
+            width: 100%;
+            font-family: inherit;
+            font-size: inherit;
+            cursor: pointer;
+        }
 
-		// Avec bordure
-		&--bordered {
-			border: 1px solid func.color-alpha(vars.$gray-light, 0.6);
-		}
+        // Variants
+        &--default {
+            border: 1px solid func.color-alpha(vars.$gray-light, 0.6);
+        }
 
-		// Header de la carte
-		&__header {
-			padding: vars.$spacing-md;
-			border-bottom: 1px solid func.color-alpha(vars.$white-dark, 0.7);
-		}
+        &--elevated {
+            border: none;
+            box-shadow: vars.$box-shadow-medium;
+        }
 
-		// Image
-		&__image {
-			width: 100%;
-			position: relative;
-			overflow: hidden;
+        &--outlined {
+            border: 2px solid vars.$gray-light;
+            background-color: transparent;
+        }
 
-			&::after {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.02));
-				pointer-events: none;
-			}
+        &--glass {
+            background: func.color-alpha(vars.$white, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid func.color-alpha(vars.$white, 0.3);
+        }
 
-			img {
-				width: 100%;
-				display: block;
-				height: auto;
-			}
-		}
+        // Padding
+        &--padding-none {
+            .card__header,
+            .card__body,
+            .card__footer {
+                padding: 0;
+            }
+        }
 
-		// Titre et sous-titre
-		&__title {
-			margin: 0;
-			margin-bottom: vars.$spacing-xs;
-			color: vars.$black-light;
-			font-weight: 600;
-		}
+        &--padding-sm {
+            .card__header,
+            .card__body,
+            .card__footer {
+                padding: vars.$spacing-xs;
+            }
+        }
 
-		&__subtitle {
-			margin: 0;
-			color: vars.$gray-dark;
-		}
+        &--padding-md {
+            .card__header,
+            .card__body,
+            .card__footer {
+                padding: vars.$spacing-md;
+            }
+        }
 
-		// Corps de la carte
-		&__body {
-			padding: vars.$spacing-md;
-		}
+        &--padding-lg {
+            .card__header,
+            .card__body,
+            .card__footer {
+                padding: vars.$spacing-lg;
+            }
+        }
 
-		// Pied de la carte
-		&__footer {
-			padding: vars.$spacing-md;
-			border-top: 1px solid func.color-alpha(vars.$white-dark, 0.7);
-			background-color: func.color-alpha(vars.$white-dark, 0.5);
-		}
+        // States
+        &--hoverable,
+        &--clickable {
+            &:hover {
+                transform: translateY(-4px);
+                box-shadow: vars.$box-shadow-medium;
+                border-color: transparent;
+            }
 
-		// Effet hover
-		&--hoverable {
-			transition:
-				transform vars.$transition-base,
-				box-shadow vars.$transition-base;
+            &:active {
+                transform: translateY(-2px);
+            }
+        }
 
-			&:hover {
-				transform: translateY(-5px);
-				box-shadow: vars.$box-shadow-medium;
-			}
-		}
+        &--clickable:focus-visible {
+            outline: 2px solid vars.$primary-color;
+            outline-offset: 2px;
+        }
 
-		@include mix.responsive(mobile) {
-			&--hoverable:hover {
-				transform: translateY(-3px);
-			}
-		}
-	}
+        &--full-height {
+            height: 100%;
+        }
+
+        // Accent
+        &__accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--card-accent-color);
+        }
+
+        &--has-accent {
+            padding-top: 3px;
+        }
+
+        // Image
+        &__image {
+            width: 100%;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+
+            :deep(img) {
+                width: 100%;
+                height: auto;
+                display: block;
+                object-fit: cover;
+                transition: transform 0.4s ease;
+            }
+        }
+
+        &--hoverable &__image :deep(img),
+        &--clickable &__image :deep(img) {
+            &:hover {
+                transform: scale(1.03);
+            }
+        }
+
+        // Header
+        &__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: vars.$spacing-md;
+
+            &:not(:last-child) {
+                border-bottom: 1px solid func.color-alpha(vars.$gray-light, 0.5);
+            }
+        }
+
+        &__header-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        &__title {
+            margin: 0;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-primary;
+            line-height: vars.$line-height-tight;
+        }
+
+        &__subtitle {
+            margin: vars.$spacing-xxs 0 0;
+            color: vars.$text-secondary;
+        }
+
+        &__actions {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+            flex-shrink: 0;
+        }
+
+        // Body
+        &__body {
+            flex: 1;
+        }
+
+        // Footer
+        &__footer {
+            margin-top: auto;
+
+            &:not(:first-child) {
+                border-top: 1px solid func.color-alpha(vars.$gray-light, 0.5);
+            }
+        }
+
+        @include mix.focus-outline;
+    }
 </style>

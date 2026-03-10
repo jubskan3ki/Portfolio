@@ -1,8 +1,6 @@
 // typography.scss
 @use '../abstracts/mixins' as mix;
 @use '../abstracts/variables' as vars;
-@use '../abstracts/functions' as func;
-@use 'sass:map';
 
 // Base headings
 h1,
@@ -11,204 +9,192 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: vars.$font-family-heading;
-	font-weight: 700;
-	line-height: 1.2;
-	color: vars.$black;
+    font-family: vars.$font-family-heading;
+    font-weight: vars.$font-weight-bold;
+    line-height: vars.$line-height-tight;
+    letter-spacing: vars.$letter-spacing-tight;
+    color: vars.$black;
 }
 
 h1 {
-	@include mix.responsive-text(
-		'font-size',
-		map.get(map.get(vars.$font-sizes, 'large'), 'h1'),
-		map.get(map.get(vars.$font-sizes, 'medium'), 'h1'),
-		map.get(map.get(vars.$font-sizes, 'small'), 'h1')
-	);
+    font-size: vars.$font-size-5xl;
+
+    @include mix.responsive(tablet) {
+        font-size: vars.$font-size-4xl;
+    }
+
+    @include mix.responsive(mobile) {
+        font-size: vars.$font-size-3xl;
+    }
 }
 
 h2 {
-	@include mix.responsive-text(
-		'font-size',
-		map.get(map.get(vars.$font-sizes, 'large'), 'h2'),
-		map.get(map.get(vars.$font-sizes, 'medium'), 'h2'),
-		map.get(map.get(vars.$font-sizes, 'small'), 'h2')
-	);
+    font-size: vars.$font-size-4xl;
+
+    @include mix.responsive(tablet) {
+        font-size: vars.$font-size-3xl;
+    }
+
+    @include mix.responsive(mobile) {
+        font-size: vars.$font-size-xxl;
+    }
 }
 
 h3 {
-	@include mix.responsive-text(
-		'font-size',
-		map.get(map.get(vars.$font-sizes, 'large'), 'h3'),
-		map.get(map.get(vars.$font-sizes, 'medium'), 'h3'),
-		map.get(map.get(vars.$font-sizes, 'small'), 'h3')
-	);
+    font-size: vars.$font-size-3xl;
+
+    @include mix.responsive(tablet) {
+        font-size: vars.$font-size-xxl;
+    }
+
+    @include mix.responsive(mobile) {
+        font-size: vars.$font-size-xl;
+    }
 }
 
-h4,
-th {
-	@include mix.responsive-text(
-		'font-size',
-		map.get(map.get(vars.$font-sizes, 'large'), 'h4'),
-		map.get(map.get(vars.$font-sizes, 'medium'), 'h4'),
-		map.get(map.get(vars.$font-sizes, 'small'), 'h4')
-	);
+h4 {
+    font-size: vars.$font-size-xxl;
+
+    @include mix.responsive(tablet) {
+        font-size: vars.$font-size-xl;
+    }
+
+    @include mix.responsive(mobile) {
+        font-size: vars.$font-size-lg;
+    }
+}
+
+h5 {
+    font-size: vars.$font-size-xl;
+
+    @include mix.responsive(mobile) {
+        font-size: vars.$font-size-lg;
+    }
+}
+
+h6 {
+    font-size: vars.$font-size-lg;
+
+    @include mix.responsive(mobile) {
+        font-size: vars.$font-size-md;
+    }
 }
 
 // Base text elements
 p,
-a,
 li,
 td {
-	@include mix.responsive-text(
-		'font-size',
-		map.get(map.get(vars.$font-sizes, 'large'), 'p'),
-		map.get(map.get(vars.$font-sizes, 'medium'), 'p'),
-		map.get(map.get(vars.$font-sizes, 'small'), 'p')
-	);
+    font-size: vars.$font-size-md;
+    line-height: vars.$line-height-relaxed;
+    letter-spacing: vars.$letter-spacing-base;
+
+    @include mix.responsive(mobile) {
+        font-size: vars.$font-size-sm;
+    }
 }
 
 small {
-	// Fix: Put display before the mixin to fix mixed declarations
-	display: inline-block;
-	@include mix.responsive-text(
-		'font-size',
-		map.get(map.get(vars.$font-sizes, 'large'), 'small'),
-		map.get(map.get(vars.$font-sizes, 'medium'), 'small'),
-		map.get(map.get(vars.$font-sizes, 'small'), 'small')
-	);
+    font-size: vars.$font-size-sm;
 }
 
 // Links
 a {
-	color: vars.$primary-color;
-	@include mix.transition(color);
+    color: vars.$primary-color;
+    transition: color 200ms ease-out;
+    text-decoration: none;
 
-	&:hover {
-		color: func.adjust-color-brightness(vars.$primary-color, -15%);
-	}
+    &:hover {
+        color: vars.$primary-dark;
+    }
 }
 
 // Form elements
 input,
 textarea,
 select {
-	width: 100%;
-	border: none;
-	border-bottom: 1px solid vars.$gray;
-	background-color: transparent;
+    width: 100%;
+    padding: vars.$input-padding;
+    border: 1px solid vars.$border-color;
+    border-radius: vars.$input-border-radius;
+    background-color: vars.$white;
+    font-size: vars.$font-size-md;
+    transition: border-color 200ms ease-out;
 
-	@include mix.transition(border-color);
-	@include mix.focus-outline;
+    &:focus {
+        outline: none;
+        border-color: vars.$primary-color;
+    }
 
-	&:focus {
-		outline: none;
-		border-color: vars.$primary-color;
-	}
-
-	@include mix.responsive-text(
-		'font-size',
-		map.get(map.get(vars.$font-sizes, 'large'), 'p'),
-		map.get(map.get(vars.$font-sizes, 'medium'), 'p'),
-		map.get(map.get(vars.$font-sizes, 'small'), 'p')
-	);
+    &::placeholder {
+        color: vars.$text-muted;
+    }
 }
 
-// Placeholder style
-::placeholder {
-	color: vars.$gray;
-	opacity: 0.7;
-}
+// Base button styles
+button {
+    @include mix.button-base;
 
-// Button styles
-button,
-.button {
-	@include mix.button-style(
-		vars.$primary-color,
-		vars.$white,
-		func.adjust-color-brightness(vars.$primary-color, -10%)
-	);
+    padding: vars.$button-padding-md;
+    background-color: vars.$primary-color;
+    color: vars.$white;
+    border: none;
+    font-size: vars.$font-size-md;
 
-	@include mix.responsive-text(
-		'font-size',
-		map.get(map.get(vars.$font-sizes, 'large'), 'p'),
-		map.get(map.get(vars.$font-sizes, 'medium'), 'p'),
-		map.get(map.get(vars.$font-sizes, 'small'), 'p')
-	);
-
-	&.button--secondary {
-		@include mix.button-style(
-			vars.$secondary-color,
-			vars.$white,
-			func.adjust-color-brightness(vars.$secondary-color, -10%)
-		);
-	}
-
-	&.button--outline {
-		background: transparent;
-		border: 2px solid vars.$primary-color;
-		color: vars.$primary-color;
-
-		&:hover {
-			background-color: vars.$primary-color;
-			color: vars.$white;
-		}
-	}
-
-	&.button--small {
-		padding: vars.$spacing-xs vars.$spacing-sm;
-		font-size: map.get(map.get(vars.$font-sizes, 'large'), 'small');
-	}
-
-	&.button--large {
-		padding: vars.$spacing-md vars.$spacing-lg;
-	}
+    &:hover:not(:disabled) {
+        background-color: vars.$primary-dark;
+    }
 }
 
 // Lists
-
 ul {
-	list-style-type: disc;
+    list-style-type: disc;
+    padding-left: vars.$spacing-xxxxs;
 }
 
 ol {
-	list-style-type: decimal;
+    list-style-type: decimal;
+    padding-left: vars.$spacing-xxxxs;
 }
 
 // Blockquote
 blockquote {
-	border-left: 4px solid vars.$primary-color;
-	font-style: italic;
-	color: vars.$gray-dark;
+    padding-left: vars.$spacing-xxxxs;
+    border-left: 4px solid vars.$primary-color;
+    font-style: italic;
+    color: vars.$gray-dark;
 }
 
 // Code blocks
 code {
-	font-family: monospace;
-	background-color: vars.$white-dark;
-	border-radius: vars.$border-radius-sm;
-	font-size: 0.9em;
+    font-family: vars.$font-family-mono;
+    background-color: vars.$white-dark;
+    padding: 2px 6px;
+    border-radius: vars.$border-radius-sm;
+    font-size: vars.$font-size-sm;
 }
 
 pre {
-	background-color: vars.$white-dark;
-	border-radius: vars.$border-radius-md;
-	overflow-x: auto;
+    background-color: vars.$white-dark;
+    padding: vars.$spacing-xxxxs;
+    border-radius: vars.$border-radius-md;
+    overflow-x: auto;
 
-	code {
-		background: none;
-		border-radius: 0;
-	}
+    code {
+        background: none;
+        padding: 0;
+        border-radius: 0;
+    }
 }
 
 // Text utilities
 .text-truncate {
-	@include mix.truncate(1);
+    @include mix.truncate(1);
 }
 
 .text-truncate-2 {
-	@include mix.truncate(2);
+    @include mix.truncate(2);
 }
 
 .text-truncate-3 {
-	@include mix.truncate(3);
+    @include mix.truncate(3);
 }

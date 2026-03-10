@@ -1,97 +1,163 @@
 <template>
-	<Section title="Mentions légales">
-		<div class="legal-content">
-			<h2>Informations légales</h2>
-			<p>
-				Conformément aux dispositions des articles 6-III et 19 de la Loi n° 2004-575 du 21 juin 2004 pour la
-				Confiance dans l'économie numérique, dite L.C.E.N., nous portons à la connaissance des utilisateurs et
-				visiteurs du site les informations suivantes :
-			</p>
+    <div class="terms-page">
+        <Section title="Conditions d'utilisation" subtitle="Règles d'usage du site" size="large">
+            <div class="terms-page__content">
+                <article class="terms-card">
+                    <h2 class="terms-card__title">Acceptation des conditions</h2>
+                    <p>
+                        En accédant et en utilisant ce site, vous acceptez d'être lié par les présentes conditions
+                        d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser ce site.
+                    </p>
+                </article>
 
-			<h3>1. Informations légales</h3>
-			<div class="legal-info">
-				<p><strong>Propriétaire du site :</strong> [Votre nom]</p>
-				<p><strong>Adresse :</strong> [Votre adresse]</p>
-				<p><strong>Email :</strong> [Votre email]</p>
-				<p><strong>Statut :</strong> [Auto-entrepreneur / SARL / etc.]</p>
-				<p><strong>Numéro SIRET :</strong> [Votre numéro SIRET]</p>
-			</div>
+                <article class="terms-card">
+                    <h2 class="terms-card__title">Utilisation du site</h2>
+                    <p>Ce site est destiné à un usage personnel et non commercial. Vous vous engagez à :</p>
+                    <ul class="terms-card__list">
+                        <li>Ne pas utiliser le site à des fins illégales ou non autorisées</li>
+                        <li>Ne pas tenter de perturber le fonctionnement du site</li>
+                        <li>Ne pas collecter d'informations sur les autres utilisateurs</li>
+                        <li>Respecter les droits de propriété intellectuelle</li>
+                    </ul>
+                </article>
 
-			<h3>2. Hébergement</h3>
-			<div class="legal-info">
-				<p><strong>Hébergeur :</strong> [Nom de l'hébergeur]</p>
-				<p><strong>Adresse :</strong> [Adresse de l'hébergeur]</p>
-				<p><strong>Téléphone :</strong> [Téléphone de l'hébergeur]</p>
-			</div>
+                <article class="terms-card">
+                    <h2 class="terms-card__title">Propriété intellectuelle</h2>
+                    <p>
+                        L'ensemble du contenu présent sur ce site (textes, images, graphiques, logos, icônes, code
+                        source) est protégé par les lois sur la propriété intellectuelle et reste la propriété exclusive
+                        de l'éditeur.
+                    </p>
+                    <p>
+                        Toute reproduction, distribution, modification ou utilisation du contenu sans autorisation
+                        préalable écrite est strictement interdite.
+                    </p>
+                </article>
 
-			<h3>3. Conception et réalisation</h3>
-			<p>Le site a été conçu et développé par [Votre nom / Votre entreprise].</p>
+                <article class="terms-card">
+                    <h2 class="terms-card__title">Limitation de responsabilité</h2>
+                    <p>
+                        Les informations fournies sur ce site le sont à titre indicatif. L'éditeur s'efforce de
+                        maintenir des informations exactes et à jour, mais ne peut garantir l'exactitude, l'exhaustivité
+                        ou la pertinence des informations.
+                    </p>
+                    <p>
+                        L'éditeur ne saurait être tenu responsable des dommages directs ou indirects résultant de
+                        l'utilisation de ce site ou de l'impossibilité d'y accéder.
+                    </p>
+                </article>
 
-			<h3>4. Crédits</h3>
-			<p>
-				Les textes, images, logos et éléments graphiques sont la propriété de leurs auteurs respectifs.
-				<br />
-				Les photographies et illustrations utilisées sur ce site sont soit notre propriété, soit utilisées avec
-				l'autorisation de leurs auteurs ou dans le cadre de licences spécifiques.
-			</p>
+                <article class="terms-card">
+                    <h2 class="terms-card__title">Liens externes</h2>
+                    <p>
+                        Ce site peut contenir des liens vers des sites externes. Ces liens sont fournis uniquement pour
+                        votre commodité. L'éditeur n'a aucun contrôle sur le contenu de ces sites et décline toute
+                        responsabilité quant à leur contenu.
+                    </p>
+                </article>
 
-			<h3>5. Cookies et données personnelles</h3>
-			<p>
-				Pour plus d'informations sur la manière dont nous utilisons les cookies et traitons vos données
-				personnelles, veuillez consulter notre
-				<NuxtLink to="/privacy">Politique de Confidentialité</NuxtLink>.
-			</p>
+                <article class="terms-card">
+                    <h2 class="terms-card__title">Modification des conditions</h2>
+                    <p>
+                        L'éditeur se réserve le droit de modifier ces conditions d'utilisation à tout moment. Les
+                        modifications prennent effet dès leur publication sur le site. Il est conseillé de consulter
+                        régulièrement cette page.
+                    </p>
+                </article>
 
-			<h3>6. Propriété intellectuelle</h3>
-			<p>
-				L'ensemble du contenu de ce site, incluant sans limitation les textes, graphiques, logos, images, clips
-				audio, est la propriété de [Votre nom / Votre entreprise] et est protégé par les lois françaises et
-				internationales sur le droit d'auteur.
-			</p>
-			<p>
-				Toute reproduction ou représentation totale ou partielle de ce site ou de son contenu par quelque
-				procédé que ce soit, sans autorisation expresse, est interdite et constituerait une contrefaçon
-				sanctionnée par les articles L.335-2 et suivants du Code de la propriété intellectuelle.
-			</p>
-
-			<h3>7. Loi applicable et juridiction</h3>
-			<p>
-				Le présent site est soumis à la loi française. En cas de litige, les tribunaux français seront seuls
-				compétents.
-			</p>
-		</div>
-	</Section>
+                <article class="terms-card">
+                    <h2 class="terms-card__title">Contact</h2>
+                    <p>
+                        Pour toute question concernant ces conditions, vous pouvez nous contacter via le
+                        <NuxtLink to="/contact" class="terms-card__link">formulaire de contact</NuxtLink>
+                        ou consulter nos <NuxtLink to="/legal" class="terms-card__link">mentions légales</NuxtLink>.
+                    </p>
+                </article>
+            </div>
+        </Section>
+    </div>
 </template>
 
+<script setup lang="ts">
+    import Section from '@/components/layouts/Section.vue';
+    import { useSeo } from '@/composables/seo/useSeo';
+
+    useSeo({
+        title: 'Conditions d\'utilisation',
+        description: 'Conditions générales d\'utilisation du site portfolio de Juba Ait-Adda, développeur full-stack.',
+        url: '/terms',
+    });
+</script>
+
 <style lang="scss" scoped>
-	.legal-content {
-		max-width: 800px;
-		margin: 0 auto;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
 
-		h2,
-		h3 {
-			margin-top: 2rem;
-			margin-bottom: 1rem;
-		}
+    .terms-page {
+        position: relative;
+        min-height: 100vh;
 
-		p {
-			margin-bottom: 1rem;
-			line-height: 1.6;
-		}
+        &__content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: vars.$spacing-lg;
+        }
+    }
 
-		.legal-info {
-			background-color: #f8f9fa;
-			padding: 1.5rem;
-			border-radius: 8px;
-			margin-bottom: 1.5rem;
+    .terms-card {
+        background: vars.$white;
+        border-radius: vars.$border-radius-lg;
+        padding: vars.$spacing-xl;
+        box-shadow: vars.$box-shadow-small;
 
-			p {
-				margin-bottom: 0.5rem;
+        @include mix.responsive(mobile) {
+            padding: vars.$spacing-lg;
+        }
 
-				&:last-child {
-					margin-bottom: 0;
-				}
-			}
-		}
-	}
+        &__title {
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$primary-color;
+            margin-bottom: vars.$spacing-md;
+            padding-bottom: vars.$spacing-xs;
+            border-bottom: 2px solid vars.$border-color-light;
+        }
+
+        p {
+            color: vars.$text-secondary;
+            line-height: vars.$line-height-relaxed;
+            margin-bottom: vars.$spacing-xs;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        &__list {
+            margin: vars.$spacing-xs 0;
+            padding-left: vars.$spacing-lg;
+
+            li {
+                color: vars.$text-secondary;
+                line-height: vars.$line-height-relaxed;
+                margin-bottom: vars.$spacing-xxs;
+                position: relative;
+
+                &::marker {
+                    color: vars.$primary-color;
+                }
+            }
+        }
+
+        &__link {
+            color: vars.$primary-color;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+
+            &:hover {
+                color: vars.$primary-dark;
+            }
+        }
+    }
 </style>

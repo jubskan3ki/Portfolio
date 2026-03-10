@@ -1,0 +1,70 @@
+// Effets visuels
+
+@use 'colors' as c;
+
+// Ombres
+$box-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$box-shadow-small:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px -1px rgba(0, 0, 0, 0.1);
+$box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+$box-shadow-medium:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+$box-shadow-large:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+$box-shadow-primary: 0 4px 14px 0 rgba(c.$primary-color, 0.25);
+$box-shadow-header: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+// Transitions
+$transition-fast: 150ms ease-out;
+$transition-base: 300ms ease-out;
+$transition-slow: 500ms ease-out;
+
+// Hover
+$hover-brightness-light: 1.05;
+$hover-brightness-dark: 0.92;
+
+// Glassmorphism
+$glass-blur: 16px;
+$glass-blur-sm: 8px;
+$glass-blur-lg: 24px;
+$glass-blur-xl: 32px;
+$glass-bg-light: rgba(255, 255, 255, 0.15);
+$glass-bg-medium: rgba(255, 255, 255, 0.25);
+$glass-bg-heavy: rgba(255, 255, 255, 0.4);
+$glass-bg-dark: rgba(0, 0, 0, 0.1);
+$glass-border: rgba(255, 255, 255, 0.2);
+$glass-border-subtle: rgba(255, 255, 255, 0.1);
+$glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+$glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.15);
+
+// Dots decoratifs
+$dots-color: rgba(c.$primary-color, 0.08);
+$dots-color-light: rgba(c.$primary-color, 0.05);
+$dots-color-dark: rgba(c.$primary-color, 0.12);
+$dots-size: 2px;
+$dots-size-sm: 1px;
+$dots-size-lg: 3px;
+$dots-spacing: 20px;
+$dots-spacing-sm: 15px;
+$dots-spacing-lg: 30px;
+
+// Tilt / Parallax
+$tilt-perspective: 1000px;
+$tilt-perspective-sm: 800px;
+$tilt-perspective-lg: 1200px;
+$tilt-max-rotation: 15deg;
+$tilt-max-rotation-subtle: 8deg;
+$tilt-max-rotation-strong: 25deg;
+$tilt-scale-hover: 1.02;
+$tilt-transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+$tilt-transition-fast: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+
+// Parallax
+$parallax-depth-1: 20px;
+$parallax-depth-2: 40px;
+$parallax-depth-3: 60px;

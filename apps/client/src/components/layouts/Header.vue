@@ -1,135 +1,206 @@
-<!-- src/components/layouts/Header.vue -->
 <template>
-	<header class="header">
-		<!-- NavBar Principal -->
-		<NavBar :sticky="true">
-			<template #logo>
-				<AppLogo :image-path="images.others.logo" width="42" height="42" />
-			</template>
-			<template #actions>
-				<a
-					v-for="social in socialLinks"
-					:key="social.name"
-					:href="social.url"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="header__social-link"
-					:aria-label="social.name"
-				>
-					<BaseIcon :name="social.icon" :size="20" />
-				</a>
-			</template>
-		</NavBar>
+    <header class="header" role="banner">
+        <nav class="header__nav" :class="{ 'header__nav--scrolled': isScrolled }" aria-label="Navigation principale">
+            <div class="header__inner">
+                <!-- Left: Logo + Mobile Toggle -->
+                <div class="header__left">
+                    <MobileMenuToggle :is-active="isMobileMenuOpen" class="header__toggle" @toggle="toggleMobileMenu" />
+                    <NuxtLink to="/" class="header__logo" aria-label="Accueil">
+                        <AppLogo size="md" />
+                        <span class="header__logo-text">Juba Ait-adda</span>
+                    </NuxtLink>
+                </div>
 
-		<!-- Mobile Menu Toggle -->
-		<MobileMenuToggle :is-active="isMobileMenuOpen" class="header__mobile-toggle" @toggle="toggleMobileMenu" />
+                <!-- Center: Search Bar (lazy-loaded via Nuxt Lazy prefix) -->
+                <div class="header__center">
+                    <LazySearchGlobal placeholder="Rechercher..." mode="public" />
+                </div>
 
-		<!-- Menu Mobile -->
-		<MobileMenu :is-open="isMobileMenuOpen" :custom-class="'header__mobile-menu'" @close="closeMobileMenu" />
-	</header>
+                <!-- Right: Desktop Navigation -->
+                <div class="header__right">
+                    <ClientOnly>
+                        <ul class="header__menu" role="menubar">
+                            <NavbarItem
+                                v-for="(item, index) in navigationItems"
+                                :key="item.path"
+                                :item="item"
+                                :index="index"
+                                :is-active="isActiveRoute(item.path, route.path)"
+                            />
+                        </ul>
+                    </ClientOnly>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Menu (slides from left) -->
+        <MobileMenu :is-open="isMobileMenuOpen" @close="closeMobileMenu" />
+    </header>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import MobileMenu from '@/components/navigation/MobileMenu.vue';
-	import MobileMenuToggle from '@/components/navigation/MobileMenuToggle.vue';
-	import NavBar from '@/components/navigation/NavBar.vue';
-	import AppLogo from '@/components/ui/AppLogo.vue';
-	import { images } from '@/config/images';
-	import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-	import { useRoute } from 'vue-router';
+    import { ref, watch } from 'vue';
 
-	// État de la navigation mobile
-	const isMobileMenuOpen = ref(false);
+    import MobileMenu from '@/components/navigation/MobileMenu.vue';
+    import MobileMenuToggle from '@/components/navigation/MobileMenuToggle.vue';
+    import NavbarItem from '@/components/navigation/NavbarItem.vue';
+    import AppLogo from '@/components/ui/AppLogo.vue';
+    import { useEscapeKey } from '@/composables/accessibility/useEscapeKey';
+    import { useHeaderScroll } from '@/composables/ui/useHeaderScroll';
+    import { isActiveRoute, navigationItems } from '@/config/navBar';
 
-	// Référence à la route actuelle
-	const route = useRoute();
+    const isMobileMenuOpen = ref(false);
+    const route = useRoute();
 
-	// Liens sociaux
-	const socialLinks = [
-		{ name: 'GitHub', icon: 'github', url: 'https://github.com/' },
-		{ name: 'LinkedIn', icon: 'linkedin', url: 'https://linkedin.com/' },
-	];
+    const { isScrolled } = useHeaderScroll(20);
 
-	// Fonctions pour le menu mobile
-	const toggleMobileMenu = () => {
-		isMobileMenuOpen.value = !isMobileMenuOpen.value;
-	};
+    useEscapeKey(() => {
+        if (isMobileMenuOpen.value) {
+            closeMobileMenu();
+        }
+    });
 
-	const closeMobileMenu = () => {
-		isMobileMenuOpen.value = false;
-	};
+    const toggleMobileMenu = () => {
+        isMobileMenuOpen.value = !isMobileMenuOpen.value;
+    };
 
-	// Fermer le menu mobile lorsque la route change
-	watch(
-		() => route.path,
-		() => {
-			closeMobileMenu();
-		}
-	);
+    const closeMobileMenu = () => {
+        isMobileMenuOpen.value = false;
+    };
 
-	// Fonction pour fermer le menu avec la touche Escape
-	const handleEscKey = (event: KeyboardEvent) => {
-		if (event.key === 'Escape' && isMobileMenuOpen.value) {
-			closeMobileMenu();
-		}
-	};
-
-	// Ajouter les écouteurs d'événements uniquement côté client
-	onMounted(() => {
-		document.addEventListener('keydown', handleEscKey);
-	});
-
-	// Nettoyer les écouteurs d'événements
-	onBeforeUnmount(() => {
-		document.removeEventListener('keydown', handleEscKey);
-	});
+    watch(() => route.path, closeMobileMenu);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.header {
-		position: relative;
-		z-index: func.z('navbar');
-		width: 100%;
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: vars.$z-index-sticky;
 
-		&__social-link {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			width: 36px;
-			height: 36px;
-			border-radius: 50%;
-			background-color: func.color-alpha(vars.$white, 0.15);
-			backdrop-filter: blur(5px);
-			color: currentColor;
-			transition: all vars.$transition-base;
+        &__nav {
+            width: 100%;
+            background: func.color-alpha(vars.$white, 0.85);
+            transition: all 0.3s ease;
 
-			&:hover {
-				transform: translateY(-3px);
-				background-color: func.color-alpha(vars.$primary-color, 0.8);
-				color: vars.$white;
-				box-shadow: 0 5px 15px func.color-alpha(vars.$primary-color, 0.3);
-			}
-		}
+            &--scrolled {
+                background: func.color-alpha(vars.$white, 0.9);
+                backdrop-filter: blur(20px) saturate(1.2);
+                will-change: backdrop-filter;
+                box-shadow: 0 4px 24px func.color-alpha(vars.$black, 0.04);
+            }
+        }
 
-		&__mobile-toggle {
-			position: fixed;
-			top: 15px;
-			right: 15px;
-			z-index: func.z('navbar') + 30;
-			display: none;
+        &__inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 75px;
+            padding: 0 vars.$spacing-xl;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: vars.$spacing-lg;
 
-			@include mix.responsive(mobile) {
-				display: flex;
-			}
-		}
+            @include mix.responsive(tablet) {
+                padding: 0 vars.$spacing-xxxxs;
+                gap: vars.$spacing-xxxxs;
+            }
 
-		&__mobile-menu {
-			z-index: func.z('navbar') + 20;
-		}
-	}
+            @include mix.responsive(mobile) {
+                padding: 0 vars.$spacing-xxxxs;
+                gap: vars.$spacing-xxxxs;
+            }
+        }
+
+        // Left section: Toggle + Logo
+        &__left {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xxxxs;
+            flex-shrink: 0;
+        }
+
+        &__toggle {
+            display: none;
+
+            @include mix.responsive(tablet) {
+                display: flex;
+            }
+        }
+
+        &__logo {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-md;
+            text-decoration: none;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            &:hover {
+                transform: scale(1.02);
+            }
+
+            &:focus-visible {
+                outline: 2px solid vars.$primary-color;
+                outline-offset: 4px;
+                border-radius: vars.$border-radius-md;
+            }
+        }
+
+        &__logo-text {
+            font-weight: vars.$font-weight-bold;
+            color: vars.$text-primary;
+            letter-spacing: -0.02em;
+
+            @include mix.responsive(mobile) {
+                display: none;
+            }
+        }
+
+        // Center section: Search
+        &__center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            max-width: 400px;
+            min-width: 0;
+
+            @include mix.responsive(tablet) {
+                max-width: 280px;
+            }
+
+            @include mix.responsive(mobile) {
+                max-width: none;
+                flex: 1;
+            }
+
+            :deep(.search-global) {
+                width: 100%;
+            }
+        }
+
+        // Right section: Desktop Nav
+        &__right {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        &__menu {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xxxs;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+
+            @include mix.responsive(tablet) {
+                display: none;
+            }
+        }
+    }
 </style>

@@ -1,89 +1,138 @@
-"""
-Modèle enrichi et optimisé pour la gestion complète des projets du portfolio.
-"""
+"""Modeles de donnees pour les projets."""
+
+from __future__ import annotations
+
+from datetime import date
+from typing import TYPE_CHECKING
 
 from django.db import models
-from django.utils.text import slugify
+
+from utils.images import MAX_SIZE_LARGE
+from utils.models import AutoSlugMixin, OptimizeImageMixin
+from utils.upload import make_upload_to
+from utils.validators import validate_image_upload
+
+from .managers import ProjectCategoryManager, ProjectManager, ProjectStatusManager
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
+
+    # Type alias for related managers
+    RelatedManager = QuerySet
 
 
-def project_image_upload_to(instance, filename):
-    """Chemin dynamique d'upload basé sur le titre du projet."""
-    project_slug = slugify(instance.title)
-    return f"projects/{project_slug}/{filename}"
+project_image_upload_to = make_upload_to("projets", "title")
 
 
-class ProjectManager(models.Manager):
-    """
-    Manager personnalisé permettant des requêtes utiles fréquentes.
-    """
+class ProjectCategory(AutoSlugMixin, models.Model):
+    """Categorie de projets."""
 
-    def get_queryset(self):
-        """Renvoie les projets triés par date de création décroissante."""
-        return super().get_queryset().order_by("-created_at")
+    id: int
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
 
-    def with_tag(self, tag):
-        """Renvoie les projets contenant un tag spécifique."""
-        return self.get_queryset().filter(tags__icontains=tag)
+    objects: ProjectCategoryManager = ProjectCategoryManager()
 
-    def recent(self, limit=5):
-        """Renvoie les projets les plus récents, limité par défaut à 5."""
-        return self.get_queryset()[:limit]
+    if TYPE_CHECKING:
+        projects: RelatedManager[Project]
+
+    class Meta:
+        verbose_name = "Categorie de projet"
+        verbose_name_plural = "Categories de projets"
+        db_table = "project_categories"
+        ordering = ["name"]
+        indexes = [
+            models.Index(fields=["slug"]),
+        ]
+
+    def __str__(self) -> str:
+        return str(self.name)
 
 
-class Project(models.Model):
-    """
-    Modèle enrichi représentant un projet complet dans le portfolio.
-    """
+class ProjectStatus(models.Model):
+    """Statut d'un projet."""
 
-    STATUS_CHOICES = [
-        ("planning", "Planification"),
-        ("in_progress", "En cours"),
-        ("completed", "Terminé"),
-        ("archived", "Archivé"),
-    ]
+    id: int
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True)
 
-    title = models.CharField(max_length=255, unique=True)
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    objects: ProjectStatusManager = ProjectStatusManager()
+
+    if TYPE_CHECKING:
+        projects: RelatedManager[Project]
+
+    class Meta:
+        verbose_name = "Statut de projet"
+        verbose_name_plural = "Statuts de projets"
+        db_table = "project_status"
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+
+class Project(OptimizeImageMixin, AutoSlugMixin, models.Model):
+    """Modele representant un projet."""
+
+    slug_source_field = "title"
+    image_fields = {"image": MAX_SIZE_LARGE}
+
+    id: int
+    title = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
     description = models.TextField()
-    image = models.ImageField(upload_to=project_image_upload_to, blank=True, null=True)
-    github_link = models.URLField(blank=True, null=True)
-    live_demo = models.URLField(blank=True, null=True)
-    tags = models.JSONField(default=list, blank=True, help_text="Liste de tags associés au projet")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="in_progress")
-    priority = models.PositiveSmallIntegerField(default=1, help_text="Priorité du projet (1 à 10)")
-    start_date = models.DateField(blank=True, null=True)
-    end_date = models.DateField(blank=True, null=True)
+    long_description = models.TextField(blank=True)
+    image = models.ImageField(
+        upload_to=project_image_upload_to, blank=True, null=True, validators=[validate_image_upload]
+    )
+    category = models.ForeignKey(
+        ProjectCategory,
+        on_delete=models.PROTECT,
+        related_name="projects",
+    )
+    status = models.ForeignKey(
+        ProjectStatus,
+        on_delete=models.SET_NULL,
+        related_name="projects",
+        null=True,
+        blank=True,
+    )
+    technologies = models.JSONField(default=list)
+    features = models.JSONField(default=list, blank=True)
+    links = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Format JSON: {'demo': 'url', 'github': 'url', 'documentation': 'url'}",
+    )
+
+    date = models.DateField(default=date.today)
+    view_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    objects = ProjectManager()
+    objects: ProjectManager = ProjectManager()
 
     class Meta:
-        """
-        Métadonnées enrichies du modèle Project.
-        """
-
-        ordering = ["-created_at"]
-        db_table = "projects"
         verbose_name = "Projet"
         verbose_name_plural = "Projets"
+        db_table = "projects"
+        ordering = ["-date", "title"]
+        indexes = [
+            models.Index(fields=["slug"]),
+            models.Index(fields=["date"]),
+            models.Index(fields=["category"]),
+            models.Index(fields=["status"]),
+            models.Index(fields=["-view_count"]),
+            # Composite indexes for common query patterns
+            models.Index(fields=["category", "-date"]),
+            models.Index(fields=["status", "-date"]),
+        ]
 
     def __str__(self) -> str:
         return str(self.title)
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
-
     @property
-    def is_active(self):
-        """Renvoie True si le projet est en cours ou en planification."""
-        return self.status in ["planning", "in_progress"]
-
-    @property
-    def duration(self):
-        """Renvoie la durée du projet en jours, si les dates sont définies."""
-        if self.start_date and self.end_date:
-            return (self.end_date - self.start_date).days
-        return None
+    def view(self) -> int:
+        """Alias pour view_count pour correspondre a l'interface TS."""
+        return self.view_count

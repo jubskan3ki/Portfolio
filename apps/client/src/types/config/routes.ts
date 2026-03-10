@@ -1,69 +1,58 @@
-// types/config/routes.ts
+// Types pour la configuration des routes
 
-/**
- * Types pour la configuration des routes
- */
-
-// Type de base pour une route
 export interface Route {
-	path: string;
-	name: string;
+    path: string;
+    name: string;
 }
 
-// Type pour une fonction générant une route avec un slug
-export type RouteWithSlugGenerator = (slug: string) => Route;
+type RouteWithSlugGenerator = (slug: string) => Route;
+type RouteWithIdGenerator = (id: string | number) => Route;
 
-// Type pour les routes du blog
-export interface BlogRoutes {
-	path: string;
-	name: string;
-	DETAIL: RouteWithSlugGenerator;
+// Routes publiques
+export interface BlogRoutes extends Route {
+    DETAIL: RouteWithSlugGenerator;
 }
 
-// Type pour les routes des projets
-export interface ProjectsRoutes {
-	path: string;
-	name: string;
-	DETAIL: RouteWithSlugGenerator;
+export interface ProjectsRoutes extends Route {
+    DETAIL: RouteWithSlugGenerator;
 }
 
-// Type pour les routes des technologies
-export interface StacksRoutes {
-	path: string;
-	name: string;
-	DETAIL: RouteWithSlugGenerator;
+export interface StacksRoutes extends Route {
+    DETAIL: RouteWithSlugGenerator;
 }
 
-// Type pour l'ensemble des routes de l'application
 export interface AppRoutes {
-	HOME: Route;
-	BLOG: BlogRoutes;
-	PROJECTS: ProjectsRoutes;
-	STACKS: StacksRoutes;
-	CONTACT: Route;
-	EXPERIENCE: Route;
-	ERROR_404: Route;
-	LEGAL: Route;
-	PRIVACY: Route;
-	TERMS: Route;
+    HOME: Route;
+    BLOG: BlogRoutes;
+    PROJECTS: ProjectsRoutes;
+    STACKS: StacksRoutes;
+    CONTACT: Route;
+    EXPERIENCE: Route;
+    ERROR_404: Route;
+    LEGAL: Route;
+    PRIVACY: Route;
+    TERMS: Route;
 }
 
-// Type pour les fonctions de création de chemins
+// Routes admin
+export interface AdminCrudRoutes extends Route {
+    CREATE: Route;
+    EDIT: RouteWithIdGenerator;
+}
+
+export interface AdminRoutes {
+    BASE: Route;
+    LOGIN: Route;
+    DASHBOARD: Route;
+    ARTICLES: AdminCrudRoutes;
+    PROJECTS: AdminCrudRoutes;
+    STACKS: AdminCrudRoutes;
+    EXPERIENCES: AdminCrudRoutes;
+    MESSAGES: Route;
+    SETTINGS: Route;
+    IMPORT_EXPORT: Route;
+    HISTORY: Route;
+}
+
+// Helper pour creer des chemins
 export type PathCreator = (route: { path: string }, params?: Record<string, string | number>) => string;
-
-// Type pour les fonctions de navigation typée
-export interface NamedRoutes {
-	goToHome: () => Route;
-	goToBlog: () => BlogRoutes;
-	goToBlogDetail: (slug: string) => Route;
-	goToProjects: () => ProjectsRoutes;
-	goToProjectDetail: (slug: string) => Route;
-	goToStacks: () => StacksRoutes;
-	goToStackDetail: (slug: string) => Route;
-	goToContact: () => Route;
-	goToExperience: () => Route;
-	goToNotFound: () => Route;
-	goToLegal: () => Route;
-	goToPrivacy: () => Route;
-	goToTerms: () => Route;
-}

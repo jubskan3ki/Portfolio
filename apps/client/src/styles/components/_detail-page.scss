@@ -1,0 +1,57 @@
+// Shared detail page mixins (blog/[slug], projects/[slug], stacks/[slug])
+
+@use '../abstracts/variables' as vars;
+@use '../abstracts/functions' as fn;
+@use '../abstracts/mixins' as mix;
+
+// Glassmorphism sidebar card
+@mixin sidebar-card($padding: vars.$spacing-lg) {
+    background: fn.color-alpha(vars.$white, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid fn.color-alpha(vars.$white, 0.8);
+    border-radius: vars.$border-radius-xl;
+    padding: $padding;
+    box-shadow:
+        0 8px 32px fn.color-alpha(vars.$black, 0.06),
+        0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
+    overflow: hidden;
+}
+
+// Glassmorphism detail content card
+@mixin detail-card($padding: vars.$spacing-xl) {
+    background: fn.color-alpha(vars.$white, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid fn.color-alpha(vars.$white, 0.8);
+    border-radius: vars.$border-radius-xl;
+    padding: $padding;
+    box-shadow:
+        0 8px 32px fn.color-alpha(vars.$black, 0.06),
+        0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
+
+    @include mix.responsive(mobile) {
+        padding: vars.$spacing-lg;
+    }
+}
+
+// Decorative section title with gradient lines
+@mixin section-title-gradient($max-line-width: 80px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: vars.$spacing-sm;
+    color: vars.$text-primary;
+    letter-spacing: vars.$letter-spacing-tight;
+
+    &::before,
+    &::after {
+        content: '';
+        flex: 1;
+        max-width: $max-line-width;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, fn.color-alpha(vars.$primary-color, 0.2));
+    }
+
+    &::after {
+        background: linear-gradient(90deg, fn.color-alpha(vars.$primary-color, 0.2), transparent);
+    }
+}

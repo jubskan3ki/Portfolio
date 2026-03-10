@@ -1,76 +1,133 @@
-// types/feature/contact.ts
+// Contact Types
 
-/**
- * Types pour les fonctionnalités de contact
- */
-
-// Type pour une question fréquemment posée
+// Type pour une question frequemment posee
 export interface FAQ {
-	question: string;
-	answer: string;
+    id: number;
+    question: string;
+    answer: string;
+    isPublished: boolean;
+    order: number;
 }
 
 // Type pour le formulaire de contact
 export interface ContactForm {
-	name: string;
-	email: string;
-	subject: string;
-	message: string;
-	phone?: string;
-	company?: string;
-	recaptchaToken?: string;
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+    phone?: string;
+    company?: string;
 }
 
-// Type pour les champs du formulaire de contact
-export interface ContactFormField {
-	name: string;
-	label: string;
-	type: 'text' | 'email' | 'tel' | 'textarea' | 'select';
-	placeholder?: string;
-	required?: boolean;
-	options?: { value: string; label: string }[];
-	validation?: {
-		pattern?: RegExp;
-		minLength?: number;
-		maxLength?: number;
-		message?: string;
-	};
+// Type pour la reponse de soumission de contact
+export interface ContactResponse {
+    success: boolean;
+    message: string;
+    referenceId: string;
 }
 
 // Type pour les informations de contact
 export interface ContactInfo {
-	email: string;
-	phone?: string;
-	address?: {
-		street?: string;
-		city?: string;
-		zipCode?: string;
-		country?: string;
-	};
-	socialMedia?: {
-		linkedin?: string;
-		github?: string;
-		twitter?: string;
-		medium?: string;
-	};
-	availability?: {
-		status: 'available' | 'limited' | 'unavailable';
-		message?: string;
-	};
+    id: number;
+    email: string;
+    phone: string;
+    bio?: string;
+    address: {
+        street: string;
+        city: string;
+        zipCode: string;
+        country: string;
+    };
+    socialMedia: {
+        linkedin: string;
+        github: string;
+        twitter: string;
+        medium: string;
+    };
+    availability: {
+        status: ContactAvailabilityStatus;
+        message: string;
+    };
 }
 
-// Type pour la réponse de soumission du formulaire
-export interface ContactSubmissionResponse {
-	success: boolean;
-	message: string;
-	errors?: Record<string, string>;
-	referenceId?: string;
-}
+export type ContactAvailabilityStatus = 'available' | 'limited' | 'unavailable';
 
 // Type pour les statistiques de contact
 export interface ContactStats {
-	totalMessages: number;
-	responseRate: number;
-	averageResponseTime: string;
-	popularSubjects: { subject: string; count: number }[];
+    totalMessages: number;
+    responseRate: number;
+    averageResponseTime: string;
+    popularSubjects: Array<{ subject: string; count: number }>;
+}
+
+// Admin Types
+
+// Contact message type (admin)
+export interface ContactMessage {
+    id: number;
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+    phone?: string;
+    company?: string;
+    isRead: boolean;
+    isArchived: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface ContactMessagesFilters {
+    page?: number;
+    limit?: number;
+    search?: string;
+    isRead?: boolean;
+    isArchived?: boolean;
+}
+
+// API Request Types (Create/Update)
+
+export interface FAQCreateData {
+    question: string;
+    answer: string;
+    isPublished?: boolean;
+    order?: number;
+}
+
+export type FAQUpdateData = Partial<FAQCreateData>;
+
+export interface ContactInfoCreateData {
+    email?: string;
+    phone?: string;
+    address?: {
+        street?: string;
+        city?: string;
+        zipCode?: string;
+        country?: string;
+    };
+    socialMedia?: {
+        linkedin?: string;
+        github?: string;
+        twitter?: string;
+        medium?: string;
+    };
+    availability?: {
+        status?: ContactAvailabilityStatus;
+        message?: string;
+    };
+}
+
+export type ContactInfoUpdateData = Partial<ContactInfoCreateData>;
+
+export interface ContactMessageUpdateData {
+    isRead?: boolean;
+    isArchived?: boolean;
+}
+
+// Props pour ContactForm (component)
+export interface ContactFormProps {
+    title?: string;
+    subtitle?: string;
+    customClass?: string;
+    formId?: string;
 }

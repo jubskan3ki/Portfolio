@@ -1,110 +1,110 @@
 <template>
-	<div :class="['app-logo', { 'app-logo--dark': dark }, customClass]">
-		<slot>
-			<span v-if="text" class="app-logo__text">{{ text }}</span>
-			<img
-				v-else-if="imagePath"
-				:src="imagePath"
-				:alt="alt"
-				class="app-logo__image"
-				:width="width"
-				:height="height"
-			/>
-			<span v-else class="app-logo__default">
-				<span class="app-logo__icon">
-					<BaseIcon name="star" :size="iconSize" />
-				</span>
-				<span class="app-logo__name">{{ defaultName }}</span>
-			</span>
-		</slot>
-	</div>
+    <component
+        :is="linkTo ? resolveComponent('NuxtLink') : 'div'"
+        v-bind="linkTo ? { 'to': linkTo, 'aria-label': 'Accueil' } : {}"
+        class="app-logo"
+        :class="[`app-logo--${size}`, { 'app-logo--dark': dark }]"
+    >
+        <NuxtImg
+            :src="src"
+            :alt="alt"
+            :width="dimensions.width"
+            :height="dimensions.height"
+            class="app-logo__image"
+            loading="eager"
+            decoding="async"
+            :fetchpriority="priority ? 'high' : 'auto'"
+        />
+    </component>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { computed, resolveComponent } from 'vue';
 
-	defineProps({
-		text: {
-			type: String,
-			default: '',
-		},
-		imagePath: {
-			type: String,
-			default: '',
-		},
-		alt: {
-			type: String,
-			default: 'Logo',
-		},
-		width: {
-			type: [String, Number],
-			default: 'auto',
-		},
-		height: {
-			type: [String, Number],
-			default: 'auto',
-		},
-		dark: {
-			type: Boolean,
-			default: false,
-		},
-		defaultName: {
-			type: String,
-			default: 'Juba Ait-adda',
-		},
-		iconSize: {
-			type: [String, Number],
-			default: 24,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import type { AppLogoProps } from '@/types/components/ui';
+
+    type Props = AppLogoProps;
+
+    const props = withDefaults(defineProps<Props>(), {
+        src: '/logo.svg',
+        alt: 'Logo Juba Ait-Adda',
+        size: 'md',
+        dark: false,
+        linkTo: '',
+        priority: false,
+    });
+
+    // Dimensions selon la taille
+    const sizeMap = {
+        xs: { width: 24, height: 24 },
+        sm: { width: 32, height: 32 },
+        md: { width: 48, height: 48 },
+        lg: { width: 60, height: 60 },
+        xl: { width: 80, height: 80 },
+    } as const;
+
+    const dimensions = computed(() => sizeMap[props.size]);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/variables' as vars;
 
-	.app-logo {
-		display: inline-flex;
-		align-items: center;
+    .app-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        flex-shrink: 0;
 
-		&__image {
-			max-width: 100%;
-			height: auto;
-		}
+        &__image {
+            display: block;
+            object-fit: contain;
+        }
 
-		&__text {
-			font-weight: 700;
-			color: vars.$black;
-		}
+        // Tailles
+        &--xs .app-logo__image {
+            width: 24px;
+            height: 24px;
+        }
 
-		&__default {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-xs;
-		}
+        &--sm .app-logo__image {
+            width: 32px;
+            height: 32px;
+        }
 
-		&__icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: vars.$primary-color;
-		}
+        &--md .app-logo__image {
+            width: 48px;
+            height: 48px;
+        }
 
-		&__name {
-			font-weight: 700;
-			color: vars.$black;
-		}
+        &--lg .app-logo__image {
+            width: 60px;
+            height: 60px;
+        }
 
-		// Variante sombre
-		&--dark {
-			.app-logo__text,
-			.app-logo__name {
-				color: vars.$white;
-			}
-		}
-	}
+        &--xl .app-logo__image {
+            width: 80px;
+            height: 80px;
+        }
+
+        // Variante sombre
+        &--dark {
+            filter: brightness(0) invert(1);
+        }
+
+        // Transition au hover si c'est un lien
+        &[href] {
+            transition: opacity vars.$transition-fast;
+
+            &:hover {
+                opacity: 0.8;
+            }
+
+            &:focus-visible {
+                outline: 2px solid vars.$primary-color;
+                outline-offset: 4px;
+                border-radius: vars.$border-radius-sm;
+            }
+        }
+    }
 </style>

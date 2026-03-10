@@ -1,0 +1,36 @@
+// Shared background effects for layouts (dots pattern + glow orbs)
+
+@keyframes dots-drift {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(32px, 32px);
+    }
+}
+
+@mixin glow-float-keyframes($translate-x: 25px, $translate-y: -20px, $scale: 1.05) {
+    @keyframes glow-float {
+        0%,
+        100% {
+            transform: translate(0, 0) scale(1);
+        }
+
+        50% {
+            transform: translate($translate-x, $translate-y) scale($scale);
+        }
+    }
+}
+
+@mixin dots-animation($duration: 120s) {
+    animation: dots-drift $duration linear infinite;
+}
+
+@mixin glow-animation($duration: 30s, $reverse: false) {
+    @if $reverse {
+        animation: glow-float $duration ease-in-out infinite reverse;
+    } @else {
+        animation: glow-float $duration ease-in-out infinite;
+    }
+}

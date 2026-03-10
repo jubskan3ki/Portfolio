@@ -1,68 +1,161 @@
-"""
-Sérialisation des technologies et stacks.
-"""
+"""Serializers pour les stacks techniques."""
 
-from django.utils.text import slugify
+from typing import Any
+
 from rest_framework import serializers
 
-from ..models import Stack
+from utils.validators import validate_string_list
+
+from ..models import Stack, StackCategory, StackRelationship
+from .resource import StackResourceSerializer
 
 
-class StackSerializer(serializers.ModelSerializer):
-    """
-    Sérialisation enrichie des stacks technologiques.
-    """
+class RelatedStackSerializer(serializers.ModelSerializer):
+    """Serializer pour les stacks associees (version legere)."""
 
-    proficiency_label = serializers.CharField(source="get_proficiency_display", read_only=True)
+    category = serializers.StringRelatedField()
+    relationship = serializers.SerializerMethodField()
 
     class Meta:
-        """
-        Métadonnées enrichies du serializer Stack.
-        """
-
         model = Stack
-        fields = [
+        fields = ("name", "logo", "slug", "category", "relationship")
+
+    def get_relationship(self, obj: Stack) -> str:
+        """Recupere le type de relation depuis le contexte."""
+        relationships = self.context.get("relationships", {})
+        return relationships.get(obj.pk, "similarTo")
+
+
+class StackListSerializer(serializers.ModelSerializer):
+    """Serializer pour la liste des stacks (version allegee)."""
+
+    category = serializers.StringRelatedField()
+    experience = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Stack
+        fields = (
+            "id",
+            "name",
+            "logo",
+            "category",
+            "slug",
+            "description",
+            "experience",
+            "level",
+            "tags",
+            "started_date",
+        )
+        read_only_fields = ("id", "slug", "experience")
+
+    def get_experience(self, obj: Stack) -> int:
+        """Retourne l'experience en mois depuis la date de debut."""
+        return obj.experience_months
+
+
+class StackDetailSerializer(serializers.ModelSerializer):
+    """Serializer pour les details d'une stack (lecture seule)."""
+
+    category = serializers.StringRelatedField()
+    resources = StackResourceSerializer(many=True, read_only=True)
+    related_stacks = serializers.SerializerMethodField()
+    experience = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Stack
+        fields = (
             "id",
             "name",
             "slug",
-            "icon",
-            "category",
-            "proficiency",
-            "proficiency_label",
             "description",
-            "official_website",
-            "experience_years",
+            "logo",
+            "category",
+            "tags",
+            "started_date",
+            "experience",
+            "level",
+            "website",
+            "website_label",
+            "github",
+            "github_label",
+            "first_release",
+            "license",
+            "content",
+            "resources",
+            "related_stacks",
             "created_at",
             "updated_at",
+        )
+        read_only_fields = fields
+
+    def get_experience(self, obj: Stack) -> int:
+        """Retourne l'experience en mois depuis la date de debut."""
+        return obj.experience_months
+
+    def get_related_stacks(self, obj: Stack) -> list[dict[str, Any]]:
+        """Recupere les stacks associees avec leurs relations."""
+        qs = getattr(obj, "relationships", StackRelationship.objects.none())
+        return [
+            {
+                "name": rel.to_stack.name,
+                "slug": rel.to_stack.slug,
+                "logo": rel.to_stack.logo.url if rel.to_stack.logo else None,
+                "category": (rel.to_stack.category.name if rel.to_stack.category else None),
+                "relationship": rel.relationship_type,
+            }
+            for rel in qs.all()
         ]
-        read_only_fields = ["slug", "created_at", "updated_at", "proficiency_label"]
 
-    def validate_proficiency(self, value):
-        """Vérifie que la proficiency est entre 1 et 5."""
-        if not 1 <= value <= 5:
-            raise serializers.ValidationError("Le niveau de maîtrise doit être entre 1 et 5.")
+
+class StackWriteSerializer(serializers.ModelSerializer):
+    """Serializer pour la creation et mise a jour des stacks."""
+
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=StackCategory.objects.all(),
+    )
+
+    class Meta:
+        model = Stack
+        fields = (
+            "id",
+            "name",
+            "slug",
+            "description",
+            "logo",
+            "category",
+            "tags",
+            "started_date",
+            "level",
+            "website",
+            "website_label",
+            "github",
+            "github_label",
+            "first_release",
+            "license",
+            "content",
+        )
+        read_only_fields = ("id",)
+        extra_kwargs = {
+            "slug": {"required": False},
+            "description": {"required": False, "allow_blank": True},
+            "logo": {"required": False},
+            "tags": {"required": False, "default": list},
+            "started_date": {"required": False, "allow_null": True},
+            "website": {"required": False, "allow_blank": True},
+            "website_label": {"required": False, "allow_blank": True},
+            "github": {"required": False, "allow_blank": True},
+            "github_label": {"required": False, "allow_blank": True},
+            "first_release": {"required": False, "allow_blank": True},
+            "license": {"required": False, "allow_blank": True},
+            "content": {"required": False, "allow_blank": True},
+        }
+
+    def validate_category(self, value: StackCategory | None) -> StackCategory:
+        """Valide que la categorie existe."""
+        if not value:
+            raise serializers.ValidationError("La categorie est obligatoire.")
         return value
 
-    def validate_experience_years(self, value):
-        """Vérifie que le nombre d'années d'expérience est réaliste."""
-        if value < 0 or value > 50:
-            raise serializers.ValidationError("Le nombre d'années d'expérience doit être compris entre 0 et 50.")
-        return value
-
-    def validate_icon(self, value):
-        """Validation sur la taille de l'icône (max 2MB)."""
-        max_size = 2 * 1024 * 1024  # 2MB
-        if value and value.size > max_size:
-            raise serializers.ValidationError("L'icône ne doit pas dépasser 2MB.")
-        return value
-
-    def create(self, validated_data):
-        """Génération automatique du slug lors de la création."""
-        validated_data["slug"] = validated_data.get("slug") or slugify(validated_data["name"])
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        """Mise à jour automatique du slug si le nom change."""
-        if "name" in validated_data and instance.name != validated_data["name"]:
-            validated_data["slug"] = slugify(validated_data["name"])
-        return super().update(instance, validated_data)
+    def validate_tags(self, value):
+        """Valide que tags est une liste de strings."""
+        return validate_string_list(value, item_label="tag")

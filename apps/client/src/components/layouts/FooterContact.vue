@@ -1,105 +1,103 @@
-<!-- src/components/footer/ContactInfo.vue -->
 <template>
-	<div class="contact-info">
-		<SectionHeading :title="title" />
+    <section class="footer-contact" aria-labelledby="contact-heading">
+        <SectionHeading :id="headingId" :title="title" />
 
-		<div class="contact-info__list">
-			<ContactItem v-if="email" icon="mail" :text="email" :is-link="true" link-type="email" />
+        <address class="footer-contact__list">
+            <FooterContactItem
+                v-if="email"
+                icon="mail"
+                :text="email"
+                is-link
+                link-type="email"
+            />
+            <FooterContactItem
+                v-if="phone"
+                icon="phone"
+                :text="phone"
+                is-link
+                link-type="phone"
+            />
+            <FooterContactItem v-if="address" icon="map-pin" :text="address" />
+        </address>
 
-			<ContactItem v-if="phone" icon="phone" :text="phone" :is-link="true" link-type="phone" />
-
-			<ContactItem v-if="address" icon="map-pin" :text="address" />
-		</div>
-
-		<div class="contact-info__availability">
-			<div class="availability__indicator" :class="{ 'availability__indicator--available': isAvailable }"></div>
-			<small>{{ availabilityText }}</small>
-		</div>
-	</div>
+        <div class="footer-contact__availability" role="status" :aria-label="availabilityText">
+            <span class="footer-contact__indicator footer-contact__indicator--available" aria-hidden="true"></span>
+            <small>{{ availabilityText }}</small>
+        </div>
+    </section>
 </template>
 
 <script setup lang="ts">
-	import ContactItem from '@/components/layouts/FooterContactItem.vue';
-	import SectionHeading from '@/components/ui/SectionHeading.vue';
-	import { computed } from 'vue';
+    import FooterContactItem from '@/components/layouts/FooterContactItem.vue';
+    import SectionHeading from '@/components/ui/SectionHeading.vue';
 
-	const props = defineProps({
-		title: {
-			type: String,
-			default: 'Contact',
-		},
-		email: {
-			type: String,
-			default: '',
-		},
-		phone: {
-			type: String,
-			default: '',
-		},
-		address: {
-			type: String,
-			default: '',
-		},
-		isAvailable: {
-			type: Boolean,
-			default: true,
-		},
-	});
+    import type { FooterContactProps } from '@/types/components/layouts';
 
-	// Texte d'état de disponibilité
-	const availabilityText = computed(() =>
-		props.isAvailable ? 'Disponible pour de nouveaux projets' : 'Non disponible pour le moment'
-	);
+    withDefaults(defineProps<FooterContactProps>(), {
+        title: 'Contact',
+        email: '',
+        phone: '',
+        address: '',
+    });
+
+    const headingId = 'footer-contact-heading';
+
+    const availabilityText = 'Disponible pour de nouveaux projets';
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.contact-info {
-		display: flex;
-		flex-direction: column;
+    .footer-contact {
+        display: flex;
+        flex-direction: column;
 
-		&__list {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-sm;
-			margin-bottom: vars.$spacing-md;
-		}
+        &__list {
+            display: flex;
+            flex-direction: column;
+            gap: vars.$spacing-xs;
+            margin-bottom: vars.$spacing-md;
+            font-style: normal;
+        }
 
-		&__availability {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-sm;
-			margin-top: vars.$spacing-sm;
-			padding: vars.$spacing-xs vars.$spacing-sm;
-			background-color: func.color-alpha(vars.$white-dark, 0.5);
-			border-radius: vars.$border-radius-md;
-		}
+        &__availability {
+            display: inline-flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            margin-top: vars.$spacing-xs;
+            padding: vars.$spacing-xxs vars.$spacing-xs;
+            border-radius: vars.$border-radius-md;
 
-		.availability__indicator {
-			width: 10px;
-			height: 10px;
-			border-radius: 50%;
-			background-color: vars.$gray;
+            @include mix.glass(12px, func.color-alpha(vars.$white, 0.6));
 
-			&--available {
-				background-color: vars.$success-color;
-				animation: pulse 2s infinite;
-			}
-		}
-	}
+            border: 1px solid func.color-alpha(vars.$primary-color, 0.08);
+            width: fit-content;
+        }
 
-	@keyframes pulse {
-		0% {
-			box-shadow: 0 0 0 0 func.color-alpha(vars.$success-color, 0.7);
-		}
-		70% {
-			box-shadow: 0 0 0 6px func.color-alpha(vars.$success-color, 0);
-		}
-		100% {
-			box-shadow: 0 0 0 0 func.color-alpha(vars.$success-color, 0);
-		}
-	}
+        &__indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: vars.$border-radius-full;
+            background-color: vars.$gray;
+            flex-shrink: 0;
+
+            &--available {
+                background-color: vars.$success-color;
+                animation: pulse 2s ease-in-out infinite;
+            }
+        }
+    }
+
+    @keyframes pulse {
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 func.color-alpha(vars.$success-color, 0.5);
+        }
+
+        50% {
+            box-shadow: 0 0 0 6px func.color-alpha(vars.$success-color, 0);
+        }
+    }
 </style>

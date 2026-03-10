@@ -1,0 +1,96 @@
+<template>
+    <div class="query-state-handler">
+        <!-- Loading -->
+        <div v-if="loading" class="query-state-handler__state">
+            <slot name="loading">
+                <Spinner :size="loadingSize" :label="loadingMessage" />
+            </slot>
+        </div>
+
+        <!-- Error -->
+        <div v-else-if="error" class="query-state-handler__state query-state-handler__state--error">
+            <slot name="error" :error="error">
+                <ErrorMessage :message="typeof error === 'string' ? error : error.message" />
+                <BaseButton
+                    v-if="retryable"
+                    variant="primary"
+                    size="sm"
+                    class="query-state-handler__retry"
+                    @click="$emit('retry')"
+                >
+                    {{ retryText }}
+                </BaseButton>
+            </slot>
+        </div>
+
+        <!-- Empty -->
+        <div v-else-if="empty" class="query-state-handler__state">
+            <slot name="empty">
+                <EmptyState :title="emptyTitle" :description="emptyDescription" :icon="emptyIcon" :icon-size="48">
+                    <template v-if="$slots['empty-action']" #action>
+                        <slot name="empty-action"></slot>
+                    </template>
+                </EmptyState>
+            </slot>
+        </div>
+
+        <!-- Content -->
+        <slot v-else></slot>
+    </div>
+</template>
+
+<script setup lang="ts">
+    import BaseButton from '@/components/base/BaseButton.vue';
+    import EmptyState from '@/components/feedback/EmptyState.vue';
+    import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
+    import Spinner from '@/components/loaders/Spinner.vue';
+
+    interface Props {
+        loading?: boolean;
+        error?: string | Error | null;
+        empty?: boolean;
+        loadingMessage?: string;
+        loadingSize?: 'sm' | 'md' | 'lg';
+        emptyTitle?: string;
+        emptyDescription?: string;
+        emptyIcon?: string;
+        retryable?: boolean;
+        retryText?: string;
+    }
+
+    withDefaults(defineProps<Props>(), {
+        loading: false,
+        error: null,
+        empty: false,
+        loadingMessage: 'Chargement...',
+        loadingSize: 'lg',
+        emptyTitle: 'Aucun résultat',
+        emptyDescription: '',
+        emptyIcon: 'folder',
+        retryable: true,
+        retryText: 'Réessayer',
+    });
+
+    defineEmits<{
+        retry: [];
+    }>();
+</script>
+
+<style lang="scss" scoped>
+    .query-state-handler {
+        width: 100%;
+
+        &__state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            min-height: 200px;
+        }
+
+        &__retry {
+            margin-top: 1rem;
+        }
+    }
+</style>

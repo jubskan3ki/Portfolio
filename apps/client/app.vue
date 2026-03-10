@@ -6,5 +6,5 @@
 </template>
 
 <style lang="scss">
-	@use 'src/styles/main.scss';
+	@use 'src/styles/main';
 </style>

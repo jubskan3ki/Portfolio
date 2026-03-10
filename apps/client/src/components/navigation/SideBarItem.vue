@@ -1,162 +1,246 @@
 <template>
-	<li class="side-bar-item">
-		<NuxtLink
-			:to="to"
-			:class="[
-				'side-bar-item__link',
-				{ 'side-bar-item__link--active': isActive },
-				{ 'side-bar-item__link--collapsed': isCollapsed },
-			]"
-			:title="isCollapsed ? text : undefined"
-		>
-			<span v-if="icon" class="side-bar-item__icon">
-				<BaseIcon :name="icon" :size="20" />
-			</span>
-			<span v-if="!isCollapsed" class="side-bar-item__text">{{ text }}</span>
-			<BaseIcon
-				v-if="badge && !isCollapsed"
-				:name="getBadgeIcon"
-				:size="16"
-				:class="['side-bar-item__badge', `side-bar-item__badge--${badge.type || 'info'}`]"
-			/>
-		</NuxtLink>
-	</li>
+    <li class="sidebar-item" role="none">
+        <NuxtLink
+            :to="to"
+            :class="linkClasses"
+            :title="isCollapsed ? text : undefined"
+            :aria-current="isActive ? 'page' : undefined"
+            role="menuitem"
+        >
+            <span class="sidebar-item__indicator" aria-hidden="true"></span>
+
+            <span v-if="icon" class="sidebar-item__icon" aria-hidden="true">
+                <BaseIcon :name="icon" :size="20" />
+            </span>
+
+            <Transition name="fade">
+                <span v-if="!isCollapsed" class="sidebar-item__text">{{ text }}</span>
+            </Transition>
+
+            <span
+                v-if="badge && !isCollapsed"
+                :class="badgeClasses"
+                :aria-label="`${badge.value || ''} ${badge.type || 'notification'}`"
+            >
+                <template v-if="badge.value">{{ badge.value }}</template>
+                <span v-else class="sidebar-item__badge-dot"></span>
+            </span>
+
+            <Tooltip v-if="isCollapsed" :content="text" position="right">
+                <span class="sidebar-item__tooltip-trigger"></span>
+            </Tooltip>
+        </NuxtLink>
+    </li>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import { computed } from 'vue';
-	import { useRoute } from 'vue-router';
+    import { computed } from 'vue';
+    import { useRoute } from 'vue-router';
 
-	interface Badge {
-		type?: 'info' | 'success' | 'warning' | 'danger';
-		value?: string | number;
-	}
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import Tooltip from '@/components/ui/Tooltip.vue';
 
-	const props = defineProps({
-		text: {
-			type: String,
-			required: true,
-		},
-		to: {
-			type: String,
-			required: true,
-		},
-		icon: {
-			type: String,
-			default: '',
-		},
-		badge: {
-			type: Object as () => Badge,
-			default: undefined,
-		},
-		isCollapsed: {
-			type: Boolean,
-			default: false,
-		},
-	});
+    type BadgeType = 'info' | 'success' | 'warning' | 'danger';
 
-	const route = useRoute();
+    interface Badge {
+        type?: BadgeType;
+        value?: string | number;
+    }
 
-	// Vérifier si la route est active
-	const isActive = computed(() => {
-		if (props.to === '/' && route.path === '/') {
-			return true;
-		}
-		return props.to !== '/' && route.path.startsWith(props.to);
-	});
+    interface Props {
+        text: string;
+        to: string;
+        icon?: string;
+        badge?: Badge;
+        isCollapsed?: boolean;
+    }
 
-	// Déterminer l'icône du badge
-	const getBadgeIcon = computed(() => {
-		if (!props.badge) return '';
+    const props = withDefaults(defineProps<Props>(), {
+        icon: '',
+        badge: undefined,
+        isCollapsed: false,
+    });
 
-		const type = props.badge.type || 'info';
+    const route = useRoute();
 
-		switch (type) {
-			case 'success':
-				return 'check-circle';
-			case 'warning':
-				return 'alert-triangle';
-			case 'danger':
-				return 'alert-circle';
-			case 'info':
-			default:
-				return 'info';
-		}
-	});
+    const isActive = computed(() => {
+        if (props.to === '/' && route.path === '/') {
+            return true;
+        }
+        return props.to !== '/' && route.path.startsWith(props.to);
+    });
+
+    const linkClasses = computed(() => [
+        'sidebar-item__link',
+        {
+            'sidebar-item__link--active': isActive.value,
+            'sidebar-item__link--collapsed': props.isCollapsed,
+        },
+    ]);
+
+    const badgeClasses = computed(() => ['sidebar-item__badge', `sidebar-item__badge--${props.badge?.type || 'info'}`]);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.side-bar-item {
-		margin-bottom: 2px;
+    .sidebar-item {
+        margin: 0 vars.$spacing-xs;
+        list-style: none;
 
-		&__link {
-			display: flex;
-			align-items: center;
-			padding: vars.$spacing-sm vars.$spacing-md;
-			transition: all vars.$transition-base;
-			position: relative;
+        &__link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            padding: vars.$spacing-xs vars.$spacing-md;
+            border-radius: vars.$border-radius-lg;
+            color: vars.$text-secondary;
+            text-decoration: none;
+            font-weight: 500;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-			&--collapsed {
-				justify-content: center;
-				padding: vars.$spacing-sm 0;
-			}
+            &:hover {
+                background: func.color-alpha(vars.$gray-light, 0.5);
+                color: vars.$text-primary;
+                transform: translateX(2px);
 
-			&--active {
-				font-weight: 500;
+                .sidebar-item__icon {
+                    transform: scale(1.1);
+                }
+            }
 
-				&::before {
-					content: '';
-					position: absolute;
-					left: 0;
-					top: 0;
-					bottom: 0;
-					width: 3px;
-					background-color: vars.$primary-color;
-				}
-			}
-		}
+            &:focus-visible {
+                outline: 2px solid vars.$primary-color;
+                outline-offset: 2px;
+            }
 
-		&__icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			margin-right: vars.$spacing-sm;
+            &--active {
+                background: func.color-alpha(vars.$primary-color, 0.1);
+                color: vars.$primary-color;
 
-			.side-bar-item__link--collapsed & {
-				margin-right: 0;
-			}
-		}
+                .sidebar-item__indicator {
+                    transform: scaleY(1);
+                }
 
-		&__text {
-			flex: 1;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
+                .sidebar-item__icon {
+                    color: vars.$primary-color;
+                }
 
-		&__badge {
-			margin-left: vars.$spacing-sm;
+                &:hover {
+                    background: func.color-alpha(vars.$primary-color, 0.15);
+                }
+            }
 
-			&--info {
-				color: vars.$info-color;
-			}
+            &--collapsed {
+                justify-content: center;
+                padding: vars.$spacing-xs;
 
-			&--success {
-				color: vars.$success-color;
-			}
+                .sidebar-item__icon {
+                    margin: 0;
+                }
+            }
+        }
 
-			&--warning {
-				color: vars.$warning-color;
-			}
+        &__indicator {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px;
+            height: 60%;
+            background: vars.$primary-color;
+            border-radius: 0 vars.$border-radius-full vars.$border-radius-full 0;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
 
-			&--danger {
-				color: vars.$danger-color;
-			}
-		}
-	}
+        &__icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            transition: all 0.3s ease;
+        }
+
+        &__text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        &__badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 vars.$spacing-xxs;
+            border-radius: vars.$border-radius-full;
+            font-weight: 600;
+            line-height: 1;
+
+            &--info {
+                background: func.color-alpha(vars.$info-color, 0.15);
+                color: vars.$info-color;
+            }
+
+            &--success {
+                background: func.color-alpha(vars.$success-color, 0.15);
+                color: vars.$success-color;
+            }
+
+            &--warning {
+                background: func.color-alpha(vars.$warning-color, 0.15);
+                color: vars.$warning-dark;
+            }
+
+            &--danger {
+                background: func.color-alpha(vars.$danger-color, 0.15);
+                color: vars.$danger-color;
+            }
+        }
+
+        &__badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentcolor;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        &__tooltip-trigger {
+            position: absolute;
+            inset: 0;
+        }
+    }
+
+    // Fade transition
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 0.2s ease;
+    }
+
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
+    }
+
+    @keyframes pulse {
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.6;
+            transform: scale(0.9);
+        }
+    }
 </style>

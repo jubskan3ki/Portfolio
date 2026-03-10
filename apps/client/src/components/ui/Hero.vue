@@ -1,308 +1,428 @@
 <template>
-	<Section :class="['hero', `hero--${variant}`, { 'hero--has-logo': !!logo }]" :variant="variant">
-		<div class="container">
-			<div class="hero__content">
-				<!-- Logo section (for stack pages) -->
-				<div v-if="logo" class="hero__logo-container animate-fade-in">
-					<img :src="logo" :alt="logoAlt || title" class="hero__logo" />
-				</div>
+    <section
+        ref="heroRef"
+        class="hero"
+        :class="[`hero--${variant}`, { 'hero--compact': size === 'compact', 'hero--has-stats': hasStats }]"
+    >
+        <!-- Background layers -->
+        <SectionBackground :variant="variant" />
 
-				<div class="hero__text">
-					<!-- Title -->
-					<h1 class="hero__title" :class="{ 'has-underline': showTitleUnderline }">
-						<slot name="title">{{ title }}</slot>
-					</h1>
+        <!-- Main Content -->
+        <div class="container">
+            <div class="hero__wrapper" :style="parallaxStyle">
+                <!-- Glass Card -->
+                <div class="hero__card">
+                    <div class="hero__card-inner">
+                        <!-- Badge -->
+                        <span v-if="badge" class="hero__badge">{{ badge }}</span>
 
-					<!-- Description -->
-					<p v-if="description || $slots.description" class="hero__description">
-						<slot name="description">{{ description }}</slot>
-					</p>
+                        <!-- Logo -->
+                        <div v-if="logo" class="hero__logo">
+                            <BaseImage
+                                :src="resolvedLogo"
+                                :alt="logoAlt || title"
+                                :width="64"
+                                :height="64"
+                                :lazy="false"
+                                :show-placeholder="false"
+                            />
+                        </div>
 
-					<!-- Meta information (dates, categories, etc) -->
-					<div v-if="hasMeta || $slots.meta" class="hero__meta">
-						<slot name="meta"></slot>
-					</div>
+                        <!-- Title -->
+                        <h1 class="hero__title">
+                            <slot name="title">{{ title }}</slot>
+                        </h1>
 
-					<!-- Links section (for stack pages) -->
-					<div v-if="$slots.links" class="hero__links">
-						<slot name="links"></slot>
-					</div>
+                        <!-- Description -->
+                        <p v-if="description || $slots.description" class="hero__description">
+                            <slot name="description">{{ description }}</slot>
+                        </p>
 
-					<!-- Additional content -->
-					<slot></slot>
-				</div>
-			</div>
-		</div>
-	</Section>
+                        <!-- Meta -->
+                        <div v-if="hasMeta || $slots.meta" class="hero__meta">
+                            <slot name="meta"></slot>
+                        </div>
+
+                        <!-- Links -->
+                        <div v-if="$slots.links" class="hero__links">
+                            <slot name="links"></slot>
+                        </div>
+
+                        <slot></slot>
+                    </div>
+
+                    <!-- Decorative floats -->
+                    <span class="hero__float hero__float--1"></span>
+                    <span class="hero__float hero__float--2"></span>
+                    <span class="hero__float hero__float--3"></span>
+                </div>
+
+                <!-- Stats (positioned overlapping) -->
+                <div v-if="$slots.stats" class="hero__stats">
+                    <slot name="stats"></slot>
+                </div>
+            </div>
+        </div>
+    </section>
 </template>
 
 <script setup lang="ts">
-	import Section from '@/components/layouts/Section.vue';
+    import { ref, computed, onMounted, onUnmounted, useSlots } from 'vue';
 
-	defineProps({
-		// Main content
-		title: {
-			type: String,
-			required: true,
-		},
-		description: {
-			type: String,
-			default: '',
-		},
+    import SectionBackground from '@/components/ui/SectionBackground.vue';
+    import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
+    import { resolveMediaUrl } from '@/services/utils/helpers';
 
-		// Styling
-		variant: {
-			type: String,
-			default: 'primary',
-			validator: (value: string) => ['primary', 'secondary', 'info', 'success'].includes(value),
-		},
-		showTitleUnderline: {
-			type: Boolean,
-			default: false,
-		},
+    import type { HeroProps } from '@/types/components/ui';
 
-		// Logo (for stack pages)
-		logo: {
-			type: String,
-			default: '',
-		},
-		logoAlt: {
-			type: String,
-			default: '',
-		},
+    const props = withDefaults(defineProps<HeroProps>(), {
+        description: '',
+        variant: 'primary',
+        showTitleUnderline: false,
+        logo: '',
+        logoAlt: '',
+        hasMeta: false,
+        badge: '',
+        centered: true,
+        size: 'default',
+        showDots: true,
+        showOrbs: true,
+        showBottomFade: false,
+        animateDots: false,
+        parallaxIntensity: 0.02,
+    });
 
-		// Meta info flag
-		hasMeta: {
-			type: Boolean,
-			default: false,
-		},
-	});
+    const slots = useSlots();
+    const hasStats = computed(() => !!slots.stats);
+    const resolvedLogo = computed(() => resolveMediaUrl(props.logo));
+
+    const heroRef = ref<HTMLElement | null>(null);
+    const scrollY = ref(0);
+    const { prefersReducedMotion } = useReducedMotion();
+
+    const parallaxStyle = computed(() => {
+        if (prefersReducedMotion.value || props.parallaxIntensity === 0) {
+            return {};
+        }
+        return { transform: `translateY(${scrollY.value * props.parallaxIntensity}px)` };
+    });
+
+    const handleScroll = () => {
+        if (heroRef.value && heroRef.value.getBoundingClientRect().bottom > 0) {
+            scrollY.value = window.scrollY;
+        }
+    };
+
+    onMounted(() => {
+        if (!prefersReducedMotion.value && props.parallaxIntensity > 0) {
+            window.addEventListener('scroll', handleScroll, { passive: true });
+        }
+    });
+
+    onUnmounted(() => {
+        window.removeEventListener('scroll', handleScroll);
+    });
 </script>
 
-<style lang="scss">
-	@use '@/styles/abstracts/functions' as func;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/variables' as vars;
+<style lang="scss" scoped>
+    @use '@/styles/abstracts/functions' as fn;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/components/hero-variants' as hero;
 
-	.hero {
-		padding: vars.$spacing-lg 0;
-		position: relative;
-		overflow: hidden;
+    .hero {
+        position: relative;
+        padding: calc(vars.$navbar-height + vars.$spacing-xxl) 0 vars.$spacing-xxl;
+        overflow: hidden;
 
-		// Background gradient
-		&::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: linear-gradient(
-				135deg,
-				func.color-alpha(vars.$primary-color, 0.95),
-				func.color-alpha(vars.$secondary-color, 0.85)
-			);
-			z-index: -1;
-		}
+        &--has-stats {
+            padding-bottom: calc(vars.$spacing-xxl + 40px);
+        }
 
-		// Variants
-		&--secondary {
-			&::before {
-				background: linear-gradient(
-					135deg,
-					func.color-alpha(vars.$secondary-color, 0.95),
-					func.color-alpha(vars.$primary-color, 0.85)
-				);
-			}
-		}
+        // Wrapper
+        &__wrapper {
+            position: relative;
+            z-index: 1;
+            will-change: transform;
+        }
 
-		&--info {
-			&::before {
-				background: linear-gradient(
-					135deg,
-					func.color-alpha(vars.$info-color, 0.95),
-					func.color-alpha(vars.$primary-color, 0.85)
-				);
-			}
-		}
+        // Glass Card
+        &__card {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: vars.$spacing-xxl vars.$spacing-xl;
+            backdrop-filter: blur(16px);
+            border-radius: vars.$border-radius-xl;
+            text-align: center;
+            transition: transform 0.4s ease;
 
-		&--success {
-			&::before {
-				background: linear-gradient(
-					135deg,
-					func.color-alpha(vars.$success-color, 0.95),
-					func.color-alpha(vars.$secondary-color, 0.85)
-				);
-			}
-		}
+            @include mix.responsive(mobile) {
+                padding: vars.$spacing-xl vars.$spacing-lg;
+            }
 
-		// Content container
-		&__content {
-			// When has logo, display flex layout
-			.hero--has-logo & {
-				display: flex;
-				align-items: center;
-				gap: vars.$spacing-lg;
+            &:hover {
+                transform: translateY(-4px);
 
-				@include mix.responsive(mobile) {
-					flex-direction: column;
-					text-align: center;
-					gap: vars.$spacing-md;
-				}
-			}
-		}
+                .hero__float {
+                    transform: translateY(-8px);
+                }
+            }
+        }
 
-		// Logo styling (for stack pages)
-		&__logo-container {
-			background-color: func.color-alpha(vars.$white, 0.9);
-			border-radius: vars.$border-radius-full;
-			padding: vars.$spacing-md;
-			width: 120px;
-			height: 120px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			box-shadow: vars.$box-shadow-medium;
-			flex-shrink: 0;
+        &__card-inner {
+            position: relative;
+            z-index: 2;
+        }
 
-			@include mix.responsive(mobile) {
-				width: 100px;
-				height: 100px;
-			}
-		}
+        // Floating decorative elements
+        &__float {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-		&__logo {
-			max-width: 80%;
-			max-height: 80%;
-			object-fit: contain;
-		}
+            @media (prefers-reduced-motion: reduce) {
+                animation: none !important;
+            }
 
-		// Text content container
-		&__text {
-			flex-grow: 1;
-		}
+            &--1 {
+                top: -20px;
+                right: 10%;
+                width: 40px;
+                height: 40px;
+                animation: float-1 8s ease-in-out infinite;
+            }
 
-		// Title styling
-		&__title {
-			color: vars.$white;
-			margin-bottom: vars.$spacing-md;
-			font-weight: 800;
-			text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            &--2 {
+                bottom: -15px;
+                left: 15%;
+                width: 24px;
+                height: 24px;
+                animation: float-2 6s ease-in-out infinite;
+            }
 
-			// Text alignment for different pages
-			.hero--has-logo & {
-				text-align: left;
-				margin-bottom: vars.$spacing-sm;
+            &--3 {
+                top: 30%;
+                right: -10px;
+                width: 16px;
+                height: 16px;
+                animation: float-3 7s ease-in-out infinite;
 
-				@include mix.responsive(mobile) {
-					text-align: center;
-				}
-			}
+                @include mix.responsive(mobile) {
+                    display: none;
+                }
+            }
+        }
 
-			&.has-underline {
-				position: relative;
-				text-align: center;
+        // Badge
+        &__badge {
+            display: inline-block;
+            margin-bottom: vars.$spacing-lg;
+            padding: vars.$spacing-xxs vars.$spacing-md;
+            font-weight: vars.$font-weight-semibold;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            border-radius: vars.$border-radius-full;
+        }
 
-				&::after {
-					content: '';
-					display: block;
-					width: 80px;
-					height: 4px;
-					background-color: vars.$white;
-					margin: vars.$spacing-sm auto 0;
-					border-radius: vars.$border-radius-full;
-				}
+        // Logo
+        &__logo {
+            margin-bottom: vars.$spacing-lg;
 
-				.hero--has-logo & {
-					text-align: left;
+            img {
+                width: 64px;
+                height: 64px;
+                object-fit: contain;
+                border-radius: vars.$border-radius-lg;
+                padding: vars.$spacing-sm;
+            }
+        }
 
-					&::after {
-						margin: vars.$spacing-sm 0 0;
-					}
+        // Title
+        &__title {
+            margin: 0 0 vars.$spacing-sm;
+            font-weight: vars.$font-weight-bold;
+            line-height: vars.$line-height-tight;
+        }
 
-					@include mix.responsive(mobile) {
-						text-align: center;
+        // Description
+        &__description {
+            margin: 0 0 vars.$spacing-lg;
+            line-height: vars.$line-height-relaxed;
+            max-width: 500px;
+            margin-inline: auto;
+        }
 
-						&::after {
-							margin: vars.$spacing-sm auto 0;
-						}
-					}
-				}
-			}
-		}
+        // Meta
+        &__meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: vars.$spacing-md;
+            margin-top: vars.$spacing-lg;
+        }
 
-		// Description styling
-		&__description {
-			color: func.color-alpha(vars.$white, 0.95);
-			max-width: 800px;
-			line-height: 1.6;
+        // Links
+        &__links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: vars.$spacing-sm;
+            margin-top: vars.$spacing-lg;
+        }
 
-			.hero--has-logo & {
-				margin: 0;
-				text-align: left;
+        // Stats (overlapping position)
+        &__stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: vars.$spacing-sm;
+            max-width: 750px;
+            margin: 0 auto;
+            margin-top: calc(-1 * vars.$spacing-lg);
+            transform: translateY(50%);
 
-				@include mix.responsive(mobile) {
-					text-align: center;
-					margin: 0 auto;
-				}
-			}
+            @include mix.responsive(mobile) {
+                grid-template-columns: 1fr;
+                gap: vars.$spacing-sm;
+                max-width: 300px;
+            }
+        }
 
-			&:not(.hero--has-logo &) {
-				margin: 0 auto;
-				text-align: center;
-			}
-		}
+        // Compact
+        &--compact {
+            padding: calc(vars.$navbar-height + vars.$spacing-xl) 0 vars.$spacing-xl;
 
-		// Meta information styling
-		&__meta {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-md;
-			color: func.color-alpha(vars.$white, 0.9);
-			margin-top: vars.$spacing-sm;
+            &.hero--has-stats {
+                padding-bottom: calc(vars.$spacing-xl + 30px);
+            }
 
-			.hero--has-logo & {
-				margin-bottom: vars.$spacing-md;
+            .hero__card {
+                padding: vars.$spacing-xl vars.$spacing-lg;
+            }
+        }
 
-				@include mix.responsive(mobile) {
-					justify-content: center;
-				}
-			}
+        // Variants
+        &--light {
+            @include hero.hero-variant(
+                $background: vars.$bg-secondary,
+                $card-bg: fn.color-alpha(vars.$white, 0.8),
+                $card-border: fn.color-alpha(vars.$white, 0.9),
+                $card-shadow: (
+                    0 8px 32px fn.color-alpha(vars.$black, 0.06),
+                    0 1px 2px fn.color-alpha(vars.$black, 0.04),
+                    inset 0 1px 0 vars.$white,
+                ),
+                $badge-color: vars.$primary-color,
+                $badge-bg: fn.color-alpha(vars.$primary-color, 0.08),
+                $badge-border: fn.color-alpha(vars.$primary-color, 0.12),
+                $title-color: vars.$text-primary,
+                $desc-color: vars.$text-secondary,
+                $meta-color: vars.$text-secondary,
+                $logo-bg: fn.color-alpha(vars.$primary-color, 0.08)
+            );
+        }
 
-			// Common meta item style (applied to slotted content)
-			:deep(.hero__meta-item) {
-				display: flex;
-				align-items: center;
-				gap: vars.$spacing-xs;
-			}
-		}
+        &--dark {
+            @include hero.hero-variant(
+                $background: vars.$black-light,
+                $card-bg: fn.color-alpha(vars.$primary-dark, 0.3),
+                $card-border: fn.color-alpha(vars.$primary-color, 0.2),
+                $card-shadow: 0 8px 32px fn.color-alpha(vars.$black, 0.3),
+                $badge-color: vars.$secondary-light,
+                $badge-bg: fn.color-alpha(vars.$primary-color, 0.15),
+                $badge-border: fn.color-alpha(vars.$primary-color, 0.25),
+                $title-color: vars.$white,
+                $desc-color: fn.color-alpha(vars.$white, 0.75),
+                $meta-color: fn.color-alpha(vars.$white, 0.65),
+                $logo-bg: fn.color-alpha(vars.$primary-color, 0.15)
+            );
+        }
 
-		// Links section styling
-		&__links {
-			display: flex;
-			gap: vars.$spacing-md;
-			margin-top: vars.$spacing-md;
+        &--primary {
+            @include hero.hero-variant(
+                $background: linear-gradient(180deg, vars.$primary-light 0%, vars.$primary-dark 100%),
+                $card-bg: fn.color-alpha(vars.$white, 0.1),
+                $card-border: fn.color-alpha(vars.$white, 0.2),
+                $card-shadow: (
+                    0 8px 32px fn.color-alpha(vars.$black, 0.1),
+                    inset 0 1px 0 fn.color-alpha(vars.$white, 0.2),
+                ),
+                $badge-color: vars.$white,
+                $badge-bg: fn.color-alpha(vars.$white, 0.1),
+                $badge-border: fn.color-alpha(vars.$white, 0.15),
+                $title-color: vars.$white,
+                $desc-color: fn.color-alpha(vars.$white, 0.85),
+                $meta-color: fn.color-alpha(vars.$white, 0.7),
+                $logo-bg: fn.color-alpha(vars.$white, 0.1)
+            );
+        }
 
-			@include mix.responsive(mobile) {
-				justify-content: center;
-			}
+        &--secondary {
+            @include hero.hero-variant(
+                $background: linear-gradient(180deg, vars.$primary-dark 0%, vars.$black-light 100%),
+                $card-bg: fn.color-alpha(vars.$white, 0.05),
+                $card-border: fn.color-alpha(vars.$primary-color, 0.3),
+                $card-shadow: (
+                    0 8px 32px fn.color-alpha(vars.$black, 0.4),
+                    0 0 60px fn.color-alpha(vars.$primary-color, 0.15),
+                    inset 0 1px 0 fn.color-alpha(vars.$white, 0.08),
+                ),
+                $badge-color: vars.$white,
+                $badge-bg: fn.color-alpha(vars.$primary-color, 0.2),
+                $badge-border: fn.color-alpha(vars.$primary-color, 0.4),
+                $title-color: vars.$white,
+                $desc-color: fn.color-alpha(vars.$white, 0.8),
+                $meta-color: fn.color-alpha(vars.$white, 0.65),
+                $logo-bg: fn.color-alpha(vars.$primary-color, 0.15),
+                $logo-border: fn.color-alpha(vars.$primary-color, 0.3)
+            );
+        }
+    }
 
-			// Link item styling (applied to slotted content)
-			:deep(.hero__link) {
-				display: flex;
-				align-items: center;
-				gap: vars.$spacing-xs;
-				padding: vars.$spacing-xs vars.$spacing-sm;
-				background-color: func.color-alpha(vars.$white, 0.2);
-				border-radius: vars.$border-radius-md;
-				color: vars.$white;
-				transition: all vars.$transition-base;
+    // Floating animations (for dots variants)
+    @keyframes float-1 {
+        0%,
+        100% {
+            transform: translate(0, 0) rotate(0deg);
+        }
 
-				&:hover {
-					background-color: func.color-alpha(vars.$white, 0.3);
-					transform: translateY(-2px);
-				}
-			}
-		}
-	}
+        25% {
+            transform: translate(-5px, -10px) rotate(5deg);
+        }
+
+        50% {
+            transform: translate(5px, -5px) rotate(-3deg);
+        }
+
+        75% {
+            transform: translate(-3px, -12px) rotate(2deg);
+        }
+    }
+
+    @keyframes float-2 {
+        0%,
+        100% {
+            transform: translate(0, 0);
+        }
+
+        33% {
+            transform: translate(8px, -8px);
+        }
+
+        66% {
+            transform: translate(-4px, -12px);
+        }
+    }
+
+    @keyframes float-3 {
+        0%,
+        100% {
+            transform: translate(0, 0) scale(1);
+        }
+
+        50% {
+            transform: translate(-6px, -10px) scale(1.1);
+        }
+    }
 </style>

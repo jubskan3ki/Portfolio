@@ -1,323 +1,374 @@
 <template>
-	<div class="experience-card">
-		<div class="experience-card__header">
-			<div v-if="logo" class="experience-card__logo">
-				<img :src="logo" :alt="company" class="experience-card__logo-img" />
-			</div>
-			<div class="experience-card__header-content">
-				<h3 class="experience-card__title">{{ title }}</h3>
-				<div class="experience-card__company">
-					{{ company }}
-					<span v-if="location" class="experience-card__location">
-						<BaseIcon name="map-pin" :size="14" />
-						{{ location }}
-					</span>
-				</div>
-				<div class="experience-card__period">
-					<BaseIcon name="calendar" :size="14" />
-					{{ displayPeriod }}
-				</div>
-			</div>
-		</div>
+    <article ref="cardRef" class="exp-card" :class="{ 'exp-card--current': isCurrent }">
+        <header class="exp-card__header">
+            <!-- Logo -->
+            <figure class="exp-card__logo">
+                <BaseImage
+                    v-if="logo"
+                    :src="resolvedLogo"
+                    :alt="`Logo ${company}`"
+                    :width="48"
+                    :height="48"
+                    object-fit="contain"
+                    :show-placeholder="false"
+                    class="exp-card__logo-img"
+                />
+                <BaseIcon v-else name="building-2" :size="22" />
+            </figure>
 
-		<div class="experience-card__body">
-			<p v-if="description" class="experience-card__description">{{ description }}</p>
+            <!-- Info -->
+            <div class="exp-card__info">
+                <h4 class="exp-card__title">{{ title }}</h4>
+                <p class="exp-card__company">
+                    <span>{{ company }}</span>
+                    <span v-if="location" class="exp-card__location">
+                        <BaseIcon name="map-pin" :size="12" />
+                        {{ location }}
+                    </span>
+                </p>
+            </div>
 
-			<div v-if="skillsArray && skillsArray.length" class="experience-card__skills">
-				<div class="experience-card__section-title">Compétences</div>
-				<div class="experience-card__skills-list">
-					<Badge v-for="(skill, index) in skillsArray" :key="index" :text="String(skill)" variant="filled" />
-				</div>
-			</div>
+            <!-- Date Badge -->
+            <time class="exp-card__date" :class="{ 'exp-card__date--current': isCurrent }" :datetime="startDate">
+                <span v-if="isCurrent" class="exp-card__pulse"></span>
+                <span class="exp-card__date-text">{{ formattedPeriod }}</span>
+            </time>
+        </header>
 
-			<div v-if="achievementsArray && achievementsArray.length" class="experience-card__achievements">
-				<div class="experience-card__section-title">Réalisations</div>
-				<ul class="experience-card__achievements-list">
-					<li
-						v-for="(achievement, index) in achievementsArray"
-						:key="index"
-						class="experience-card__achievement-item"
-					>
-						{{ achievement }}
-					</li>
-				</ul>
-			</div>
-		</div>
+        <!-- Description -->
+        <p v-if="description" class="exp-card__desc">{{ truncatedDescription }}</p>
 
-		<div v-if="$slots.footer" class="experience-card__footer">
-			<slot name="footer"></slot>
-		</div>
-	</div>
+        <!-- Skills -->
+        <ul v-if="displayedSkills.length" class="exp-card__skills">
+            <li v-for="skill in displayedSkills" :key="skill" class="exp-card__skill">
+                {{ skill }}
+            </li>
+            <li v-if="hiddenSkillsCount > 0" class="exp-card__skill exp-card__skill--more">+{{ hiddenSkillsCount }}</li>
+        </ul>
+
+        <!-- Achievements -->
+        <ul v-if="displayedAchievements.length" class="exp-card__achievements">
+            <li v-for="(item, i) in displayedAchievements" :key="i">
+                <BaseIcon name="check-circle" :size="14" />
+                <span>{{ item }}</span>
+            </li>
+        </ul>
+
+        <!-- Footer slot -->
+        <footer v-if="$slots.footer" class="exp-card__footer">
+            <slot name="footer"></slot>
+        </footer>
+    </article>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import Badge from '@/components/ui/Badge.vue';
-	import { computed } from 'vue';
+    import { computed, ref } from 'vue';
 
-	// Type personnalisé pour les tableaux qui peuvent être en lecture seule
-	type ReadonlyOrRegularArray<T> = T[] | readonly T[];
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { useTiltCSS } from '@/composables/ui/useTilt';
+    import { resolveMediaUrl } from '@/services/utils/helpers';
 
-	const props = defineProps({
-		title: {
-			type: String,
-			required: true,
-		},
-		company: {
-			type: String,
-			required: true,
-		},
-		logo: {
-			type: String,
-			default: '',
-		},
-		location: {
-			type: String,
-			default: '',
-		},
-		startDate: {
-			type: String,
-			required: true,
-		},
-		endDate: {
-			type: String,
-			default: '',
-		},
-		period: {
-			type: String,
-			default: '',
-		},
-		description: {
-			type: String,
-			default: '',
-		},
-		skills: {
-			type: [String, Array] as unknown as () => string | ReadonlyOrRegularArray<string>,
-			default: () => [],
-		},
-		achievements: {
-			type: [String, Array] as unknown as () => string | ReadonlyOrRegularArray<string>,
-			default: () => [],
-		},
-		dateFormat: {
-			type: String,
-			default: 'MMM yyyy',
-		},
-		currentText: {
-			type: String,
-			default: 'Présent',
-		},
-	});
+    import type { ExperienceCardProps } from '@/types/feature/experience';
 
-	// Formater une date
-	const formatDate = (dateString: string, format: string): string => {
-		if (!dateString) return '';
+    const props = withDefaults(defineProps<ExperienceCardProps>(), {
+        logo: '',
+        location: '',
+        endDate: '',
+        period: '',
+        description: '',
+        skills: () => [],
+        achievements: () => [],
+        dateFormat: 'MMM yyyy',
+        currentText: 'Présent',
+    });
 
-		try {
-			const date = new Date(dateString);
+    // Constants
+    const MAX_SKILLS = 5;
+    const MAX_ACHIEVEMENTS = 3;
+    const MAX_DESC_LENGTH = 150;
 
-			// Format simple - mois année
-			if (format === 'MMM yyyy') {
-				const month = date.toLocaleString('fr-FR', { month: 'short' });
-				const year = date.getFullYear();
-				return `${month} ${year}`;
-			}
+    // Refs
+    const cardRef = ref<HTMLElement | null>(null);
 
-			// Format complet
-			if (format === 'full') {
-				return date.toLocaleDateString('fr-FR', {
-					year: 'numeric',
-					month: 'long',
-					day: 'numeric',
-				});
-			}
+    // Tilt effect - subtle et fluide
+    useTiltCSS(cardRef, {
+        maxRotation: 3,
+        scale: 1,
+        smoothing: 0.06,
+    });
 
-			// Format par défaut
-			return date.toLocaleDateString('fr-FR');
-		} catch (error) {
-			console.error('Error formatting date:', error);
-			return dateString;
-		}
-	};
+    const resolvedLogo = computed(() => resolveMediaUrl(props.logo));
 
-	// Période d'affichage
-	const displayPeriod = computed(() => {
-		if (props.period) {
-			return props.period;
-		}
+    // Is current position
+    const isCurrent = computed(() => !props.endDate);
 
-		const start = formatDate(props.startDate, props.dateFormat);
-		const end = props.endDate ? formatDate(props.endDate, props.dateFormat) : props.currentText;
+    // Format date
+    const formatDate = (date: string): string => {
+        if (!date) {
+            return '';
+        }
+        const d = new Date(date);
+        return d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+    };
 
-		return `${start} - ${end}`;
-	});
+    // Formatted period
+    const formattedPeriod = computed(() => {
+        if (props.period) {
+            return props.period;
+        }
+        const start = formatDate(props.startDate);
+        const end = props.endDate ? formatDate(props.endDate) : props.currentText;
+        return `${start} — ${end}`;
+    });
 
-	// Convertir les compétences en tableau de strings
-	const skillsArray = computed((): string[] => {
-		if (Array.isArray(props.skills)) {
-			return [...props.skills].map((skill) => String(skill));
-		}
+    // Truncated description
+    const truncatedDescription = computed(() => {
+        if (!props.description) {
+            return '';
+        }
+        if (props.description.length <= MAX_DESC_LENGTH) {
+            return props.description;
+        }
+        return `${props.description.slice(0, MAX_DESC_LENGTH).trim()}...`;
+    });
 
-		if (typeof props.skills === 'string' && props.skills.trim() !== '') {
-			return props.skills.split(',').map((skill) => skill.trim());
-		}
+    // Skills list
+    const skillsList = computed((): string[] => {
+        if (Array.isArray(props.skills)) {
+            return props.skills.map(String);
+        }
+        if (typeof props.skills === 'string' && props.skills.trim()) {
+            return props.skills.split(',').map((s) => s.trim());
+        }
+        return [];
+    });
 
-		return [];
-	});
+    // Displayed skills
+    const displayedSkills = computed(() => skillsList.value.slice(0, MAX_SKILLS));
 
-	// Convertir les réalisations en tableau
-	const achievementsArray = computed((): string[] => {
-		if (Array.isArray(props.achievements)) {
-			return [...props.achievements].map((achievement) => String(achievement));
-		}
+    // Hidden skills count
+    const hiddenSkillsCount = computed(() => Math.max(0, skillsList.value.length - MAX_SKILLS));
 
-		if (typeof props.achievements === 'string' && props.achievements.trim() !== '') {
-			return props.achievements
-				.split('\n')
-				.map((line) => line.trim())
-				.filter((line) => line !== '');
-		}
+    // Achievements list
+    const achievementsList = computed((): string[] => {
+        if (Array.isArray(props.achievements)) {
+            return props.achievements.map(String);
+        }
+        if (typeof props.achievements === 'string' && props.achievements.trim()) {
+            return props.achievements
+                .split('\n')
+                .map((s) => s.trim())
+                .filter(Boolean);
+        }
+        return [];
+    });
 
-		return [];
-	});
+    // Displayed achievements
+    const displayedAchievements = computed(() => achievementsList.value.slice(0, MAX_ACHIEVEMENTS));
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	// Fonction color-alpha pour remplacer la fonction SASS
-	@function color-alpha($color, $alpha) {
-		@return rgba($color, $alpha);
-	}
+    .exp-card {
+        position: relative;
+        padding: vars.$spacing-lg;
+        background: vars.$white;
+        border: 1px solid fn.color-alpha(vars.$border-color, 0.5);
+        border-radius: vars.$border-radius-lg;
+        transition:
+            border-color 0.25s ease,
+            box-shadow 0.25s ease;
 
-	.experience-card {
-		padding: vars.$spacing-md;
-		background-color: vars.$white;
-		border-radius: vars.$border-radius-md;
-		box-shadow: vars.$box-shadow;
-		transition:
-			transform vars.$transition-base,
-			box-shadow vars.$transition-base;
+        &:hover {
+            border-color: fn.color-alpha(vars.$primary-color, 0.3);
+            box-shadow: 0 8px 24px fn.color-alpha(vars.$black, 0.08);
+        }
 
-		&:hover {
-			transform: translateY(-2px);
-			box-shadow: vars.$box-shadow-medium;
-		}
+        &--current {
+            .exp-card__date {
+                background: fn.color-alpha(vars.$primary-color, 0.1);
+                color: vars.$primary-color;
+            }
+        }
 
-		&__header {
-			display: flex;
-			gap: vars.$spacing-md;
-			margin-bottom: vars.$spacing-md;
-		}
+        // Header
+        &__header {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: vars.$spacing-md;
+            align-items: start;
+            margin-bottom: vars.$spacing-md;
 
-		&__logo {
-			flex-shrink: 0;
-			width: 50px;
-			height: 50px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background-color: vars.$white-dark;
-			border-radius: vars.$border-radius-md;
-			overflow: hidden;
+            @include mix.responsive(mobile) {
+                grid-template-columns: auto 1fr;
+                gap: vars.$spacing-sm;
+            }
+        }
 
-			&-img {
-				max-width: 100%;
-				max-height: 100%;
-				object-fit: contain;
-			}
-		}
+        // Logo
+        &__logo {
+            @include mix.flex-center;
+            width: 48px;
+            height: 48px;
+            margin: 0;
+            background: vars.$bg-secondary;
+            border: 1px solid fn.color-alpha(vars.$border-color, 0.3);
+            border-radius: vars.$border-radius-md;
+            color: vars.$gray;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
 
-		&__header-content {
-			flex: 1;
-		}
+        &__logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: vars.$spacing-xxs;
+        }
 
-		&__title {
-			margin-bottom: vars.$spacing-xs;
-			font-weight: 600;
-			color: vars.$black;
-		}
+        // Info
+        &__info {
+            min-width: 0;
+        }
 
-		&__company {
-			display: flex;
-			flex-wrap: wrap;
-			align-items: center;
-			gap: vars.$spacing-sm;
-			margin-bottom: vars.$spacing-xs;
-			font-weight: 500;
-			color: vars.$gray-dark;
-		}
+        &__title {
+            margin: 0 0 vars.$spacing-xxs;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-primary;
+            line-height: 1.3;
+        }
 
-		&__location {
-			display: inline-flex;
-			align-items: center;
-			gap: vars.$spacing-xs;
-			color: vars.$gray;
-		}
+        &__company {
+            @include mix.flex(row, flex-start, center, vars.$spacing-sm);
+            flex-wrap: wrap;
+            margin: 0;
+            color: vars.$text-secondary;
+        }
 
-		&__period {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-xs;
-			color: vars.$gray;
-		}
+        &__location {
+            @include mix.flex(row, flex-start, center, vars.$spacing-xxxs);
+            color: vars.$text-muted;
 
-		&__body {
-			margin-bottom: vars.$spacing-md;
-		}
+            :deep(svg) {
+                opacity: 0.6;
+            }
+        }
 
-		&__description {
-			margin-bottom: vars.$spacing-md;
-			line-height: 1.5;
-		}
+        // Date
+        &__date {
+            @include mix.flex(row, center, center, vars.$spacing-xxs);
+            padding: vars.$spacing-xxs vars.$spacing-sm;
+            background: vars.$bg-secondary;
+            border-radius: vars.$border-radius-sm;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$text-secondary;
+            white-space: nowrap;
 
-		&__section-title {
-			font-weight: 600;
-			margin-bottom: vars.$spacing-sm;
-			color: vars.$black-light;
-		}
+            @include mix.responsive(mobile) {
+                grid-column: 1 / -1;
+                justify-self: start;
+                margin-top: vars.$spacing-xs;
+            }
+        }
 
-		&__skills {
-			margin-bottom: vars.$spacing-md;
-		}
+        &__pulse {
+            width: 6px;
+            height: 6px;
+            background: vars.$success-color;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
 
-		&__skills-list {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-xs;
-		}
+        &__date-text {
+            line-height: 1;
+        }
 
-		&__achievements {
-			margin-bottom: vars.$spacing-md;
-		}
+        // Description
+        &__desc {
+            margin: 0 0 vars.$spacing-md;
+            color: vars.$text-secondary;
+            line-height: 1.6;
+        }
 
-		&__achievements-list {
-			list-style-type: none;
-			padding-left: 0;
-		}
+        // Skills
+        &__skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: vars.$spacing-xxs;
+            margin: 0 0 vars.$spacing-md;
+            padding: 0;
+            list-style: none;
+        }
 
-		&__achievement-item {
-			position: relative;
-			padding-left: 1.5rem;
-			margin-bottom: vars.$spacing-xs;
-			line-height: 1.4;
+        &__skill {
+            padding: 2px vars.$spacing-xs;
+            background: fn.color-alpha(vars.$primary-color, 0.08);
+            border-radius: vars.$border-radius-sm;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$primary-color;
 
-			&::before {
-				content: '';
-				position: absolute;
-				left: 0;
-				top: 0.5rem;
-				width: 6px;
-				height: 6px;
-				border-radius: 50%;
-				background-color: vars.$primary-color;
-			}
-		}
+            &--more {
+                background: vars.$bg-secondary;
+                color: vars.$text-muted;
+            }
+        }
 
-		&__footer {
-			margin-top: vars.$spacing-md;
-			padding-top: vars.$spacing-sm;
-			border-top: 1px solid rgba(vars.$gray-light, 0.5);
-		}
-	}
+        // Achievements
+        &__achievements {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+
+            li {
+                @include mix.flex(row, flex-start, flex-start, vars.$spacing-xs);
+                padding: vars.$spacing-xxs 0;
+                color: vars.$text-secondary;
+
+                :deep(svg) {
+                    flex-shrink: 0;
+                    margin-top: 2px;
+                    color: vars.$success-color;
+                }
+
+                &:last-child {
+                    padding-bottom: 0;
+                }
+            }
+        }
+
+        // Footer
+        &__footer {
+            margin-top: vars.$spacing-md;
+            padding-top: vars.$spacing-md;
+            border-top: 1px solid fn.color-alpha(vars.$border-color, 0.3);
+        }
+    }
+
+    // Pulse animation
+    @keyframes pulse {
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+        }
+    }
+
+    // Reduced motion
+    @media (prefers-reduced-motion: reduce) {
+        .exp-card {
+            transition: none;
+
+            &__pulse {
+                animation: none;
+            }
+        }
+    }
 </style>

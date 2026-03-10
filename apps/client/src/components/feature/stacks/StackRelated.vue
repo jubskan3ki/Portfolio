@@ -3,107 +3,120 @@
   Composant pour afficher les technologies similaires
 -->
 <template>
-	<div v-if="stacks && stacks.length > 0" class="stack-related">
-		<h3>Technologies similaires</h3>
-		<div class="stack-related__list">
-			<div v-for="stack in stacks" :key="stack.slug" class="stack-related__item">
-				<BaseLink :to="`/stacks/${stack.slug}`" class="stack-related__link">
-					<img :src="stack.logo" :alt="stack.name" class="stack-related__logo" />
-					<div class="stack-related__info">
-						<span class="stack-related__name">{{ stack.name }}</span>
-						<small class="stack-related__category">{{ stack.category }}</small>
-					</div>
-				</BaseLink>
-			</div>
-		</div>
-	</div>
+    <div v-if="stacks && stacks.length > 0" class="stack-related">
+        <h3 class="stack-related__heading">Stacks similaires</h3>
+        <div class="stack-related__list">
+            <BaseLink
+                v-for="stack in stacks"
+                :key="stack.slug"
+                :to="`/stacks/${stack.slug}`"
+                class="stack-related__item"
+            >
+                <BaseImage
+                    :src="stack.logo"
+                    :alt="stack.name"
+                    :width="40"
+                    :height="40"
+                    :show-placeholder="false"
+                    class="stack-related__logo"
+                />
+                <div class="stack-related__info">
+                    <span class="stack-related__name">{{ stack.name }}</span>
+                    <small class="stack-related__category">{{ stack.category }}</small>
+                </div>
+            </BaseLink>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseLink from '@/components/base/BaseLink.vue';
+    import BaseLink from '@/components/base/BaseLink.vue';
 
-	interface RelatedStack {
-		name: string;
-		logo: string;
-		slug: string;
-		category: string;
-	}
+    interface RelatedStack {
+        name: string;
+        logo: string;
+        slug: string;
+        category: string;
+    }
 
-	defineProps({
-		stacks: {
-			type: Array as () => RelatedStack[] | readonly RelatedStack[],
-			default: () => [],
-		},
-	});
+    interface Props {
+        stacks?: RelatedStack[];
+    }
+
+    withDefaults(defineProps<Props>(), {
+        stacks: () => [],
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.stack-related {
-		background-color: vars.$white;
-		border-radius: vars.$border-radius-lg;
-		padding: vars.$spacing-lg;
-		box-shadow: vars.$box-shadow-small;
+    .stack-related {
+        background: fn.color-alpha(vars.$white, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid fn.color-alpha(vars.$white, 0.8);
+        border-radius: vars.$border-radius-xl;
+        padding: vars.$spacing-lg;
+        box-shadow:
+            0 8px 32px fn.color-alpha(vars.$black, 0.06),
+            0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
 
-		h3 {
-			margin-bottom: vars.$spacing-md;
-			color: vars.$primary-color;
-			font-weight: 600;
-			padding-bottom: vars.$spacing-xs;
-			border-bottom: 1px solid vars.$white-dark;
-		}
+        &__heading {
+            margin-bottom: vars.$spacing-md;
+            color: vars.$primary-color;
+            font-weight: vars.$font-weight-semibold;
+            padding-bottom: vars.$spacing-xxs;
+            border-bottom: 1px solid fn.color-alpha(vars.$border-color, 0.3);
+        }
 
-		&__list {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-sm;
-		}
+        &__list {
+            display: flex;
+            flex-direction: column;
+            gap: vars.$spacing-xxs;
+        }
 
-		&__item {
-			border-bottom: 1px solid vars.$white-dark;
-			padding-bottom: vars.$spacing-sm;
+        &__item {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-sm;
+            padding: vars.$spacing-xs;
+            text-decoration: none;
+            border-radius: vars.$border-radius-md;
+            transition: all 0.2s ease;
 
-			&:last-child {
-				border-bottom: none;
-				padding-bottom: 0;
-			}
-		}
+            &:hover {
+                background: fn.color-alpha(vars.$primary-color, 0.06);
+                transform: translateX(4px);
 
-		&__link {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-sm;
-			padding: vars.$spacing-xs;
-			border-radius: vars.$border-radius-md;
-			transition: all vars.$transition-base;
+                .stack-related__name {
+                    color: vars.$primary-color;
+                }
+            }
+        }
 
-			&:hover {
-				background-color: vars.$white-dark;
-				transform: translateX(5px);
-			}
-		}
+        &__logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
 
-		&__logo {
-			width: 40px;
-			height: 40px;
-			object-fit: contain;
-		}
+        &__info {
+            display: flex;
+            flex-direction: column;
+        }
 
-		&__info {
-			display: flex;
-			flex-direction: column;
-		}
+        &__name {
+            font-weight: vars.$font-weight-medium;
+            color: vars.$text-primary;
+            transition: color 0.2s ease;
+        }
 
-		&__name {
-			font-weight: 500;
-			color: vars.$black-light;
-		}
-
-		&__category {
-			color: vars.$gray;
-		}
-	}
+        &__category {
+            color: vars.$text-muted;
+            font-size: vars.$font-size-sm;
+        }
+    }
 </style>

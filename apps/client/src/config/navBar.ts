@@ -1,57 +1,47 @@
 // src/config/navBar.ts
-import ROUTES from '@/config/routes';
+import { ROUTES } from '@/config/routes';
+
 import type { ActiveRouteChecker, NavigationItems } from '@/types/config/navBar';
 
-// Éléments de navigation avec les routes définies
+// Public Navigation Items
+
+// Main navigation items for public site header
 export const navigationItems: NavigationItems = [
-	{
-		label: 'Accueil',
-		path: ROUTES.HOME.path,
-		icon: 'home',
-	},
-	{
-		label: 'Expérience',
-		path: ROUTES.EXPERIENCE.path,
-		icon: 'experience',
-	},
-	{
-		label: 'Projets',
-		path: ROUTES.PROJECTS.path,
-		icon: 'projects',
-	},
-	{
-		label: 'Technologies',
-		path: ROUTES.STACKS.path,
-		icon: 'stacks',
-	},
-	{
-		label: 'Blog',
-		path: ROUTES.BLOG.path,
-		icon: 'blog',
-	},
+    {
+        label: 'Accueil',
+        path: ROUTES.HOME.path,
+        icon: 'home',
+    },
+    {
+        label: 'Experience',
+        path: ROUTES.EXPERIENCE.path,
+        icon: 'briefcase',
+    },
+    {
+        label: 'Projets',
+        path: ROUTES.PROJECTS.path,
+        icon: 'folder',
+    },
+    {
+        label: 'Stacks',
+        path: ROUTES.STACKS.path,
+        icon: 'layers',
+    },
+    {
+        label: 'Blog',
+        path: ROUTES.BLOG.path,
+        icon: 'file-text',
+    },
 ];
 
-// Fonction utilitaire pour vérifier si une route est active
+// Helper Functions
 
+// Check if a route is currently active
 export const isActiveRoute: ActiveRouteChecker = (path: string, currentPath: string): boolean => {
-	// Cas spécial pour la page d'accueil
-	if (path === '/' && currentPath === '/') {
-		return true;
-	}
+    // Special case for home page
+    if (path === '/' && currentPath === '/') {
+        return true;
+    }
 
-	return path !== '/' && currentPath.startsWith(path);
-};
-
-//Fonction pour vérifier si un des enfants d'un élément de navigation est actif
-
-export const hasActiveChild = (item: NavigationItems[0], currentPath: string): boolean => {
-	if (!item.children) return false;
-
-	return item.children.some((child) => isActiveRoute(child.path, currentPath));
-};
-
-export default {
-	navigationItems,
-	isActiveRoute,
-	hasActiveChild,
+    return path !== '/' && currentPath.startsWith(path);
 };

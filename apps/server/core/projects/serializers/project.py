@@ -1,94 +1,116 @@
-"""
-Sérialisation des projets du portfolio.
-"""
+"""Serializers pour les projets."""
 
-from django.utils.text import slugify
 from rest_framework import serializers
 
-from ..models import Project
+from utils.serializers.fields import URLDictField
+from utils.validators import validate_string_list
+
+from ..models import Project, ProjectCategory, ProjectStatus
 
 
-class ProjectSerializer(serializers.ModelSerializer):
-    """
-    Sérialisation complète des projets avec validations avancées.
-    """
+class ProjectWriteSerializer(serializers.ModelSerializer[Project]):
+    """Serializer pour la creation et mise a jour des projets."""
 
-    is_active = serializers.ReadOnlyField()
-    duration = serializers.ReadOnlyField()
-    priority_label = serializers.ReadOnlyField(source="get_priority_display")
+    category = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
+    status = serializers.PrimaryKeyRelatedField(
+        queryset=ProjectStatus.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    long_description = serializers.CharField(required=False, allow_blank=True)
+    # Accept longDescription from frontend and map to long_description
+    longDescription = serializers.CharField(
+        source="long_description",
+        required=False,
+        allow_blank=True,
+        write_only=True,
+    )
+
+    links = URLDictField(
+        allowed_keys={"demo", "github", "documentation", "website"},
+        required=False,
+    )
 
     class Meta:
-        """
-        Métadonnées de la sérialisation.
-        """
-
         model = Project
         fields = [
             "id",
             "title",
             "slug",
             "description",
+            "long_description",
+            "longDescription",
             "image",
-            "github_link",
-            "live_demo",
-            "tags",
+            "category",
             "status",
-            "priority",
-            "priority_label",
-            "start_date",
-            "end_date",
-            "duration",
-            "is_active",
-            "created_at",
-            "updated_at",
+            "technologies",
+            "features",
+            "links",
+            "date",
         ]
+        read_only_fields = ["id"]
+        extra_kwargs = {
+            "slug": {"required": False},
+            "technologies": {"required": False},
+            "features": {"required": False},
+            "date": {"required": False},
+        }
 
-    def validate_github_link(self, value):
-        """Validation stricte de l'URL GitHub."""
-        if value and not value.startswith("https://github.com/"):
-            raise serializers.ValidationError("L'URL GitHub doit commencer par 'https://github.com/'.")
-        return value
+    def validate_technologies(self, value):
+        """Valide que technologies est une liste de strings."""
+        return validate_string_list(value, item_label="technologie")
 
-    def validate_live_demo(self, value):
-        """Validation stricte pour un lien HTTPS uniquement."""
-        if value and not value.startswith("https://"):
-            raise serializers.ValidationError("L'URL du live demo doit être en HTTPS.")
-        return value
+    def validate_features(self, value):
+        """Valide que features est une liste de strings."""
+        return validate_string_list(value, item_label="fonctionnalite")
 
-    def validate_image(self, value):
-        """Validation optionnelle sur le poids de l'image."""
-        max_size = 2 * 1024 * 1024
-        if value and value.size > max_size:
-            raise serializers.ValidationError("L'image ne doit pas dépasser 2MB.")
-        return value
 
-    def validate_priority(self, value):
-        """Validation stricte de la priorité."""
-        if not 1 <= value <= 10:
-            raise serializers.ValidationError("La priorité doit être comprise entre 1 et 10.")
-        return value
+class ProjectListSerializer(serializers.ModelSerializer[Project]):
+    """Serializer pour la liste des projets (version allegee)."""
 
-    def validate_tags(self, value):
-        """Validation stricte des tags sous forme de liste."""
-        if not isinstance(value, list):
-            raise serializers.ValidationError("Les tags doivent être fournis sous forme de liste.")
-        return value
+    category = serializers.StringRelatedField()
+    status = serializers.StringRelatedField()
+    views = serializers.IntegerField(source="view_count", read_only=True)
 
-    def validate(self, attrs):
-        """Validation stricte des dates de début et de fin."""
-        start_date = attrs.get("start_date")
-        end_date = attrs.get("end_date")
-        if start_date and end_date and start_date > end_date:
-            raise serializers.ValidationError("La date de début doit être antérieure à la date de fin.")
-        return attrs
+    class Meta:
+        model = Project
+        fields = (
+            "id",
+            "title",
+            "slug",
+            "description",
+            "image",
+            "category",
+            "status",
+            "technologies",
+            "date",
+            "views",
+        )
 
-    def create(self, validated_data):
-        """Création d'un projet avec slug automatique."""
-        validated_data.setdefault("slug", slugify(validated_data["title"]))
-        return super().create(validated_data)
 
-    def update(self, instance, validated_data):
-        """Mise à jour d'un projet avec slug automatique."""
-        if "title" in validated_data:
-            validated_data["slug"] = slugify(validated_data["title"])
-        return super().update(instance, validated_data)
+class ProjectDetailSerializer(serializers.ModelSerializer[Project]):
+    """Serializer pour les details d'un projet."""
+
+    category = serializers.StringRelatedField()
+    status = serializers.StringRelatedField()
+    views = serializers.IntegerField(source="view_count", read_only=True)
+    longDescription = serializers.CharField(source="long_description")
+
+    class Meta:
+        model = Project
+        fields = (
+            "id",
+            "title",
+            "slug",
+            "description",
+            "views",
+            "longDescription",
+            "status",
+            "image",
+            "category",
+            "technologies",
+            "date",
+            "features",
+            "links",
+        )
+        read_only_fields = ("id", "slug", "view")

@@ -1,242 +1,312 @@
 <!-- components/feature/home/StatCard.vue -->
 <template>
-	<div class="stat-card" :class="`stat-card--${variant}`" @mouseenter="startCount">
-		<div class="stat-card__icon">
-			<BaseIcon :name="icon" size="lg" />
-		</div>
-		<div class="stat-card__content">
-			<div class="stat-card__number">
-				<span class="counter">{{ displayValue }}</span>
-				<span v-if="suffix">{{ suffix }}</span>
-			</div>
-			<p class="stat-card__label">{{ label }}</p>
-		</div>
-	</div>
+    <div ref="cardRef" class="stat-card" :class="[`stat-card--${variant}`]" @mouseenter="startCount">
+        <div class="stat-card__icon">
+            <BaseIcon :name="icon" :size="22" />
+        </div>
+        <div class="stat-card__info">
+            <p class="stat-card__value">
+                {{ displayValue }}<span v-if="suffix" class="stat-card__suffix">{{ suffix }}</span>
+            </p>
+            <small class="stat-card__label">{{ label }}</small>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import { computed, onMounted, ref } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-	const props = defineProps({
-		value: {
-			type: [Number, String],
-			required: true,
-		},
-		label: {
-			type: String,
-			required: true,
-		},
-		icon: {
-			type: String,
-			required: true,
-		},
-		variant: {
-			type: String,
-			default: 'primary',
-			validator: (value: string) => ['primary', 'secondary', 'accent'].includes(value),
-		},
-		suffix: {
-			type: String,
-			default: '',
-		},
-		duration: {
-			type: Number,
-			default: 2000, // ms
-		},
-	});
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
 
-	const currentValue = ref(0);
-	const counted = ref(false);
-	const displayValue = computed(() => {
-		// Si c'est une chaîne avec un "+" à la fin (comme "25+"), on affiche juste la valeur complète
-		if (typeof props.value === 'string' && props.value.endsWith('+')) {
-			const numPart = parseInt(props.value.replace('+', ''));
-			return Math.min(numPart, currentValue.value);
-		}
+    import type { StatCardVariant } from '@/types/components/ui';
 
-		// Sinon c'est un nombre normal
-		return currentValue.value;
-	});
+    interface Props {
+        value: number | string;
+        label: string;
+        icon: string;
+        variant?: StatCardVariant;
+        suffix?: string;
+        duration?: number;
+    }
 
-	const targetValue = computed(() => {
-		if (typeof props.value === 'string') {
-			// Si c'est une chaîne comme "25+", on extrait juste le nombre
-			if (props.value.endsWith('+')) {
-				return parseInt(props.value.replace('+', ''));
-			}
-			return parseInt(props.value);
-		}
-		return props.value;
-	});
+    const props = withDefaults(defineProps<Props>(), {
+        variant: 'light',
+        suffix: '',
+        duration: 2000,
+    });
 
-	const startCount = () => {
-		if (counted.value) return;
+    const { prefersReducedMotion } = useReducedMotion();
+    const currentValue = ref(0);
+    const counted = ref(false);
 
-		counted.value = true;
-		const startTime = Date.now();
-		const endTime = startTime + props.duration;
+    const displayValue = computed(() => {
+        if (typeof props.value === 'string' && props.value.endsWith('+')) {
+            const numPart = parseInt(props.value.replace('+', ''));
+            return Math.min(numPart, currentValue.value);
+        }
+        return currentValue.value;
+    });
 
-		const updateCounter = () => {
-			const now = Date.now();
-			const remaining = Math.max(0, endTime - now);
-			const progress = 1 - remaining / props.duration;
+    const targetValue = computed(() => {
+        if (typeof props.value === 'string') {
+            if (props.value.endsWith('+')) {
+                return parseInt(props.value.replace('+', ''));
+            }
+            return parseInt(props.value);
+        }
+        return props.value;
+    });
 
-			currentValue.value = Math.floor(progress * targetValue.value);
+    const startCount = () => {
+        if (counted.value) {
+            return;
+        }
+        counted.value = true;
 
-			if (remaining > 0) {
-				requestAnimationFrame(updateCounter);
-			} else {
-				currentValue.value = targetValue.value;
-			}
-		};
+        if (prefersReducedMotion.value) {
+            currentValue.value = targetValue.value;
+            return;
+        }
 
-		updateCounter();
-	};
+        const startTime = Date.now();
+        const endTime = startTime + props.duration;
 
-	onMounted(() => {
-		// Vérifier si la carte est visible dans le viewport
-		const observer = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						startCount();
-						observer.disconnect();
-					}
-				});
-			},
-			{ threshold: 0.5 }
-		);
+        const updateCounter = () => {
+            const now = Date.now();
+            const remaining = Math.max(0, endTime - now);
+            const progress = 1 - remaining / props.duration;
 
-		// Trouver l'élément parent ou la carte elle-même
-		const element = document.querySelector('.stat-card');
-		if (element) {
-			observer.observe(element);
-		}
-	});
+            currentValue.value = Math.floor(progress * targetValue.value);
+
+            if (remaining > 0) {
+                requestAnimationFrame(updateCounter);
+            } else {
+                currentValue.value = targetValue.value;
+            }
+        };
+
+        updateCounter();
+    };
+
+    const cardRef = ref<HTMLElement | null>(null);
+    let observer: IntersectionObserver | null = null;
+
+    onMounted(() => {
+        const el = cardRef.value ?? document.querySelector('.stat-card');
+        if (!el) {
+            return;
+        }
+
+        observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        startCount();
+                        observer?.disconnect();
+                        observer = null;
+                    }
+                });
+            },
+            { threshold: 0.5 },
+        );
+
+        observer.observe(el);
+    });
+
+    onBeforeUnmount(() => {
+        observer?.disconnect();
+        observer = null;
+    });
+
+    defineExpose({ cardRef });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.stat-card {
-		display: flex;
-		padding: vars.$spacing-lg;
-		background-color: vars.$white;
-		border-radius: vars.$border-radius-lg;
-		box-shadow: vars.$box-shadow-small;
-		height: 100%;
-		@include mix.transition(transform, box-shadow);
-		position: relative;
-		overflow: hidden;
-		z-index: 1;
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: vars.$spacing-xs;
+        padding: vars.$spacing-sm vars.$spacing-md;
+        min-width: 180px;
+        border-radius: vars.$border-radius-lg;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
 
-		&::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 5px;
-			background: linear-gradient(
-				90deg,
-				vars.$primary-color,
-				func.adjust-color-brightness(vars.$primary-color, 20%)
-			);
-			z-index: 1;
-		}
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+        }
 
-		&:hover {
-			transform: translateY(-5px);
-			box-shadow: vars.$box-shadow-medium;
-		}
+        &:hover {
+            transform: translateY(-3px);
+        }
 
-		&--primary::before {
-			background: linear-gradient(
-				90deg,
-				vars.$primary-color,
-				func.adjust-color-brightness(vars.$primary-color, 20%)
-			);
-		}
+        // Icon
+        &__icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: vars.$border-radius-md;
+            flex-shrink: 0;
+        }
 
-		&--secondary::before {
-			background: linear-gradient(
-				90deg,
-				vars.$secondary-color,
-				func.adjust-color-brightness(vars.$secondary-color, 20%)
-			);
-		}
+        // Info
+        &__info {
+            display: flex;
+            flex-direction: column;
+            gap: vars.$spacing-xxs;
+            flex: 1;
+            text-align: right;
+        }
 
-		&--accent::before {
-			background: linear-gradient(90deg, vars.$info-color, func.adjust-color-brightness(vars.$info-color, 20%));
-		}
+        // Value
+        &__value {
+            font-weight: vars.$font-weight-bold;
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
 
-		&__icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			width: 60px;
-			height: 60px;
-			border-radius: vars.$border-radius-md;
-			margin-right: vars.$spacing-md;
-			color: vars.$white;
-			flex-shrink: 0;
+        &__suffix {
+            font-weight: vars.$font-weight-semibold;
+            margin-left: 1px;
+        }
 
-			.stat-card--primary & {
-				background: linear-gradient(
-					135deg,
-					vars.$primary-color,
-					func.adjust-color-brightness(vars.$primary-color, 15%)
-				);
-			}
+        // Label
+        &__label {
+            font-weight: vars.$font-weight-medium;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-			.stat-card--secondary & {
-				background: linear-gradient(
-					135deg,
-					vars.$secondary-color,
-					func.adjust-color-brightness(vars.$secondary-color, 15%)
-				);
-			}
+        // Light variant
+        &--light {
+            background: fn.color-alpha(vars.$white, 0.9);
+            border: 1px solid fn.color-alpha(vars.$white, 0.8);
+            box-shadow: 0 4px 20px fn.color-alpha(vars.$black, 0.06);
 
-			.stat-card--accent & {
-				background: linear-gradient(
-					135deg,
-					vars.$info-color,
-					func.adjust-color-brightness(vars.$info-color, 15%)
-				);
-			}
-		}
+            &:hover {
+                box-shadow: 0 8px 32px fn.color-alpha(vars.$black, 0.1);
+            }
 
-		&__content {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-		}
+            .stat-card__icon {
+                background: fn.color-alpha(vars.$primary-color, 0.1);
+                color: vars.$primary-color;
+            }
 
-		&__number {
-			font-weight: 700;
-			line-height: 1.2;
-			margin-bottom: vars.$spacing-xs;
+            .stat-card__value {
+                color: vars.$primary-color;
+            }
 
-			.stat-card--primary & {
-				color: vars.$primary-color;
-			}
+            .stat-card__suffix {
+                color: vars.$primary-color;
+            }
 
-			.stat-card--secondary & {
-				color: vars.$secondary-color;
-			}
+            .stat-card__label {
+                color: vars.$text-secondary;
+            }
+        }
 
-			.stat-card--accent & {
-				color: vars.$info-color;
-			}
-		}
+        // Dark variant
+        &--dark {
+            background: fn.color-alpha(vars.$black-light, 0.95);
+            border: 1px solid fn.color-alpha(vars.$primary-color, 0.25);
+            box-shadow: 0 4px 24px fn.color-alpha(vars.$black, 0.4);
 
-		&__label {
-			font-weight: 500;
-			color: vars.$gray-dark;
-			margin: 0;
-		}
-	}
+            &:hover {
+                border-color: fn.color-alpha(vars.$primary-color, 0.4);
+                box-shadow: 0 8px 32px fn.color-alpha(vars.$black, 0.5);
+            }
+
+            .stat-card__icon {
+                background: fn.color-alpha(vars.$primary-color, 0.2);
+                border: 1px solid fn.color-alpha(vars.$primary-color, 0.3);
+                color: vars.$secondary-light;
+            }
+
+            .stat-card__value {
+                color: vars.$white;
+            }
+
+            .stat-card__suffix {
+                color: vars.$secondary-light;
+            }
+
+            .stat-card__label {
+                color: fn.color-alpha(vars.$white, 0.55);
+            }
+        }
+
+        // Primary variant
+        &--primary {
+            background: fn.color-alpha(vars.$white, 0.12);
+            border: 1px solid fn.color-alpha(vars.$white, 0.2);
+            box-shadow: 0 4px 20px fn.color-alpha(vars.$black, 0.15);
+
+            &:hover {
+                background: fn.color-alpha(vars.$white, 0.18);
+                box-shadow: 0 8px 32px fn.color-alpha(vars.$black, 0.2);
+            }
+
+            .stat-card__icon {
+                background: fn.color-alpha(vars.$white, 0.15);
+                border: 1px solid fn.color-alpha(vars.$white, 0.2);
+                color: vars.$white;
+            }
+
+            .stat-card__value {
+                color: vars.$white;
+            }
+
+            .stat-card__suffix {
+                color: fn.color-alpha(vars.$white, 0.85);
+            }
+
+            .stat-card__label {
+                color: fn.color-alpha(vars.$white, 0.65);
+            }
+        }
+
+        // Secondary variant
+        &--secondary {
+            background: fn.color-alpha(vars.$black, 0.6);
+            border: 1px solid fn.color-alpha(vars.$primary-color, 0.45);
+            box-shadow:
+                0 4px 24px fn.color-alpha(vars.$black, 0.4),
+                0 0 30px fn.color-alpha(vars.$primary-color, 0.15);
+
+            &:hover {
+                border-color: fn.color-alpha(vars.$primary-color, 0.6);
+                box-shadow:
+                    0 8px 32px fn.color-alpha(vars.$black, 0.5),
+                    0 0 40px fn.color-alpha(vars.$primary-color, 0.2);
+            }
+
+            .stat-card__icon {
+                background: fn.color-alpha(vars.$primary-color, 0.35);
+                border: 1px solid fn.color-alpha(vars.$primary-color, 0.5);
+                color: vars.$white;
+            }
+
+            .stat-card__value {
+                color: vars.$white;
+            }
+
+            .stat-card__suffix {
+                color: fn.color-alpha(vars.$white, 0.85);
+            }
+
+            .stat-card__label {
+                color: fn.color-alpha(vars.$white, 0.6);
+            }
+        }
+    }
 </style>

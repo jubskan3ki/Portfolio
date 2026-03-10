@@ -1,175 +1,116 @@
 <template>
-	<div
-		class="skeleton"
-		:class="[`skeleton--${type}`, { 'skeleton--animate': animate }, customClass]"
-		:style="computedStyle"
-		aria-hidden="true"
-	></div>
+    <div :class="classes" :style="style" aria-hidden="true"></div>
 </template>
 
 <script setup lang="ts">
-	import { computed } from 'vue';
+    import { computed } from 'vue';
 
-	const props = defineProps({
-		type: {
-			type: String,
-			default: 'block',
-			validator: (value: string) => ['block', 'circle', 'text', 'image', 'button', 'avatar'].includes(value),
-		},
-		width: {
-			type: [String, Number],
-			default: null,
-		},
-		height: {
-			type: [String, Number],
-			default: null,
-		},
-		radius: {
-			type: [String, Number],
-			default: null,
-		},
-		animate: {
-			type: Boolean,
-			default: true,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import type { SkeletonType, SkeletonAnimation } from '@/types/components/loaders';
 
-	// Helper pour convertir les nombres en pixels
-	const formatSize = (size: string | number | null) => {
-		if (size === null) return null;
-		if (typeof size === 'number') return `${size}px`;
-		return size;
-	};
+    interface Props {
+        type?: SkeletonType;
+        width?: string | number;
+        height?: string | number;
+        radius?: string | number;
+        animate?: boolean;
+        animation?: SkeletonAnimation;
+    }
 
-	// Calcul des dimensions et du rayon selon le type
-	const computedWidth = computed(() => {
-		if (props.width) return formatSize(props.width);
+    const props = withDefaults(defineProps<Props>(), {
+        type: 'block',
+        width: undefined,
+        height: undefined,
+        radius: undefined,
+        animate: true,
+        animation: 'wave',
+    });
 
-		switch (props.type) {
-			case 'circle':
-			case 'avatar':
-				return '48px';
-			case 'text':
-				return '100%';
-			case 'button':
-				return '120px';
-			case 'image':
-				return '300px';
-			default:
-				return '100%';
-		}
-	});
+    // Convert number to px
+    const toPx = (size: string | number | undefined) => {
+        if (size === undefined) {
+            return undefined;
+        }
+        return typeof size === 'number' ? `${size}px` : size;
+    };
 
-	const computedHeight = computed(() => {
-		if (props.height) return formatSize(props.height);
+    // Default dimensions by type
+    const DEFAULTS: Record<SkeletonType, { width: string; height: string; radius: string }> = {
+        block: { width: '100%', height: '20px', radius: '4px' },
+        circle: { width: '48px', height: '48px', radius: '50%' },
+        text: { width: '100%', height: '16px', radius: '2px' },
+        image: { width: '100%', height: '200px', radius: '8px' },
+        button: { width: '120px', height: '40px', radius: '6px' },
+        avatar: { width: '48px', height: '48px', radius: '50%' },
+    };
 
-		switch (props.type) {
-			case 'circle':
-			case 'avatar':
-				return '48px';
-			case 'text':
-				return '16px';
-			case 'button':
-				return '40px';
-			case 'image':
-				return '200px';
-			default:
-				return '20px';
-		}
-	});
+    const style = computed(() => ({
+        width: toPx(props.width) ?? DEFAULTS[props.type].width,
+        height: toPx(props.height) ?? DEFAULTS[props.type].height,
+        borderRadius: toPx(props.radius) ?? DEFAULTS[props.type].radius,
+    }));
 
-	const computedRadius = computed(() => {
-		if (props.radius) return formatSize(props.radius);
-
-		switch (props.type) {
-			case 'circle':
-			case 'avatar':
-				return '50%';
-			case 'button':
-				return '4px';
-			case 'text':
-				return '2px';
-			default:
-				return '4px';
-		}
-	});
-
-	const computedStyle = computed(() => ({
-		width: computedWidth.value ?? undefined,
-		height: computedHeight.value ?? undefined,
-		borderRadius: computedRadius.value ?? undefined,
-	}));
+    const classes = computed(() => [
+        'skeleton',
+        `skeleton--${props.type}`,
+        props.animate && `skeleton--${props.animation}`,
+    ]);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as v;
+    @use '@/styles/abstracts/functions' as fn;
 
-	@keyframes skeleton-pulse {
-		0% {
-			opacity: 0.6;
-		}
-		50% {
-			opacity: 0.8;
-		}
-		100% {
-			opacity: 0.6;
-		}
-	}
+    .skeleton {
+        display: block;
+        background: fn.color-alpha(v.$gray-light, 0.5);
+        position: relative;
+        overflow: hidden;
 
-	.skeleton {
-		display: inline-block;
-		background-color: func.color-alpha(vars.$gray-light, 0.8);
-		position: relative;
-		overflow: hidden;
+        // Wave animation (shimmer)
+        &--wave::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, fn.color-alpha(v.$white, 0.5) 50%, transparent 100%);
+            transform: translateX(-100%);
+            animation: wave 1.5s ease-in-out infinite;
+        }
 
-		&::after {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: -150%;
-			width: 150%;
-			height: 100%;
-			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-			transform: skewX(-20deg);
-		}
+        // Pulse animation
+        &--pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
 
-		&--animate {
-			animation: skeleton-pulse 1.5s ease-in-out infinite;
+        // Type-specific
+        &--text {
+            & + & {
+                margin-top: v.$spacing-xxs;
+            }
+            &:last-of-type:not(:first-of-type) {
+                max-width: 70%;
+            }
+        }
 
-			&::after {
-				animation: shimmer 2s infinite;
-			}
-		}
+        &--avatar,
+        &--button {
+            flex-shrink: 0;
+        }
+    }
 
-		&--text {
-			margin-bottom: 8px;
+    // Animations
+    @keyframes wave {
+        to {
+            transform: translateX(100%);
+        }
+    }
 
-			&:last-of-type {
-				width: 80%;
-			}
-		}
-
-		&--avatar {
-			margin-right: 8px;
-		}
-
-		&--button {
-			margin-top: 16px;
-		}
-	}
-
-	@keyframes shimmer {
-		0% {
-			left: -150%;
-		}
-		100% {
-			left: 150%;
-		}
-	}
+    @keyframes pulse {
+        0%,
+        100% {
+            opacity: 0.6;
+        }
+        50% {
+            opacity: 0.3;
+        }
+    }
 </style>

@@ -1,21 +1,16 @@
-"""
-Routes API pour la gestion des messages de contact.
-"""
+"""Configuration des URLs pour l'application Contact."""
 
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views.contact import ContactMessageViewSet
+from .views import ContactInfoViewSet, ContactStatsView, ContactViewSet, FAQViewSet
 
 router = DefaultRouter()
-router.register(r"", ContactMessageViewSet, basename="contact-messages")
+router.register(r"faqs", FAQViewSet, basename="faq")
+router.register(r"infos", ContactInfoViewSet, basename="contact-info")
+router.register(r"", ContactViewSet, basename="contact-submission")
 
 urlpatterns = [
+    path("stats/", ContactStatsView.as_view(), name="contact-stats"),
     path("", include(router.urls)),
-    path("unread/", ContactMessageViewSet.as_view({"get": "unread"}), name="contact-messages-unread"),
-    path(
-        "<int:pk>/mark-as-read/",
-        ContactMessageViewSet.as_view({"post": "mark_as_read"}),
-        name="contact-message-mark-as-read",
-    ),
 ]

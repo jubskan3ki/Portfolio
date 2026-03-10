@@ -1,0 +1,6751 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Portfolio API",
+    "description": "API pour le portfolio personnel",
+    "contact": {
+      "email": "contact@aitaddajuba.fr"
+    },
+    "license": {
+      "name": "BSD License"
+    },
+    "version": "v1"
+  },
+  "basePath": "/api",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "JWT authorization using Bearer scheme. Example: \"Bearer {token}\""
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "paths": {
+    "/articles/": {
+      "get": {
+        "operationId": "articles_list",
+        "summary": "Liste des articles",
+        "description": "Recupere la liste des articles, filtrable par differents criteres.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Recherche textuelle",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filtrer par categorie (nom ou slug)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "Filtrer par tag",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Champ de tri (date, views, readTime, title)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "date",
+              "views",
+              "readTime",
+              "title"
+            ],
+            "default": "date"
+          },
+          {
+            "name": "sortDirection",
+            "in": "query",
+            "description": "Direction du tri (asc, desc)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginee des articles",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "excerpt": {
+                        "type": "string"
+                      },
+                      "image": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "readTime": {
+                        "type": "integer"
+                      },
+                      "views": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "post": {
+        "operationId": "articles_create",
+        "summary": "Creer un article",
+        "description": "Cree un nouvel article.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ArticleWrite"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ArticleDetail"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "parameters": []
+    },
+    "/articles/by-category/{category_slug}/": {
+      "get": {
+        "operationId": "articles_by_category",
+        "summary": "Articles par categorie",
+        "description": "Recupere les articles d'une categorie specifique.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de page",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre d'articles a recuperer",
+            "required": false,
+            "type": "integer",
+            "default": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginee des articles",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "excerpt": {
+                        "type": "string"
+                      },
+                      "image": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "readTime": {
+                        "type": "integer"
+                      },
+                      "views": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "category_slug",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/articles/by-tag/{tag_name}/": {
+      "get": {
+        "operationId": "articles_by_tag",
+        "summary": "Articles par tag",
+        "description": "Recupere les articles avec un tag specifique.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de page",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre d'articles a recuperer",
+            "required": false,
+            "type": "integer",
+            "default": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginee des articles",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "excerpt": {
+                        "type": "string"
+                      },
+                      "image": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "readTime": {
+                        "type": "integer"
+                      },
+                      "views": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "tag_name",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/articles/categories/": {
+      "get": {
+        "operationId": "articles_categories_list",
+        "summary": "Liste des catégories",
+        "description": "Récupère la liste des catégories d'articles.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Category"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles - Catégories"
+        ]
+      },
+      "post": {
+        "operationId": "articles_categories_create",
+        "summary": "Créer une catégorie",
+        "description": "Crée une nouvelle catégorie d'articles.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Articles - Catégories"
+        ]
+      },
+      "parameters": []
+    },
+    "/articles/categories/{slug}/": {
+      "get": {
+        "operationId": "articles_categories_read",
+        "summary": "Détails d'une catégorie",
+        "description": "Récupère les détails d'une catégorie par son slug.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          },
+          "404": {
+            "description": "Catégorie non trouvée"
+          }
+        },
+        "tags": [
+          "Articles - Catégories"
+        ]
+      },
+      "put": {
+        "operationId": "articles_categories_update",
+        "summary": "Mettre à jour une catégorie",
+        "description": "Met à jour une catégorie existante.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Catégorie non trouvée"
+          }
+        },
+        "tags": [
+          "Articles - Catégories"
+        ]
+      },
+      "patch": {
+        "operationId": "articles_categories_partial_update",
+        "summary": "Mettre à jour partiellement une catégorie",
+        "description": "Met à jour partiellement une catégorie existante.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Catégorie non trouvée"
+          }
+        },
+        "tags": [
+          "Articles - Catégories"
+        ]
+      },
+      "delete": {
+        "operationId": "articles_categories_delete",
+        "summary": "Supprimer une catégorie",
+        "description": "Supprime une catégorie existante.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Catégorie supprimée"
+          },
+          "404": {
+            "description": "Catégorie non trouvée"
+          }
+        },
+        "tags": [
+          "Articles - Catégories"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/articles/featured/": {
+      "get": {
+        "operationId": "articles_featured",
+        "summary": "Articles mis en avant",
+        "description": "Recupere les articles mis en avant.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre d'articles a recuperer",
+            "required": false,
+            "type": "integer",
+            "default": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ArticleList"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "parameters": []
+    },
+    "/articles/popular/": {
+      "get": {
+        "operationId": "articles_popular",
+        "summary": "Articles populaires",
+        "description": "Recupere les articles les plus populaires.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre d'articles a recuperer",
+            "required": false,
+            "type": "integer",
+            "default": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ArticleList"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "parameters": []
+    },
+    "/articles/tags/": {
+      "get": {
+        "operationId": "articles_tags_list",
+        "summary": "Liste des tags",
+        "description": "Récupère la liste des tags d'articles.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Tag"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles - Tags"
+        ]
+      },
+      "post": {
+        "operationId": "articles_tags_create",
+        "summary": "Créer un tag",
+        "description": "Crée un nouveau tag d'articles.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Tag"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Tag"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Articles - Tags"
+        ]
+      },
+      "parameters": []
+    },
+    "/articles/tags/{name}/": {
+      "get": {
+        "operationId": "articles_tags_read",
+        "summary": "Détails d'un tag",
+        "description": "Récupère les détails d'un tag par son nom.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Tag"
+            }
+          },
+          "404": {
+            "description": "Tag non trouvé"
+          }
+        },
+        "tags": [
+          "Articles - Tags"
+        ]
+      },
+      "put": {
+        "operationId": "articles_tags_update",
+        "summary": "Mettre à jour un tag",
+        "description": "Met à jour un tag existant.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Tag"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Tag"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Tag non trouvé"
+          }
+        },
+        "tags": [
+          "Articles - Tags"
+        ]
+      },
+      "patch": {
+        "operationId": "articles_tags_partial_update",
+        "summary": "Mettre à jour partiellement un tag",
+        "description": "Met à jour partiellement un tag existant.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Tag"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Tag"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Tag non trouvé"
+          }
+        },
+        "tags": [
+          "Articles - Tags"
+        ]
+      },
+      "delete": {
+        "operationId": "articles_tags_delete",
+        "summary": "Supprimer un tag",
+        "description": "Supprime un tag existant.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Tag supprimé"
+          },
+          "404": {
+            "description": "Tag non trouvé"
+          }
+        },
+        "tags": [
+          "Articles - Tags"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/articles/{slug}/": {
+      "get": {
+        "operationId": "articles_read",
+        "summary": "Details d'un article",
+        "description": "Recupere les details d'un article par son slug ou ID.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ArticleDetail"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "put": {
+        "operationId": "articles_update",
+        "summary": "Mettre a jour un article",
+        "description": "Met a jour un article existant.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ArticleWrite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ArticleDetail"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "patch": {
+        "operationId": "articles_partial_update",
+        "summary": "Mettre a jour partiellement un article",
+        "description": "Met a jour partiellement un article existant.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ArticleWrite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ArticleDetail"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "delete": {
+        "operationId": "articles_delete",
+        "summary": "Supprimer un article",
+        "description": "Supprime un article existant.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Supprime avec succes"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/articles/{slug}/related/": {
+      "get": {
+        "operationId": "articles_related",
+        "summary": "Articles lies",
+        "description": "Recupere les articles similaires a cet article.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre d'articles a recuperer",
+            "required": false,
+            "type": "integer",
+            "default": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ArticleList"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/articles/{slug}/view/": {
+      "post": {
+        "operationId": "articles_view",
+        "summary": "Incrementer les vues d'un article",
+        "description": "Incremente le compteur de vues d'un article.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ArticleDetail"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ArticleDetail"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Articles"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/contacts/": {
+      "get": {
+        "operationId": "contacts_list",
+        "summary": "Liste des soumissions",
+        "description": "Recupere la liste des soumissions de contact (admin uniquement).",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Contact"
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifie"
+          },
+          "403": {
+            "description": "Permission refusee"
+          }
+        },
+        "tags": [
+          "Contact"
+        ]
+      },
+      "post": {
+        "operationId": "contacts_create",
+        "summary": "Soumettre un formulaire",
+        "description": "Soumet un formulaire de contact.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Contact"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Message envoye",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "referenceId": {
+                  "type": "string"
+                },
+                "error_details": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        },
+        "tags": [
+          "Contact"
+        ]
+      },
+      "parameters": []
+    },
+    "/contacts/faqs/": {
+      "get": {
+        "operationId": "contacts_faqs_list",
+        "summary": "Liste des FAQs",
+        "description": "Recupere la liste des FAQs publiees.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FAQ"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Contact - FAQs"
+        ]
+      },
+      "post": {
+        "operationId": "contacts_faqs_create",
+        "summary": "Creer une FAQ",
+        "description": "Cree une nouvelle FAQ.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FAQ"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/FAQ"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Contact - FAQs"
+        ]
+      },
+      "parameters": []
+    },
+    "/contacts/faqs/{id}/": {
+      "get": {
+        "operationId": "contacts_faqs_read",
+        "summary": "Details d'une FAQ",
+        "description": "Recupere les details d'une FAQ par son ID.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/FAQ"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact - FAQs"
+        ]
+      },
+      "put": {
+        "operationId": "contacts_faqs_update",
+        "summary": "Mettre a jour une FAQ",
+        "description": "Met a jour une FAQ existante.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FAQ"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/FAQ"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact - FAQs"
+        ]
+      },
+      "patch": {
+        "operationId": "contacts_faqs_partial_update",
+        "summary": "Mettre a jour partiellement une FAQ",
+        "description": "Met a jour partiellement une FAQ existante.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FAQ"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/FAQ"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact - FAQs"
+        ]
+      },
+      "delete": {
+        "operationId": "contacts_faqs_delete",
+        "summary": "Supprimer une FAQ",
+        "description": "Supprime une FAQ existante.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Supprime avec succes"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact - FAQs"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this FAQ.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/contacts/infos/": {
+      "get": {
+        "operationId": "contacts_infos_list",
+        "summary": "Liste des informations de contact",
+        "description": "Recupere les informations de contact.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContactInfo"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Contact - Info"
+        ]
+      },
+      "post": {
+        "operationId": "contacts_infos_create",
+        "summary": "Creer une information de contact",
+        "description": "Cree une nouvelle information de contact.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ContactInfo"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ContactInfo"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Contact - Info"
+        ]
+      },
+      "parameters": []
+    },
+    "/contacts/infos/{id}/": {
+      "get": {
+        "operationId": "contacts_infos_read",
+        "summary": "Details d'une information de contact",
+        "description": "Recupere les details d'une information de contact.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ContactInfo"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact - Info"
+        ]
+      },
+      "put": {
+        "operationId": "contacts_infos_update",
+        "summary": "Mettre a jour une information de contact",
+        "description": "Met a jour une information de contact existante.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ContactInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ContactInfo"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact - Info"
+        ]
+      },
+      "patch": {
+        "operationId": "contacts_infos_partial_update",
+        "summary": "Mettre a jour partiellement une information de contact",
+        "description": "Met a jour partiellement une information de contact.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ContactInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ContactInfo"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact - Info"
+        ]
+      },
+      "delete": {
+        "operationId": "contacts_infos_delete",
+        "summary": "Supprimer une information de contact",
+        "description": "Supprime une information de contact existante.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Supprime avec succes"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact - Info"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this Information de contact.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/contacts/stats/": {
+      "get": {
+        "operationId": "contacts_stats_list",
+        "summary": "Statistiques de contact",
+        "description": "Recupere les statistiques globales de contact.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Statistiques de contact",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "totalMessages": {
+                  "type": "integer"
+                },
+                "responseRate": {
+                  "type": "number"
+                },
+                "averageResponseTime": {
+                  "type": "string"
+                },
+                "popularSubjects": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "subject": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Contact - Stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/contacts/{id}/": {
+      "get": {
+        "operationId": "contacts_read",
+        "summary": "Details d'une soumission",
+        "description": "Recupere les details d'une soumission de contact (admin uniquement).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Contact"
+            }
+          },
+          "401": {
+            "description": "Non authentifie"
+          },
+          "403": {
+            "description": "Permission refusee"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact"
+        ]
+      },
+      "put": {
+        "operationId": "contacts_update",
+        "summary": "Mettre a jour une soumission",
+        "description": "Met a jour une soumission de contact (admin uniquement).",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Contact"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Contact"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "401": {
+            "description": "Non authentifie"
+          },
+          "403": {
+            "description": "Permission refusee"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact"
+        ]
+      },
+      "patch": {
+        "operationId": "contacts_partial_update",
+        "summary": "Mettre a jour partiellement une soumission",
+        "description": "Met a jour partiellement une soumission de contact (admin uniquement).",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Contact"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Contact"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "401": {
+            "description": "Non authentifie"
+          },
+          "403": {
+            "description": "Permission refusee"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact"
+        ]
+      },
+      "delete": {
+        "operationId": "contacts_delete",
+        "summary": "Supprimer une soumission",
+        "description": "Supprime une soumission de contact (admin uniquement).",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Supprime avec succes"
+          },
+          "401": {
+            "description": "Non authentifie"
+          },
+          "403": {
+            "description": "Permission refusee"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Contact"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/experiences/": {
+      "get": {
+        "operationId": "experiences_list",
+        "summary": "Liste des experiences",
+        "description": "Recupere la liste des experiences avec filtres optionnels.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filtrer par type d'experience",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "startYear",
+            "in": "query",
+            "description": "Filtrer par annee de debut minimum",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "endYear",
+            "in": "query",
+            "description": "Filtrer par annee de fin maximum",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "technologies",
+            "in": "query",
+            "description": "Filtrer par technologie (peut etre utilise plusieurs fois)",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Experience"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "post": {
+        "operationId": "experiences_create",
+        "summary": "Creer une experience",
+        "description": "Cree une nouvelle experience.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Experience"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Experience"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "parameters": []
+    },
+    "/experiences/by-type/{type_name}/": {
+      "get": {
+        "operationId": "experiences_by_type",
+        "summary": "Experiences par type",
+        "description": "Recupere les experiences d'un type specifique.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Experience"
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "type_name",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/experiences/current/": {
+      "get": {
+        "operationId": "experiences_current",
+        "summary": "Experience en cours",
+        "description": "Recupere l'experience en cours (sans date de fin).",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Experience"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "parameters": []
+    },
+    "/experiences/stats/": {
+      "get": {
+        "operationId": "experiences_stats_list",
+        "summary": "Statistiques des experiences",
+        "description": "Recupere les statistiques globales des experiences.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Statistiques des experiences",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "totalYears": {
+                  "description": "Annees d'experience",
+                  "type": "number"
+                },
+                "companiesCount": {
+                  "description": "Nombre d'entreprises",
+                  "type": "integer"
+                },
+                "topTechnologies": {
+                  "description": "Top technologies",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "level": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "experienceByType": {
+                  "description": "Experiences par type",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      },
+                      "icon": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Experiences - Stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/experiences/timeline/": {
+      "get": {
+        "operationId": "experiences_timeline_list",
+        "summary": "Timeline des experiences",
+        "description": "Recupere les experiences groupees par annee.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Timeline des experiences",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "year": {
+                    "type": "integer"
+                  },
+                  "experiences": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Experiences - Stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/experiences/types/": {
+      "get": {
+        "operationId": "experiences_types_list",
+        "summary": "Liste des types d'experiences",
+        "description": "Recupere tous les types d'experiences.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExperienceType"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Experiences - Types"
+        ]
+      },
+      "post": {
+        "operationId": "experiences_types_create",
+        "summary": "Creer un type",
+        "description": "Cree un nouveau type d'experience.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ExperienceType"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ExperienceType"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Experiences - Types"
+        ]
+      },
+      "parameters": []
+    },
+    "/experiences/types/{id}/": {
+      "get": {
+        "operationId": "experiences_types_read",
+        "summary": "Details d'un type",
+        "description": "Recupere un type d'experience par son ID.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ExperienceType"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences - Types"
+        ]
+      },
+      "put": {
+        "operationId": "experiences_types_update",
+        "summary": "Modifier un type",
+        "description": "Met a jour completement un type d'experience.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ExperienceType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ExperienceType"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences - Types"
+        ]
+      },
+      "patch": {
+        "operationId": "experiences_types_partial_update",
+        "summary": "Modifier partiellement un type",
+        "description": "Met a jour partiellement un type d'experience.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ExperienceType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ExperienceType"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences - Types"
+        ]
+      },
+      "delete": {
+        "operationId": "experiences_types_delete",
+        "summary": "Supprimer un type",
+        "description": "Supprime un type d'experience.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Supprime avec succes"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences - Types"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this Type d'experience.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/experiences/{id}/": {
+      "get": {
+        "operationId": "experiences_read",
+        "summary": "Details d'une experience",
+        "description": "Recupere les details d'une experience par son ID.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Experience"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "put": {
+        "operationId": "experiences_update",
+        "summary": "Modifier une experience",
+        "description": "Met a jour completement une experience.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Experience"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Experience"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "patch": {
+        "operationId": "experiences_partial_update",
+        "summary": "Modifier partiellement une experience",
+        "description": "Met a jour partiellement une experience.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Experience"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Experience"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "delete": {
+        "operationId": "experiences_delete",
+        "summary": "Supprimer une experience",
+        "description": "Supprime une experience existante.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Supprime avec succes"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Experiences"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this Experience.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/projects/": {
+      "get": {
+        "operationId": "projects_list",
+        "summary": "Liste des projets",
+        "description": "Recupere la liste des projets, filtrable par differents criteres.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Recherche textuelle dans le titre, la description et les technologies",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de page",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre d'elements par page",
+            "required": false,
+            "type": "integer",
+            "default": 10
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filtrer par categorie (nom ou slug)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtrer par statut",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "technologies",
+            "in": "query",
+            "description": "Filtrer par technologie (peut etre utilise plusieurs fois)",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Champ de tri (date, title, views)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "date",
+              "title",
+              "views"
+            ],
+            "default": "date"
+          },
+          {
+            "name": "sortDirection",
+            "in": "query",
+            "description": "Direction du tri (asc, desc)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginee des projets",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "image": {
+                        "type": "string",
+                        "format": "uri",
+                        "x-nullable": true
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "technologies": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "view": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "post": {
+        "operationId": "projects_create",
+        "summary": "Creer un projet",
+        "description": "Cree un nouveau projet.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectWrite"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectList"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "parameters": []
+    },
+    "/projects/by-category/{category_slug}/": {
+      "get": {
+        "operationId": "projects_by_category",
+        "summary": "Projets par categorie",
+        "description": "Recupere les projets d'une categorie specifique.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de page",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre d'elements par page",
+            "required": false,
+            "type": "integer",
+            "default": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginee des projets",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "image": {
+                        "type": "string",
+                        "format": "uri",
+                        "x-nullable": true
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "technologies": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "view": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "category_slug",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/projects/categories/": {
+      "get": {
+        "operationId": "projects_categories_list",
+        "summary": "Liste des categories",
+        "description": "Recupere la liste de toutes les categories de projets.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ProjectCategory"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Projets - Categories"
+        ]
+      },
+      "post": {
+        "operationId": "projects_categories_create",
+        "summary": "Creer une categorie",
+        "description": "Cree une nouvelle categorie de projet.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectCategory"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectCategory"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Projets - Categories"
+        ]
+      },
+      "parameters": []
+    },
+    "/projects/categories/{slug}/": {
+      "get": {
+        "operationId": "projects_categories_read",
+        "summary": "Details d'une categorie",
+        "description": "Recupere les details d'une categorie par son slug.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectCategory"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets - Categories"
+        ]
+      },
+      "put": {
+        "operationId": "projects_categories_update",
+        "summary": "Mettre a jour une categorie",
+        "description": "Met a jour completement une categorie existante.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectCategory"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectCategory"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets - Categories"
+        ]
+      },
+      "patch": {
+        "operationId": "projects_categories_partial_update",
+        "summary": "Mettre a jour partiellement une categorie",
+        "description": "Met a jour partiellement une categorie existante.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectCategory"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectCategory"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets - Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "projects_categories_delete",
+        "summary": "Supprimer une categorie",
+        "description": "Supprime une categorie existante.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Suppression reussie"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets - Categories"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/projects/featured/": {
+      "get": {
+        "operationId": "projects_featured",
+        "summary": "Projets mis en avant",
+        "description": "Recupere les projets mis en avant (les plus aimes).",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre de projets a recuperer",
+            "required": false,
+            "type": "integer",
+            "default": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ProjectList"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "parameters": []
+    },
+    "/projects/stats/": {
+      "get": {
+        "operationId": "projects_stats_list",
+        "summary": "Statistiques des projets",
+        "description": "Recupere les statistiques globales des projets.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Statistiques des projets",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "totalProjects": {
+                  "type": "integer"
+                },
+                "totalViews": {
+                  "type": "integer"
+                },
+                "projectsByCategory": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "category": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      },
+                      "slug": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "mostViewedProjects": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "views": {
+                        "type": "integer"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "projectsByYear": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "year": {
+                        "type": "integer"
+                      },
+                      "count": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "projectsByMonth": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "month": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Projets - Stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/projects/statuses/": {
+      "get": {
+        "operationId": "projects_statuses_list",
+        "summary": "Liste des statuts",
+        "description": "Recupere la liste de tous les statuts de projets.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ProjectStatus"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Projets - Statuts"
+        ]
+      },
+      "post": {
+        "operationId": "projects_statuses_create",
+        "summary": "Creer un statut",
+        "description": "Cree un nouveau statut de projet.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectStatus"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectStatus"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Projets - Statuts"
+        ]
+      },
+      "parameters": []
+    },
+    "/projects/statuses/{id}/": {
+      "get": {
+        "operationId": "projects_statuses_read",
+        "summary": "Details d'un statut",
+        "description": "Recupere les details d'un statut par son ID.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectStatus"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets - Statuts"
+        ]
+      },
+      "put": {
+        "operationId": "projects_statuses_update",
+        "summary": "Mettre a jour un statut",
+        "description": "Met a jour completement un statut existant.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectStatus"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets - Statuts"
+        ]
+      },
+      "patch": {
+        "operationId": "projects_statuses_partial_update",
+        "summary": "Mettre a jour partiellement un statut",
+        "description": "Met a jour partiellement un statut existant.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectStatus"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets - Statuts"
+        ]
+      },
+      "delete": {
+        "operationId": "projects_statuses_delete",
+        "summary": "Supprimer un statut",
+        "description": "Supprime un statut existant.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Suppression reussie"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets - Statuts"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this Statut de projet.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/projects/{slug}/": {
+      "get": {
+        "operationId": "projects_read",
+        "summary": "Details d'un projet",
+        "description": "Recupere les details d'un projet par son slug ou ID.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectDetail"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "put": {
+        "operationId": "projects_update",
+        "summary": "Mettre a jour un projet",
+        "description": "Met a jour completement un projet existant.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectWrite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectList"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "patch": {
+        "operationId": "projects_partial_update",
+        "summary": "Mettre a jour partiellement un projet",
+        "description": "Met a jour partiellement un projet existant.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectWrite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectList"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "delete": {
+        "operationId": "projects_delete",
+        "summary": "Supprimer un projet",
+        "description": "Supprime un projet existant.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Suppression reussie"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/projects/{slug}/view/": {
+      "post": {
+        "operationId": "projects_view",
+        "summary": "Incrementer les vues d'un projet",
+        "description": "Incremente le compteur de vues d'un projet.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjectDetail"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ProjectDetail"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Projets"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/stacks/": {
+      "get": {
+        "operationId": "stacks_list",
+        "summary": "Liste des stacks",
+        "description": "Recupere la liste des stacks techniques avec filtres optionnels.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Recherche textuelle",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filtrer par categorie",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "description": "Filtrer par tags (peut etre utilise plusieurs fois)",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "min_level",
+            "in": "query",
+            "description": "Niveau de maitrise minimum (0.5-5.0)",
+            "required": false,
+            "type": "number"
+          },
+          {
+            "name": "min_experience",
+            "in": "query",
+            "description": "Experience minimum en mois",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Champ de tri",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "name",
+              "level",
+              "started_date"
+            ],
+            "default": "name"
+          },
+          {
+            "name": "sort_direction",
+            "in": "query",
+            "description": "Direction du tri",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StackList"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Stacks"
+        ]
+      },
+      "post": {
+        "operationId": "stacks_create",
+        "summary": "Creer une stack",
+        "description": "Cree une nouvelle stack technique.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Stack"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Stack"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Stacks"
+        ]
+      },
+      "parameters": []
+    },
+    "/stacks/by-category/{category_name}/": {
+      "get": {
+        "operationId": "stacks_by_category",
+        "summary": "Stacks par categorie",
+        "description": "Recupere les stacks d'une categorie specifique.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StackList"
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "category_name",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/stacks/categories/": {
+      "get": {
+        "operationId": "stacks_categories_list",
+        "summary": "Liste des categories",
+        "description": "Recupere toutes les categories de stacks.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StackCategory"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Stacks - Categories"
+        ]
+      },
+      "post": {
+        "operationId": "stacks_categories_create",
+        "summary": "Creer une categorie",
+        "description": "Cree une nouvelle categorie.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StackCategory"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StackCategory"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Stacks - Categories"
+        ]
+      },
+      "parameters": []
+    },
+    "/stacks/categories/{name}/": {
+      "get": {
+        "operationId": "stacks_categories_read",
+        "summary": "Details d'une categorie",
+        "description": "Recupere une categorie par son nom.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StackCategory"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks - Categories"
+        ]
+      },
+      "put": {
+        "operationId": "stacks_categories_update",
+        "summary": "Modifier une categorie",
+        "description": "Met a jour completement une categorie.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StackCategory"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StackCategory"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks - Categories"
+        ]
+      },
+      "patch": {
+        "operationId": "stacks_categories_partial_update",
+        "summary": "Modifier partiellement une categorie",
+        "description": "Met a jour partiellement une categorie.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StackCategory"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StackCategory"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks - Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "stacks_categories_delete",
+        "summary": "Supprimer une categorie",
+        "description": "Supprime une categorie existante.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Suppression reussie"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks - Categories"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/stacks/resources/": {
+      "get": {
+        "operationId": "stacks_resources_list",
+        "summary": "Liste des ressources",
+        "description": "Recupere les ressources avec filtres optionnels.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "A search term.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ordering",
+            "in": "query",
+            "description": "Which field to use when ordering the results.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "stack_id",
+            "in": "query",
+            "description": "ID de la stack pour filtrer",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "stack_slug",
+            "in": "query",
+            "description": "Slug de la stack pour filtrer",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Type de ressource",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "documentation",
+              "tutorial",
+              "article",
+              "video",
+              "other"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StackResource"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Stacks - Ressources"
+        ]
+      },
+      "post": {
+        "operationId": "stacks_resources_create",
+        "summary": "Creer une ressource",
+        "description": "Cree une nouvelle ressource.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StackResource"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StackResource"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          }
+        },
+        "tags": [
+          "Stacks - Ressources"
+        ]
+      },
+      "parameters": []
+    },
+    "/stacks/resources/{id}/": {
+      "get": {
+        "operationId": "stacks_resources_read",
+        "summary": "Details d'une ressource",
+        "description": "Recupere une ressource par son ID.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StackResource"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks - Ressources"
+        ]
+      },
+      "put": {
+        "operationId": "stacks_resources_update",
+        "summary": "Modifier une ressource",
+        "description": "Met a jour completement une ressource.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StackResource"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StackResource"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks - Ressources"
+        ]
+      },
+      "patch": {
+        "operationId": "stacks_resources_partial_update",
+        "summary": "Modifier partiellement une ressource",
+        "description": "Met a jour partiellement une ressource.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StackResource"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StackResource"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks - Ressources"
+        ]
+      },
+      "delete": {
+        "operationId": "stacks_resources_delete",
+        "summary": "Supprimer une ressource",
+        "description": "Supprime une ressource existante.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Suppression reussie"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks - Ressources"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "A unique integer value identifying this Ressource.",
+          "required": true,
+          "type": "integer"
+        }
+      ]
+    },
+    "/stacks/stats/": {
+      "get": {
+        "operationId": "stacks_stats_list",
+        "summary": "Statistiques des stacks",
+        "description": "Recupere les statistiques globales des stacks techniques.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Statistiques",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "totalStacks": {
+                  "type": "integer"
+                },
+                "stacksByCategory": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "category": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "averageProficiency": {
+                  "type": "number"
+                },
+                "topStacks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "level": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "yearsOfExperience": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "years": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Stacks - Stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/stacks/{slug}/": {
+      "get": {
+        "operationId": "stacks_read",
+        "summary": "Details d'une stack",
+        "description": "Recupere les details d'une stack par son slug ou ID.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Stack"
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks"
+        ]
+      },
+      "put": {
+        "operationId": "stacks_update",
+        "summary": "Modifier une stack",
+        "description": "Met a jour completement une stack.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Stack"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Stack"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks"
+        ]
+      },
+      "patch": {
+        "operationId": "stacks_partial_update",
+        "summary": "Modifier partiellement une stack",
+        "description": "Met a jour partiellement une stack.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Stack"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Stack"
+            }
+          },
+          "400": {
+            "description": "Erreur de validation"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks"
+        ]
+      },
+      "delete": {
+        "operationId": "stacks_delete",
+        "summary": "Supprimer une stack",
+        "description": "Supprime une stack existante.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Supprime"
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/stacks/{slug}/related/": {
+      "get": {
+        "operationId": "stacks_related",
+        "summary": "Stacks associees",
+        "description": "Recupere les stacks associees a une stack.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Liste des stacks associees",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "logo": {
+                    "type": "string",
+                    "format": "uri",
+                    "x-nullable": true
+                  },
+                  "slug": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "relationship": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource non trouvee"
+          }
+        },
+        "tags": [
+          "Stacks"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "slug",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$"
+        }
+      ]
+    },
+    "/stats/": {
+      "get": {
+        "operationId": "stats_list",
+        "description": "Recupere les statistiques globales du dashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/DashboardStats"
+            }
+          }
+        },
+        "tags": [
+          "stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/stats/activity/": {
+      "get": {
+        "operationId": "stats_activity_list",
+        "description": "Recupere l'activite recente",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/RecentActivity"
+            }
+          }
+        },
+        "tags": [
+          "stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/stats/charts/": {
+      "get": {
+        "operationId": "stats_charts_list",
+        "description": "Recupere les donnees pour les graphiques",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ChartData"
+            }
+          }
+        },
+        "tags": [
+          "stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/stats/overview/": {
+      "get": {
+        "operationId": "stats_overview_list",
+        "description": "Recupere toutes les donnees du dashboard en une requete",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Dashboard overview data"
+          }
+        },
+        "tags": [
+          "stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/stats/quick/": {
+      "get": {
+        "operationId": "stats_quick_list",
+        "description": "Recupere les stats rapides",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/QuickStats"
+            }
+          }
+        },
+        "tags": [
+          "stats"
+        ]
+      },
+      "parameters": []
+    },
+    "/transfer/export/bulk/": {
+      "get": {
+        "operationId": "transfer_export_bulk_list",
+        "description": "Export bulk de plusieurs modules dans un fichier ZIP",
+        "parameters": [
+          {
+            "name": "modules",
+            "in": "query",
+            "description": "Liste de modules separes par virgule (ex: articles,projects) ou 'all'",
+            "type": "string",
+            "default": "all"
+          },
+          {
+            "name": "export_format",
+            "in": "query",
+            "description": "Format d'export pour les fichiers dans le ZIP (json, csv, xlsx)",
+            "type": "string",
+            "default": "json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fichier ZIP contenant les exports"
+          },
+          "400": {
+            "description": "Requete invalide"
+          }
+        },
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": []
+    },
+    "/transfer/export/download/{module}/": {
+      "get": {
+        "operationId": "transfer_export_download_read",
+        "description": "Telecharge directement le fichier d'export",
+        "parameters": [
+          {
+            "name": "module",
+            "in": "path",
+            "description": "Module a exporter",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "export_format",
+            "in": "query",
+            "description": "Format d'export (json, csv, xlsx)",
+            "type": "string",
+            "default": "json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fichier d'export"
+          },
+          "400": {
+            "description": "Requete invalide"
+          },
+          "401": {
+            "description": "Non authentifie"
+          },
+          "403": {
+            "description": "Non autorise"
+          }
+        },
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "module",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/transfer/export/module/{module}/": {
+      "get": {
+        "operationId": "transfer_export_module_read",
+        "description": "Exporte les donnees d'un module",
+        "parameters": [
+          {
+            "name": "module",
+            "in": "path",
+            "description": "Module a exporter (articles, projects, stacks, experiences, contacts)",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "export_format",
+            "in": "query",
+            "description": "Format d'export (json, csv, xlsx)",
+            "type": "string",
+            "default": "json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ExportJob"
+            }
+          },
+          "400": {
+            "description": "Requete invalide"
+          },
+          "403": {
+            "description": "Non autorise"
+          }
+        },
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "module",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/transfer/import/bulk/": {
+      "post": {
+        "operationId": "transfer_import_bulk_import",
+        "description": "Import bulk depuis plusieurs fichiers",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Liste des jobs d'import"
+          }
+        },
+        "consumes": [
+          "multipart/form-data",
+          "application/x-www-form-urlencoded"
+        ],
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": []
+    },
+    "/transfer/import/module/{module}/": {
+      "post": {
+        "operationId": "transfer_import_import_module",
+        "description": "Importe les donnees dans un module",
+        "parameters": [
+          {
+            "name": "module",
+            "in": "path",
+            "description": "Module cible",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "Fichier a importer",
+            "required": true,
+            "type": "file"
+          },
+          {
+            "name": "update_existing",
+            "in": "formData",
+            "description": "Mettre a jour les enregistrements existants",
+            "type": "boolean",
+            "default": false
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ImportJob"
+            }
+          },
+          "400": {
+            "description": "Requete invalide"
+          }
+        },
+        "consumes": [
+          "multipart/form-data",
+          "application/x-www-form-urlencoded"
+        ],
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "module",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/transfer/import/preview/{module}/": {
+      "post": {
+        "operationId": "transfer_import_preview",
+        "description": "Preview des donnees avant import",
+        "parameters": [
+          {
+            "name": "module",
+            "in": "path",
+            "description": "Module cible",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "description": "Fichier a importer",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ImportPreview"
+            }
+          },
+          "400": {
+            "description": "Requete invalide"
+          }
+        },
+        "consumes": [
+          "multipart/form-data",
+          "application/x-www-form-urlencoded"
+        ],
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "module",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/transfer/jobs/": {
+      "get": {
+        "operationId": "transfer_jobs_list",
+        "description": "Liste tous les jobs de l'utilisateur",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Liste des jobs"
+          }
+        },
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": []
+    },
+    "/transfer/jobs/cleanup/": {
+      "delete": {
+        "operationId": "transfer_jobs_cleanup",
+        "description": "Supprime les anciens jobs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Jobs supprimes"
+          }
+        },
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": []
+    },
+    "/transfer/jobs/export/{job_id}/": {
+      "get": {
+        "operationId": "transfer_jobs_export_detail",
+        "description": "Detail d'un job d'export",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ExportJob"
+            }
+          },
+          "404": {
+            "description": "Job non trouve"
+          }
+        },
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "job_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/transfer/jobs/import/{job_id}/": {
+      "get": {
+        "operationId": "transfer_jobs_import_detail",
+        "description": "Detail d'un job d'import",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ImportJob"
+            }
+          },
+          "404": {
+            "description": "Job non trouve"
+          }
+        },
+        "tags": [
+          "transfer"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "job_id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/users/auth/login/": {
+      "post": {
+        "operationId": "users_auth_login_create",
+        "summary": "Connexion administrateur",
+        "description": "Authentifie un administrateur et renvoie des tokens JWT via cookies HTTPOnly.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminLogin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connexion reussie (tokens dans cookies HTTPOnly)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "first_name": {
+                      "type": "string"
+                    },
+                    "last_name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Identifiants invalides"
+          },
+          "403": {
+            "description": "Compte desactive ou sans permissions"
+          },
+          "400": {
+            "description": "Format de donnees invalide"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/auth/logout/": {
+      "post": {
+        "operationId": "users_auth_logout_create",
+        "summary": "Deconnexion administrateur",
+        "description": "Invalide le token de rafraichissement JWT et supprime les cookies.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Deconnexion reussie (cookies supprimes)"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/auth/refresh/": {
+      "post": {
+        "operationId": "users_auth_refresh_create",
+        "summary": "Rafraichissement du token",
+        "description": "Genere un nouveau token d'acces via cookie HTTPOnly.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Token rafraichi (nouveaux tokens dans cookies HTTPOnly)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "detail": {
+                  "description": "Message",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expire"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/password/change/": {
+      "post": {
+        "operationId": "users_password_change_create",
+        "summary": "Changer le mot de passe",
+        "description": "Change le mot de passe de l'utilisateur connecte.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ChangePassword"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mot de passe modifie",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "detail": {
+                  "description": "Message",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Donnees invalides"
+          },
+          "403": {
+            "description": "Mot de passe actuel incorrect"
+          }
+        },
+        "tags": [
+          "Password"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/profile/": {
+      "get": {
+        "operationId": "users_profile_list",
+        "summary": "Obtenir le profil",
+        "description": "Recupere le profil administrateur connecte.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profil recupere"
+          },
+          "404": {
+            "description": "Profil non trouve"
+          },
+          "403": {
+            "description": "Acces non autorise"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "put": {
+        "operationId": "users_profile_update",
+        "summary": "Mettre a jour le profil",
+        "description": "Met a jour le profil administrateur connecte.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminUpdateProfile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profil mis a jour"
+          },
+          "400": {
+            "description": "Donnees invalides"
+          },
+          "404": {
+            "description": "Profil non trouve"
+          },
+          "403": {
+            "description": "Acces non autorise"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/request-reset-password/": {
+      "post": {
+        "operationId": "users_request-reset-password_create",
+        "summary": "Demander la reinitialisation",
+        "description": "Envoie un email avec un code de reinitialisation.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RequestResetPassword"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email envoye si l'adresse est valide",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "detail": {
+                  "description": "Message",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Password"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/reset-password/": {
+      "post": {
+        "operationId": "users_reset-password_create",
+        "summary": "Reinitialiser le mot de passe",
+        "description": "Reinitialise le mot de passe avec le code fourni.",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ResetPassword"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mot de passe reinitialise",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "detail": {
+                  "description": "Message",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Donnees invalides"
+          },
+          "403": {
+            "description": "Code invalide ou expire"
+          },
+          "404": {
+            "description": "Utilisateur non trouve"
+          }
+        },
+        "tags": [
+          "Password"
+        ]
+      },
+      "parameters": []
+    },
+    "/users/sessions/": {
+      "get": {
+        "operationId": "users_sessions_list",
+        "summary": "Lister les sessions",
+        "description": "Recupere la liste des sessions actives de l'utilisateur.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Liste des sessions actives",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "sessions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "description": "ID de session",
+                        "type": "string"
+                      },
+                      "device": {
+                        "type": "object",
+                        "properties": {
+                          "browser": {
+                            "type": "string"
+                          },
+                          "os": {
+                            "type": "string"
+                          },
+                          "device": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "last_activity": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "is_current": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "users_sessions_delete",
+        "summary": "Revoquer des sessions",
+        "description": "Revoque une session specifique ou toutes les autres sessions.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sessions revoquees",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "detail": {
+                  "description": "Message",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session non trouvee"
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "parameters": []
+    }
+  },
+  "definitions": {
+    "ArticleWrite": {
+      "required": [
+        "title",
+        "category"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "maxLength": 250
+        },
+        "excerpt": {
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "object",
+          "default": {}
+        },
+        "image": {
+          "title": "Image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "category": {
+          "title": "Category",
+          "type": "integer"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "uniqueItems": true
+        },
+        "read_time": {
+          "title": "Read time",
+          "type": "integer",
+          "maximum": 2147483647,
+          "minimum": 0
+        },
+        "is_published": {
+          "title": "Is published",
+          "type": "boolean"
+        },
+        "is_featured": {
+          "title": "Is featured",
+          "type": "boolean"
+        }
+      }
+    },
+    "ArticleDetail": {
+      "required": [
+        "title",
+        "excerpt",
+        "date",
+        "readTime",
+        "views"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "maxLength": 250
+        },
+        "excerpt": {
+          "title": "Excerpt",
+          "type": "string",
+          "minLength": 1
+        },
+        "content": {
+          "title": "Content",
+          "type": "object"
+        },
+        "image": {
+          "title": "Image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string",
+          "readOnly": true
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "readOnly": true
+        },
+        "date": {
+          "title": "Date",
+          "type": "string",
+          "format": "date-time"
+        },
+        "readTime": {
+          "title": "Readtime",
+          "type": "integer"
+        },
+        "views": {
+          "title": "Views",
+          "type": "integer"
+        }
+      }
+    },
+    "Category": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "ArticleList": {
+      "required": [
+        "title",
+        "excerpt",
+        "date",
+        "readTime",
+        "views",
+        "is_published"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "maxLength": 250
+        },
+        "excerpt": {
+          "title": "Excerpt",
+          "type": "string",
+          "minLength": 1
+        },
+        "image": {
+          "title": "Image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "cover_image": {
+          "title": "Cover image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string",
+          "readOnly": true
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "readOnly": true
+        },
+        "date": {
+          "title": "Date",
+          "type": "string",
+          "format": "date-time"
+        },
+        "readTime": {
+          "title": "Readtime",
+          "type": "integer"
+        },
+        "views": {
+          "title": "Views",
+          "type": "integer"
+        },
+        "is_published": {
+          "title": "Is published",
+          "type": "boolean"
+        }
+      }
+    },
+    "Tag": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 1
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "Contact": {
+      "required": [
+        "name",
+        "email",
+        "subject",
+        "message"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "minLength": 1
+        },
+        "subject": {
+          "title": "Subject",
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "message": {
+          "title": "Message",
+          "type": "string",
+          "minLength": 1
+        },
+        "phone": {
+          "title": "Phone",
+          "type": "string",
+          "maxLength": 20
+        },
+        "company": {
+          "title": "Company",
+          "type": "string",
+          "maxLength": 100
+        },
+        "recaptchaToken": {
+          "title": "Recaptchatoken",
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "FAQ": {
+      "required": [
+        "question",
+        "answer"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "question": {
+          "title": "Question",
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        },
+        "answer": {
+          "title": "Answer",
+          "type": "string",
+          "minLength": 1
+        },
+        "is_published": {
+          "title": "Is published",
+          "type": "boolean"
+        },
+        "order": {
+          "title": "Order",
+          "type": "integer",
+          "maximum": 2147483647,
+          "minimum": 0
+        }
+      }
+    },
+    "ContactInfo": {
+      "required": [
+        "email"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "minLength": 1
+        },
+        "phone": {
+          "title": "Phone",
+          "type": "string",
+          "maxLength": 20
+        },
+        "address": {
+          "title": "Address",
+          "type": "object",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "socialMedia": {
+          "title": "Socialmedia",
+          "type": "object",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "availability": {
+          "title": "Availability",
+          "type": "object",
+          "readOnly": true
+        }
+      }
+    },
+    "Experience": {
+      "required": [
+        "title",
+        "company",
+        "location",
+        "startDate",
+        "description"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "company": {
+          "title": "Company",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "location": {
+          "title": "Location",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "period": {
+          "title": "Period",
+          "type": "string",
+          "maxLength": 100
+        },
+        "startDate": {
+          "title": "Startdate",
+          "type": "string",
+          "format": "date"
+        },
+        "endDate": {
+          "title": "Enddate",
+          "type": "string",
+          "format": "date",
+          "x-nullable": true
+        },
+        "isCurrent": {
+          "title": "Iscurrent",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "minLength": 1
+        },
+        "logo": {
+          "title": "Logo",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "technologies": {
+          "title": "Technologies",
+          "type": "object"
+        },
+        "achievements": {
+          "title": "Achievements",
+          "type": "object"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ExperienceType": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 1
+        },
+        "icon": {
+          "title": "Icon",
+          "type": "string",
+          "maxLength": 50
+        }
+      }
+    },
+    "ProjectWrite": {
+      "required": [
+        "title",
+        "description",
+        "category"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "maxLength": 100
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "minLength": 1
+        },
+        "long_description": {
+          "title": "Long description",
+          "type": "string"
+        },
+        "longDescription": {
+          "title": "Longdescription",
+          "type": "string"
+        },
+        "image": {
+          "title": "Image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "category": {
+          "title": "Category",
+          "type": "integer"
+        },
+        "status": {
+          "title": "Status",
+          "type": "integer",
+          "x-nullable": true
+        },
+        "technologies": {
+          "title": "Technologies",
+          "type": "object"
+        },
+        "features": {
+          "title": "Features",
+          "type": "object"
+        },
+        "links": {
+          "title": "Links",
+          "description": "Format JSON: {'demo': 'url', 'github': 'url', 'documentation': 'url'}",
+          "type": "object"
+        },
+        "date": {
+          "title": "Date",
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "ProjectList": {
+      "required": [
+        "title",
+        "description"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "maxLength": 100
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "minLength": 1
+        },
+        "image": {
+          "title": "Image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string",
+          "readOnly": true
+        },
+        "status": {
+          "title": "Status",
+          "type": "string",
+          "readOnly": true
+        },
+        "technologies": {
+          "title": "Technologies",
+          "type": "object"
+        },
+        "date": {
+          "title": "Date",
+          "type": "string",
+          "format": "date"
+        },
+        "view": {
+          "title": "View",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "ProjectCategory": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "ProjectStatus": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      }
+    },
+    "ProjectDetail": {
+      "required": [
+        "title",
+        "description",
+        "longDescription"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "minLength": 1
+        },
+        "view": {
+          "title": "View",
+          "type": "integer",
+          "readOnly": true
+        },
+        "longDescription": {
+          "title": "Longdescription",
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "title": "Status",
+          "type": "string",
+          "readOnly": true
+        },
+        "image": {
+          "title": "Image",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string",
+          "readOnly": true
+        },
+        "technologies": {
+          "title": "Technologies",
+          "type": "object"
+        },
+        "date": {
+          "title": "Date",
+          "type": "string",
+          "format": "date"
+        },
+        "features": {
+          "title": "Features",
+          "type": "object"
+        },
+        "links": {
+          "title": "Links",
+          "description": "Format JSON: {'demo': 'url', 'github': 'url', 'documentation': 'url'}",
+          "type": "object"
+        }
+      }
+    },
+    "StackList": {
+      "required": [
+        "name",
+        "description"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "logo": {
+          "title": "Logo",
+          "description": "Logo (PNG, JPG, GIF, WebP ou SVG)",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string",
+          "readOnly": true
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "minLength": 1
+        },
+        "experience": {
+          "title": "Experience",
+          "type": "integer",
+          "readOnly": true
+        },
+        "level": {
+          "title": "Level",
+          "description": "Niveau de maitrise (0.5-5.0)",
+          "type": "string",
+          "format": "decimal"
+        },
+        "tags": {
+          "title": "Tags",
+          "type": "object"
+        },
+        "started_date": {
+          "title": "Started date",
+          "description": "Date de début d'utilisation de cette technologie",
+          "type": "string",
+          "format": "date",
+          "x-nullable": true
+        }
+      }
+    },
+    "StackResource": {
+      "required": [
+        "title",
+        "description",
+        "url"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "title": "Url",
+          "type": "string",
+          "format": "uri",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "type": {
+          "title": "Type",
+          "type": "string",
+          "enum": [
+            "documentation",
+            "tutorial",
+            "article",
+            "video",
+            "other"
+          ]
+        },
+        "type_display": {
+          "title": "Type display",
+          "type": "string",
+          "readOnly": true
+        },
+        "is_featured": {
+          "title": "Is featured",
+          "type": "boolean"
+        }
+      }
+    },
+    "Stack": {
+      "required": [
+        "name",
+        "category"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "slug": {
+          "title": "Slug",
+          "type": "string",
+          "format": "slug",
+          "pattern": "^[-a-zA-Z0-9_]+$",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "logo": {
+          "title": "Logo",
+          "description": "Logo (PNG, JPG, GIF, WebP ou SVG)",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "category": {
+          "title": "Category",
+          "type": "integer"
+        },
+        "category_name": {
+          "title": "Category name",
+          "type": "string",
+          "readOnly": true
+        },
+        "tags": {
+          "title": "Tags",
+          "type": "object",
+          "default": []
+        },
+        "started_date": {
+          "title": "Started date",
+          "description": "Date de début d'utilisation de cette technologie",
+          "type": "string",
+          "format": "date",
+          "x-nullable": true
+        },
+        "experience": {
+          "title": "Experience",
+          "type": "integer",
+          "readOnly": true
+        },
+        "level": {
+          "title": "Level",
+          "description": "Niveau de maitrise (0.5-5.0)",
+          "type": "string",
+          "format": "decimal"
+        },
+        "website": {
+          "title": "Website",
+          "type": "string",
+          "format": "uri",
+          "maxLength": 200,
+          "x-nullable": true
+        },
+        "website_label": {
+          "title": "Website label",
+          "type": "string",
+          "maxLength": 50,
+          "x-nullable": true
+        },
+        "github": {
+          "title": "Github",
+          "type": "string",
+          "format": "uri",
+          "maxLength": 200,
+          "x-nullable": true
+        },
+        "github_label": {
+          "title": "Github label",
+          "type": "string",
+          "maxLength": 50,
+          "x-nullable": true
+        },
+        "first_release": {
+          "title": "First release",
+          "type": "string",
+          "maxLength": 50
+        },
+        "license": {
+          "title": "License",
+          "type": "string",
+          "maxLength": 50
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StackResource"
+          },
+          "readOnly": true
+        },
+        "related_stacks": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "readOnly": true
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "updated_at": {
+          "title": "Updated at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        }
+      }
+    },
+    "StackCategory": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "ID",
+          "type": "integer",
+          "readOnly": true
+        },
+        "name": {
+          "title": "Name",
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "icon": {
+          "title": "Icon",
+          "type": "string",
+          "maxLength": 50
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer",
+          "readOnly": true
+        }
+      }
+    },
+    "ModuleStats": {
+      "required": [
+        "count"
+      ],
+      "type": "object",
+      "properties": {
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        },
+        "published": {
+          "title": "Published",
+          "type": "integer"
+        },
+        "featured": {
+          "title": "Featured",
+          "type": "integer"
+        },
+        "new": {
+          "title": "New",
+          "type": "integer"
+        },
+        "responded": {
+          "title": "Responded",
+          "type": "integer"
+        },
+        "total_views": {
+          "title": "Total views",
+          "type": "integer"
+        }
+      }
+    },
+    "DashboardStats": {
+      "required": [
+        "articles",
+        "projects",
+        "stacks",
+        "experiences",
+        "messages",
+        "total_views"
+      ],
+      "type": "object",
+      "properties": {
+        "articles": {
+          "$ref": "#/definitions/ModuleStats"
+        },
+        "projects": {
+          "$ref": "#/definitions/ModuleStats"
+        },
+        "stacks": {
+          "$ref": "#/definitions/ModuleStats"
+        },
+        "experiences": {
+          "$ref": "#/definitions/ModuleStats"
+        },
+        "messages": {
+          "$ref": "#/definitions/ModuleStats"
+        },
+        "total_views": {
+          "title": "Total views",
+          "type": "integer"
+        }
+      }
+    },
+    "ActivityItem": {
+      "required": [
+        "id",
+        "type",
+        "action",
+        "title",
+        "timestamp",
+        "module"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "title": "Action",
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "string",
+          "format": "date-time"
+        },
+        "module": {
+          "title": "Module",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RecentActivity": {
+      "required": [
+        "activities"
+      ],
+      "type": "object",
+      "properties": {
+        "activities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ActivityItem"
+          }
+        }
+      }
+    },
+    "ViewsDataPoint": {
+      "required": [
+        "date",
+        "views"
+      ],
+      "type": "object",
+      "properties": {
+        "date": {
+          "title": "Date",
+          "type": "string",
+          "minLength": 1
+        },
+        "views": {
+          "title": "Views",
+          "type": "integer"
+        },
+        "articles_published": {
+          "title": "Articles published",
+          "type": "integer"
+        }
+      }
+    },
+    "MessagesDataPoint": {
+      "required": [
+        "month",
+        "count"
+      ],
+      "type": "object",
+      "properties": {
+        "month": {
+          "title": "Month",
+          "type": "string",
+          "minLength": 1
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        }
+      }
+    },
+    "ChartData": {
+      "required": [
+        "views_over_time",
+        "messages_per_month"
+      ],
+      "type": "object",
+      "properties": {
+        "views_over_time": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewsDataPoint"
+          }
+        },
+        "messages_per_month": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MessagesDataPoint"
+          }
+        }
+      }
+    },
+    "QuickStats": {
+      "required": [
+        "new_messages_today",
+        "total_views",
+        "popular_article",
+        "popular_project"
+      ],
+      "type": "object",
+      "properties": {
+        "new_messages_today": {
+          "title": "New messages today",
+          "type": "integer"
+        },
+        "total_views": {
+          "title": "Total views",
+          "type": "integer"
+        },
+        "popular_article": {
+          "title": "Popular article",
+          "type": "string",
+          "minLength": 1,
+          "x-nullable": true
+        },
+        "popular_project": {
+          "title": "Popular project",
+          "type": "string",
+          "minLength": 1,
+          "x-nullable": true
+        }
+      }
+    },
+    "ExportJob": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "user_email": {
+          "title": "User email",
+          "type": "string",
+          "format": "email",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "module": {
+          "title": "Module",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "format": {
+          "title": "Format",
+          "type": "string",
+          "enum": [
+            "json",
+            "csv",
+            "xlsx"
+          ],
+          "readOnly": true
+        },
+        "status": {
+          "title": "Status",
+          "type": "string",
+          "enum": [
+            "pending",
+            "processing",
+            "completed",
+            "failed"
+          ],
+          "readOnly": true
+        },
+        "filters": {
+          "title": "Filters",
+          "type": "object",
+          "readOnly": true
+        },
+        "records_count": {
+          "title": "Records count",
+          "type": "integer",
+          "readOnly": true
+        },
+        "error_message": {
+          "title": "Error message",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "download_url": {
+          "title": "Download url",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "completed_at": {
+          "title": "Completed at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true,
+          "x-nullable": true
+        }
+      }
+    },
+    "ImportJob": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "user_email": {
+          "title": "User email",
+          "type": "string",
+          "format": "email",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "module": {
+          "title": "Module",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "status": {
+          "title": "Status",
+          "type": "string",
+          "enum": [
+            "pending",
+            "validating",
+            "processing",
+            "completed",
+            "failed",
+            "partially_completed"
+          ],
+          "readOnly": true
+        },
+        "original_filename": {
+          "title": "Original filename",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "file_format": {
+          "title": "File format",
+          "type": "string",
+          "readOnly": true,
+          "minLength": 1
+        },
+        "total_records": {
+          "title": "Total records",
+          "type": "integer",
+          "readOnly": true
+        },
+        "processed_records": {
+          "title": "Processed records",
+          "type": "integer",
+          "readOnly": true
+        },
+        "success_count": {
+          "title": "Success count",
+          "type": "integer",
+          "readOnly": true
+        },
+        "error_count": {
+          "title": "Error count",
+          "type": "integer",
+          "readOnly": true
+        },
+        "errors": {
+          "title": "Errors",
+          "type": "object",
+          "readOnly": true
+        },
+        "progress": {
+          "title": "Progress",
+          "type": "number",
+          "readOnly": true
+        },
+        "created_at": {
+          "title": "Created at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "completed_at": {
+          "title": "Completed at",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true,
+          "x-nullable": true
+        }
+      }
+    },
+    "ImportPreview": {
+      "required": [
+        "total_records",
+        "preview_data",
+        "columns"
+      ],
+      "type": "object",
+      "properties": {
+        "total_records": {
+          "title": "Total records",
+          "type": "integer"
+        },
+        "preview_data": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "x-nullable": true
+          }
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "validation_errors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "x-nullable": true
+          },
+          "default": []
+        }
+      }
+    },
+    "AdminLogin": {
+      "required": [
+        "email",
+        "password"
+      ],
+      "type": "object",
+      "properties": {
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "minLength": 1
+        },
+        "password": {
+          "title": "Password",
+          "type": "string",
+          "minLength": 1
+        },
+        "remember_me": {
+          "title": "Remember me",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "ChangePassword": {
+      "required": [
+        "old_password",
+        "new_password"
+      ],
+      "type": "object",
+      "properties": {
+        "old_password": {
+          "title": "Old password",
+          "type": "string",
+          "minLength": 1
+        },
+        "new_password": {
+          "title": "New password",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "AdminUpdateProfile": {
+      "type": "object",
+      "properties": {
+        "first_name": {
+          "title": "Prenom",
+          "type": "string",
+          "maxLength": 150
+        },
+        "last_name": {
+          "title": "Nom",
+          "type": "string",
+          "maxLength": 150
+        },
+        "phone_number": {
+          "title": "Numero telephone",
+          "type": "string",
+          "maxLength": 15,
+          "x-nullable": true
+        },
+        "bio": {
+          "title": "Biographie",
+          "type": "string"
+        },
+        "avatar": {
+          "title": "Avatar",
+          "type": "string",
+          "readOnly": true,
+          "x-nullable": true,
+          "format": "uri"
+        },
+        "position": {
+          "title": "Poste",
+          "type": "string",
+          "maxLength": 255
+        },
+        "public_email": {
+          "title": "Email public",
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "x-nullable": true
+        },
+        "linkedin": {
+          "title": "LinkedIn",
+          "type": "string",
+          "format": "uri",
+          "maxLength": 200,
+          "x-nullable": true
+        },
+        "github": {
+          "title": "GitHub",
+          "type": "string",
+          "format": "uri",
+          "maxLength": 200,
+          "x-nullable": true
+        },
+        "twitter": {
+          "title": "Twitter",
+          "type": "string",
+          "format": "uri",
+          "maxLength": 200,
+          "x-nullable": true
+        }
+      }
+    },
+    "RequestResetPassword": {
+      "required": [
+        "email"
+      ],
+      "type": "object",
+      "properties": {
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "minLength": 1
+        }
+      }
+    },
+    "ResetPassword": {
+      "required": [
+        "email",
+        "reset_code",
+        "new_password"
+      ],
+      "type": "object",
+      "properties": {
+        "email": {
+          "title": "Email",
+          "type": "string",
+          "format": "email",
+          "minLength": 1
+        },
+        "reset_code": {
+          "title": "Reset code",
+          "type": "string",
+          "minLength": 1
+        },
+        "new_password": {
+          "title": "New password",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

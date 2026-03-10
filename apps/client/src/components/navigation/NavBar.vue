@@ -1,181 +1,187 @@
-<!-- src/components/navigation/NavBar.vue -->
 <template>
-	<nav
-		:class="['navbar', { 'navbar--sticky': sticky, 'navbar--scrolled': isScrolled }, customClass]"
-		:aria-label="ariaLabel"
-	>
-		<div class="container_large">
-			<div class="navbar__container">
-				<!-- Logo -->
-				<div class="navbar__logo">
-					<slot name="logo">
-						<AppLogo />
-					</slot>
-				</div>
+    <nav :class="navbarClasses" :aria-label="ariaLabel" role="navigation">
+        <div class="navbar__inner">
+            <div class="navbar__container">
+                <div class="navbar__logo">
+                    <slot name="logo">
+                        <AppLogo />
+                    </slot>
+                </div>
 
-				<!-- Navigation -->
-				<ul class="navbar__nav">
-					<NavbarItem
-						v-for="(item, index) in navigationItems"
-						:key="index"
-						:item="item"
-						:index="index"
-						:is-active="isActiveRoute(item.path, route.path)"
-						@mouseenter="hoverIndex = item.children ? index : null"
-						@mouseleave="hoverIndex = null"
-					/>
-				</ul>
-			</div>
-		</div>
-	</nav>
+                <ClientOnly>
+                    <ul class="navbar__nav" role="menubar">
+                        <NavbarItem
+                            v-for="(item, index) in navigationItems"
+                            :key="item.path"
+                            :item="item"
+                            :index="index"
+                            :is-active="isActiveRoute(item.path, route.path)"
+                        />
+                    </ul>
+                </ClientOnly>
+
+                <div class="navbar__actions">
+                    <slot name="actions"></slot>
+                </div>
+            </div>
+        </div>
+    </nav>
 </template>
 
 <script setup lang="ts">
-	import NavbarItem from '@/components/navigation/NavbarItem.vue';
-	import AppLogo from '@/components/ui/AppLogo.vue';
-	import { isActiveRoute, navigationItems } from '@/config/navBar';
-	import { onBeforeUnmount, onMounted, ref } from 'vue';
-	import { useRoute } from 'vue-router';
+    import { computed, ref } from 'vue';
+    import { useRoute } from 'vue-router';
 
-	// Props
-	defineProps({
-		sticky: {
-			type: Boolean,
-			default: false,
-		},
-		ariaLabel: {
-			type: String,
-			default: 'Navigation principale',
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import NavbarItem from '@/components/navigation/NavbarItem.vue';
+    import AppLogo from '@/components/ui/AppLogo.vue';
+    import { useScrollListener } from '@/composables';
+    import { isActiveRoute, navigationItems } from '@/config/navBar';
 
-	const route = useRoute();
-	const hoverIndex = ref<number | null>(null);
-	const isScrolled = ref(false);
+    interface Props {
+        sticky?: boolean;
+        transparent?: boolean;
+        elevated?: boolean;
+        ariaLabel?: string;
+        customClass?: string;
+    }
 
-	// Détecter le défilement
-	const handleScroll = () => {
-		isScrolled.value = window.scrollY > 20;
-	};
+    const props = withDefaults(defineProps<Props>(), {
+        sticky: false,
+        transparent: false,
+        elevated: false,
+        ariaLabel: 'Navigation principale',
+        customClass: '',
+    });
 
-	// Gestion des événements
-	onMounted(() => {
-		window.addEventListener('scroll', handleScroll);
-		// Vérification initiale du défilement
-		handleScroll();
-	});
+    const route = useRoute();
+    const isScrolled = ref(false);
+    let ticking = false;
 
-	onBeforeUnmount(() => {
-		window.removeEventListener('scroll', handleScroll);
-	});
+    const navbarClasses = computed(() => [
+        'navbar',
+        {
+            'navbar--sticky': props.sticky,
+            'navbar--scrolled': isScrolled.value,
+            'navbar--transparent': props.transparent && !isScrolled.value,
+            'navbar--elevated': props.elevated,
+        },
+        props.customClass,
+    ]);
+
+    const handleScroll = () => {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                isScrolled.value = window.scrollY > 20;
+                ticking = false;
+            });
+            ticking = true;
+        }
+    };
+
+    // Auto-managed scroll listener with cleanup (passive: true by default)
+    useScrollListener(handleScroll);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.navbar {
-		padding: 0;
-		transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-		width: 100%;
+    .navbar {
+        position: relative;
+        width: 100%;
+        z-index: vars.$z-index-sticky;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
-		.container_large {
-			width: 100%;
-			max-width: 100%;
-			padding: 0 vars.$spacing-xl;
-			margin-left: auto;
-			margin-right: auto;
+        &__inner {
+            width: 100%;
+            padding: 0 vars.$spacing-xl;
 
-			@include mix.responsive(mobile) {
-				padding: 0 vars.$spacing-md;
-			}
-		}
+            @include mix.responsive(mobile) {
+                padding: 0 vars.$spacing-xxxxs;
+            }
+        }
 
-		&.navbar--scrolled {
-			background-color: func.color-alpha(vars.$white, 0.5);
-			backdrop-filter: blur(20px);
-			box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+        &__container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: vars.$navbar-height;
+            transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
-			.navbar__link {
-				color: vars.$black-light;
+            @include mix.responsive(mobile) {
+                height: vars.$navbar-height-mobile;
+            }
+        }
 
-				&::after {
-					background-color: vars.$primary-color;
-				}
-			}
-		}
+        &__logo {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 2;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-		&__container {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			height: 75px;
-			transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            &:hover {
+                transform: translateY(-2px) scale(1.02);
+            }
+        }
 
-			@include mix.responsive(mobile) {
-				height: 65px;
-			}
-		}
+        &__nav {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            list-style: none;
+            margin: 0;
+            padding: 0;
 
-		&--scrolled &__container {
-			height: 75px;
+            @include mix.responsive(tablet) {
+                display: none;
+            }
+        }
 
-			@include mix.responsive(mobile) {
-				height: 65px;
-			}
-		}
+        &__actions {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            margin-left: vars.$spacing-md;
 
-		&__logo {
-			display: flex;
-			align-items: center;
-			margin-right: vars.$spacing-md;
-			transition: transform 0.3s ease;
+            @include mix.responsive(tablet) {
+                margin-left: auto;
+            }
+        }
 
-			&:hover {
-				transform: translateY(-2px);
-			}
+        // States
+        &--sticky {
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
 
-			@include mix.responsive(mobile) {
-				margin-right: 0;
-			}
-		}
+        &--scrolled {
+            background: func.color-alpha(vars.$white, 0.75);
+            backdrop-filter: blur(20px) saturate(1.2);
+            border-bottom: 1px solid func.color-alpha(vars.$primary-color, 0.06);
+            box-shadow:
+                0 4px 30px func.color-alpha(vars.$black, 0.04),
+                0 1px 2px func.color-alpha(vars.$black, 0.02);
 
-		&__nav {
-			display: flex;
-			align-items: center;
-			gap: 16px;
-			justify-content: flex-end;
-			flex-direction: row;
+            .navbar__container {
+                height: calc(vars.$navbar-height - 10px);
 
-			@include mix.responsive(mobile) {
-				display: none;
-			}
-		}
+                @include mix.responsive(mobile) {
+                    height: calc(vars.$navbar-height-mobile - 5px);
+                }
+            }
+        }
 
-		&--sticky {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			z-index: func.z('navbar');
-		}
-	}
+        &--transparent:not(&--scrolled) {
+            background: transparent;
+        }
 
-	// Animation du dropdown
-	.dropdown-enter-active,
-	.dropdown-leave-active {
-		transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-		transform-origin: top center;
-	}
-
-	.dropdown-enter-from,
-	.dropdown-leave-to {
-		opacity: 0;
-		transform: translateY(-10px) translateX(-50%) scale(0.95);
-	}
+        &--elevated {
+            box-shadow: vars.$box-shadow-medium;
+        }
+    }
 </style>

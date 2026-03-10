@@ -1,90 +1,62 @@
-"""
-Sérialisation des messages de contact.
-"""
-
-import re
+"""Serialiseurs pour les soumissions de formulaire de contact."""
 
 from rest_framework import serializers
 
-from ..models import ContactMessage
+from utils.serializers.base import ReadOnlySerializer
+
+from ..models import Contact
 
 
-class ContactMessageSerializer(serializers.ModelSerializer):
+class ContactSerializer(serializers.ModelSerializer):
+    """Serialiseur pour la soumission de formulaire de contact.
+
+    Note: pas de separation List/Detail/Write car Contact est un endpoint
+    write-heavy (soumission formulaire). Le meme serializer sert pour
+    la creation (public) et la lecture (admin).
     """
-    Sérialisation enrichie avec validation avancée des messages de contact.
-    """
-
-    subject_display = serializers.CharField(source="get_subject_display", read_only=True)
-    short_message = serializers.SerializerMethodField()
 
     class Meta:
-        """
-        Métadonnées de la sérialisation.
-        """
-
-        model = ContactMessage
+        model = Contact
         fields = [
             "id",
             "name",
             "email",
-            "phone_number",
             "subject",
-            "subject_display",
             "message",
-            "short_message",
-            "is_read",
+            "phone",
+            "company",
             "created_at",
-            "updated_at",
         ]
-        read_only_fields = [
-            "is_read",
-            "created_at",
-            "updated_at",
-            "subject_display",
-            "short_message",
-        ]
-
-    def get_short_message(self, obj):
-        """Renvoie un extrait court du message."""
-        message = obj.message.strip()
-        return f"{message[:47]}..." if len(message) > 50 else message
-
-    def validate_name(self, value):
-        """Le nom doit contenir au moins 2 caractères et pas de caractères spéciaux interdits."""
-        cleaned_value = value.strip()
-        if len(cleaned_value) < 2:
-            raise serializers.ValidationError("Le nom doit contenir au moins 2 caractères.")
-        if not re.match(r"^[A-Za-zÀ-ÿ '-]+$", cleaned_value):
-            raise serializers.ValidationError("Le nom contient des caractères non autorisés.")
-        return cleaned_value
+        read_only_fields = ["id", "created_at"]
+        extra_kwargs = {
+            "message": {"max_length": 5000},
+        }
 
     def validate_email(self, value):
-        """Validation stricte de l'email (basique ici, DNS check en option)."""
-        cleaned_email = value.strip().lower()
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", cleaned_email):
-            raise serializers.ValidationError("Adresse email invalide.")
-        return cleaned_email
+        """Normalise l'email (DRF EmailField valide deja le format)."""
+        return value.lower().strip()
+
+    def validate_name(self, value):
+        """Valide que le nom n'est pas vide apres nettoyage."""
+        cleaned = value.strip()
+        if not cleaned:
+            raise serializers.ValidationError("Le nom ne peut pas etre vide.")
+        if len(cleaned) < 2:
+            raise serializers.ValidationError("Le nom doit contenir au moins 2 caracteres.")
+        return cleaned
 
     def validate_message(self, value):
-        """Le message doit contenir au moins 10 caractères et limiter les répétitions."""
-        cleaned_message = value.strip()
-        if len(cleaned_message) < 10:
-            raise serializers.ValidationError("Le message doit contenir au moins 10 caractères.")
-        if cleaned_message.lower().count("http") > 3:
-            raise serializers.ValidationError("Trop de liens dans le message.")
-        return cleaned_message
+        """Valide que le message a une longueur minimale."""
+        cleaned = value.strip()
+        if len(cleaned) < 10:
+            raise serializers.ValidationError("Le message doit contenir au moins 10 caracteres.")
+        return cleaned
 
-    def validate_phone_number(self, value):
-        """Validation stricte du numéro de téléphone (format international)."""
-        if value:
-            cleaned_number = re.sub(r"\s+", "", value)
-            if not re.match(r"^\+?1?\d{8,15}$", cleaned_number):
-                raise serializers.ValidationError("Numéro de téléphone invalide (format international requis).")
-            return cleaned_number
-        return value
 
-    def validate_subject(self, value):
-        """Validation stricte du sujet (choix limité)."""
-        if value not in dict(ContactMessage.SUBJECT_CHOICES).keys():
-            raise serializers.ValidationError("Sujet non valide.")
-        return value
+class ContactResponseSerializer(ReadOnlySerializer):
+    """Serialiseur pour la reponse de soumission du formulaire."""
+
+    success = serializers.BooleanField()
+    message = serializers.CharField()
+    error_details = serializers.DictField(required=False, allow_empty=True)
+    referenceId = serializers.CharField(required=False, allow_blank=True)

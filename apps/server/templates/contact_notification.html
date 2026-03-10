@@ -2,131 +2,337 @@
 <html lang="fr">
     <head>
         <meta charset="UTF-8" />
-        <title>📩 Nouveau message de contact</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Nouveau message de contact</title>
+        <style>
+            @media only screen and (max-width: 620px) {
+                .container {
+                    width: 100% !important;
+                    margin: 20px auto !important;
+                }
+                .content {
+                    padding: 25px !important;
+                }
+                .header {
+                    padding: 35px 25px !important;
+                }
+            }
+        </style>
     </head>
     <body
         style="
             margin: 0;
             padding: 0;
-            background-color: #f5f7fa;
-            font-family: Lato, Roboto, sans-serif;
+            background-color: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
         "
     >
-        <table
-            align="center"
-            width="600"
-            cellpadding="0"
-            cellspacing="0"
-            style="
-                background-color: #ffffff;
-                border-radius: 12px;
-                border: 2px solid #e0e0e0;
-            "
-        >
-            <tr>
-                <td style="padding: 40px">
-                    <h1
+        <div style="padding: 40px 20px">
+            <table
+                class="container"
+                align="center"
+                width="600"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background-color: #ffffff;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 8px 24px rgba(17, 20, 24, 0.08);
+                "
+            >
+                <!-- En-tête sobre -->
+                <tr>
+                    <td
+                        class="header"
                         style="
-                            color: #2196f3;
-                            font-size: 26px;
+                            background: linear-gradient(
+                                135deg,
+                                #43889d 0%,
+                                #673c5c 100%
+                            );
+                            padding: 45px 40px;
                             text-align: center;
-                            margin: 0;
                         "
                     >
-                        📬 Nouveau message de contact reçu
-                    </h1>
-
-                    <p style="font-size: 16px; color: #333333">
-                        <strong>Nom :</strong> {{ name }}
-                    </p>
-                    <p style="font-size: 16px; color: #333333">
-                        <strong>Email :</strong>
-                        <a href="mailto:{{ email }}" style="color: #2196f3"
-                            >{{ email }}</a
-                        >
-                    </p>
-
-                    <p style="font-size: 16px; color: #333333">
-                        <strong>Message :</strong>
-                    </p>
-                    <div
-                        style="
-                            background: #f1f1f1;
-                            padding: 12px 20px;
-                            border-left: 4px solid #2196f3;
-                            font-style: italic;
-                            color: #555555;
-                        "
-                    >
-                        {{ message }}
-                    </div>
-
-                    <div style="text-align: center; margin-top: 24px">
-                        <a
-                            href="mailto:{{ email }}"
+                        <div
                             style="
-                                background-color: #2196f3;
-                                color: #ffffff;
-                                text-decoration: none;
-                                padding: 12px 28px;
-                                border-radius: 6px;
-                                font-weight: bold;
                                 display: inline-block;
+                                width: 60px;
+                                height: 60px;
+                                background-color: rgba(255, 255, 255, 0.15);
+                                border-radius: 12px;
+                                margin-bottom: 20px;
+                                line-height: 60px;
+                                font-size: 28px;
                             "
                         >
-                            Répondre à {{ name }}
-                        </a>
-                    </div>
+                            📬
+                        </div>
+                        <h1
+                            style="
+                                color: #ffffff;
+                                font-size: 26px;
+                                font-weight: 600;
+                                margin: 0 0 8px;
+                                letter-spacing: -0.3px;
+                            "
+                        >
+                            Nouveau message de contact
+                        </h1>
+                        <p
+                            style="
+                                color: rgba(255, 255, 255, 0.85);
+                                font-size: 16px;
+                                margin: 0;
+                                font-weight: 400;
+                            "
+                        >
+                            Vous avez reçu un nouveau message
+                        </p>
+                    </td>
+                </tr>
 
-                    <hr
-                        style="
-                            margin: 40px 0;
-                            border: none;
-                            border-top: 1px solid #e0e0e0;
-                        "
-                    />
+                <!-- Contenu -->
+                <tr>
+                    <td class="content" style="padding: 40px">
+                        <!-- Informations expéditeur -->
+                        <div
+                            style="
+                                background-color: #f3f4f6;
+                                border-left: 4px solid #43889d;
+                                border-radius: 0 8px 8px 0;
+                                padding: 24px;
+                                margin: 0 0 30px;
+                            "
+                        >
+                            <h3
+                                style="
+                                    color: #673c5c;
+                                    font-size: 16px;
+                                    font-weight: 600;
+                                    margin: 0 0 16px;
+                                "
+                            >
+                                Informations de l'expéditeur
+                            </h3>
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td
+                                        style="
+                                            color: #4d586a;
+                                            font-size: 14px;
+                                            font-weight: 500;
+                                            padding: 6px 0;
+                                            width: 60px;
+                                        "
+                                    >
+                                        Nom :
+                                    </td>
+                                    <td
+                                        style="
+                                            color: #111418;
+                                            font-size: 15px;
+                                            font-weight: 600;
+                                            padding: 6px 0;
+                                        "
+                                    >
+                                        {{ name }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td
+                                        style="
+                                            color: #4d586a;
+                                            font-size: 14px;
+                                            font-weight: 500;
+                                            padding: 6px 0;
+                                        "
+                                    >
+                                        Email :
+                                    </td>
+                                    <td style="padding: 6px 0">
+                                        <a
+                                            href="mailto:{{ email }}"
+                                            style="
+                                                color: #43889d;
+                                                text-decoration: none;
+                                                font-weight: 500;
+                                                font-size: 15px;
+                                            "
+                                            >{{ email }}</a
+                                        >
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
 
-                    <footer
+                        <!-- Message -->
+                        <div
+                            style="
+                                background-color: #ffffff;
+                                border: 1px solid #b8c0cc;
+                                border-radius: 8px;
+                                padding: 24px;
+                                margin: 0 0 35px;
+                            "
+                        >
+                            <h4
+                                style="
+                                    color: #673c5c;
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                    margin: 0 0 12px;
+                                    text-transform: uppercase;
+                                    letter-spacing: 0.5px;
+                                "
+                            >
+                                Message
+                            </h4>
+                            <div
+                                style="
+                                    color: #4d586a;
+                                    font-size: 16px;
+                                    line-height: 1.6;
+                                    font-style: italic;
+                                "
+                            >
+                                {{ message }}
+                            </div>
+                        </div>
+
+                        <!-- Bouton d'action -->
+                        <div style="text-align: center; margin-top: 35px">
+                            <a
+                                href="mailto:{{ email }}?subject=Re: Votre message"
+                                style="
+                                    display: inline-block;
+                                    background-color: #43889d;
+                                    color: #ffffff;
+                                    text-decoration: none;
+                                    font-weight: 600;
+                                    font-size: 15px;
+                                    padding: 14px 28px;
+                                    border-radius: 6px;
+                                    transition: background-color 0.3s ease;
+                                "
+                            >
+                                Répondre à {{ name }}
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Pied de page -->
+                <tr>
+                    <td
                         style="
+                            background: linear-gradient(
+                                90deg,
+                                #673c5c0d,
+                                #ac72a00d
+                            );
+                            padding: 35px 40px;
                             text-align: center;
-                            font-size: 12px;
-                            color: #999999;
                         "
                     >
-                        <p>
+                        <p
+                            style="
+                                color: #7d8ba1;
+                                font-size: 13px;
+                                margin: 0 0 6px;
+                                font-weight: 500;
+                            "
+                        >
                             Ce message est automatique. Ne pas y répondre
                             directement.
                         </p>
-                        <p>© {{ year }} Juba Aitadda. Tous droits réservés.</p>
-                        <p>
+                        <p
+                            style="
+                                color: #4d586a;
+                                font-size: 13px;
+                                margin: 0 0 25px;
+                                font-weight: 600;
+                            "
+                        >
+                            © {{ year }} Juba Aitadda. Tous droits réservés.
+                        </p>
+
+                        <div style="margin: 25px 0 20px">
                             <a
                                 href="https://aitaddajuba.fr/politique-confidentialite"
-                                style="color: #2196f3"
-                                >Politique de confidentialité</a
+                                style="
+                                    color: #43889d;
+                                    text-decoration: none;
+                                    font-weight: 600;
+                                    font-size: 13px;
+                                    padding: 8px 16px;
+                                    border: 1px solid #43889d;
+                                    border-radius: 20px;
+                                    transition: all 0.3s ease;
+                                "
                             >
-                        </p>
-                        <p>
+                                Politique de confidentialité
+                            </a>
+                        </div>
+
+                        <div
+                            style="
+                                border-top: 1px solid rgba(125, 139, 161, 0.3);
+                                padding-top: 20px;
+                            "
+                        >
                             <a
                                 href="https://github.com/aitaddajuba"
-                                style="color: #2196f3"
+                                style="
+                                    color: #4d586a;
+                                    text-decoration: none;
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                    margin: 0 12px;
+                                    padding: 6px 8px;
+                                    border-radius: 4px;
+                                "
                                 >GitHub</a
                             >
-                            |
+                            <span style="color: #b8c0cc">•</span>
                             <a
                                 href="https://linkedin.com/in/aitaddajuba"
-                                style="color: #2196f3"
+                                style="
+                                    color: #4d586a;
+                                    text-decoration: none;
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                    margin: 0 12px;
+                                    padding: 6px 8px;
+                                    border-radius: 4px;
+                                "
                                 >LinkedIn</a
                             >
-                            |
+                            <span style="color: #b8c0cc">•</span>
                             <a
                                 href="mailto:contact@aitaddajuba.fr"
-                                style="color: #2196f3"
+                                style="
+                                    color: #4d586a;
+                                    text-decoration: none;
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                    margin: 0 12px;
+                                    padding: 6px 8px;
+                                    border-radius: 4px;
+                                "
                                 >Email</a
                             >
-                        </p>
-                    </footer>
-                </td>
-            </tr>
-        </table>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </body>
 </html>
