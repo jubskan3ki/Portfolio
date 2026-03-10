@@ -34,7 +34,7 @@ SchemaView = get_schema_view(
 
 urlpatterns = [
     path("", health_check, name="root"),
-    path("admin/", admin.site.urls),
+    path("django-admin/", admin.site.urls),
     path(f"{API_PREFIX}users/", include("core.user.urls")),
     path(f"{API_PREFIX}articles/", include("core.articles.urls")),
     path(f"{API_PREFIX}contacts/", include("core.contact.urls")),
