@@ -21,7 +21,7 @@ db.sqlite3
 Pipfile.lock
 celerybeat-schedule
 staticfiles/
-**/migrations/*
+**/migrations/__pycache__/
 **/media/*
 
 # --- Virtualenv & Pip --- #

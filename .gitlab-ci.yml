@@ -3,20 +3,37 @@ stages:
     - test
     - deploy
 
-# Étape 1 : Build de l'image Docker
+variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
 
-build:
+# ── Build ────────────────────────────────────
+
+build-backend:
     stage: build
     image: docker:latest
     services:
         - docker:dind
-    before_script:
-        - docker info
     script:
-        - echo "===> Build de l'image Docker en cours..."
-        - docker-compose -f docker-compose.yml build
+        - docker build -t portfolio-backend ./apps/server
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        - if: $CI_COMMIT_BRANCH == "main"
+        - if: $CI_COMMIT_BRANCH == "develop"
 
-# Étape 2 : Tests backend et frontend
+build-frontend:
+    stage: build
+    image: docker:latest
+    services:
+        - docker:dind
+    script:
+        - docker build -t portfolio-frontend ./apps/client
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        - if: $CI_COMMIT_BRANCH == "main"
+        - if: $CI_COMMIT_BRANCH == "develop"
+
+# ── Tests ────────────────────────────────────
 
 test-backend:
     stage: test
@@ -29,12 +46,8 @@ test-backend:
               POSTGRES_DB: test_portfolio
               POSTGRES_USER: test_user
               POSTGRES_PASSWORD: test_password
-    before_script:
-        - docker info
     script:
-        - echo "===> Build de l'image backend..."
         - docker build -t portfolio-backend ./apps/server
-        - echo "===> Vérification de la configuration Django..."
         - docker run --rm
           -e DB_HOST=test-db
           -e DB_PORT=5432
@@ -43,9 +56,9 @@ test-backend:
           -e DB_PASSWORD=test_password
           -e DJANGO_SECRET_KEY=test-secret-key
           -e JWT_SECRET_ACCESS_KEY=test-jwt-key
+          -e ALLOWED_HOSTS=*
           --network host
           portfolio-backend python manage.py check
-        - echo "===> Lancement des tests backend..."
         - docker run --rm
           -e DB_HOST=test-db
           -e DB_PORT=5432
@@ -54,44 +67,44 @@ test-backend:
           -e DB_PASSWORD=test_password
           -e DJANGO_SECRET_KEY=test-secret-key
           -e JWT_SECRET_ACCESS_KEY=test-jwt-key
+          -e ALLOWED_HOSTS=*
           --network host
           portfolio-backend python -m pytest --cov=core --cov-report=term-missing
-
-test-frontend:
-    stage: test
-    image: docker:latest
-    services:
-        - docker:dind
-    before_script:
-        - docker info
-    script:
-        - echo "===> Build de l'image frontend..."
-        - docker build -t portfolio-frontend ./apps/client
-        - echo "===> Vérification des types TypeScript..."
-        - docker run --rm portfolio-frontend pnpm run type-check
-        - echo "===> Linting ESLint..."
-        - docker run --rm portfolio-frontend pnpm run lint
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        - if: $CI_COMMIT_BRANCH == "main"
+        - if: $CI_COMMIT_BRANCH == "develop"
 
 lint-backend:
     stage: test
     image: docker:latest
     services:
         - docker:dind
-    before_script:
-        - docker info
     script:
-        - echo "===> Build de l'image backend..."
         - docker build -t portfolio-backend ./apps/server
-        - echo "===> Vérification du formatage (Black)..."
         - docker run --rm portfolio-backend python -m black --check .
-        - echo "===> Vérification des imports (isort)..."
         - docker run --rm portfolio-backend python -m isort --check-only .
-        - echo "===> Linting (flake8)..."
-        - docker run --rm portfolio-backend python -m flake8 .
-        - echo "===> Linting (ruff)..."
         - docker run --rm portfolio-backend python -m ruff check .
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        - if: $CI_COMMIT_BRANCH == "main"
+        - if: $CI_COMMIT_BRANCH == "develop"
 
-# Étape 3 : Déploiement sur ton VPS via SSH
+lint-frontend:
+    stage: test
+    image: docker:latest
+    services:
+        - docker:dind
+    script:
+        - docker build --target builder -t portfolio-frontend-builder ./apps/client
+        - docker run --rm portfolio-frontend-builder pnpm run type-check
+        - docker run --rm portfolio-frontend-builder pnpm run lint
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        - if: $CI_COMMIT_BRANCH == "main"
+        - if: $CI_COMMIT_BRANCH == "develop"
+
+# ── Deploy ───────────────────────────────────
 
 deploy:
     stage: deploy
@@ -105,11 +118,11 @@ deploy:
         - chmod 600 ~/.ssh/id_rsa
         - ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
     script:
-        - echo "===> Connexion SSH au serveur et déploiement"
-        - ssh -v -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
-          cd /home/$SSH_USER/projects/Portfolio/ &&
+        - scp -P "$SSH_PORT" "$ENV_FILE" "$SSH_USER@$SSH_HOST:/home/$SSH_USER/projects/Portfolio/.env"
+        - ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+          cd /home/$SSH_USER/projects/Portfolio &&
           git pull origin main &&
-          chmod +x ./apps/server/scripts/setup.sh &&
-          docker-compose down &&
-          docker-compose up -d --build
+          docker compose down &&
+          docker compose up -d --build &&
+          docker compose ps
           "

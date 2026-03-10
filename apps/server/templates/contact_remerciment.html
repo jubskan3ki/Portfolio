@@ -1,346 +1,123 @@
-<!DOCTYPE html>
-<html lang="fr">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Merci pour votre message</title>
-        <style>
-            @media only screen and (max-width: 620px) {
-                .container {
-                    width: 100% !important;
-                    margin: 20px auto !important;
-                }
-                .content {
-                    padding: 25px !important;
-                }
-                .header {
-                    padding: 35px 25px !important;
-                }
-            }
-        </style>
-    </head>
-    <body
-        style="
-            margin: 0;
-            padding: 0;
-            background-color: #f3f4f6;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
-                sans-serif;
-            -webkit-font-smoothing: antialiased;
-        "
-    >
-        <div style="padding: 40px 20px">
-            <table
-                class="container"
-                align="center"
-                width="600"
-                cellpadding="0"
-                cellspacing="0"
-                border="0"
-                style="
-                    max-width: 600px;
-                    margin: 0 auto;
-                    background-color: #ffffff;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    box-shadow: 0 8px 24px rgba(17, 20, 24, 0.08);
-                "
-            >
-                <!-- En-tête sobre -->
-                <tr>
-                    <td
-                        class="header"
-                        style="
-                            background: linear-gradient(
-                                135deg,
-                                #673c5c 0%,
-                                #ac72a0 100%
-                            );
-                            padding: 45px 40px;
-                            text-align: center;
-                        "
-                    >
-                        <div
-                            style="
-                                display: inline-block;
-                                width: 60px;
-                                height: 60px;
-                                background-color: rgba(255, 255, 255, 0.15);
-                                border-radius: 12px;
-                                margin-bottom: 20px;
-                                line-height: 60px;
-                                font-size: 28px;
-                            "
-                        >
-                            🤝
-                        </div>
-                        <h1
-                            style="
-                                color: #ffffff;
-                                font-size: 26px;
-                                font-weight: 600;
-                                margin: 0 0 8px;
-                                letter-spacing: -0.3px;
-                            "
-                        >
-                            Merci, {{ name }} !
-                        </h1>
-                        <p
-                            style="
-                                color: rgba(255, 255, 255, 0.85);
-                                font-size: 16px;
-                                margin: 0;
-                                font-weight: 400;
-                            "
-                        >
-                            Votre message a bien été reçu
-                        </p>
-                    </td>
-                </tr>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <title>Merci pour votre message</title>
+    <!--[if mso]>
+    <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+    <style>table{border-collapse:collapse;}td,th{font-family:Arial,sans-serif;}</style>
+    <![endif]-->
+    <style>
+        @media only screen and (max-width: 620px) {
+            .card { width: 100% !important; }
+            .card-body { padding: 32px 24px !important; }
+            .stat-td { display: block !important; width: 100% !important; border-right: none !important; border-bottom: 1px solid rgba(103,60,92,0.15) !important; }
+            .stat-last { border-bottom: none !important; }
+        }
+    </style>
+</head>
+<body style="margin:0;padding:0;background-color:#1f2937;font-family:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;">
+    <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#542f4a;">Merci {{ name }}, votre message a bien &eacute;t&eacute; re&ccedil;u.&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
 
-                <!-- Contenu -->
-                <tr>
-                    <td class="content" style="padding: 40px">
-                        <!-- Confirmation -->
-                        <div style="text-align: center; margin: 0 0 35px">
-                            <h2
-                                style="
-                                    color: #673c5c;
-                                    font-size: 22px;
-                                    font-weight: 600;
-                                    margin: 0 0 10px;
-                                "
-                            >
-                                Message reçu avec succès
-                            </h2>
-                            <p
-                                style="
-                                    color: #4d586a;
-                                    font-size: 16px;
-                                    margin: 0;
-                                    line-height: 1.5;
-                                "
-                            >
-                                Je vous répondrai dans les plus brefs délais.
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#1f2937;background-image:radial-gradient(circle,rgba(103,60,92,0.24) 1.5px,transparent 1.5px);background-size:28px 28px;">
+        <tr>
+            <td align="center" style="padding:48px 16px;">
+
+                <!--[if mso]>
+                <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;">
+                <v:fill type="solid" color="#1f2937"/>
+                <v:textbox inset="0,0,0,0">
+                <![endif]-->
+
+                <!-- ════ CARD ════ -->
+                <table class="card" align="center" width="560" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:560px;width:100%;background-color:rgba(255,255,255,0.04);border-radius:16px;border:1px solid rgba(103,60,92,0.25);box-shadow:0 10px 40px rgba(0,0,0,0.30),0 2px 8px rgba(0,0,0,0.15);">
+                    <tr>
+                        <td class="card-body" style="padding:48px 40px;">
+
+                            <!-- Badge -->
+                            <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:24px;">
+                                <tr><td style="background-color:rgba(103,60,92,0.18);border:1px solid rgba(103,60,92,0.35);border-radius:9999px;padding:6px 18px;">
+                                    <span style="color:#ffffff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.15em;">Confirmation</span>
+                                </td></tr>
+                            </table>
+
+                            <!-- Title -->
+                            <h1 style="color:#ffffff;font-size:28px;font-weight:700;margin:0 0 8px;line-height:1.2;text-align:center;letter-spacing:-0.3px;">Merci, {{ name }}&nbsp;!</h1>
+                            <p style="color:rgba(255,255,255,0.75);font-size:15px;margin:0 0 32px;line-height:1.6;text-align:center;max-width:420px;margin-left:auto;margin-right:auto;">
+                                Votre message a bien &eacute;t&eacute; re&ccedil;u. Je vous r&eacute;pondrai dans les plus brefs d&eacute;lais.
                             </p>
-                        </div>
 
-                        <!-- Message de suivi -->
-                        <div
-                            style="
-                                background-color: #f3f4f6;
-                                border-left: 4px solid #ac72a0;
-                                border-radius: 0 8px 8px 0;
-                                padding: 24px;
-                                margin: 0 0 30px;
-                            "
-                        >
-                            <h3
-                                style="
-                                    color: #673c5c;
-                                    font-size: 16px;
-                                    font-weight: 600;
-                                    margin: 0 0 12px;
-                                "
-                            >
-                                Prochaines étapes
-                            </h3>
-                            <p
-                                style="
-                                    color: #4d586a;
-                                    font-size: 15px;
-                                    line-height: 1.6;
-                                    margin: 0;
-                                "
-                            >
-                                Votre demande sera traitée avec attention. Si
-                                votre demande est urgente, n'hésitez pas à me
-                                contacter directement via mon LinkedIn.
-                            </p>
-                        </div>
+                            <!-- Separator (3 dots) -->
+                            <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:32px;">
+                                <tr>
+                                    <td style="width:4px;height:4px;background-color:rgba(201,148,188,0.20);border-radius:2px;"></td>
+                                    <td style="width:10px;"></td>
+                                    <td style="width:4px;height:4px;background-color:rgba(201,148,188,0.40);border-radius:2px;"></td>
+                                    <td style="width:10px;"></td>
+                                    <td style="width:4px;height:4px;background-color:rgba(201,148,188,0.20);border-radius:2px;"></td>
+                                </tr>
+                            </table>
 
-                        <!-- Stats simples -->
-                        <div
-                            style="
-                                display: flex;
-                                justify-content: space-around;
-                                background: linear-gradient(
-                                    135deg,
-                                    #f3f4f6 0%,
-                                    #ffffff 100%
-                                );
-                                border: 1px solid #b8c0cc;
-                                border-radius: 10px;
-                                padding: 24px;
-                                margin: 30px 0;
-                            "
-                        >
-                            <div style="text-align: center; flex: 1">
-                                <div
-                                    style="
-                                        color: #43889d;
-                                        font-size: 24px;
-                                        font-weight: 700;
-                                        margin-bottom: 4px;
-                                    "
-                                >
-                                    < 24h
-                                </div>
-                                <div style="color: #7d8ba1; font-size: 13px">
-                                    Réponse moyenne
-                                </div>
-                            </div>
-                            <div
-                                style="
-                                    width: 1px;
-                                    background-color: #b8c0cc;
-                                    margin: 0 20px;
-                                "
-                            ></div>
-                            <div style="text-align: center; flex: 1">
-                                <div
-                                    style="
-                                        color: #ac72a0;
-                                        font-size: 24px;
-                                        font-weight: 700;
-                                        margin-bottom: 4px;
-                                    "
-                                >
-                                    100%
-                                </div>
-                                <div style="color: #7d8ba1; font-size: 13px">
-                                    Taux de réponse
-                                </div>
-                            </div>
-                        </div>
+                            <!-- Stats -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border:1px solid rgba(103,60,92,0.20);border-radius:12px;margin-bottom:36px;">
+                                <tr>
+                                    <td class="stat-td" width="50%" style="text-align:center;padding:22px 20px;border-right:1px solid rgba(103,60,92,0.15);">
+                                        <div style="color:#ffffff;font-size:24px;font-weight:700;line-height:1;margin-bottom:6px;">&lt; 24h</div>
+                                        <div style="color:rgba(255,255,255,0.45);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;">R&eacute;ponse moyenne</div>
+                                    </td>
+                                    <td class="stat-td stat-last" width="50%" style="text-align:center;padding:22px 20px;">
+                                        <div style="color:#ffffff;font-size:24px;font-weight:700;line-height:1;margin-bottom:6px;">100%</div>
+                                        <div style="color:rgba(255,255,255,0.45);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;">Taux de r&eacute;ponse</div>
+                                    </td>
+                                </tr>
+                            </table>
 
-                        <!-- Bouton d'action -->
-                        <div style="text-align: center; margin: 35px 0">
-                            <a
-                                href="https://aitaddajuba.fr"
-                                style="
-                                    display: inline-block;
-                                    background-color: #ac72a0;
-                                    color: #ffffff;
-                                    text-decoration: none;
-                                    font-weight: 600;
-                                    font-size: 15px;
-                                    padding: 14px 28px;
-                                    border-radius: 6px;
-                                    transition: background-color 0.3s ease;
-                                "
-                            >
-                                Retourner sur le site
-                            </a>
-                        </div>
-                    </td>
-                </tr>
+                            <!-- CTA -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                                <tr><td style="text-align:center;">
+                                    <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                                        <tr>
+                                            <!--[if mso]><td style="background-color:#ffffff;border-radius:12px;padding:16px 32px;"><a href="https://aitaddajuba.fr" style="color:#673c5c;font-size:14px;font-weight:600;font-family:sans-serif;text-decoration:none;">Retourner sur le site</a></td><![endif]-->
+                                            <!--[if !mso]><!-->
+                                            <td style="border-radius:12px;background-color:#ffffff;box-shadow:0 4px 16px rgba(0,0,0,0.20),0 1px 3px rgba(0,0,0,0.10);">
+                                                <a href="https://aitaddajuba.fr" style="display:inline-block;padding:16px 32px;color:#673c5c;font-size:14px;font-weight:600;text-decoration:none;line-height:1;">Retourner sur le site</a>
+                                            </td>
+                                            <!--<![endif]-->
+                                        </tr>
+                                    </table>
+                                </td></tr>
+                            </table>
 
-                <!-- Pied de page -->
-                <tr>
-                    <td
-                        style="
-                            background: linear-gradient(
-                                90deg,
-                                #673c5c0d,
-                                #ac72a00d
-                            );
-                            padding: 35px 40px;
-                            text-align: center;
-                        "
-                    >
-                        <p
-                            style="
-                                color: #7d8ba1;
-                                font-size: 13px;
-                                margin: 0 0 6px;
-                                font-weight: 500;
-                            "
-                        >
-                            Ce message est automatique. Ne pas y répondre
-                            directement.
-                        </p>
-                        <p
-                            style="
-                                color: #4d586a;
-                                font-size: 13px;
-                                margin: 0 0 25px;
-                                font-weight: 600;
-                            "
-                        >
-                            © {{ year }} Juba Aitadda. Tous droits réservés.
-                        </p>
+                        </td>
+                    </tr>
+                </table>
 
-                        <div style="margin: 25px 0 20px">
-                            <a
-                                href="https://aitaddajuba.fr/politique-confidentialite"
-                                style="
-                                    color: #ac72a0;
-                                    text-decoration: none;
-                                    font-weight: 600;
-                                    font-size: 13px;
-                                    padding: 8px 16px;
-                                    border: 1px solid #ac72a0;
-                                    border-radius: 20px;
-                                    transition: all 0.3s ease;
-                                "
-                            >
-                                Politique de confidentialité
-                            </a>
-                        </div>
+                <!-- ════ FOOTER ════ -->
+                <table align="center" width="560" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:560px;width:100%;">
+                    <tr>
+                        <td style="text-align:center;padding:32px 16px 40px;">
+                            <p style="color:rgba(255,255,255,0.30);font-size:11px;margin:0 0 10px;">Message automatique &middot; &copy; {{ year }} Juba Aitadda</p>
+                            <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                                <tr>
+                                    <td style="padding:0 8px;"><a href="https://github.com/aitaddajuba" style="color:rgba(255,255,255,0.40);text-decoration:none;font-size:11px;">GitHub</a></td>
+                                    <td style="color:rgba(255,255,255,0.12);font-size:6px;">&#9679;</td>
+                                    <td style="padding:0 8px;"><a href="https://linkedin.com/in/aitaddajuba" style="color:rgba(255,255,255,0.40);text-decoration:none;font-size:11px;">LinkedIn</a></td>
+                                    <td style="color:rgba(255,255,255,0.12);font-size:6px;">&#9679;</td>
+                                    <td style="padding:0 8px;"><a href="https://aitaddajuba.fr/politique-confidentialite" style="color:rgba(255,255,255,0.40);text-decoration:none;font-size:11px;">Confidentialit&eacute;</a></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
 
-                        <div
-                            style="
-                                border-top: 1px solid rgba(125, 139, 161, 0.3);
-                                padding-top: 20px;
-                            "
-                        >
-                            <a
-                                href="https://github.com/aitaddajuba"
-                                style="
-                                    color: #4d586a;
-                                    text-decoration: none;
-                                    font-size: 13px;
-                                    font-weight: 500;
-                                    margin: 0 12px;
-                                    padding: 6px 8px;
-                                    border-radius: 4px;
-                                "
-                                >GitHub</a
-                            >
-                            <span style="color: #b8c0cc">•</span>
-                            <a
-                                href="https://linkedin.com/in/aitaddajuba"
-                                style="
-                                    color: #4d586a;
-                                    text-decoration: none;
-                                    font-size: 13px;
-                                    font-weight: 500;
-                                    margin: 0 12px;
-                                    padding: 6px 8px;
-                                    border-radius: 4px;
-                                "
-                                >LinkedIn</a
-                            >
-                            <span style="color: #b8c0cc">•</span>
-                            <a
-                                href="mailto:contact@aitaddajuba.fr"
-                                style="
-                                    color: #4d586a;
-                                    text-decoration: none;
-                                    font-size: 13px;
-                                    font-weight: 500;
-                                    margin: 0 12px;
-                                    padding: 6px 8px;
-                                    border-radius: 4px;
-                                "
-                                >Email</a
-                            >
-                        </div>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </body>
+                <!--[if mso]></v:textbox></v:rect><![endif]-->
+
+            </td>
+        </tr>
+    </table>
+</body>
 </html>

@@ -16,7 +16,11 @@ from django.utils.timezone import now
 from config.constants import MIN_RESPONSE_TIME, RESET_CODE_CHARS, RESET_CODE_LENGTH
 
 from ..models import ResetPasswordCode
-from ..tasks import send_reset_password_email_async, send_reset_password_email_sync
+from ..tasks import (
+    send_password_changed_email_async,
+    send_reset_password_email_async,
+    send_reset_password_email_sync,
+)
 
 logger = logging.getLogger("core.user")
 User = get_user_model()
@@ -149,6 +153,11 @@ class PasswordService:
             user.save()
             reset_record.delete()
 
+            PasswordService._send_password_changed_notification(
+                email,
+                user.get_full_name() or user.first_name,
+            )
+
             logger.info("Mot de passe reinitialise pour %s", email)
             PasswordService._ensure_min_response_time(start_time)
             return True
@@ -163,6 +172,21 @@ class PasswordService:
             raise PermissionDenied("Donnees invalides pour la reinitialisation.") from e
 
     @staticmethod
+    def _send_password_changed_notification(
+        email: str,
+        user_name: str,
+    ) -> None:
+        """Envoie l'email de confirmation de changement de mot de passe."""
+        context = {"user_name": user_name}
+        try:
+            send_password_changed_email_async(email, context)
+            logger.info("Notification password_changed envoyee pour %s", email)
+        except (ConnectionError, ImportError, AttributeError, RuntimeError):
+            logger.exception(
+                "Erreur envoi notification password_changed pour %s", email,
+            )
+
+    @staticmethod
     def change_password(user: Any, old_password: str, new_password: str) -> bool:
         """Change le mot de passe d'un utilisateur connecte."""
         if not user.check_password(old_password):
@@ -175,6 +199,11 @@ class PasswordService:
 
         user.set_password(new_password)
         user.save(update_fields=["password"])
+
+        PasswordService._send_password_changed_notification(
+            user.email,
+            user.get_full_name() or user.first_name,
+        )
 
         logger.info("Mot de passe change pour %s", user.email)
         return True

@@ -4,15 +4,49 @@ import os
 import re
 
 from django.db import models
+from django.utils.deconstruct import deconstructible
 from django.utils.text import slugify
+
+
+@deconstructible
+class UploadTo:
+    """Callable serialisable pour les chemins d'upload dynamiques.
+
+    Args:
+        prefix: Dossier racine (ex: "articles", "stacks").
+        slug_source: Nom du champ (str) ou tuple de champs a concatener.
+        fallback: Valeur par defaut si le champ est absent.
+    """
+
+    def __init__(
+        self,
+        prefix: str,
+        slug_source: str | tuple[str, ...] = "title",
+        fallback: str = "unknown",
+    ):
+        self.prefix = prefix
+        self.slug_source = slug_source
+        self.fallback = fallback
+
+    def __call__(self, instance: models.Model, filename: str) -> str:
+        if isinstance(self.slug_source, (list, tuple)):
+            parts = [getattr(instance, f, self.fallback) for f in self.slug_source]
+            slug = slugify("-".join(parts))
+        else:
+            slug = slugify(getattr(instance, self.slug_source, self.fallback))
+
+        base, ext = os.path.splitext(filename)
+        safe_base = re.sub(r"[^\w.-]", "_", base)[:100]
+        safe_filename = f"{safe_base}{ext.lower()}"
+        return f"{self.prefix}/{slug}/{safe_filename}"
 
 
 def make_upload_to(
     prefix: str,
     slug_source: str | tuple[str, ...] = "title",
     fallback: str = "unknown",
-):
-    """Cree une fonction upload_to dynamique basee sur un champ du modele.
+) -> UploadTo:
+    """Cree un callable upload_to serialisable par les migrations Django.
 
     Args:
         prefix: Dossier racine (ex: "articles", "stacks").
@@ -20,23 +54,9 @@ def make_upload_to(
         fallback: Valeur par defaut si le champ est absent.
 
     Returns:
-        Callable compatible avec le parametre upload_to de Django.
+        Instance UploadTo compatible avec le parametre upload_to de Django.
     """
-
-    def upload_to(instance: models.Model, filename: str) -> str:
-        if isinstance(slug_source, (list, tuple)):
-            parts = [getattr(instance, f, fallback) for f in slug_source]
-            slug = slugify("-".join(parts))
-        else:
-            slug = slugify(getattr(instance, slug_source, fallback))
-
-        # Sanitize filename: keep only the last extension, slugify the base name
-        base, ext = os.path.splitext(filename)
-        safe_base = re.sub(r"[^\w.-]", "_", base)[:100]
-        safe_filename = f"{safe_base}{ext.lower()}"
-        return f"{prefix}/{slug}/{safe_filename}"
-
-    return upload_to
+    return UploadTo(prefix=prefix, slug_source=slug_source, fallback=fallback)
 
 
 def extract_images_from_files(files) -> dict:
