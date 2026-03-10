@@ -1,296 +1,240 @@
 <template>
-	<div
-		:class="[
-			'textarea',
-			{ 'textarea--disabled': disabled },
-			{ 'textarea--error': error },
-			{ 'textarea--success': success },
-			{ 'textarea--resizable': resizable },
-			{ 'textarea--focused': isFocused },
-			customClass,
-		]"
-	>
-		<label v-if="label" :for="textareaId" class="textarea__label">
-			{{ label }}
-			<span v-if="required" class="textarea__required">*</span>
-		</label>
+    <div :class="textareaClasses">
+        <label v-if="label" :for="textareaId" class="textarea__label">
+            {{ label }}
+            <span v-if="required" class="textarea__required">*</span>
+        </label>
 
-		<div class="textarea__container">
-			<textarea
-				:id="textareaId"
-				:name="name"
-				:value="modelValue"
-				:placeholder="placeholder"
-				:disabled="disabled"
-				:required="required"
-				:readonly="readonly"
-				:rows="rows"
-				:maxlength="maxlength"
-				:autocomplete="autocomplete"
-				class="textarea__field"
-				@input="handleInput"
-				@blur="handleBlur"
-				@focus="handleFocus"
-			></textarea>
+        <div class="textarea__container">
+            <textarea
+                :id="textareaId"
+                ref="textareaRef"
+                v-model="model"
+                :name="name"
+                :placeholder="placeholder"
+                :disabled="disabled"
+                :required="required"
+                :readonly="readonly"
+                :rows="rows"
+                :maxlength="maxlength"
+                :autocomplete="autocomplete"
+                :aria-required="required || undefined"
+                :aria-invalid="!!error || undefined"
+                :aria-describedby="messageId || undefined"
+                class="textarea__field"
+                @blur="handleBlur"
+                @focus="handleFocus"
+            ></textarea>
 
-			<div
-				v-if="showCount && maxlength"
-				class="textarea__counter"
-				:class="{ 'textarea__counter--limit': isNearLimit }"
-			>
-				{{ modelValue.length }}/{{ maxlength }}
-			</div>
-		</div>
+            <div
+                v-if="showCount && maxlength"
+                class="textarea__counter"
+                :class="{ 'textarea__counter--limit': isNearLimit }"
+            >
+                {{ String(model).length }}/{{ maxlength }}
+            </div>
+        </div>
 
-		<p v-if="error" class="textarea__message textarea__message--error">{{ error }}</p>
-		<p v-else-if="success" class="textarea__message textarea__message--success">{{ success }}</p>
-		<p v-else-if="hint" class="textarea__message textarea__message--hint">{{ hint }}</p>
-	</div>
+        <p v-if="error" :id="messageId" class="textarea__message textarea__message--error" role="alert">{{ error }}</p>
+        <p v-else-if="success" class="textarea__message textarea__message--success">{{ success }}</p>
+        <p v-else-if="hint" class="textarea__message textarea__message--hint">{{ hint }}</p>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import { computed, onMounted, ref } from 'vue';
+    import { computed, ref, useId } from 'vue';
 
-	const props = defineProps({
-		modelValue: {
-			type: String,
-			default: '',
-		},
-		id: {
-			type: String,
-			default: '',
-		},
-		name: {
-			type: String,
-			default: '',
-		},
-		label: {
-			type: String,
-			default: '',
-		},
-		placeholder: {
-			type: String,
-			default: '',
-		},
-		rows: {
-			type: [String, Number],
-			default: 3,
-		},
-		required: {
-			type: Boolean,
-			default: false,
-		},
-		disabled: {
-			type: Boolean,
-			default: false,
-		},
-		readonly: {
-			type: Boolean,
-			default: false,
-		},
-		maxlength: {
-			type: [String, Number],
-			default: undefined,
-		},
-		autocomplete: {
-			type: String,
-			default: 'off',
-		},
-		resizable: {
-			type: Boolean,
-			default: true,
-		},
-		showCount: {
-			type: Boolean,
-			default: false,
-		},
-		error: {
-			type: String,
-			default: '',
-		},
-		success: {
-			type: String,
-			default: '',
-		},
-		hint: {
-			type: String,
-			default: '',
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    interface Props {
+        id?: string;
+        name?: string;
+        label?: string;
+        placeholder?: string;
+        required?: boolean;
+        disabled?: boolean;
+        readonly?: boolean;
+        rows?: number;
+        maxlength?: string | number;
+        autocomplete?: string;
+        resizable?: boolean;
+        showCount?: boolean;
+        error?: string;
+        success?: string;
+        hint?: string;
+        customClass?: string;
+    }
 
-	const emit = defineEmits(['update:modelValue', 'blur', 'focus']);
+    const props = withDefaults(defineProps<Props>(), {
+        id: '',
+        name: '',
+        label: '',
+        placeholder: '',
+        rows: 4,
+        required: false,
+        disabled: false,
+        readonly: false,
+        maxlength: undefined,
+        autocomplete: 'off',
+        resizable: true,
+        showCount: false,
+        error: '',
+        success: '',
+        hint: '',
+        customClass: '',
+    });
 
-	const isFocused = ref(false);
-	const uniqueId = ref('');
+    const emit = defineEmits<{
+        blur: [event: FocusEvent];
+        focus: [event: FocusEvent];
+    }>();
 
-	// Générer un ID stable pour l'hydratation côté serveur et client
-	const textareaId = computed(() => {
-		return props.id || uniqueId.value || 'textarea';
-	});
+    const model = defineModel<string>({ default: '' });
 
-	// Vérifier si on s'approche de la limite de caractères (90%)
-	const isNearLimit = computed(() => {
-		if (!props.maxlength) return false;
-		const maxLength = Number(props.maxlength);
-		return props.modelValue.length >= maxLength * 0.9;
-	});
+    const textareaRef = ref<HTMLTextAreaElement | null>(null);
+    const isFocused = ref(false);
+    const generatedId = useId();
 
-	onMounted(() => {
-		if (!props.id && !uniqueId.value) {
-			uniqueId.value = `textarea-${Math.random().toString(36).substring(2, 9)}`;
-		}
-	});
+    const textareaId = computed(() => props.id || generatedId);
+    const messageId = computed(() =>
+        props.error || props.success || props.hint ? `${textareaId.value}-message` : undefined,
+    );
 
-	const handleInput = (event: Event) => {
-		const target = event.target as HTMLTextAreaElement;
-		emit('update:modelValue', target.value);
-	};
+    const isNearLimit = computed(() => {
+        if (!props.maxlength) {
+            return false;
+        }
+        const maxLength = Number(props.maxlength);
+        return String(model.value).length >= maxLength * 0.9;
+    });
 
-	const handleBlur = (event: FocusEvent) => {
-		isFocused.value = false;
-		emit('blur', event);
-	};
+    const textareaClasses = computed(() => [
+        'textarea',
+        {
+            'textarea--disabled': props.disabled,
+            'textarea--error': props.error,
+            'textarea--success': props.success,
+            'textarea--resizable': props.resizable,
+            'textarea--focused': isFocused.value,
+        },
+        props.customClass,
+    ]);
 
-	const handleFocus = (event: FocusEvent) => {
-		isFocused.value = true;
-		emit('focus', event);
-	};
+    const handleBlur = (event: FocusEvent) => {
+        isFocused.value = false;
+        emit('blur', event);
+    };
+
+    const handleFocus = (event: FocusEvent) => {
+        isFocused.value = true;
+        emit('focus', event);
+    };
+
+    defineExpose({
+        focus: () => textareaRef.value?.focus(),
+        blur: () => textareaRef.value?.blur(),
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.textarea {
-		display: flex;
-		flex-direction: column;
-		margin-bottom: vars.$spacing-md;
-		width: 100%;
+    .textarea {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
 
-		&__label {
-			display: block;
-			margin-bottom: vars.$spacing-xs;
-			font-weight: 500;
-			color: vars.$black-light;
-		}
+        @include mix.form-field-chrome;
 
-		&__required {
-			color: vars.$danger-color;
-			margin-left: 2px;
-		}
+        &__container {
+            position: relative;
+        }
 
-		&__container {
-			position: relative;
-		}
+        &__field {
+            width: 100%;
+            border: 1px solid vars.$border-color;
+            border-radius: vars.$border-radius-md;
+            padding: vars.$spacing-xs vars.$spacing-md;
+            background-color: vars.$bg-primary;
+            color: vars.$text-primary;
+            font-family: vars.$font-family;
+            line-height: vars.$line-height-base;
+            min-height: 120px;
+            resize: none;
+            transition:
+                border-color vars.$transition-base,
+                box-shadow vars.$transition-base,
+                background-color vars.$transition-base;
 
-		&__field {
-			width: 100%;
-			border: none;
-			border-bottom: 2px solid vars.$gray;
-			padding: vars.$spacing-sm 0;
-			background-color: transparent;
-			color: vars.$black-light;
-			resize: none; // Default to no resize
-			min-height: 90px;
-			font-family: vars.$font-family;
-			line-height: 1.5;
+            &:focus {
+                outline: none;
+                border-color: vars.$primary-color;
+                box-shadow: 0 0 0 3px func.color-alpha(vars.$primary-color, 0.12);
+                background-color: vars.$white;
+            }
 
-			@include mix.transition(border-color, box-shadow);
-			@include mix.focus-outline;
+            &::placeholder {
+                color: vars.$text-muted;
+            }
 
-			&:focus {
-				outline: none;
-				border-color: vars.$primary-color;
-				box-shadow: 0 2px 0 rgba(vars.$primary-color, 0.2);
-			}
+            &:disabled {
+                cursor: not-allowed;
+                opacity: 0.6;
+                background-color: vars.$bg-secondary;
+            }
+        }
 
-			&::placeholder {
-				color: vars.$gray;
-				opacity: 0.7;
-			}
+        &__counter {
+            position: absolute;
+            right: vars.$spacing-xs;
+            bottom: vars.$spacing-xs;
+            color: vars.$text-muted;
+            background-color: vars.$bg-primary;
+            padding: 2px vars.$spacing-xxs;
+            border-radius: vars.$border-radius-sm;
+            transition: all vars.$transition-base;
 
-			&:disabled {
-				cursor: not-allowed;
-				opacity: 0.6;
-				background-color: func.color-alpha(vars.$gray-light, 0.1);
-			}
-		}
+            &--limit {
+                color: vars.$warning-color;
+                font-weight: vars.$font-weight-medium;
+            }
+        }
 
-		&__counter {
-			position: absolute;
-			right: 0;
-			bottom: 8px;
-			color: vars.$gray;
-			padding: vars.$spacing-xs;
-			border-radius: vars.$border-radius-sm;
-			transition: all vars.$transition-base;
+        &--disabled {
+            @include mix.form-disabled;
+        }
 
-			&--limit {
-				color: vars.$warning-color;
-				font-weight: 500;
-			}
-		}
+        &--error {
+            @include mix.form-field-state('.textarea__field', vars.$danger-color);
+        }
 
-		&__message {
-			margin-top: vars.$spacing-xs;
+        &--success {
+            @include mix.form-field-state('.textarea__field', vars.$success-color);
+        }
 
-			&--error {
-				color: vars.$danger-color;
-			}
+        &--focused {
+            .textarea__label {
+                color: vars.$primary-color;
+            }
+        }
 
-			&--success {
-				color: vars.$success-color;
-			}
+        &--resizable {
+            .textarea__field {
+                resize: vertical;
+            }
+        }
 
-			&--hint {
-				color: vars.$gray;
-			}
-		}
+        &:hover:not(&--disabled) {
+            .textarea__field:not(:focus) {
+                border-color: vars.$text-muted;
+            }
+        }
 
-		&--disabled {
-			opacity: 0.7;
-			cursor: not-allowed;
-		}
-
-		&--error {
-			.textarea__field {
-				border-color: vars.$danger-color;
-			}
-		}
-
-		&--success {
-			.textarea__field {
-				border-color: vars.$success-color;
-			}
-		}
-
-		&--focused {
-			.textarea__label {
-				color: vars.$primary-color;
-			}
-		}
-
-		&--resizable {
-			.textarea__field {
-				resize: vertical;
-			}
-		}
-
-		&:hover:not(&--disabled) {
-			.textarea__field:not(:focus) {
-				border-color: func.adjust-color-brightness(vars.$gray, -15%);
-			}
-		}
-
-		@include mix.responsive(mobile) {
-			.textarea__field {
-				min-height: 80px;
-			}
-		}
-	}
+        @include mix.responsive(mobile) {
+            .textarea__field {
+                min-height: 100px;
+                font-size: 1rem;
+            }
+        }
+    }
 </style>

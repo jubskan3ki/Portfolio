@@ -1,0 +1,20 @@
+"""Views pour exposer les metriques Prometheus."""
+
+from django.http import HttpRequest, HttpResponse
+from django.views import View
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+
+class MetricsView(View):
+    """Endpoint pour exposer les metriques Prometheus.
+
+    GET /metrics/ - Retourne les metriques au format Prometheus.
+    """
+
+    def get(self, _request: HttpRequest) -> HttpResponse:
+        """Genere et retourne les metriques."""
+        metrics = generate_latest()
+        return HttpResponse(
+            metrics,
+            content_type=CONTENT_TYPE_LATEST,
+        )

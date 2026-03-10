@@ -1,19 +1,16 @@
-"""
-Routes API pour la gestion des projets.
-"""
+"""Configuration des URLs pour le module projects."""
 
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views.project import ProjectViewSet
+from .views import CategoryViewSet, ProjectViewSet, StatsView, StatusViewSet
 
 router = DefaultRouter()
-router.register(r"", ProjectViewSet, basename="projects")
+router.register(r"categories", CategoryViewSet, basename="category")
+router.register(r"statuses", StatusViewSet, basename="status")
+router.register(r"", ProjectViewSet, basename="project")
 
 urlpatterns = [
+    path("stats/", StatsView.as_view(), name="project-stats"),
     path("", include(router.urls)),
-    path("active/", ProjectViewSet.as_view({"get": "active"}), name="projects-active"),
-    path("recent/", ProjectViewSet.as_view({"get": "recent"}), name="projects-recent"),
-    path("archived/", ProjectViewSet.as_view({"get": "archived"}), name="projects-archived"),
-    path("by-tag/", ProjectViewSet.as_view({"get": "by_tag"}), name="projects-by-tag"),
 ]

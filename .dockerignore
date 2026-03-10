@@ -1,0 +1,25 @@
+# Root level dockerignore
+.git
+.github
+.gitignore
+.vscode
+.idea
+*.md
+LICENSE
+
+# Monitoring
+monitoring/
+backups/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

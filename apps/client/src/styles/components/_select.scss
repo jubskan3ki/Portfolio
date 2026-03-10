@@ -1,0 +1,220 @@
+// Styles partages entre BaseSelect et BaseMultiSelect.
+// Utiliser via @include dans chaque composant scoped.
+
+@use '../abstracts/variables' as vars;
+@use '../abstracts/functions' as func;
+
+// --- Bouton clear ---
+@mixin clear-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    background: none;
+    border: none;
+    color: vars.$text-muted;
+    cursor: pointer;
+    border-radius: vars.$border-radius-sm;
+    transition: all vars.$transition-fast;
+
+    &:hover {
+        background-color: vars.$bg-secondary;
+        color: vars.$text-primary;
+    }
+}
+
+// --- Fleche chevron ---
+@mixin arrow-icon {
+    display: flex;
+    align-items: center;
+    color: vars.$text-muted;
+    transition:
+        transform vars.$transition-base,
+        color vars.$transition-base;
+
+    &--active {
+        transform: rotate(180deg);
+        color: vars.$primary-color;
+    }
+}
+
+// --- Panneau dropdown ---
+@mixin dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background-color: vars.$white;
+    border: 1px solid vars.$border-color;
+    border-radius: vars.$border-radius-md;
+    z-index: vars.$z-index-dropdown;
+    overflow: hidden;
+}
+
+// --- Liste d'options ---
+@mixin options-list {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: vars.$spacing-xxs;
+    display: flex;
+    flex-direction: column;
+    gap: vars.$spacing-xxs;
+}
+
+// --- Item d'option ---
+// $block: nom du bloc BEM parent (ex: "select" ou "multi-select")
+@mixin option-item($block) {
+    display: flex;
+    align-items: center;
+    gap: vars.$spacing-xs;
+    width: 100%;
+    padding: vars.$spacing-xs vars.$spacing-md;
+    background: none;
+    border: none;
+    border-radius: vars.$border-radius-sm;
+    color: vars.$text-primary;
+    font-family: vars.$font-family;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color vars.$transition-fast;
+
+    &:hover,
+    &--highlighted {
+        background-color: vars.$bg-secondary;
+    }
+
+    &--selected {
+        background-color: func.color-alpha(vars.$primary-color, 0.08);
+        color: vars.$primary-color;
+
+        &:hover,
+        &.#{$block}__option--highlighted {
+            background-color: func.color-alpha(vars.$primary-color, 0.12);
+        }
+    }
+}
+
+// --- Image dans option ---
+@mixin option-image($size: 20px) {
+    width: $size;
+    height: $size;
+    border-radius: 2px;
+    object-fit: contain;
+}
+
+// --- Texte dans option ---
+@mixin option-text {
+    flex: 1;
+}
+
+// --- Check dans option ---
+@mixin option-check {
+    color: vars.$primary-color;
+    flex-shrink: 0;
+}
+
+// --- Etat vide ---
+@mixin empty-state {
+    padding: vars.$spacing-lg;
+    text-align: center;
+    color: vars.$text-muted;
+}
+
+// --- Section creation ---
+@mixin create-section {
+    border-top: 1px solid vars.$border-color;
+    padding: vars.$spacing-xs;
+}
+
+@mixin create-form {
+    display: flex;
+    gap: vars.$spacing-xxs;
+}
+
+@mixin create-input {
+    flex: 1;
+    min-width: 0;
+    padding: vars.$spacing-xxs vars.$spacing-xs;
+    border: 1px solid vars.$border-color;
+    border-radius: vars.$border-radius-sm;
+    font-family: vars.$font-family;
+    background-color: vars.$bg-primary;
+    color: vars.$text-primary;
+    transition:
+        border-color vars.$transition-fast,
+        box-shadow vars.$transition-fast;
+
+    &:focus {
+        outline: none;
+        border-color: vars.$primary-color;
+        box-shadow: 0 0 0 2px func.color-alpha(vars.$primary-color, 0.1);
+    }
+
+    &::placeholder {
+        color: vars.$text-muted;
+    }
+}
+
+@mixin create-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: vars.$spacing-xxs vars.$spacing-xs;
+    background-color: vars.$primary-color;
+    color: vars.$white;
+    border: none;
+    border-radius: vars.$border-radius-sm;
+    font-family: vars.$font-family;
+    font-weight: vars.$font-weight-medium;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color vars.$transition-fast,
+        opacity vars.$transition-fast;
+
+    &:hover:not(:disabled) {
+        background-color: vars.$primary-dark;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    svg {
+        flex-shrink: 0;
+    }
+}
+
+// --- Etats du trigger/container ---
+// $trigger-selector: selecteur du trigger (ex: ".select__trigger")
+@mixin state-error($trigger-selector) {
+    #{$trigger-selector} {
+        border-color: vars.$danger-color;
+        background-color: func.color-alpha(vars.$danger-color, 0.03);
+    }
+}
+
+@mixin state-disabled($trigger-selector) {
+    opacity: 0.7;
+
+    #{$trigger-selector} {
+        cursor: not-allowed;
+        background-color: vars.$bg-secondary;
+    }
+}
+
+// --- Transition dropdown ---
+@mixin dropdown-transition {
+    .dropdown-enter-active,
+    .dropdown-leave-active {
+        transition: all 0.2s ease;
+    }
+
+    .dropdown-enter-from,
+    .dropdown-leave-to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}

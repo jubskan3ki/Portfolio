@@ -1,109 +1,182 @@
-# 📌 Black Configuration (Formatage du code Python)
-[tool.black]
-line-length = 120
-target-version = ["py311"]
-skip-string-normalization = false
-include = "\\.pyi?$"
-exclude = '''
-/(
-    \.git
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | env
-    | venv
-    | __pycache__
-    | _build
-    | buck-out
-    | build
-    | dist
-    | migrations
-    | staticfiles
-    | media
-    | pyproject.toml
-)/
-'''
-
-# 🔄 isort (Organisation des imports)
-[tool.isort]
-profile = "black"
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-use_parentheses = true
-ensure_newline_before_comments = true
-combine_as_imports = true
-known_django = "django"
-sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-default_section = "THIRDPARTY"
-skip = [
-    "migrations",
-    ".venv",
-    "venv",
-    "env",
-    "__pycache__",
-    "staticfiles",
-    "media",
-]
-
-# ✅ Pylint (Linter pour Python)
-[tool.pylint.messages_control]
-disable = [
-    "missing-docstring",
-    "invalid-name",
-    "too-many-instance-attributes",
-    "too-few-public-methods",
-    "import-error",
-    "no-member",
-    "fixme",
-]
-
-[tool.pylint.format]
-max-line-length = 88
-
-[tool.pylint.master]
-load-plugins = ["pylint_django"]
-django-settings-module = "config.settings"
-
-[tool.pylint.similarities]
-ignore-imports = true
-
-# 📝 Flake8 (Contrôle qualité du code Python)
-[tool.flake8]
-max-line-length = 88
-exclude = [
-    ".git",
-    ".hg",
-    ".mypy_cache",
-    ".tox",
-    ".venv",
-    "venv",
-    "env",
-    "__pycache__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "migrations",
-    "staticfiles",
-    "media",
-]
-ignore = [
-    "E203",
-    "W503",
-    "E266",
-    "E501",
-    "B905",
-    "D100",
-    "D104",
-]
-select = ["E", "F", "W", "B", "C", "D"]
-per-file-ignores = [
-    "__init__.py:F401"
-]
-
-# 🔨 Configuration du système de build
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+# Black - Formatage du code
+
+[tool.black]
+line-length = 120
+target-version = ["py313"]
+exclude = '''
+/(
+    \.git
+    | \.venv
+    | venv
+    | __pycache__
+    | migrations
+    | staticfiles
+    | media
+)/
+'''
+
+# isort - Organisation des imports
+
+[tool.isort]
+profile = "black"
+line_length = 120
+combine_as_imports = false
+known_third_party = ["django", "rest_framework", "celery", "drf_yasg", "rest_framework_simplejwt", "django_filters", "factory", "kombu"]
+known_first_party = ["config", "core", "utils", "middlewares"]
+skip = ["migrations", ".venv", "venv", "__pycache__", "staticfiles", "media"]
+
+# Pylint - Linter Python
+
+[tool.pylint.main]
+load-plugins = ["pylint_django"]
+django-settings-module = "config.settings"
+ignore = ["migrations", "venv", ".venv", "__pycache__"]
+jobs = 0
+init-hook = "import sys; sys.path.insert(0, '.')"
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "fixme",
+    "redefined-outer-name",
+    "wrong-import-position",
+]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.design]
+max-args = 10
+max-locals = 20
+
+[tool.pylint.similarities]
+ignore-imports = true
+min-similarity-lines = 6
+
+# Flake8 - Controle qualite (via pyproject-flake8)
+
+[tool.flake8]
+max-line-length = 120
+exclude = [".git", ".venv", "venv", "__pycache__", "migrations", "staticfiles", "media"]
+ignore = ["E203", "E501", "W503"]
+per-file-ignores = ["__init__.py:F401"]
+
+# Ruff - Linter rapide (alternative moderne)
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+exclude = [".git", ".venv", "venv", "__pycache__", "migrations", "staticfiles", "media"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "W",      # pycodestyle warnings
+    # "I",    # isort — handled by isort directly (avoids ruff/isort conflicts)
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear - bug detection
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+    "DJ",     # flake8-django
+    "DTZ",    # flake8-datetimez
+    "PIE",    # flake8-pie
+    "RET",    # flake8-return
+    "PTH",    # flake8-use-pathlib
+    "PERF",   # perflint
+    "RUF",    # ruff-specific
+    "S",      # flake8-bandit - security bugs
+    "A",      # flake8-builtins - shadowing builtins
+    "PLC",    # pylint convention
+    "PLE",    # pylint errors
+    "PLW",    # pylint warnings
+    "TRY",    # tryceratops - exception handling
+    "FBT",    # flake8-boolean-trap
+    "ARG",    # flake8-unused-arguments
+    "ERA",    # eradicate - commented code
+    "G",      # flake8-logging-format
+]
+ignore = [
+    "E501",    # line too long (handled by formatter)
+    "DJ001",   # null=True on CharField (Django pattern)
+    "RUF012",  # ClassVar - Django/DRF Meta class pattern
+    "TRY003",  # long exception messages - acceptable for user-facing errors
+    "TRY300",  # consider else block - style preference
+    "TRY301",  # abstract raise - style preference
+    "PLC0415", # import outside top-level - intentional for circular imports
+    "S108",    # hardcoded temp file - /tmp fallback is intentional
+    "S603",    # subprocess without shell - lint command is safe
+    "S104",    # 0.0.0.0 in ALLOWED_HOSTS/CORS - Docker dev, not socket.bind()
+    "UP046",   # Generic[T] → PEP 695 - mypy doesn't fully support PEP 695 yet
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config", "core", "utils", "middlewares"]
+known-third-party = ["django", "rest_framework", "celery"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*" = ["S101", "S105", "S106"]  # assert, hardcoded passwords OK in tests
+"*/migrations/*" = ["ALL"]
+"scripts/*" = ["E402"]  # scripts need django.setup() before imports
+"core/user/views/admin.py" = ["E402"]  # get_user_model before imports
+"manage.py" = ["E402"]  # Django manage.py pattern
+"core/articles/managers.py" = ["F401"]  # TYPE_CHECKING imports used in string annotations
+"core/stats/managers.py" = ["F401"]  # TYPE_CHECKING imports used in Manager generic
+
+# MyPy - Typage statique
+
+[tool.mypy]
+explicit_package_bases = true
+mypy_path = [".", "typings"]
+exclude = ["migrations", "venv", ".venv", "tests"]
+show_error_codes = true
+scripts_are_modules = true
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+
+# Django/DRF - les stubs ne sont pas complets
+ignore_missing_imports = true
+disallow_subclassing_any = false
+disallow_untyped_defs = false
+check_untyped_defs = true
+warn_return_any = false
+
+# Detecte les vrais bugs
+warn_unreachable = true
+warn_unused_ignores = false
+strict_optional = true
+
+# Desactive les faux positifs Django
+disable_error_code = ["var-annotated", "misc", "django-manager-missing"]
+
+# Overrides par module — limites django-stubs sur les generics (.objects sur type[T])
+[[tool.mypy.overrides]]
+module = ["utils.services", "core.stats.services.stats"]
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+module = ["core.articles.serializers.article"]
+disable_error_code = ["arg-type"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
+
+# Pyright/Pylance - Type checking for VSCode
+
+[tool.pyright]
+include = ["."]
+exclude = ["**/node_modules", "**/__pycache__", "**/migrations", ".venv", "venv"]
+stubPath = "typings"
+pythonVersion = "3.14"
+typeCheckingMode = "basic"
+reportMissingImports = true
+reportMissingTypeStubs = false

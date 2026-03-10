@@ -1,0 +1,93 @@
+"""Views pour la gestion des jobs."""
+
+from datetime import timedelta
+
+from django.utils import timezone
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status, viewsets
+from rest_framework.permissions import IsAdminUser
+from rest_framework.request import Request
+from rest_framework.response import Response
+
+from ..models import ExportJob, ImportJob
+from ..serializers import ExportJobSerializer, ImportJobSerializer
+
+
+class JobViewSet(viewsets.ViewSet):
+    """ViewSet pour consulter les jobs d'import/export."""
+
+    permission_classes = [IsAdminUser]
+
+    @swagger_auto_schema(
+        operation_description="Liste tous les jobs de l'utilisateur",
+        responses={200: "Liste des jobs"},
+    )
+    def list(self, request: Request) -> Response:
+        """Liste tous les jobs de l'utilisateur."""
+        export_jobs = ExportJob.objects.filter(user=request.user).order_by("-created_at")[:20]
+        import_jobs = ImportJob.objects.filter(user=request.user).order_by("-created_at")[:20]
+
+        return Response(
+            {
+                "exports": ExportJobSerializer(export_jobs, many=True, context={"request": request}).data,
+                "imports": ImportJobSerializer(import_jobs, many=True).data,
+            }
+        )
+
+    @swagger_auto_schema(
+        operation_description="Detail d'un job d'export",
+        responses={200: ExportJobSerializer, 404: "Job non trouve"},
+    )
+    def export_detail(self, request: Request, job_id: str) -> Response:
+        """Detail d'un job d'export."""
+        try:
+            job = ExportJob.objects.get(id=job_id, user=request.user)
+            return Response(ExportJobSerializer(job, context={"request": request}).data)
+        except ExportJob.DoesNotExist:
+            return Response(
+                {"error": "Job non trouve"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    @swagger_auto_schema(
+        operation_description="Detail d'un job d'import",
+        responses={200: ImportJobSerializer, 404: "Job non trouve"},
+    )
+    def import_detail(self, request: Request, job_id: str) -> Response:
+        """Detail d'un job d'import."""
+        try:
+            job = ImportJob.objects.get(id=job_id, user=request.user)
+            return Response(ImportJobSerializer(job).data)
+        except ImportJob.DoesNotExist:
+            return Response(
+                {"error": "Job non trouve"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    @swagger_auto_schema(
+        operation_description="Supprime les anciens jobs",
+        responses={200: "Jobs supprimes"},
+    )
+    def cleanup(self, request: Request) -> Response:
+        """Supprime les anciens jobs de l'utilisateur."""
+
+        cutoff = timezone.now() - timedelta(days=7)
+
+        export_deleted, _ = ExportJob.objects.filter(
+            user=request.user,
+            created_at__lt=cutoff,
+        ).delete()
+
+        import_deleted, _ = ImportJob.objects.filter(
+            user=request.user,
+            created_at__lt=cutoff,
+        ).delete()
+
+        return Response(
+            {
+                "deleted": {
+                    "exports": export_deleted,
+                    "imports": import_deleted,
+                }
+            }
+        )

@@ -1,112 +1,40 @@
 <template>
-	<div class="project-carousel">
-		<div v-if="isLoading" class="project-carousel__loader">
-			<Spinner type="circle" label="Chargement des projets..." />
-		</div>
-
-		<div v-else-if="error" class="project-carousel__error">
-			<p>{{ error }}</p>
-		</div>
-
-		<div v-else-if="projects.length === 0" class="project-carousel__empty">
-			<EmptyState title="Aucun projet" description="Aucun projet n'est disponible pour le moment." />
-		</div>
-
-		<div v-else class="project-carousel__content">
-			<Swiper
-				:slides="projects.length"
-				:slides-to-show="slidesToShow"
-				:slides-to-scroll="1"
-				:gap="4"
-				:autoplay="autoplay"
-				:autoplay-interval="5000"
-				:show-controls="false"
-				:show-dots="true"
-			>
-				<template v-for="(project, index) in projects" :key="project.id" v-slot:[`slide-${index}`]>
-					<ProjectCard :project="project" />
-				</template>
-			</Swiper>
-		</div>
-	</div>
+    <ContentCarousel
+        :items="projects"
+        :is-loading="isLoading"
+        :is-error="isError"
+        loading-label="Chargement des projets..."
+        error-message="Une erreur est survenue lors du chargement des projets."
+        empty-title="Aucun projet"
+        empty-description="Aucun projet n'est disponible pour le moment."
+        :slides-desktop="3"
+        :autoplay="autoplay"
+        show-dots
+    >
+        <template #slide="{ item }">
+            <ProjectCard :project="item as Project" />
+        </template>
+    </ContentCarousel>
 </template>
 
 <script setup lang="ts">
-	import EmptyState from '@/components/feedback/EmptyState.vue';
-	import Spinner from '@/components/loaders/Spinner.vue';
-	import Swiper from '@/components/ui/Swiper.vue';
-	import { useMock } from '@/services/api/useMock';
-	import { computed, onMounted, onUnmounted, watch } from 'vue';
-	import ProjectCard from './ProjectCard.vue';
+    import { computed } from 'vue';
 
-	const props = defineProps({
-		// Limite le nombre de projets à afficher
-		limit: {
-			type: Number,
-			default: undefined,
-		},
-		// Filtre par catégorie
-		category: {
-			type: String,
-			default: undefined,
-		},
-		// Autoplay du carousel
-		autoplay: {
-			type: Boolean,
-			default: true,
-		},
-	});
+    import ContentCarousel from '@/components/ui/ContentCarousel.vue';
+    import { useFeaturedProjects } from '@/services/api/modules/projects';
 
-	// Utilisez le service useMock pour récupérer les données
-	const { projects, isLoading, error, fetchProjects } = useMock();
+    import ProjectCard from './ProjectCard.vue';
 
-	// Calculer le nombre de slides à afficher en fonction de la largeur d'écran
-	const slidesToShow = computed(() => {
-		// Vérifie si window est défini (pour SSR)
-		if (typeof window === 'undefined') return 1;
+    import type { Project, ProjectCarouselProps } from '@/types/feature/project';
 
-		const width = window.innerWidth;
-		if (width < 768) return 1;
-		if (width < 1024) return 2;
-		return 3;
-	});
+    type Props = ProjectCarouselProps;
 
-	// Gestionnaire de redimensionnement
-	const handleResize = () => {
-		// Le calcul se fait automatiquement grâce à la propriété calculée
-	};
+    const props = withDefaults(defineProps<Props>(), {
+        limit: 6,
+        autoplay: true,
+    });
 
-	// Charger les projets au montage du composant
-	onMounted(async () => {
-		window.addEventListener('resize', handleResize);
-		await fetchProjects(props.limit, props.category);
-	});
+    const { data, isLoading, isError } = useFeaturedProjects(props.limit);
 
-	// Nettoyer les event listeners
-	onUnmounted(() => {
-		window.removeEventListener('resize', handleResize);
-	});
-
-	// Recharger les projets si les props changent
-	watch(
-		() => [props.limit, props.category],
-		async () => {
-			await fetchProjects(props.limit, props.category);
-		}
-	);
+    const projects = computed(() => data.value ?? []);
 </script>
-
-<style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-
-	.project-carousel {
-		&__loader,
-		&__error,
-		&__empty {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			min-height: 200px;
-		}
-	}
-</style>

@@ -1,285 +1,319 @@
 <template>
-	<!-- Rendu conditionnel : utiliser NuxtLink ou <a> si props 'to' est présent -->
-	<NuxtLink
-		v-if="to && isInternalLink"
-		:to="resolvedPath"
-		:class="[
-			'button',
-			variant && `button--${variant}`,
-			size && `button--${size}`,
-			{ 'button--disabled': disabled },
-			{ 'button--loading': loading },
-			{ 'button--full-width': fullWidth },
-			customClass,
-		]"
-		:aria-label="ariaLabel"
-		@click="!disabled && !loading ? $emit('click', $event) : null"
-	>
-		<span v-if="loading" class="button__loader">
-			<span class="button__loader-dot"></span>
-			<span class="button__loader-dot"></span>
-			<span class="button__loader-dot"></span>
-		</span>
-		<span v-else class="button__content">
-			<slot name="icon-left"></slot>
-			<slot>{{ text }}</slot>
-			<slot name="icon-right"></slot>
-		</span>
-	</NuxtLink>
+    <NuxtLink v-if="isInternalLink" v-bind="componentProps" :class="buttonClasses" @click="handleClick">
+        <span v-if="loading" class="button__loader">
+            <span class="button__loader-dot"></span>
+            <span class="button__loader-dot"></span>
+            <span class="button__loader-dot"></span>
+        </span>
+        <span v-else class="button__content">
+            <slot name="icon-left"></slot>
+            <slot>{{ text }}</slot>
+            <slot name="icon-right"></slot>
+        </span>
+    </NuxtLink>
 
-	<!-- Lien externe si nécessaire -->
-	<a
-		v-else-if="to && !isInternalLink"
-		:href="resolvedPath"
-		:target="target"
-		:rel="target === '_blank' ? 'noopener noreferrer' : undefined"
-		:class="[
-			'button',
-			variant && `button--${variant}`,
-			size && `button--${size}`,
-			{ 'button--disabled': disabled },
-			{ 'button--loading': loading },
-			{ 'button--full-width': fullWidth },
-			customClass,
-		]"
-		:aria-label="ariaLabel"
-		@click="!disabled && !loading ? $emit('click', $event) : null"
-	>
-		<span v-if="loading" class="button__loader">
-			<span class="button__loader-dot"></span>
-			<span class="button__loader-dot"></span>
-			<span class="button__loader-dot"></span>
-		</span>
-		<span v-else class="button__content">
-			<slot name="icon-left"></slot>
-			<slot>{{ text }}</slot>
-			<slot name="icon-right"></slot>
-		</span>
-	</a>
+    <a
+        v-else-if="isExternalLink"
+        v-bind="componentProps"
+        :class="buttonClasses"
+        @click="handleClick"
+        @keydown.enter="handleClick"
+    >
+        <span v-if="loading" class="button__loader">
+            <span class="button__loader-dot"></span>
+            <span class="button__loader-dot"></span>
+            <span class="button__loader-dot"></span>
+        </span>
+        <span v-else class="button__content">
+            <slot name="icon-left"></slot>
+            <slot>{{ text }}</slot>
+            <slot name="icon-right"></slot>
+        </span>
+    </a>
 
-	<!-- Button original -->
-	<button
-		v-else
-		:type="type"
-		:class="[
-			'button',
-			variant && `button--${variant}`,
-			size && `button--${size}`,
-			{ 'button--disabled': disabled },
-			{ 'button--loading': loading },
-			{ 'button--full-width': fullWidth },
-			customClass,
-		]"
-		:disabled="disabled || loading"
-		:aria-label="ariaLabel"
-		@click="$emit('click', $event)"
-	>
-		<span v-if="loading" class="button__loader">
-			<span class="button__loader-dot"></span>
-			<span class="button__loader-dot"></span>
-			<span class="button__loader-dot"></span>
-		</span>
-		<span v-else class="button__content">
-			<slot name="icon-left"></slot>
-			<slot>{{ text }}</slot>
-			<slot name="icon-right"></slot>
-		</span>
-	</button>
+    <button
+        v-else
+        v-bind="componentProps"
+        :class="buttonClasses"
+        :disabled="disabled || loading"
+        @click="handleClick"
+    >
+        <span v-if="loading" class="button__loader">
+            <span class="button__loader-dot"></span>
+            <span class="button__loader-dot"></span>
+            <span class="button__loader-dot"></span>
+        </span>
+        <span v-else class="button__content">
+            <slot name="icon-left"></slot>
+            <slot>{{ text }}</slot>
+            <slot name="icon-right"></slot>
+        </span>
+    </button>
 </template>
 
 <script setup lang="ts">
-	import { createPath } from '@/config/routes';
-	import { computed, PropType } from 'vue';
+    import { computed } from 'vue';
 
-	// Type pour les objets route
-	type RouteObject = { path: string; name?: string };
+    import { useLinkResolver } from '@/composables/ui/useLinkResolver';
 
-	const props = defineProps({
-		text: {
-			type: String,
-			default: '',
-		},
-		type: {
-			type: String as () => 'button' | 'submit' | 'reset',
-			default: 'button',
-			validator: (value: string) => ['button', 'submit', 'reset'].includes(value),
-		},
-		variant: {
-			type: String,
-			default: '',
-			validator: (value: string) => ['', 'primary', 'secondary', 'outline'].includes(value),
-		},
-		size: {
-			type: String,
-			default: '',
-			validator: (value: string) => ['', 'small', 'large'].includes(value),
-		},
-		disabled: {
-			type: Boolean,
-			default: false,
-		},
-		loading: {
-			type: Boolean,
-			default: false,
-		},
-		fullWidth: {
-			type: Boolean,
-			default: false,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-		to: {
-			type: [String, Object] as PropType<string | RouteObject>,
-			default: '',
-		},
-		params: {
-			type: Object as PropType<Record<string, string | number>>,
-			default: () => ({}),
-		},
-		target: {
-			type: String,
-			default: '',
-			validator: (value: string) => ['', '_blank', '_self', '_parent', '_top'].includes(value),
-		},
-		ariaLabel: {
-			type: String,
-			default: '',
-		},
-	});
+    import type { ButtonVariant, ButtonSize, LinkTarget, ButtonProps } from '@/types/components/base';
 
-	defineEmits(['click']);
+    // Extended Props to allow empty strings for optional variants
+    type Props = Omit<ButtonProps, 'variant' | 'size' | 'target'> & {
+        variant?: ButtonVariant | '';
+        size?: ButtonSize | '';
+        target?: LinkTarget | '';
+    };
 
-	// Résoudre l'URL à partir d'un objet route
-	const resolvedPath = computed(() => {
-		if (typeof props.to === 'object' && props.to && 'path' in props.to) {
-			return createPath(props.to, props.params);
-		}
-		return props.to as string;
-	});
+    const props = withDefaults(defineProps<Props>(), {
+        text: '',
+        type: 'button',
+        variant: '',
+        size: '',
+        disabled: false,
+        loading: false,
+        fullWidth: false,
+        customClass: '',
+        to: '',
+        params: () => ({}),
+        target: '',
+        ariaLabel: '',
+    });
 
-	// Détermine si le lien est interne ou externe
-	const isInternalLink = computed(() => {
-		if (!props.to) return false;
+    const emit = defineEmits<{
+        click: [event: MouseEvent];
+    }>();
 
-		if (typeof props.to === 'string') {
-			return !(
-				props.to.startsWith('http://') ||
-				props.to.startsWith('https://') ||
-				props.to.startsWith('//') ||
-				props.to.startsWith('tel:') ||
-				props.to.startsWith('mailto:')
-			);
-		}
+    const { isInternalLink, isExternalLink, linkProps } = useLinkResolver(() => ({
+        to: props.to,
+        params: props.params,
+        target: props.target,
+    }));
 
-		return true; // Les objets route sont toujours des liens internes
-	});
+    // Provide aria-label when loading (no visible text)
+    const effectiveAriaLabel = computed(() => {
+        if (props.ariaLabel) {
+            return props.ariaLabel;
+        }
+        if (props.loading) {
+            return 'Chargement en cours';
+        }
+        return undefined;
+    });
+
+    const componentProps = computed(() => {
+        if (isInternalLink.value || isExternalLink.value) {
+            return {
+                ...linkProps.value,
+                'aria-label': effectiveAriaLabel.value,
+            };
+        }
+        return {
+            type: props.type,
+            'aria-label': effectiveAriaLabel.value,
+            'aria-busy': props.loading || undefined,
+        };
+    });
+
+    const buttonClasses = computed(() => [
+        'button',
+        props.variant && `button--${props.variant}`,
+        props.size && `button--${props.size}`,
+        {
+            'button--disabled': props.disabled,
+            'button--loading': props.loading,
+            'button--full-width': props.fullWidth,
+        },
+        props.customClass,
+    ]);
+
+    const handleClick = (event: MouseEvent) => {
+        if (props.disabled || props.loading) {
+            event.preventDefault();
+            return;
+        }
+        emit('click', event);
+    };
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.button {
-		@include mix.button-style(
-			vars.$primary-color,
-			vars.$white,
-			func.adjust-color-brightness(vars.$primary-color, -10%)
-		);
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		border: none;
-		font-weight: 500;
-		position: relative;
-		transition: all vars.$transition-base;
-		text-decoration: none;
-		cursor: pointer;
+    .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: vars.$spacing-xxs;
+        padding: vars.$spacing-xs vars.$spacing-md;
+        border: none;
+        border-radius: vars.$border-radius-md;
+        background-color: vars.$primary-color;
+        color: vars.$white;
+        font-family: vars.$font-family;
+        font-weight: vars.$font-weight-medium;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all vars.$transition-base;
 
-		&__content {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-xs;
-		}
+        @include mix.focus-outline;
 
-		&--secondary {
-			@include mix.button-style(
-				vars.$secondary-color,
-				vars.$white,
-				func.adjust-color-brightness(vars.$secondary-color, -10%)
-			);
-		}
+        &:hover:not(:disabled) {
+            background-color: vars.$primary-dark;
+        }
 
-		&--outline {
-			background-color: transparent;
-			border: 2px solid vars.$primary-color;
-			color: vars.$primary-color;
+        &__content {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+        }
 
-			&:hover {
-				background-color: vars.$primary-color;
-				color: vars.$white;
-			}
-		}
+        // Variants
+        &--primary {
+            background-color: vars.$primary-color;
+            color: vars.$white;
 
-		&--small {
-			padding: vars.$spacing-xs vars.$spacing-sm;
-		}
+            &:hover:not(:disabled) {
+                background-color: vars.$primary-dark;
+            }
+        }
 
-		&--large {
-			padding: vars.$spacing-md vars.$spacing-lg;
-		}
+        &--secondary {
+            background-color: vars.$secondary-color;
+            color: vars.$white;
 
-		&--full-width {
-			width: 100%;
-		}
+            &:hover:not(:disabled) {
+                background-color: vars.$secondary-dark;
+            }
+        }
 
-		&--disabled {
-			opacity: 0.6;
-			cursor: not-allowed;
-			pointer-events: none;
-		}
+        &--outline {
+            background-color: transparent;
+            border: 2px solid vars.$primary-color;
+            color: vars.$primary-color;
 
-		&__loader {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: vars.$spacing-xs;
+            &:hover:not(:disabled) {
+                background-color: vars.$primary-color;
+                color: vars.$white;
+            }
+        }
 
-			&-dot {
-				width: 6px;
-				height: 6px;
-				background-color: currentColor;
-				border-radius: 50%;
-				display: inline-block;
-				animation: button-loading 1.2s infinite ease-in-out;
+        &--danger {
+            background-color: vars.$danger-color;
+            color: vars.$white;
 
-				&:nth-child(1) {
-					animation-delay: 0s;
-				}
+            &:hover:not(:disabled) {
+                background-color: vars.$danger-dark;
+            }
+        }
 
-				&:nth-child(2) {
-					animation-delay: 0.2s;
-				}
+        &--ghost {
+            background-color: transparent;
+            color: vars.$text-primary;
 
-				&:nth-child(3) {
-					animation-delay: 0.4s;
-				}
-			}
-		}
-	}
+            &:hover:not(:disabled) {
+                background-color: vars.$bg-secondary;
+            }
+        }
 
-	@keyframes button-loading {
-		0%,
-		80%,
-		100% {
-			transform: scale(0);
-			opacity: 0.6;
-		}
-		40% {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
+        // Sizes (système unifié xs/sm/md/lg/xl)
+        &--xs {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        &--sm {
+            padding: vars.$spacing-xxs vars.$spacing-xs;
+            font-size: 0.875rem;
+        }
+
+        // md = taille par défaut (pas de classe spécifique)
+
+        &--lg {
+            padding: vars.$spacing-md vars.$spacing-lg;
+            font-size: 1.125rem;
+        }
+
+        &--xl {
+            padding: vars.$spacing-lg vars.$spacing-xl;
+            font-size: 1.25rem;
+        }
+
+        &--icon {
+            padding: vars.$spacing-xs;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+        }
+
+        // Aliases de compatibilité (anciennes valeurs)
+        &--small {
+            padding: vars.$spacing-xxs vars.$spacing-xs;
+            font-size: 0.875rem;
+        }
+
+        &--large {
+            padding: vars.$spacing-md vars.$spacing-lg;
+            font-size: 1.125rem;
+        }
+
+        // States
+        &--full-width {
+            width: 100%;
+        }
+
+        &--disabled,
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        &--loading {
+            cursor: wait;
+        }
+
+        // Loader
+        &__loader {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: vars.$spacing-xxs;
+
+            &-dot {
+                width: 6px;
+                height: 6px;
+                background-color: currentcolor;
+                border-radius: vars.$border-radius-full;
+                animation: button-loading 1.2s infinite ease-in-out;
+
+                &:nth-child(1) {
+                    animation-delay: 0s;
+                }
+
+                &:nth-child(2) {
+                    animation-delay: 0.2s;
+                }
+
+                &:nth-child(3) {
+                    animation-delay: 0.4s;
+                }
+            }
+        }
+    }
+
+    @keyframes button-loading {
+        0%,
+        80%,
+        100% {
+            transform: scale(0);
+            opacity: 0.6;
+        }
+
+        40% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
 </style>

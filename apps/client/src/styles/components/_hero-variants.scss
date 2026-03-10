@@ -1,0 +1,56 @@
+@use '@/styles/abstracts/functions' as fn;
+@use '@/styles/abstracts/variables' as vars;
+
+@mixin hero-variant(
+    $background,
+    $card-bg,
+    $card-border,
+    $card-shadow,
+    $float-display: none,
+    $badge-color,
+    $badge-bg,
+    $badge-border,
+    $title-color,
+    $desc-color,
+    $meta-color,
+    $logo-bg,
+    $logo-border: null
+) {
+    background: $background;
+
+    .hero__card {
+        background: $card-bg;
+        border: 1px solid $card-border;
+        box-shadow: $card-shadow;
+    }
+
+    .hero__float {
+        display: $float-display;
+    }
+
+    .hero__badge {
+        color: $badge-color;
+        background: $badge-bg;
+        border: 1px solid $badge-border;
+    }
+
+    .hero__title {
+        color: $title-color;
+    }
+
+    .hero__description {
+        color: $desc-color;
+    }
+
+    .hero__meta {
+        color: $meta-color;
+    }
+
+    .hero__logo img {
+        background: $logo-bg;
+
+        @if $logo-border {
+            border: 1px solid $logo-border;
+        }
+    }
+}

@@ -1,6 +1,7 @@
-"""
-Tâches Celery pour l'envoi des emails de contact.
-"""
+"""Tâches Celery pour l'envoi des emails de contact."""
+
+import logging
+from smtplib import SMTPException
 
 from celery import shared_task
 from django.conf import settings
@@ -8,24 +9,33 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 
+logger = logging.getLogger("core.contact")
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def send_contact_email(self, name, email, message):
+
+@shared_task(bind=True, max_retries=3, name="contact.send_admin_notification")
+def send_admin_notification(
+    self,
+    name: str,
+    email: str,
+    message: str,
+) -> bool:
+    """Envoie la notification de contact a l'administrateur.
+
+    Args:
+        name: Nom de l'expediteur
+        email: Email de l'expediteur
+        message: Contenu du message
+
+    Returns:
+        True si l'email a ete envoye avec succes
+
+    Raises:
+        Retry: En cas d'echec d'envoi (3 tentatives max)
     """
-    Envoie :
-    1. Un mail à l'administrateur du site (moi-même)
-    2. Un mail de confirmation à l'utilisateur
-    """
-
-    print(f"[TASK] 🚀 Lancement de la task send_contact_email avec : name={name}, email={email}")
-
     admin_email = settings.ADMIN_EMAIL
     current_year = now().year
 
-    print(f"[TASK] 📧 Envoi du mail ADMIN vers : {admin_email}")
-
-    # === Email pour l'administrateur ===
-    admin_subject = f"📩 Nouveau message de contact de {name}"
+    admin_subject = f"Nouveau message de contact de {name}"
     admin_context = {
         "name": name,
         "email": email,
@@ -44,16 +54,36 @@ def send_contact_email(self, name, email, message):
             html_message=admin_html,
             fail_silently=False,
         )
-        print(f"[TASK] ✅ Notification admin envoyée à {admin_email} pour {name} ({email})")
 
-    except Exception as exc:
-        print(f"[TASK] ❌ Échec de l'envoi admin pour {email} : {str(exc)}")
-        raise self.retry(exc=exc)
+        logger.info("[CONTACT] Admin notification sent to %s for sender %s", admin_email, email)
 
-    print(f"[TASK] 📧 Envoi du mail UTILISATEUR vers : {email}")
+    except (SMTPException, ConnectionError, TimeoutError, OSError) as exc:
+        logger.exception("[CONTACT] Failed to send admin notification for %s", email)
+        raise self.retry(exc=exc, countdown=60 * (2**self.request.retries)) from exc
 
-    # === Email pour l'utilisateur ===
-    user_subject = "✅ Merci pour votre message !"
+    return True
+
+
+@shared_task(bind=True, max_retries=3, name="contact.send_user_confirmation")
+def send_user_confirmation(
+    self,
+    name: str,
+    email: str,
+) -> bool:
+    """Envoie l'email de confirmation a l'utilisateur.
+
+    Args:
+        name: Nom de l'expediteur
+        email: Email de l'expediteur
+
+    Returns:
+        True si l'email a ete envoye avec succes
+
+    Raises:
+        Retry: En cas d'echec d'envoi (3 tentatives max)
+    """
+    current_year = now().year
+
     user_context = {
         "name": name,
         "year": current_year,
@@ -61,21 +91,25 @@ def send_contact_email(self, name, email, message):
 
     try:
         user_html = render_to_string("contact_remerciment.html", user_context)
+        user_text = (
+            f"Bonjour {name},\n\n"
+            "Merci pour votre message ! Je vous repondrai rapidement.\n\n"
+            f"Bonne journee,\nL'equipe {settings.DEFAULT_FROM_EMAIL}"
+        )
 
         send_mail(
-            subject=user_subject,
-            message=(
-                f"Bonjour {name},\n\n"
-                "Merci pour votre message ! Je vous répondrai rapidement.\n\n"
-                f"Bonne journée,\nL'équipe {settings.DEFAULT_FROM_EMAIL}"
-            ),
+            subject="Merci pour votre message !",
+            message=user_text,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[admin_email, email],
+            recipient_list=[email],
             html_message=user_html,
             fail_silently=False,
         )
-        print(f"[TASK] ✅ Email de remerciement envoyé à {email}")
 
-    except Exception as exc:
-        print(f"[TASK] ❌ Échec de l'envoi de l'email de remerciement à {email} : {str(exc)}")
-        raise self.retry(exc=exc)
+        logger.info("[CONTACT] Confirmation email sent to %s", email)
+
+    except (SMTPException, ConnectionError, TimeoutError, OSError) as exc:
+        logger.exception("[CONTACT] Failed to send confirmation email to %s", email)
+        raise self.retry(exc=exc, countdown=60 * (2**self.request.retries)) from exc
+
+    return True

@@ -1,298 +1,410 @@
 <template>
-	<div class="error-page">
-		<div class="error-page__content">
-			<h1 class="error-page__title">{{ error.statusCode || '404' }}</h1>
-			<div class="error-page__graphic">
-				<!-- Visage triste animé -->
-				<div class="error-page__face">
-					<div class="error-page__eyes">
-						<div class="error-page__eye"></div>
-						<div class="error-page__eye"></div>
-					</div>
-					<div class="error-page__mouth"></div>
-				</div>
-			</div>
-			<p class="error-page__message">
-				{{ error.statusMessage || "La page que vous recherchez n'existe pas" }}
-			</p>
-			<p class="error-page__submessage">Peut-être que l'URL a été mal tapée ou que la page a été déplacée.</p>
+	<div class="error-page" ref="pageRef">
+		<!-- Background dots -->
+		<div class="error-page__dots"></div>
 
-			<div class="error-page__actions">
-				<BaseButton :to="ROUTES.HOME" variant="primary" class="error-page__button">
-					<BaseIcon name="home" size="sm" class="mr-xs" />
-					Retour à l'accueil
-				</BaseButton>
-			</div>
-
-			<div class="error-page__suggestions">
-				<p class="error-page__suggestion-title">Pages populaires:</p>
-				<div class="error-page__links">
-					<BaseLink :to="ROUTES.PROJECTS" variant="secondary" class="mr-md">Projets</BaseLink>
-					<BaseLink :to="ROUTES.BLOG" variant="secondary" class="mr-md">Blog</BaseLink>
-					<BaseLink :to="ROUTES.CONTACT" variant="secondary">Contact</BaseLink>
-				</div>
-			</div>
+		<!-- Floating shapes with parallax -->
+		<div class="error-page__shapes">
+			<span
+				v-for="shape in shapes"
+				:key="shape.id"
+				:ref="(el) => setShapeRef(el as HTMLElement, shape.id)"
+				class="error-page__shape"
+				:class="`error-page__shape--${shape.type}`"
+				:style="{
+					left: shape.x + '%',
+					top: shape.y + '%',
+					width: shape.size + 'px',
+					height: shape.size + 'px',
+					opacity: shape.opacity,
+				}"
+			/>
 		</div>
 
-		<!-- Éléments décoratifs en arrière-plan -->
-		<div class="error-page__decoration error-page__decoration--1"></div>
-		<div class="error-page__decoration error-page__decoration--2"></div>
-		<div class="error-page__decoration error-page__decoration--3"></div>
-		<div class="error-page__decoration error-page__decoration--4"></div>
+		<!-- Orbs -->
+		<div class="error-page__orb error-page__orb--1"></div>
+		<div class="error-page__orb error-page__orb--2"></div>
+
+		<!-- Content -->
+		<main class="error-page__content">
+			<div class="error-page__card">
+				<!-- Error code with bug -->
+				<div class="error-page__hero">
+					<span class="error-page__code">{{ statusCode }}</span>
+					<div class="error-page__bug">
+						<BaseIcon :name="currentIcon" size="xl" />
+					</div>
+				</div>
+
+				<!-- Title -->
+				<h2 class="error-page__title">{{ errorTitle }}</h2>
+
+				<!-- Message -->
+				<p class="error-page__message">{{ errorMessage }}</p>
+
+				<!-- Actions -->
+				<div class="error-page__actions">
+					<BaseButton :to="ROUTES.HOME.path" variant="primary" size="lg">
+						<BaseIcon name="home" size="sm" />
+						Accueil
+					</BaseButton>
+					<BaseButton variant="outline" size="lg" @click="goBack">
+						<BaseIcon name="arrow-left" size="sm" />
+						Retour
+					</BaseButton>
+				</div>
+
+				<!-- Links -->
+				<nav class="error-page__nav">
+					<BaseLink :to="ROUTES.PROJECTS.path">Projets</BaseLink>
+					<BaseLink :to="ROUTES.BLOG.path">Blog</BaseLink>
+					<BaseLink :to="ROUTES.STACKS.path">Stacks</BaseLink>
+					<BaseLink :to="ROUTES.CONTACT.path">Contact</BaseLink>
+				</nav>
+			</div>
+		</main>
+
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { useRouter } from 'vue-router';
-	import BaseButton from './src/components/base/BaseButton.vue';
-	import BaseIcon from './src/components/base/BaseIcon.vue';
-	import BaseLink from './src/components/base/BaseLink.vue';
-	import { ROUTES } from './src/config/routes';
+	import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+	import BaseButton from '@/components/base/BaseButton.vue';
+	import BaseIcon from '@/components/base/BaseIcon.vue';
+	import BaseLink from '@/components/base/BaseLink.vue';
+	import { ROUTES } from '@/config/routes';
 
-	defineProps({
-		error: {
-			type: Object,
-			default: () => ({
-				statusCode: 404,
-				statusMessage: "La page que vous recherchez n'existe pas",
-			}),
-		},
+	// Props
+	const props = withDefaults(
+		defineProps<{
+			error?: { statusCode?: number; statusMessage?: string };
+		}>(),
+		{
+			error: () => ({ statusCode: 404, statusMessage: '' }),
+		}
+	);
+
+	const pageRef = ref<HTMLElement | null>(null);
+	const shapeRefs = ref<Map<number, HTMLElement>>(new Map());
+
+	// Status code — SSR-safe (no client-only query param logic to avoid hydration mismatch)
+	const statusCode = computed(() => props.error?.statusCode || 404);
+
+	// Error config
+	const errors: Record<number, { title: string; message: string }> = {
+		400: { title: 'Requête invalide', message: 'La syntaxe de la requête est incorrecte.' },
+		401: { title: 'Non autorisé', message: 'Authentification requise.' },
+		403: { title: 'Accès interdit', message: 'Vous n\'avez pas la permission d\'accéder à cette page.' },
+		404: { title: 'Page introuvable', message: 'Cette page n\'existe pas ou a été déplacée.' },
+		500: { title: 'Erreur serveur', message: 'Une erreur interne est survenue.' },
+		503: { title: 'Service indisponible', message: 'Le service est temporairement indisponible.' },
+	};
+
+	const errorTitle = computed(() => errors[statusCode.value]?.title || 'Erreur');
+	const errorMessage = computed(() => errors[statusCode.value]?.message || 'Une erreur est survenue.');
+
+	// Icons for each error type (Lucide icons)
+	const errorIcons: Record<number, string> = {
+		400: 'bug',
+		401: 'shield-alert',
+		403: 'shield-off',
+		404: 'search-x',
+		500: 'server-off',
+		503: 'wifi-off',
+	};
+
+	const currentIcon = computed(() => errorIcons[statusCode.value] ?? 'bug');
+
+	// Shapes
+	const shapes = [
+		{ id: 1, type: 'circle', size: 60, x: 5, y: 10, depth: 20, opacity: 0.4 },
+		{ id: 2, type: 'square', size: 40, x: 85, y: 15, depth: 35, opacity: 0.3 },
+		{ id: 3, type: 'circle', size: 80, x: 80, y: 70, depth: 25, opacity: 0.25 },
+		{ id: 4, type: 'square', size: 50, x: 10, y: 75, depth: 30, opacity: 0.3 },
+		{ id: 5, type: 'circle', size: 30, x: 20, y: 40, depth: 45, opacity: 0.35 },
+		{ id: 6, type: 'square', size: 35, x: 70, y: 45, depth: 40, opacity: 0.25 },
+	];
+
+	const setShapeRef = (el: HTMLElement | null, id: number) => {
+		if (el) shapeRefs.value.set(id, el);
+	};
+
+	// Parallax
+	let targetX = 0;
+	let targetY = 0;
+	let currentX = 0;
+	let currentY = 0;
+	let animationId: number;
+	const prefersReducedMotion = ref(false);
+
+	const onMouseMove = (e: MouseEvent) => {
+		if (!pageRef.value || prefersReducedMotion.value) return;
+		const { width, height } = pageRef.value.getBoundingClientRect();
+		targetX = (e.clientX / width - 0.5) * 2;
+		targetY = (e.clientY / height - 0.5) * 2;
+	};
+
+	const animate = () => {
+		if (prefersReducedMotion.value) return;
+
+		currentX += (targetX - currentX) * 0.05;
+		currentY += (targetY - currentY) * 0.05;
+
+		shapeRefs.value.forEach((el, id) => {
+			const shape = shapes.find((s) => s.id === id);
+			if (shape) {
+				const x = currentX * shape.depth;
+				const y = currentY * shape.depth;
+				el.style.transform = `translate(${x}px, ${y}px)`;
+			}
+		});
+
+		animationId = requestAnimationFrame(animate);
+	};
+
+	const startParallax = () => {
+		if (!prefersReducedMotion.value) {
+			window.addEventListener('mousemove', onMouseMove);
+			animationId = requestAnimationFrame(animate);
+		}
+	};
+
+	const stopParallax = () => {
+		window.removeEventListener('mousemove', onMouseMove);
+		if (animationId) {
+			cancelAnimationFrame(animationId);
+		}
+	};
+
+	const handleVisibilityChange = () => {
+		if (document.hidden) {
+			stopParallax();
+		} else {
+			startParallax();
+		}
+	};
+
+	const goBack = () => {
+		if (import.meta.client && window.history.length > 1) {
+			window.history.back();
+		} else {
+			clearError({ redirect: ROUTES.HOME.path });
+		}
+	};
+
+	onMounted(() => {
+		prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(() => startParallax());
+		} else {
+			setTimeout(() => startParallax(), 300);
+		}
+		document.addEventListener('visibilitychange', handleVisibilityChange);
 	});
 
-	useRouter();
+	onBeforeUnmount(() => {
+		stopParallax();
+		document.removeEventListener('visibilitychange', handleVisibilityChange);
+	});
 </script>
 
 <style lang="scss" scoped>
 	@use '@/styles/abstracts/variables' as vars;
 	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+	@use '@/styles/abstracts/functions' as fn;
 
 	.error-page {
+		min-height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 100vh;
-		background: linear-gradient(
-			135deg,
-			func.color-alpha(vars.$primary-color, 0.03),
-			func.color-alpha(vars.$secondary-color, 0.05)
-		);
+		background: vars.$bg-secondary;
 		position: relative;
 		overflow: hidden;
 
+		&__dots {
+			position: absolute;
+			inset: 0;
+
+			@include mix.dots-pattern;
+
+			pointer-events: none;
+		}
+
+		&__shapes {
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+		}
+
+		&__shape {
+			position: absolute;
+			will-change: transform;
+			transition: transform 0.1s linear;
+
+			&--circle {
+				border-radius: 50%;
+				background: vars.$primary-light;
+			}
+
+			&--square {
+				border-radius: vars.$border-radius-md;
+				background: vars.$secondary-color;
+			}
+		}
+
+		&__orb {
+			position: absolute;
+			border-radius: 50%;
+			filter: blur(100px);
+			pointer-events: none;
+
+			&--1 {
+				width: 400px;
+				height: 400px;
+				background: vars.$primary-color;
+				opacity: 0.12;
+				top: -100px;
+				left: -100px;
+			}
+
+			&--2 {
+				width: 300px;
+				height: 300px;
+				background: vars.$secondary-color;
+				opacity: 0.1;
+				bottom: -80px;
+				right: -80px;
+			}
+		}
+
 		&__content {
-			text-align: center;
-			padding: vars.$spacing-xl;
-			max-width: 650px;
-			background-color: vars.$white;
-			border-radius: vars.$border-radius-lg;
-			box-shadow: vars.$box-shadow-medium;
 			position: relative;
-			z-index: 5;
+			z-index: 10;
+			width: 100%;
+			max-width: 480px;
+			padding: vars.$spacing-lg;
 
 			@include mix.responsive(mobile) {
-				padding: vars.$spacing-lg vars.$spacing-md;
-				margin: 0 vars.$spacing-sm;
+				padding: vars.$spacing-md;
+			}
+		}
+
+		&__card {
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(16px);
+			border-radius: vars.$border-radius-xl;
+			padding: vars.$spacing-xxl;
+			text-align: center;
+			box-shadow: 0 16px 48px fn.color-alpha(vars.$black, 0.08);
+
+			@include mix.responsive(mobile) {
+				padding: vars.$spacing-xl vars.$spacing-lg;
+			}
+		}
+
+		&__hero {
+			position: relative;
+			display: inline-block;
+			margin-bottom: vars.$spacing-lg;
+		}
+
+		&__code {
+			font-size: 8rem;
+			font-weight: vars.$font-weight-bold;
+			color: vars.$primary-color;
+			line-height: 1;
+			display: block;
+
+			@include mix.responsive(mobile) {
+				font-size: 5rem;
+			}
+		}
+
+		&__bug {
+			position: absolute;
+			width: 56px;
+			height: 56px;
+			top: -16px;
+			right: -16px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: vars.$white;
+			border: 2px solid vars.$primary-color;
+			border-radius: 50%;
+			box-shadow: 0 4px 12px fn.color-alpha(vars.$primary-color, 0.2);
+			animation: bug-float 3s ease-in-out infinite;
+			color: vars.$primary-dark;
+
+			svg {
+				width: 32px;
+				height: 32px;
+			}
+
+			@include mix.responsive(mobile) {
+				width: 48px;
+				height: 48px;
+				top: -12px;
+				right: -12px;
+
+				svg {
+					width: 26px;
+					height: 26px;
+				}
 			}
 		}
 
 		&__title {
-			font-size: 8rem;
-			font-weight: 800;
-			background: linear-gradient(135deg, vars.$primary-color, vars.$secondary-color);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-			margin-bottom: vars.$spacing-sm;
-			text-shadow: 0 4px 15px func.color-alpha(vars.$primary-color, 0.2);
-
-			@include mix.responsive(mobile) {
-				font-size: 6rem;
-			}
-		}
-
-		&__graphic {
-			width: 150px;
-			height: 150px;
-			margin: 0 auto vars.$spacing-lg;
-			border-radius: 50%;
-			position: relative;
-			background: linear-gradient(135deg, vars.$primary-color, vars.$secondary-color);
-			box-shadow: 0 10px 30px func.color-alpha(vars.$primary-color, 0.3);
-			animation: pulse 3s infinite ease-in-out;
-		}
-
-		&__face {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		}
-
-		&__eyes {
-			display: flex;
-			gap: 30px;
-			margin-bottom: 20px;
-		}
-
-		&__eye {
-			width: 15px;
-			height: 15px;
-			border-radius: 50%;
-			background-color: vars.$white;
-			position: relative;
-
-			// Animation des yeux
-			animation: blink 4s infinite;
-		}
-
-		&__mouth {
-			width: 60px;
-			height: 20px;
-			border-radius: 0 0 40px 40px;
-			border: 5px solid vars.$white;
-			border-top: none;
-			transform: rotate(180deg);
+			font-size: vars.$font-size-xl;
+			font-weight: vars.$font-weight-semibold;
+			color: vars.$text-primary;
+			margin-bottom: vars.$spacing-xxs;
 		}
 
 		&__message {
-			font-size: 1.5rem;
-			margin-bottom: vars.$spacing-sm;
-			color: vars.$black-light;
-			font-weight: 600;
-		}
+			font-size: vars.$font-size-md;
+			color: vars.$text-secondary;
+			margin-bottom: vars.$spacing-xl;
 
-		&__submessage {
-			font-size: 1rem;
-			margin-bottom: vars.$spacing-lg;
-			color: vars.$gray-dark;
+			@include mix.responsive(mobile) {
+				font-size: vars.$font-size-sm;
+			}
 		}
 
 		&__actions {
 			display: flex;
 			justify-content: center;
 			gap: vars.$spacing-md;
-			margin-bottom: vars.$spacing-lg;
+			margin-bottom: vars.$spacing-xl;
 
 			@include mix.responsive(mobile) {
 				flex-direction: column;
-				align-items: center;
-				gap: vars.$spacing-sm;
 			}
 		}
 
-		&__button {
-			display: inline-flex;
-			align-items: center;
-			gap: vars.$spacing-xs;
-			min-width: 180px;
-
-			@include mix.responsive(mobile) {
-				width: 100%;
-			}
-		}
-
-		&__suggestions {
-			margin-top: vars.$spacing-lg;
-			padding-top: vars.$spacing-md;
-			border-top: 1px solid func.color-alpha(vars.$gray-light, 0.5);
-		}
-
-		&__suggestion-title {
-			margin-bottom: vars.$spacing-sm;
-			color: vars.$gray-dark;
-			font-size: 0.9rem;
-		}
-
-		&__links {
+		&__nav {
 			display: flex;
 			justify-content: center;
-			flex-wrap: wrap;
-			gap: vars.$spacing-sm;
-		}
+			gap: vars.$spacing-lg;
+			padding-top: vars.$spacing-lg;
+			border-top: 1px solid vars.$border-color;
 
-		// Décorations d'arrière-plan
-		&__decoration {
-			position: absolute;
-			border-radius: 50%;
-			opacity: 0.5;
-			z-index: 1;
-
-			&--1 {
-				top: 10%;
-				left: 10%;
-				width: 100px;
-				height: 100px;
-				background-color: func.color-alpha(vars.$primary-color, 0.1);
-				animation: float 8s infinite ease-in-out;
-			}
-
-			&--2 {
-				bottom: 15%;
-				right: 10%;
-				width: 150px;
-				height: 150px;
-				background-color: func.color-alpha(vars.$secondary-color, 0.1);
-				animation: float 12s infinite ease-in-out;
-			}
-
-			&--3 {
-				top: 50%;
-				right: 20%;
-				width: 70px;
-				height: 70px;
-				background-color: func.color-alpha(vars.$info-color, 0.1);
-				animation: float 9s infinite ease-in-out;
-			}
-
-			&--4 {
-				bottom: 30%;
-				left: 15%;
-				width: 120px;
-				height: 120px;
-				background-color: func.color-alpha(vars.$success-color, 0.1);
-				animation: float 10s infinite ease-in-out;
+			@include mix.responsive(mobile) {
+				gap: vars.$spacing-md;
+				flex-wrap: wrap;
 			}
 		}
+
 	}
 
-	// Animations
-	@keyframes pulse {
-		0% {
-			transform: scale(1);
-		}
-		50% {
-			transform: scale(1.05);
-		}
-		100% {
-			transform: scale(1);
-		}
-	}
-
-	@keyframes blink {
-		0%,
-		45%,
-		55%,
-		100% {
-			transform: scaleY(1);
-		}
-		50% {
-			transform: scaleY(0.1);
-		}
-	}
-
-	@keyframes float {
-		0%,
-		100% {
+	@keyframes bug-float {
+		0%, 100% {
 			transform: translateY(0);
 		}
+
 		50% {
-			transform: translateY(-20px);
+			transform: translateY(-6px);
 		}
 	}
 </style>

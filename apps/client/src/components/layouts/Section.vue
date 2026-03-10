@@ -1,275 +1,296 @@
 <template>
-	<section
-		:id="id"
-		:class="[
-			'section',
-			size && `section--${size}`,
-			{
-				'section--with-container': withContainer,
-				'section--dark': dark,
-				'section--light': light,
-				'section--primary': primary,
-				'section--animated': animated,
-			},
-			customClass,
-		]"
-		:data-animation="animationType"
-	>
-		<div :class="{ container: withContainer }">
-			<!-- Header slot with title/subtitle fallback -->
-			<div v-if="hasHeader" class="section__header" :class="{ 'animate-fade-in-down': animated }">
-				<slot name="header">
-					<h2 v-if="title" class="section__title" :class="{ 'font-bold': true }">{{ title }}</h2>
-					<p v-if="subtitle" class="section__subtitle">{{ subtitle }}</p>
-				</slot>
-			</div>
+    <section :id="id" :class="sectionClasses" :data-animation="animationType" :aria-labelledby="titleId">
+        <div :class="{ container: withContainer }">
+            <!-- Header -->
+            <header v-if="hasHeader" class="section__header">
+                <slot name="header">
+                    <h2 v-if="title" :id="titleId" class="section__title">{{ title }}</h2>
+                    <p v-if="subtitle" class="section__subtitle">{{ subtitle }}</p>
+                </slot>
+            </header>
 
-			<!-- Main content -->
-			<div class="section__content" :class="{ 'animate-fade-in-up': animated }">
-				<slot></slot>
-			</div>
+            <!-- Content -->
+            <div class="section__content">
+                <slot></slot>
+            </div>
 
-			<!-- Footer slot -->
-			<div v-if="$slots.footer" class="section__footer" :class="{ 'animate-fade-in-up delay-2': animated }">
-				<slot name="footer"></slot>
-			</div>
-		</div>
-	</section>
+            <!-- Footer -->
+            <footer v-if="$slots.footer" class="section__footer">
+                <slot name="footer"></slot>
+            </footer>
+        </div>
+    </section>
 </template>
 
 <script setup lang="ts">
-	import { computed, useSlots } from 'vue';
+    import { computed, useSlots } from 'vue';
 
-	type AnimationType = 'fade' | 'slide' | 'scale' | 'none';
+    import type { SectionSize, SectionVariant, SectionAnimation } from '@/types/components/layouts';
 
-	const props = defineProps({
-		id: {
-			type: String,
-			default: '',
-		},
-		title: {
-			type: String,
-			default: '',
-		},
-		subtitle: {
-			type: String,
-			default: '',
-		},
-		size: {
-			type: String,
-			default: '',
-			validator: (value: string) => ['', 'tight', 'large'].includes(value),
-		},
-		withContainer: {
-			type: Boolean,
-			default: true,
-		},
-		dark: {
-			type: Boolean,
-			default: false,
-		},
-		light: {
-			type: Boolean,
-			default: false,
-		},
-		primary: {
-			type: Boolean,
-			default: false,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-		animated: {
-			type: Boolean,
-			default: false,
-		},
-		animationType: {
-			type: String as () => AnimationType,
-			default: 'fade',
-			validator: (value: string) => ['fade', 'slide', 'scale', 'none'].includes(value),
-		},
-	});
+    const props = withDefaults(defineProps<Props>(), {
+        id: undefined,
+        title: '',
+        subtitle: '',
+        size: 'default',
+        variant: 'default',
+        withContainer: true,
+        animated: false,
+        animationType: 'fade',
+        customClass: '',
+    });
 
-	const slots = useSlots();
+    const titleId = computed(() => {
+        if (!props.title) {
+            return undefined;
+        }
+        // Generate a stable ID based on the title
+        const slug = props.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+        return `section-title-${slug}`;
+    });
 
-	// Check if header exists
-	const hasHeader = computed(() => slots.header || props.title || props.subtitle);
+    interface Props {
+        id?: string;
+        title?: string;
+        subtitle?: string;
+        size?: SectionSize;
+        variant?: SectionVariant;
+        withContainer?: boolean;
+        animated?: boolean;
+        animationType?: SectionAnimation;
+        customClass?: string;
+    }
+
+    const slots = useSlots();
+
+    const hasHeader = computed(() => !!slots.header || !!props.title || !!props.subtitle);
+
+    const sectionClasses = computed(() => [
+        'section',
+        `section--${props.size}`,
+        `section--${props.variant}`,
+        {
+            'section--animated': props.animated,
+        },
+        props.customClass,
+    ]);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.section {
-		padding: vars.$spacing-lg 0 vars.$spacing-xl 0;
-		position: relative;
-		overflow: hidden;
+    .section {
+        padding: vars.$spacing-xl 0;
+        position: relative;
 
-		@include mix.responsive(mobile) {
-			padding: vars.$spacing-md 0 vars.$spacing-lg 0;
-		}
+        @include mix.responsive(mobile) {
+            padding: vars.$spacing-lg 0;
+        }
 
-		&__header {
-			text-align: center;
-			max-width: 800px;
-			margin: 0 auto vars.$spacing-xl;
-			position: relative;
-			z-index: 5;
+        /* Elements */
+        &__header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto vars.$spacing-xl;
+            position: relative;
+            z-index: 5;
 
-			@include mix.responsive(mobile) {
-				margin-bottom: vars.$spacing-lg;
-			}
-		}
+            @include mix.responsive(mobile) {
+                margin-bottom: vars.$spacing-lg;
+            }
+        }
 
-		&__title {
-			margin-bottom: vars.$spacing-md;
-			position: relative;
-			display: inline-block;
+        &__title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: vars.$spacing-sm;
+            color: vars.$text-primary;
+            letter-spacing: vars.$letter-spacing-tight;
 
-			&::after {
-				content: '';
-				display: block;
-				width: 50px;
-				height: 3px;
-				background-color: vars.$primary-color;
-				margin: vars.$spacing-sm auto 0;
-			}
-		}
+            &::before,
+            &::after {
+                content: '';
+                flex: 1;
+                max-width: 80px;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, func.color-alpha(vars.$primary-color, 0.2));
+            }
 
-		&__subtitle {
-			color: vars.$gray-dark;
-			line-height: 1.6;
-		}
+            &::after {
+                background: linear-gradient(90deg, func.color-alpha(vars.$primary-color, 0.2), transparent);
+            }
+        }
 
-		&__content {
-			width: 100%;
-			position: relative;
-			z-index: 5;
-		}
+        &__subtitle {
+            color: vars.$text-secondary;
+            line-height: vars.$line-height-relaxed;
+            max-width: 600px;
+            margin: 0 auto;
+        }
 
-		&__footer {
-			margin-top: vars.$spacing-xl;
-			text-align: center;
-			position: relative;
-			z-index: 5;
+        &__content {
+            width: 100%;
+            position: relative;
+            z-index: 5;
+        }
 
-			@include mix.responsive(mobile) {
-				margin-top: vars.$spacing-lg;
-			}
-		}
+        &__footer {
+            margin-top: vars.$spacing-xl;
+            text-align: center;
+            position: relative;
+            z-index: 5;
 
-		// Size variants
-		&--tight {
-			padding: vars.$spacing-md 0 vars.$spacing-lg 0;
+            @include mix.responsive(mobile) {
+                margin-top: vars.$spacing-lg;
+            }
+        }
 
-			@include mix.responsive(mobile) {
-				padding: vars.$spacing-sm 0 vars.$spacing-md 0;
-			}
+        // Size modifiers
+        &--tight {
+            padding: vars.$spacing-lg 0;
 
-			.section__header {
-				margin-bottom: vars.$spacing-lg;
+            @include mix.responsive(mobile) {
+                padding: vars.$spacing-md 0;
+            }
 
-				@include mix.responsive(mobile) {
-					margin-bottom: vars.$spacing-md;
-				}
-			}
-		}
+            .section__header {
+                margin-bottom: vars.$spacing-lg;
 
-		&--large {
-			padding: vars.$spacing-xl 0 calc(vars.$spacing-xl * 1.5) 0;
+                @include mix.responsive(mobile) {
+                    margin-bottom: vars.$spacing-md;
+                }
+            }
+        }
 
-			@include mix.responsive(mobile) {
-				padding: vars.$spacing-lg 0 vars.$spacing-xl 0;
-			}
-		}
+        &--large {
+            padding: vars.$spacing-xxl 0;
 
-		// Color variants
-		&--dark {
-			background-color: vars.$black-light;
-			color: vars.$white;
+            @include mix.responsive(mobile) {
+                padding: vars.$spacing-xl 0;
+            }
+        }
 
-			.section__title {
-				color: vars.$white;
+        // Variant modifiers - All transparent
 
-				&::after {
-					background-color: vars.$secondary-color;
-				}
-			}
+        /* All variants transparent - dots visible through */
+        &--default,
+        &--light,
+        &--primary,
+        &--gradient,
+        &--glass {
+            background: transparent;
+        }
 
-			.section__subtitle {
-				color: vars.$gray-light;
-			}
-		}
+        /* Dark - only variant with background */
+        &--dark {
+            background: vars.$gray-dark;
+            color: vars.$white;
 
-		&--light {
-			background-color: vars.$white-dark;
-		}
+            .section__title {
+                color: vars.$white;
 
-		&--primary {
-			background-color: func.color-alpha(vars.$primary-color, 0.1);
+                &::before,
+                &::after {
+                    background: linear-gradient(90deg, transparent, func.color-alpha(vars.$secondary-color, 0.3));
+                }
 
-			.section__title::after {
-				background-color: vars.$primary-color;
-			}
-		}
+                &::after {
+                    background: linear-gradient(90deg, func.color-alpha(vars.$secondary-color, 0.3), transparent);
+                }
+            }
 
-		// Animation support
-		&--animated {
-			[data-animation='fade'] & {
-				.animate-fade-in-up,
-				.animate-fade-in-down {
-					animation-duration: vars.$transition-base;
-				}
-			}
+            .section__subtitle {
+                color: func.color-alpha(vars.$white, 0.75);
+            }
+        }
 
-			[data-animation='slide'] & {
-				.section__content {
-					animation: slideInRight vars.$transition-base forwards;
-				}
-			}
+        // Animation modifiers
+        &--animated {
+            .section__header {
+                animation: fade-in-down 0.5s ease-out;
+            }
 
-			[data-animation='scale'] & {
-				.section__content {
-					animation: scaleIn vars.$transition-base forwards;
-				}
-			}
-		}
-	}
+            .section__content {
+                animation: fade-in-up 0.5s ease-out 0.1s both;
+            }
 
-	@keyframes morph {
-		0% {
-			border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-		}
-		50% {
-			border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-		}
-		100% {
-			border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-		}
-	}
+            .section__footer {
+                animation: fade-in-up 0.5s ease-out 0.2s both;
+            }
 
-	// Additional animations
-	@keyframes slideInRight {
-		from {
-			opacity: 0;
-			transform: translateX(-30px);
-		}
-		to {
-			opacity: 1;
-			transform: translateX(0);
-		}
-	}
+            &[data-animation='slide'] {
+                .section__content {
+                    animation: slide-in-right 0.5s ease-out both;
+                }
+            }
 
-	@keyframes scaleIn {
-		from {
-			opacity: 0;
-			transform: scale(0.95);
-		}
-		to {
-			opacity: 1;
-			transform: scale(1);
-		}
-	}
+            &[data-animation='scale'] {
+                .section__content {
+                    animation: scale-in 0.5s ease-out both;
+                }
+            }
+
+            &[data-animation='none'] {
+                .section__header,
+                .section__content,
+                .section__footer {
+                    animation: none;
+                }
+            }
+        }
+    }
+
+    /* Keyframes */
+    @keyframes fade-in-down {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slide-in-right {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scale-in {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
 </style>

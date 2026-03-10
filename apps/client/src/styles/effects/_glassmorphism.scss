@@ -1,0 +1,91 @@
+// Glassmorphism Effects
+@use '../abstracts/variables' as vars;
+@use '../abstracts/mixins' as mix;
+
+// Glass card utility class
+.glass-card {
+    @include mix.glass-card;
+
+    &--sm {
+        @include mix.glass-card(vars.$glass-blur-sm, vars.$spacing-xxxxs);
+    }
+
+    &--lg {
+        @include mix.glass-card(vars.$glass-blur-lg, vars.$spacing-lg);
+    }
+
+    &--dark {
+        @include mix.glass-dark;
+
+        padding: vars.$spacing-xxxxs;
+        border-radius: vars.$border-radius-lg;
+    }
+}
+
+// Glass panel utility class
+.glass-panel {
+    @include mix.glass-panel;
+}
+
+// Glass button
+.glass-button {
+    @include mix.glass(vars.$glass-blur-sm, vars.$glass-bg-medium);
+
+    padding: vars.$spacing-xxxxs vars.$spacing-xxxxs;
+    border-radius: vars.$border-radius-md;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+
+    &:hover {
+        background: vars.$glass-bg-heavy;
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+// Glass nav
+.glass-nav {
+    @include mix.glass(vars.$glass-blur-lg, vars.$glass-bg-heavy);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: vars.$z-index-sticky;
+}
+
+// Glass modal backdrop
+.glass-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(vars.$glass-blur-sm);
+    z-index: vars.$z-index-modal - 1;
+}
+
+// Glass tooltip
+.glass-tooltip {
+    @include mix.glass(vars.$glass-blur-sm, vars.$glass-bg-heavy);
+
+    padding: vars.$spacing-xxxs vars.$spacing-xxxxs;
+    border-radius: vars.$border-radius-sm;
+    box-shadow: vars.$glass-shadow;
+}
+
+// Frosted section background
+.frosted-section {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: vars.$glass-bg-light;
+        backdrop-filter: blur(vars.$glass-blur-xl);
+        z-index: -1;
+    }
+}

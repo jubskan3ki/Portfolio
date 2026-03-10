@@ -1,115 +1,97 @@
-// src/services/utils/helpers.ts
-import type {
-	ArrayToStringFunction,
-	CurrentYearFunction,
-	FormatDateFRFunction,
-	FormatNumberFunction,
-	GetFileExtensionFunction,
-	GroupStacksByCategoryFunction,
-	IsImageFileFunction,
-	RandomColorFunction,
-	SlugifyFunction,
-	TruncateTextFunction,
-} from '@/types/services/utils/helpers';
+const ENTITY_RE = /&(?:#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/;
+
+function decodeStr(s: string): string {
+    if (!ENTITY_RE.test(s)) return s;
+    return s
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#0?39;/g, "'")
+        .replace(/&#x27;/g, "'")
+        .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)))
+        .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
 
 /**
- * Formate une date en français
+ * Recursively decode HTML entities in all string values of an object/array.
+ * Useful to clean API responses that contain double-encoded entities.
  */
-export const formatDateFR: FormatDateFRFunction = (date: string | Date): string => {
-	if (!date) return '';
+export function decodeHtmlEntities<T>(obj: T): T {
+    if (obj == null) return obj;
+    if (typeof obj === 'string') return decodeStr(obj) as T;
+    if (Array.isArray(obj)) return obj.map((item) => decodeHtmlEntities(item)) as T;
+    if (typeof obj === 'object') {
+        const result = { ...obj } as Record<string, unknown>;
+        for (const key of Object.keys(result)) {
+            const val = result[key];
+            if (typeof val === 'string') {
+                result[key] = decodeStr(val);
+            } else if (typeof val === 'object' && val !== null) {
+                result[key] = decodeHtmlEntities(val);
+            }
+        }
+        return result as T;
+    }
+    return obj;
+}
 
-	const options: Intl.DateTimeFormatOptions = {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric',
-	};
-	return new Date(date).toLocaleDateString('fr-FR', options);
+export function resolveMediaUrl(path: string | null | undefined): string {
+    if (!path) {
+        return '';
+    }
+
+    // Already a full URL — normalize Docker-internal hostname to public base
+    if (path.startsWith('http')) {
+        const runtimeConfig = useRuntimeConfig();
+        const publicBase = (runtimeConfig.public?.apiBase as string) || 'http://localhost:8000';
+        const serverBase = (runtimeConfig.apiBaseServer as string) || '';
+        if (serverBase && serverBase !== publicBase && path.startsWith(serverBase)) {
+            return path.replace(serverBase, publicBase);
+        }
+        return path;
+    }
+
+    // Already starts with /media/ — good
+    if (path.startsWith('/media/')) {
+        return path;
+    }
+
+    // Relative path (e.g. "stacks/git/git.svg" or "deviprop") — prepend /media/
+    return `/media/${path}`;
+}
+
+export function truncateText(text: string, maxLength = 100): string {
+    if (!text || text.length <= maxLength) {
+        return text;
+    }
+    return `${text.slice(0, maxLength)}...`;
+}
+
+type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'outline';
+
+const PROJECT_STATUS_MAP: Record<string, BadgeVariant> = {
+    completed: 'success',
+    in_progress: 'warning',
+    planned: 'info',
+    archived: 'secondary',
 };
 
-/**
- * Tronque un texte à une longueur donnée et ajoute des points de suspension
- */
-export const truncateText: TruncateTextFunction = (text: string, maxLength = 100): string => {
-	if (!text || text.length <= maxLength) return text;
-	return text.slice(0, maxLength) + '...';
-};
+export function getProjectStatusVariant(status: string): BadgeVariant {
+    return PROJECT_STATUS_MAP[status] || 'secondary';
+}
 
-/**
- * Génère des URLs conviviales (slug) à partir d'un titre
- */
-export const slugify: SlugifyFunction = (text: string): string => {
-	if (!text) return '';
+export function formatViews(views: number): string {
+    if (views >= 1000) {
+        return `${(views / 1000).toFixed(1)}k`;
+    }
+    return views.toString();
+}
 
-	return text
-		.toString()
-		.normalize('NFD')
-		.replace(/[\u0300-\u036f]/g, '')
-		.toLowerCase()
-		.trim()
-		.replace(/\s+/g, '-')
-		.replace(/[^\w-]+/g, '')
-		.replace(/--+/g, '-');
-};
-
-/**
- * Formate un nombre avec séparateur de milliers
- */
-export const formatNumber: FormatNumberFunction = (num: number): string => {
-	return new Intl.NumberFormat('fr-FR').format(num);
-};
-
-/**
- * Classifie les stacks tech par catégorie
- */
-export const groupStacksByCategory: GroupStacksByCategoryFunction = <T extends { category: string }>(
-	stacks: T[]
-): Record<string, T[]> => {
-	return stacks.reduce(
-		(acc, stack) => {
-			const category = stack.category;
-			if (!acc[category]) {
-				acc[category] = [];
-			}
-			acc[category].push(stack);
-			return acc;
-		},
-		{} as Record<string, T[]>
-	);
-};
-
-/**
- * Récupère l'extension d'un fichier à partir de son nom
- */
-export const getFileExtension: GetFileExtensionFunction = (filename: string): string => {
-	return filename.split('.').pop() || '';
-};
-
-/**
- * Vérifie si un fichier est une image
- */
-export const isImageFile: IsImageFileFunction = (filename: string): boolean => {
-	const ext = getFileExtension(filename).toLowerCase();
-	return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
-};
-
-/**
- * Génère une couleur aléatoire en hexadécimal
- */
-export const randomColor: RandomColorFunction = (): string => {
-	return '#' + Math.floor(Math.random() * 16777215).toString(16);
-};
-
-/**
- * Récupère l'année actuelle (utile pour footer)
- */
-export const currentYear: CurrentYearFunction = (): number => {
-	return new Date().getFullYear();
-};
-
-/**
- * Transforme un tableau en chaîne avec virgules
- */
-export const arrayToString: ArrayToStringFunction = (arr: string[]): string => {
-	if (!arr || !Array.isArray(arr)) return '';
-	return arr.join(', ');
-};
+export function sliceTags(tags: string[] | undefined, maxTags: number): { displayed: string[]; remaining: number } {
+    const all = tags ?? [];
+    return {
+        displayed: all.slice(0, maxTags),
+        remaining: Math.max(0, all.length - maxTags),
+    };
+}

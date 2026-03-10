@@ -1,290 +1,306 @@
 <template>
-	<transition name="toast">
-		<div
-			v-if="isVisible"
-			:class="['toast', `toast--${type}`, { 'toast--with-action': $slots.action }, customClass]"
-			role="alert"
-		>
-			<div v-if="showIcon" class="toast__icon">
-				<BaseIcon :name="getIconName" :size="20" />
-			</div>
+    <Transition name="toast">
+        <div
+            v-if="isVisible"
+            :class="toastClasses"
+            role="alert"
+            @mouseenter="pauseTimer"
+            @mouseleave="resumeTimer"
+        >
+            <!-- Icon -->
+            <div v-if="showIcon" class="toast__icon">
+                <BaseIcon :name="iconName" :size="20" />
+            </div>
 
-			<div class="toast__content">
-				<div v-if="title" class="toast__title">{{ title }}</div>
-				<div class="toast__message">
-					<slot>{{ message }}</slot>
-				</div>
-			</div>
+            <!-- Content -->
+            <div class="toast__content">
+                <h6 v-if="title" class="toast__title">{{ title }}</h6>
+                <p class="toast__message">
+                    <slot>{{ message }}</slot>
+                </p>
+            </div>
 
-			<div v-if="$slots.action" class="toast__action">
-				<slot name="action"></slot>
-			</div>
+            <!-- Action slot -->
+            <div v-if="$slots.action" class="toast__action">
+                <slot name="action"></slot>
+            </div>
 
-			<button v-if="dismissible" class="toast__close" aria-label="Fermer la notification" @click="dismiss">
-				<BaseIcon name="close" :size="16" />
-			</button>
+            <!-- Close button -->
+            <button
+                v-if="dismissible"
+                type="button"
+                class="toast__close"
+                aria-label="Fermer"
+                @click="dismiss"
+            >
+                <BaseIcon name="x" :size="16" />
+            </button>
 
-			<div v-if="autoClose && progress" class="toast__progress">
-				<div class="toast__progress-bar" :style="{ width: `${progressValue}%` }"></div>
-			</div>
-		</div>
-	</transition>
+            <!-- Progress bar -->
+            <div v-if="autoClose && progress" class="toast__progress">
+                <div class="toast__progress-bar" :style="{ width: `${progressValue}%` }"></div>
+            </div>
+        </div>
+    </Transition>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
 
-	const props = defineProps({
-		type: {
-			type: String,
-			default: 'info',
-			validator: (value: string) => ['info', 'success', 'warning', 'error'].includes(value),
-		},
-		title: {
-			type: String,
-			default: '',
-		},
-		message: {
-			type: String,
-			default: '',
-		},
-		autoClose: {
-			type: Boolean,
-			default: true,
-		},
-		duration: {
-			type: Number,
-			default: 5000,
-		},
-		dismissible: {
-			type: Boolean,
-			default: true,
-		},
-		showIcon: {
-			type: Boolean,
-			default: true,
-		},
-		progress: {
-			type: Boolean,
-			default: true,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { useProgressTimer } from '@/composables/ui/useProgressTimer';
 
-	const emit = defineEmits(['close']);
+    import type { FeedbackType, ToastProps } from '@/types/components/feedback';
 
-	const isVisible = ref(true);
-	const progressValue = ref(100);
-	let timer: number | null = null;
-	let progressTimer: number | null = null;
+    type Props = ToastProps;
 
-	const getIconName = computed(() => {
-		switch (props.type) {
-			case 'success':
-				return 'success';
-			case 'warning':
-				return 'warning';
-			case 'error':
-				return 'error';
-			default:
-				return 'info';
-		}
-	});
+    const props = withDefaults(defineProps<Props>(), {
+        type: 'info',
+        title: '',
+        message: '',
+        autoClose: true,
+        duration: 5000,
+        dismissible: true,
+        showIcon: true,
+        progress: true,
+        customClass: '',
+    });
 
-	const dismiss = () => {
-		isVisible.value = false;
-		clearTimers();
-		emit('close');
-	};
+    const emit = defineEmits<{
+        close: [];
+    }>();
 
-	const startProgressTimer = () => {
-		if (!props.autoClose || !props.progress) return;
+    const isVisible = ref(true);
 
-		const stepTime = 10; // update every 10ms
-		const steps = props.duration / stepTime;
-		const decrement = 100 / steps;
+    const ICON_MAP: Record<FeedbackType, string> = {
+        info: 'info',
+        success: 'check-circle',
+        warning: 'alert-triangle',
+        error: 'x-circle',
+    };
 
-		progressValue.value = 100;
+    const iconName = computed(() => ICON_MAP[props.type || 'info']);
 
-		progressTimer = window.setInterval(() => {
-			progressValue.value = Math.max(0, progressValue.value - decrement);
+    const toastClasses = computed(() => [
+        'toast',
+        `toast--${props.type}`,
+        {
+            'toast--with-action': true,
+        },
+        props.customClass,
+    ]);
 
-			if (progressValue.value <= 0) {
-				clearInterval(progressTimer!);
-			}
-		}, stepTime);
-	};
+    const dismiss = () => {
+        isVisible.value = false;
+        timer.stop();
+        emit('close');
+    };
 
-	const clearTimers = () => {
-		if (timer) {
-			clearTimeout(timer);
-			timer = null;
-		}
+    // Use composable for timer management
+    const timer = useProgressTimer({
+        duration: props.duration,
+        autoStart: props.autoClose,
+        onComplete: dismiss,
+    });
 
-		if (progressTimer) {
-			clearInterval(progressTimer);
-			progressTimer = null;
-		}
-	};
+    const progressValue = computed(() => timer.progress.value);
 
-	watch(
-		() => props.duration,
-		() => {
-			clearTimers();
-			if (props.autoClose) {
-				timer = window.setTimeout(dismiss, props.duration);
-				startProgressTimer();
-			}
-		}
-	);
+    const pauseTimer = () => {
+        if (!props.autoClose) {
+            return;
+        }
+        timer.pause();
+    };
 
-	onMounted(() => {
-		if (props.autoClose) {
-			timer = window.setTimeout(dismiss, props.duration);
-			startProgressTimer();
-		}
-	});
+    const resumeTimer = () => {
+        if (!props.autoClose) {
+            return;
+        }
+        timer.resume();
+    };
 
-	onBeforeUnmount(() => {
-		clearTimers();
-	});
+    watch(
+        () => props.duration,
+        () => {
+            timer.reset();
+            if (props.autoClose) {
+                timer.start();
+            }
+        },
+    );
+
+    defineExpose({
+        dismiss,
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/functions' as func;
 
-	.toast {
-		position: relative;
-		display: flex;
-		align-items: flex-start;
-		width: 100%;
-		max-width: 400px;
-		padding: vars.$spacing-md;
-		border-radius: vars.$border-radius-md;
-		background-color: vars.$white;
-		box-shadow: vars.$box-shadow-medium;
-		overflow: hidden;
+    .toast {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: vars.$spacing-xs;
+        width: 100%;
+        max-width: 400px;
+        padding: vars.$spacing-md;
+        border-radius: vars.$border-radius-lg;
+        background-color: vars.$white;
+        box-shadow: vars.$box-shadow-medium;
+        overflow: hidden;
 
-		&__icon {
-			flex-shrink: 0;
-			margin-right: vars.$spacing-sm;
-			margin-top: 2px;
-		}
+        // Icon
+        &__icon {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: vars.$border-radius-md;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-		&__content {
-			flex: 1;
-		}
+        // Content
+        &__content {
+            flex: 1;
+            min-width: 0;
+            padding-top: 2px;
+        }
 
-		&__title {
-			font-weight: 600;
-			margin-bottom: vars.$spacing-xxs;
-		}
+        &__title {
+            margin: 0 0 vars.$spacing-xxs;
+            font-weight: vars.$font-weight-semibold;
+            line-height: vars.$line-height-tight;
+        }
 
-		&__message {
-			color: vars.$gray-dark;
-		}
+        &__message {
+            margin: 0;
+            color: vars.$text-secondary;
+            line-height: vars.$line-height-relaxed;
+        }
 
-		&__action {
-			margin-left: vars.$spacing-sm;
-			align-self: center;
-		}
+        // Action
+        &__action {
+            flex-shrink: 0;
+            align-self: center;
+        }
 
-		&__close {
-			flex-shrink: 0;
-			background: none;
-			border: none;
-			padding: vars.$spacing-xxs;
-			margin: -vars.$spacing-xxs;
-			cursor: pointer;
-			color: vars.$gray;
-			transition: color vars.$transition-fast;
+        // Close
+        &__close {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            border-radius: vars.$border-radius-md;
+            color: vars.$gray;
+            cursor: pointer;
+            transition: all vars.$transition-fast;
 
-			&:hover {
-				color: vars.$black-light;
-			}
-		}
+            &:hover {
+                background-color: func.color-alpha(vars.$black, 0.05);
+                color: vars.$text-primary;
+            }
+        }
 
-		&__progress {
-			position: absolute;
-			left: 0;
-			bottom: 0;
-			width: 100%;
-			height: 3px;
-			background-color: rgba(0, 0, 0, 0.1);
-		}
+        // Progress
+        &__progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: func.color-alpha(vars.$black, 0.05);
+        }
 
-		&__progress-bar {
-			height: 100%;
-			transition: width linear 10ms;
-		}
+        &__progress-bar {
+            height: 100%;
+            transition: width 10ms linear;
+        }
 
-		// Types de toast
-		&--info {
-			border-left: 4px solid vars.$info-color;
+        // Variants
+        &--info {
+            .toast__icon {
+                background-color: func.color-alpha(vars.$info-color, 0.1);
+                color: vars.$info-color;
+            }
 
-			.toast__icon {
-				color: vars.$info-color;
-			}
+            .toast__title {
+                color: vars.$info-dark;
+            }
 
-			.toast__progress-bar {
-				background-color: vars.$info-color;
-			}
-		}
+            .toast__progress-bar {
+                background-color: vars.$info-color;
+            }
+        }
 
-		&--success {
-			border-left: 4px solid vars.$success-color;
+        &--success {
+            .toast__icon {
+                background-color: func.color-alpha(vars.$success-color, 0.1);
+                color: vars.$success-color;
+            }
 
-			.toast__icon {
-				color: vars.$success-color;
-			}
+            .toast__title {
+                color: vars.$success-dark;
+            }
 
-			.toast__progress-bar {
-				background-color: vars.$success-color;
-			}
-		}
+            .toast__progress-bar {
+                background-color: vars.$success-color;
+            }
+        }
 
-		&--warning {
-			border-left: 4px solid vars.$warning-color;
+        &--warning {
+            .toast__icon {
+                background-color: func.color-alpha(vars.$warning-color, 0.15);
+                color: vars.$warning-dark;
+            }
 
-			.toast__icon {
-				color: vars.$warning-color;
-			}
+            .toast__title {
+                color: vars.$warning-dark;
+            }
 
-			.toast__progress-bar {
-				background-color: vars.$warning-color;
-			}
-		}
+            .toast__progress-bar {
+                background-color: vars.$warning-color;
+            }
+        }
 
-		&--error {
-			border-left: 4px solid vars.$danger-color;
+        &--error {
+            .toast__icon {
+                background-color: func.color-alpha(vars.$danger-color, 0.1);
+                color: vars.$danger-color;
+            }
 
-			.toast__icon {
-				color: vars.$danger-color;
-			}
+            .toast__title {
+                color: vars.$danger-dark;
+            }
 
-			.toast__progress-bar {
-				background-color: vars.$danger-color;
-			}
-		}
+            .toast__progress-bar {
+                background-color: vars.$danger-color;
+            }
+        }
+    }
 
-		// Animation
-		&-enter-active,
-		&-leave-active {
-			transition:
-				transform vars.$transition-base,
-				opacity vars.$transition-base;
-		}
+    // Transitions
+    .toast-enter-active {
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
 
-		&-enter-from,
-		&-leave-to {
-			transform: translateY(-20px);
-			opacity: 0;
-		}
-	}
+    .toast-leave-active {
+        transition: all 0.3s ease-out;
+    }
+
+    .toast-enter-from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+
+    .toast-leave-to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
 </style>

@@ -1,167 +1,283 @@
 <template>
-	<div
-		:class="[
-			'avatar',
-			`avatar--${size}`,
-			{ 'avatar--square': square },
-			{ 'avatar--border': border },
-			{ 'avatar--status': status },
-			{ [`avatar--status-${status}`]: status },
-			customClass,
-		]"
-	>
-		<img v-if="src" class="avatar__image" :src="src" :alt="alt" @error="handleImageError" />
+    <div :class="avatarClasses" :style="avatarStyle">
+        <BaseImage
+            v-if="src && !hasError"
+            :src="resolvedSrc"
+            :alt="alt || name"
+            :width="avatarSize"
+            :height="avatarSize"
+            object-fit="cover"
+            :show-placeholder="false"
+            class="avatar__image"
+            @error="handleError"
+        />
 
-		<div v-if="status" class="avatar__status"></div>
+        <span v-else-if="initials" class="avatar__initials" aria-hidden="true">
+            {{ initials }}
+        </span>
 
-		<div v-if="$slots.badge" class="avatar__badge">
-			<slot name="badge"></slot>
-		</div>
-	</div>
+        <BaseIcon
+            v-else
+            name="user"
+            :size="iconSize"
+            class="avatar__icon"
+            aria-hidden="true"
+        />
+
+        <span
+            v-if="status"
+            class="avatar__status"
+            :class="[`avatar__status--${status}`]"
+            :aria-label="statusLabel"
+            role="status"
+        ></span>
+
+        <div v-if="$slots.badge" class="avatar__badge">
+            <slot name="badge"></slot>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import { ref } from 'vue';
+    import { computed, ref } from 'vue';
 
-	defineProps({
-		src: {
-			type: String,
-			default: '',
-		},
-		alt: {
-			type: String,
-			default: 'Avatar',
-		},
-		size: {
-			type: String,
-			default: 'medium',
-			validator: (value: string) => ['small', 'medium', 'large', 'xlarge'].includes(value),
-		},
-		square: {
-			type: Boolean,
-			default: false,
-		},
-		border: {
-			type: Boolean,
-			default: false,
-		},
-		status: {
-			type: String,
-			default: '',
-			validator: (value: string) => ['', 'online', 'offline', 'busy', 'away'].includes(value),
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { resolveMediaUrl } from '@/services/utils/helpers';
 
-	const imgError = ref(false);
+    import type { AvatarProps, AvatarSize, AvatarStatus } from '@/types/components/base';
 
-	const handleImageError = () => {
-		imgError.value = true;
-	};
+    type Props = AvatarProps;
+
+    const props = withDefaults(defineProps<Props>(), {
+        src: '',
+        alt: '',
+        name: '',
+        size: 'md',
+        shape: 'circle',
+        status: undefined,
+        color: '',
+        border: false,
+        customClass: '',
+    });
+
+    const hasError = ref(false);
+    const resolvedSrc = computed(() => resolveMediaUrl(props.src));
+
+    const STATUS_LABELS: Record<AvatarStatus, string> = {
+        online: 'En ligne',
+        offline: 'Hors ligne',
+        busy: 'Occupé',
+        away: 'Absent',
+    };
+
+    const SIZE_MAP: Record<AvatarSize, number> = {
+        xs: 24,
+        sm: 32,
+        md: 40,
+        lg: 48,
+        xl: 64,
+        '': 96,
+    };
+
+    const ICON_SIZE_MAP: Record<AvatarSize, number> = {
+        xs: 12,
+        sm: 16,
+        md: 20,
+        lg: 24,
+        xl: 32,
+        '': 48,
+    };
+
+    const COLORS = [
+        '#6366f1',
+        '#8b5cf6',
+        '#ec4899',
+        '#f43f5e',
+        '#f97316',
+        '#eab308',
+        '#22c55e',
+        '#14b8a6',
+        '#06b6d4',
+        '#3b82f6',
+    ];
+
+    const avatarSize = computed(() => SIZE_MAP[props.size]);
+    const iconSize = computed(() => ICON_SIZE_MAP[props.size]);
+
+    const initials = computed(() => {
+        if (!props.name) {
+            return '';
+        }
+        const words = props.name
+            .trim()
+            .split(/\s+/)
+            .filter((w) => w.length > 0);
+        if (words.length === 0) {
+            return '';
+        }
+        const firstWord = words[0];
+        if (words.length === 1) {
+            return firstWord ? firstWord.substring(0, 2).toUpperCase() : '';
+        }
+        const firstChar = firstWord?.[0] ?? '';
+        const lastChar = words[words.length - 1]?.[0] ?? '';
+        return (firstChar + lastChar).toUpperCase();
+    });
+
+    const backgroundColor = computed(() => {
+        if (props.color) {
+            return props.color;
+        }
+        if (!props.name) {
+            return undefined;
+        }
+
+        let hash = 0;
+        for (let i = 0; i < props.name.length; i++) {
+            hash = props.name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        return COLORS[Math.abs(hash) % COLORS.length];
+    });
+
+    const statusLabel = computed(() => (props.status ? STATUS_LABELS[props.status] : undefined));
+
+    const avatarClasses = computed(() => [
+        'avatar',
+        `avatar--${props.size}`,
+        `avatar--${props.shape}`,
+        {
+            'avatar--has-status': props.status,
+            'avatar--border': props.border,
+        },
+        props.customClass,
+    ]);
+
+    const avatarStyle = computed(() => ({
+        width: `${avatarSize.value}px`,
+        height: `${avatarSize.value}px`,
+        '--avatar-bg': !props.src || hasError.value ? backgroundColor.value : undefined,
+    }));
+
+    const handleError = () => {
+        hasError.value = true;
+    };
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/functions' as func;
 
-	.avatar {
-		position: relative;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: 50%;
-		color: vars.$white;
-		overflow: hidden;
-		font-weight: 600;
-		background-color: vars.$primary-color;
+    .avatar {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background-color: var(--avatar-bg, vars.$gray-light);
+        color: vars.$white;
+        font-weight: vars.$font-weight-medium;
+        overflow: hidden;
+        user-select: none;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
 
-		// Tailles standard
-		&--small {
-			width: 32px;
-			height: 32px;
-		}
+        &:hover {
+            transform: scale(1.02);
+        }
 
-		&--medium {
-			width: 40px;
-			height: 40px;
-		}
+        /* Shapes */
+        &--circle {
+            border-radius: vars.$border-radius-full;
+        }
 
-		&--large {
-			width: 48px;
-			height: 48px;
-		}
+        &--square {
+            border-radius: vars.$border-radius-md;
+        }
 
-		&--xlarge {
-			width: 64px;
-			height: 64px;
-		}
+        /* Sizes handled by avatar dimensions */
 
-		// Variante carrée
-		&--square {
-			border-radius: vars.$border-radius-md;
-		}
+        /* Border */
+        &--border {
+            border: 2px solid vars.$white;
+            box-shadow: 0 0 0 1px func.color-alpha(vars.$black, 0.08);
+        }
 
-		// Bordure
-		&--border {
-			border: 2px solid vars.$white;
-			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
-		}
+        /* Image */
+        &__image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
 
-		// Image
-		&__image {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
+        &:hover &__image {
+            transform: scale(1.05);
+        }
 
-		// Texte (initiales)
-		&__text,
-		&__icon {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
+        /* Initials */
+        &__initials {
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
 
-		// Status
-		&__status {
-			position: absolute;
-			bottom: 0;
-			right: 0;
-			width: 25%;
-			height: 25%;
-			border-radius: 50%;
-			border: 2px solid vars.$white;
-			background-color: vars.$gray-light;
-		}
+        /* Icon */
+        &__icon {
+            color: vars.$white;
+            opacity: 0.8;
+        }
 
-		&--status-online &__status {
-			background-color: vars.$success-color;
-		}
+        /* Badge */
+        &__badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translate(30%, -30%);
+        }
 
-		&--status-offline &__status {
-			background-color: vars.$gray;
-		}
+        /* Status */
+        &__status {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 25%;
+            height: 25%;
+            min-width: 8px;
+            min-height: 8px;
+            max-width: 14px;
+            max-height: 14px;
+            border-radius: vars.$border-radius-full;
+            border: 2px solid vars.$white;
+            transition: transform 0.2s ease;
 
-		&--status-busy &__status {
-			background-color: vars.$danger-color;
-		}
+            &--online {
+                background-color: vars.$success-color;
+                animation: pulse-online 2s ease-in-out infinite;
+            }
 
-		&--status-away &__status {
-			background-color: vars.$warning-color;
-		}
+            &--offline {
+                background-color: vars.$gray;
+            }
 
-		// Badge
-		&__badge {
-			position: absolute;
-			top: 0;
-			right: 0;
-			transform: translate(30%, -30%);
-		}
-	}
+            &--busy {
+                background-color: vars.$danger-color;
+            }
+
+            &--away {
+                background-color: vars.$warning-color;
+            }
+        }
+    }
+
+    @keyframes pulse-online {
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 func.color-alpha(vars.$success-color, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 4px func.color-alpha(vars.$success-color, 0);
+        }
+    }
 </style>

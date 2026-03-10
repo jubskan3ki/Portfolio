@@ -1,231 +1,290 @@
-<!-- src/components/navigation/MobileMenuItem.vue -->
 <template>
-	<li class="mobile-menu-item">
-		<div class="mobile-menu-item__wrapper">
-			<NuxtLink
-				:to="item.path"
-				class="mobile-menu-item__link"
-				:class="{ 'mobile-menu-item__link--active': isActive }"
-				@click="closeMenu"
-			>
-				<span v-if="item.icon" class="mobile-menu-item__icon">
-					<BaseIcon :name="item.icon" :size="20" />
-				</span>
-				<span class="mobile-menu-item__text">{{ item.label }}</span>
-			</NuxtLink>
+    <li class="mobile-menu-item" role="none">
+        <div class="mobile-menu-item__wrapper">
+            <NuxtLink
+                :to="item.path"
+                :class="linkClasses"
+                :aria-current="isActive ? 'page' : undefined"
+                role="menuitem"
+                @click="closeMenu"
+            >
+                <span class="mobile-menu-item__indicator" aria-hidden="true"></span>
+                <span v-if="item.icon" class="mobile-menu-item__icon" aria-hidden="true">
+                    <BaseIcon :name="item.icon" :size="20" />
+                </span>
+                <span class="mobile-menu-item__text">{{ item.label }}</span>
+            </NuxtLink>
 
-			<!-- Toggle pour le sous-menu (si des enfants existent) -->
-			<button
-				v-if="hasChildren"
-				class="mobile-menu-item__toggle"
-				:class="{ 'mobile-menu-item__toggle--expanded': isExpanded }"
-				:aria-expanded="isExpanded"
-				:aria-controls="`submenu-${index}`"
-				@click="toggleSubmenu"
-			>
-				<BaseIcon
-					name="chevron-down"
-					:size="16"
-					:class="{ 'mobile-menu-item__toggle-icon--expanded': isExpanded }"
-				/>
-			</button>
-		</div>
+            <button
+                v-if="hasChildren"
+                :class="toggleClasses"
+                :aria-expanded="isExpanded"
+                :aria-controls="`submenu-${index}`"
+                :aria-label="isExpanded ? 'Réduire le sous-menu' : 'Développer le sous-menu'"
+                @click="toggleSubmenu"
+            >
+                <BaseIcon name="chevron-down" :size="16" />
+            </button>
+        </div>
 
-		<!-- Sous-menu -->
-		<transition name="submenu">
-			<ul v-if="hasChildren && isExpanded" :id="`submenu-${index}`" class="mobile-menu-item__submenu">
-				<li v-for="(subItem, subIndex) in item.children" :key="subIndex" class="mobile-menu-item__submenu-item">
-					<NuxtLink
-						:to="subItem.path"
-						class="mobile-menu-item__submenu-link"
-						:class="{
-							'mobile-menu-item__submenu-link--active': isSubItemActive(subItem.path),
-						}"
-						@click="closeMenu"
-					>
-						<span v-if="subItem.icon" class="mobile-menu-item__submenu-icon">
-							<BaseIcon :name="subItem.icon" :size="16" />
-						</span>
-						{{ subItem.label }}
-					</NuxtLink>
-				</li>
-			</ul>
-		</transition>
-	</li>
+        <Transition name="submenu">
+            <ul v-if="hasChildren && isExpanded" :id="`submenu-${index}`" class="mobile-menu-item__submenu" role="menu">
+                <li
+                    v-for="subItem in item.children"
+                    :key="subItem.path"
+                    class="mobile-menu-item__submenu-item"
+                    role="none"
+                >
+                    <NuxtLink
+                        :to="subItem.path"
+                        :class="getSubmenuLinkClasses(subItem.path)"
+                        :aria-current="isSubItemActive(subItem.path) ? 'page' : undefined"
+                        role="menuitem"
+                        @click="closeMenu"
+                    >
+                        <span v-if="subItem.icon" class="mobile-menu-item__submenu-icon" aria-hidden="true">
+                            <BaseIcon :name="subItem.icon" :size="16" />
+                        </span>
+                        <span>{{ subItem.label }}</span>
+                    </NuxtLink>
+                </li>
+            </ul>
+        </Transition>
+    </li>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import { isActiveRoute } from '@/config/navBar';
-	import { useNavStore } from '@/store/navBar';
-	import { NavItem } from '@/types/config/navBar';
-	import { computed } from 'vue';
-	import { useRoute } from 'vue-router';
+    import { computed } from 'vue';
+    import { useRoute } from 'vue-router';
 
-	const props = defineProps({
-		item: {
-			type: Object as () => NavItem,
-			required: true,
-		},
-		index: {
-			type: Number,
-			required: true,
-		},
-	});
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { isActiveRoute } from '@/config/navBar';
+    import { useUiStore } from '@/stores/ui';
 
-	const route = useRoute();
-	const navStore = useNavStore();
+    import type { NavItem } from '@/types/config/navBar';
 
-	// Computed properties
-	const hasChildren = computed(() => props.item.children && props.item.children.length > 0);
-	const isActive = computed(() => isActiveRoute(props.item.path, route.path));
-	const isExpanded = computed(() => navStore.expandedSubmenuIndex === props.index);
+    interface Props {
+        item: NavItem;
+        index: number;
+    }
 
-	// Méthodes
-	const closeMenu = () => {
-		navStore.closeMobileMenu();
-	};
+    const props = defineProps<Props>();
 
-	const toggleSubmenu = () => {
-		navStore.toggleSubmenu(props.index);
-	};
+    const route = useRoute();
+    const navStore = useUiStore();
 
-	const isSubItemActive = (path: string) => {
-		return isActiveRoute(path, route.path);
-	};
+    const hasChildren = computed(() => props.item.children && props.item.children.length > 0);
+    const isActive = computed(() => isActiveRoute(props.item.path, route.path));
+    const isExpanded = computed(() => navStore.expandedSubmenuIndex === props.index);
+
+    const linkClasses = computed(() => [
+        'mobile-menu-item__link',
+        {
+            'mobile-menu-item__link--active': isActive.value,
+            'mobile-menu-item__link--has-children': hasChildren.value,
+        },
+    ]);
+
+    const toggleClasses = computed(() => [
+        'mobile-menu-item__toggle',
+        { 'mobile-menu-item__toggle--expanded': isExpanded.value },
+    ]);
+
+    const getSubmenuLinkClasses = (path: string) => [
+        'mobile-menu-item__submenu-link',
+        { 'mobile-menu-item__submenu-link--active': isSubItemActive(path) },
+    ];
+
+    const closeMenu = () => {
+        navStore.closeMobileMenu();
+    };
+
+    const toggleSubmenu = () => {
+        navStore.toggleSubmenu(props.index);
+    };
+
+    const isSubItemActive = (path: string) => {
+        return isActiveRoute(path, route.path);
+    };
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.mobile-menu-item {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		width: 100%;
+    .mobile-menu-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
 
-		&__wrapper {
-			display: flex;
-			align-items: center;
-		}
+        &__wrapper {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+        }
 
-		&__link {
-			flex: 1;
-			display: flex;
-			align-items: center;
-			padding: vars.$spacing-sm;
-			border-radius: vars.$border-radius-md;
-			color: vars.$black-light;
-			font-weight: 500;
-			transition: all vars.$transition-base;
+        &__link {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            padding: vars.$spacing-xs vars.$spacing-md;
+            border-radius: vars.$border-radius-lg;
+            color: vars.$text-primary;
+            font-weight: 500;
+            text-decoration: none;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-			&:hover {
-				background-color: vars.$white-dark;
-			}
+            &:hover {
+                background: func.color-alpha(vars.$gray-light, 0.5);
+                transform: translateX(4px);
 
-			&--active {
-				color: vars.$primary-color;
-				background-color: func.color-alpha(vars.$primary-color, 0.1);
+                .mobile-menu-item__icon {
+                    transform: scale(1.1);
+                }
+            }
 
-				&:hover {
-					background-color: func.color-alpha(vars.$primary-color, 0.15);
-				}
-			}
-		}
+            &:focus-visible {
+                outline: 2px solid vars.$primary-color;
+                outline-offset: 2px;
+            }
 
-		&__icon {
-			margin-right: vars.$spacing-sm;
-			display: flex;
-			align-items: center;
-		}
+            &--active {
+                color: vars.$primary-color;
+                background: func.color-alpha(vars.$primary-color, 0.1);
 
-		&__toggle {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			min-width: 36px;
-			height: 36px;
-			margin: vars.$spacing-xs;
-			border-radius: 50%;
-			transition: all vars.$transition-base;
+                .mobile-menu-item__indicator {
+                    transform: scaleY(1);
+                }
 
-			&:hover {
-				background-color: vars.$white-dark;
-			}
+                &:hover {
+                    background: func.color-alpha(vars.$primary-color, 0.15);
+                }
+            }
+        }
 
-			&--expanded {
-				background-color: vars.$white-dark;
-			}
-		}
+        &__indicator {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px;
+            height: 60%;
+            background: vars.$primary-color;
+            border-radius: 0 vars.$border-radius-full vars.$border-radius-full 0;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
 
-		&__toggle-icon {
-			transition: transform 0.3s ease;
+        &__icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: inherit;
+            transition: transform 0.3s ease;
+        }
 
-			&--expanded {
-				transform: rotate(180deg);
-			}
-		}
+        &__text {
+            flex: 1;
+        }
 
-		&__submenu {
-			width: 100%;
-			padding-left: vars.$spacing-lg;
-			margin-top: vars.$spacing-xs;
-			margin-bottom: vars.$spacing-xs;
-		}
+        &__toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: vars.$border-radius-full;
+            color: vars.$text-secondary;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-		&__submenu-item {
-			margin-bottom: vars.$spacing-xs;
+            &:hover {
+                background: func.color-alpha(vars.$gray-light, 0.5);
+                color: vars.$primary-color;
+            }
 
-			&:last-child {
-				margin-bottom: 0;
-			}
-		}
+            &:focus-visible {
+                outline: 2px solid vars.$primary-color;
+                outline-offset: 2px;
+            }
 
-		&__submenu-link {
-			display: flex;
-			align-items: center;
-			padding: vars.$spacing-xs vars.$spacing-sm;
-			border-radius: vars.$border-radius-md;
-			color: vars.$gray-dark;
-			transition: all vars.$transition-base;
+            &--expanded {
+                background: func.color-alpha(vars.$primary-color, 0.1);
+                color: vars.$primary-color;
+                transform: rotate(180deg);
+            }
+        }
 
-			&:hover {
-				background-color: vars.$white-dark;
-				color: vars.$black-light;
-			}
+        &__submenu {
+            list-style: none;
+            margin: vars.$spacing-xxs 0;
+            padding: 0 0 0 vars.$spacing-xl;
+            border-left: 2px solid func.color-alpha(vars.$gray-light, 0.5);
+            margin-left: vars.$spacing-lg;
+        }
 
-			&--active {
-				color: vars.$primary-color;
-				font-weight: 500;
-			}
-		}
+        &__submenu-item {
+            &:not(:last-child) {
+                margin-bottom: vars.$spacing-xxxs;
+            }
+        }
 
-		&__submenu-icon {
-			margin-right: vars.$spacing-sm;
-			display: flex;
-			align-items: center;
-			opacity: 0.7;
-		}
-	}
+        &__submenu-link {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            padding: vars.$spacing-xxs vars.$spacing-xs;
+            border-radius: vars.$border-radius-md;
+            color: vars.$text-secondary;
+            text-decoration: none;
+            transition: all 0.2s ease;
 
-	// Animation pour le sous-menu
-	.submenu-enter-active,
-	.submenu-leave-active {
-		transition: all 0.3s ease;
-		overflow: hidden;
-	}
+            &:hover {
+                background: func.color-alpha(vars.$gray-light, 0.4);
+                color: vars.$text-primary;
+                transform: translateX(2px);
+            }
 
-	.submenu-enter-from,
-	.submenu-leave-to {
-		opacity: 0;
-		max-height: 0;
-	}
+            &:focus-visible {
+                outline: 2px solid vars.$primary-color;
+                outline-offset: 2px;
+            }
 
-	.submenu-enter-to,
-	.submenu-leave-from {
-		opacity: 1;
-		max-height: 500px;
-	}
+            &--active {
+                color: vars.$primary-color;
+                font-weight: 500;
+                background: func.color-alpha(vars.$primary-color, 0.08);
+            }
+        }
+
+        &__submenu-icon {
+            display: flex;
+            align-items: center;
+            opacity: 0.7;
+        }
+    }
+
+    // Submenu transition
+    .submenu-enter-active,
+    .submenu-leave-active {
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        overflow: hidden;
+    }
+
+    .submenu-enter-from,
+    .submenu-leave-to {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+
+    .submenu-enter-to,
+    .submenu-leave-from {
+        opacity: 1;
+        max-height: 500px;
+        transform: translateY(0);
+    }
 </style>

@@ -1,373 +1,738 @@
 <template>
-	<div class="home-page">
-		<!-- Hero Section -->
-		<HeroSection :featured-stacks="featuredStacks" />
+    <div ref="pageRef" class="home-page" :class="{ 'home-page--ready': pageReady }">
+        <!-- Background decorations (dots handled by layout) -->
+        <div class="home-page__orb home-page__orb--primary"></div>
+        <div class="home-page__orb home-page__orb--secondary"></div>
 
-		<!-- Stats Section -->
-		<section class="stats-section">
-			<div class="container">
-				<div class="expertise-grid">
-					<ExpertiseCard
-						title="Front-end"
-						description="Création d'interfaces utilisateur modernes, réactives et accessibles avec React, Vue, Svelte et CSS/SASS."
-						icon="layout"
-						color="#673c5c"
-					/>
-					<ExpertiseCard
-						title="Back-end"
-						description="Développement d'APIs robustes et évolutives avec Go, Node.js et Django, associées aux bases de données SQL/NoSQL."
-						icon="server"
-						color="#43889d"
-					/>
-					<ExpertiseCard
-						title="Mobile"
-						description="Conception d'applications mobiles natives et cross-platform performantes avec React Native et Flutter."
-						icon="smartphone"
-						color="#ac72a0"
-					/>
-					<ExpertiseCard
-						title="DevOps"
-						description="Mise en place d'infrastructures cloud scalables et sécurisées avec Docker, Kubernetes, Terraform et Ansible."
-						icon="cloud"
-						color="#ff2453"
-					/>
-				</div>
-			</div>
-		</section>
+        <!-- Floating blob shapes (always visible, parallax disabled if reduced motion) -->
+        <div class="home-page__shapes">
+            <span
+                v-for="shape in shapes"
+                :key="shape.id"
+                :ref="(el) => setShapeRef(el as HTMLElement, shape.id)"
+                class="home-page__shape"
+                :class="`home-page__shape--${shape.type}`"
+                :style="{
+                    left: shape.x + '%',
+                    top: shape.y + '%',
+                    width: shape.size + 'px',
+                    height: shape.size + 'px',
+                    opacity: shape.opacity,
+                }"
+            ></span>
+        </div>
 
-		<!-- Experience Section -->
-		<Section
-			id="Experiences"
-			title="Expériences récentes"
-			subtitle="Parcours professionnel et réalisations marquantes"
-			animation-type="scale"
-			animated
-		>
-			<div class="container">
-				<div class="project-timeline">
-					<ExperienceTimeline :experiences="professionalExperiences" :limit="3" :compact="true" />
+        <!-- Hero Section -->
+        <HeroSection :featured-stacks="featuredStacks" :bio="heroBio" />
 
-					<div class="section-actions">
-						<BaseButton :to="ROUTES.EXPERIENCE" variant="outline">
-							<BaseIcon name="grid" size="sm" class="mr-xs" />
-							Voir mon parcours complet
-						</BaseButton>
-					</div>
-				</div>
-			</div>
-		</Section>
+        <!-- Stats/Expertise Section -->
+        <section class="expertise-section">
+            <div class="container">
+                <div class="expertise-grid">
+                    <ExpertiseCard
+                        title="Front-end"
+                        description="Interfaces modernes et accessibles avec React, Vue, Svelte et CSS/SASS."
+                        icon="layout"
+                        color="#673c5c"
+                        variant="light"
+                    />
+                    <ExpertiseCard
+                        title="DevOps"
+                        description="Infrastructures cloud scalables avec Docker, Kubernetes et Terraform."
+                        icon="cloud"
+                        color="#ff2453"
+                        variant="primary"
+                    />
+                    <ExpertiseCard
+                        title="Back-end"
+                        description="APIs robustes avec Go, Node.js et Django, bases de données SQL/NoSQL."
+                        icon="server"
+                        color="#43889d"
+                        variant="dark"
+                    />
+                    <ExpertiseCard
+                        title="Mobile"
+                        description="Applications natives et cross-platform avec React Native et Flutter."
+                        icon="smartphone"
+                        color="#ac72a0"
+                        variant="secondary"
+                    />
+                </div>
+            </div>
+        </section>
 
-		<!-- Projets Section -->
-		<Section
-			id="projects"
-			title="Projets récents"
-			subtitle="Solutions digitales innovantes et impactantes"
-			animation-type="fade"
-			animated
-			light
-		>
-			<div class="container">
-				<ProjectCarousel :projects="featuredProjects" :limit="5" :autoplay="true" />
+        <!-- Experience Section -->
+        <Section
+            id="Experiences"
+            title="Expériences récentes"
+            subtitle="Parcours professionnel et réalisations marquantes"
+            animation-type="scale"
+            :animated="!shouldDisableParallax"
+            variant="glass"
+        >
+            <div class="container">
+                <div class="project-timeline">
+                    <LazyExperienceTimeline :experiences="professionalExperiences" :limit="3" compact />
 
-				<div class="section-actions">
-					<BaseButton :to="ROUTES.PROJECTS" variant="primary">
-						<BaseIcon name="grid" size="sm" class="mr-xs" />
-						Explorer tous mes projets
-					</BaseButton>
-				</div>
-			</div>
-		</Section>
+                    <div class="section-actions">
+                        <BaseButton :to="ROUTES.EXPERIENCE" variant="outline">
+                            <BaseIcon name="grid" size="sm" class="mr-xs" />
+                            Voir mon parcours complet
+                        </BaseButton>
+                    </div>
+                </div>
+            </div>
+        </Section>
 
-		<!-- Technologies Section -->
-		<Section
-			id="technologies"
-			title="Technologies"
-			subtitle="Mon expertise technique polyvalente"
-			animation-type="slide"
-			animated
-		>
-			<div class="container">
-				<StackCarousel :stacks="stacks" :limit="10" :autoplay="true" :slides-per-view="6" :show-level="true" />
+        <!-- Projets Section -->
+        <Section
+            id="projects"
+            title="Projets récents"
+            subtitle="Solutions digitales innovantes et impactantes"
+            animation-type="fade"
+            :animated="!shouldDisableParallax"
+            variant="light"
+        >
+            <div class="container">
+                <LazyProjectCarousel :projects="featuredProjects" :limit="5" autoplay />
 
-				<div class="section-actions">
-					<BaseButton :to="ROUTES.STACKS" variant="outline">
-						<BaseIcon name="layers" size="sm" class="mr-xs" />
-						Découvrir toutes mes technologies
-					</BaseButton>
-				</div>
-			</div>
-		</Section>
+                <div class="section-actions">
+                    <BaseButton :to="ROUTES.PROJECTS" variant="primary">
+                        <BaseIcon name="grid" size="sm" class="mr-xs" />
+                        Explorer tous mes projets
+                    </BaseButton>
+                </div>
+            </div>
+        </Section>
 
-		<!-- Blog Preview Section -->
-		<Section
-			id="blog"
-			title="Articles récents"
-			subtitle="Partage de connaissances et veille technologique"
-			animation-type="scale"
-			animated
-			light
-		>
-			<div class="container">
-				<ArticleCarousel
-					:articles="articles"
-					:limit="4"
-					:autoplay="true"
-					:autoplay-speed="6000"
-					:show-author="true"
-					:show-stats="true"
-					:show-dots="true"
-				/>
+        <!-- Stacks Section -->
+        <Section
+            id="stacks"
+            title="Stacks"
+            subtitle="Mon expertise technique polyvalente"
+            animation-type="slide"
+            :animated="!shouldDisableParallax"
+        >
+            <div class="container">
+                <LazyStackCarousel
+                    :stacks="stacks"
+                    :limit="10"
+                    autoplay
+                    :slides-per-view="6"
+                    show-level
+                />
 
-				<div class="section-actions">
-					<BaseButton :to="ROUTES.BLOG" variant="primary">
-						<BaseIcon name="book-open" size="sm" class="mr-xs" />
-						Lire tous mes articles
-					</BaseButton>
-				</div>
-			</div>
-		</Section>
+                <div class="section-actions">
+                    <BaseButton :to="ROUTES.STACKS" variant="outline">
+                        <BaseIcon name="layers" size="sm" class="mr-xs" />
+                        Découvrir tous mes stacks
+                    </BaseButton>
+                </div>
+            </div>
+        </Section>
 
-		<!-- Section Contact -->
-		<Section
-			id="contact"
-			title="Travaillons ensemble"
-			subtitle="Transformons vos idées en solutions digitales"
-			size="large"
-			animated
-		>
-			<div class="container">
-				<div class="contact-wrapper">
-					<div class="contact-wrapper__form">
-						<ContactForm form-id="contact-form-fixed" />
-					</div>
-					<div class="contact-wrapper__info">
-						<ContactInfos
-							title="Mes coordonnées"
-							subtitle="Discutons de vos besoins et objectifs"
-							address="Paris, France"
-							email="contact@aitaddajuba.fr"
-							phone="+33 6 95 21 71 97"
-							:social-links="socialMediaLinks"
-							custom-class="contact-page-infos"
-						/>
-					</div>
-				</div>
-			</div>
-		</Section>
-	</div>
+        <!-- Blog Preview Section -->
+        <Section
+            id="blog"
+            title="Articles récents"
+            subtitle="Partage de connaissances et veille technologique"
+            animation-type="scale"
+            :animated="!shouldDisableParallax"
+            variant="light"
+        >
+            <div class="container">
+                <LazyArticleCarousel
+                    :articles="articles"
+                    :limit="4"
+                    autoplay
+                    :autoplay-speed="6000"
+                    show-stats
+                    show-dots
+                />
+
+                <div class="section-actions">
+                    <BaseButton :to="ROUTES.BLOG" variant="primary">
+                        <BaseIcon name="book-open" size="sm" class="mr-xs" />
+                        Lire tous mes articles
+                    </BaseButton>
+                </div>
+            </div>
+        </Section>
+
+        <!-- Section Contact -->
+        <section class="contact-section">
+            <div class="container">
+                <div class="contact-section__header">
+                    <h2 class="contact-section__title">Travaillons ensemble</h2>
+                    <p class="contact-section__subtitle">Transformons vos idées en solutions digitales</p>
+                </div>
+                <div class="contact-wrapper">
+                    <div class="contact-wrapper__form">
+                        <LazyContactForm form-id="contact-form-home" />
+                    </div>
+                    <div class="contact-wrapper__info">
+                        <LazyContactInfos
+                            title="Mes coordonnées"
+                            subtitle="Discutons de vos besoins et objectifs"
+                            :address="contactAddress"
+                            :email="contactEmail"
+                            :phone="contactPhone"
+                            :social-links="socialMediaLinks"
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseButton from '@/components/base/BaseButton.vue';
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import ArticleCarousel from '@/components/feature/blog/ArticleCarousel.vue';
-	import ContactForm from '@/components/feature/contact/ContactForm.vue';
-	import ContactInfos from '@/components/feature/contact/ContactInfos.vue';
-	import ExperienceTimeline from '@/components/feature/experience/ExperienceTimeline.vue';
-	import ExpertiseCard from '@/components/feature/home/ExpertiseCard.vue';
-	import HeroSection from '@/components/feature/home/HeroSection.vue';
-	import ProjectCarousel from '@/components/feature/projects/ProjectCarousel.vue';
-	import StackCarousel from '@/components/feature/stacks/StackCarousel.vue';
-	import Section from '@/components/layouts/Section.vue';
-	import { ROUTES } from '@/config/routes';
-	import { useMock } from '@/services/api/useMock';
-	import { computed, onMounted } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-	const {
-		fetchProjects,
-		fetchExperience,
-		fetchStacks,
-		fetchArticles,
-		projects,
-		stacks,
-		professionalExperiences,
-		articles,
-	} = useMock();
+    import BaseButton from '@/components/base/BaseButton.vue';
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import ExpertiseCard from '@/components/feature/home/ExpertiseCard.vue';
+    import HeroSection from '@/components/feature/home/HeroSection.vue';
+    import Section from '@/components/layouts/Section.vue';
+    import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
+    import { useHomeSeo } from '@/composables/seo/useSeo';
+    import { useResponsive } from '@/composables/ui/useResponsive';
+    import { ROUTES } from '@/config/routes';
+    import { useRecentArticles } from '@/services/api/modules/articles';
+    import { contactApi, useContactInfo } from '@/services/api/modules/contact';
+    import { useProfessionalExperiences } from '@/services/api/modules/experiences';
+    import { useFeaturedProjects } from '@/services/api/modules/projects';
+    import { useFeaturedStacks } from '@/services/api/modules/stacks';
 
-	// Projets mis en avant
-	const featuredProjects = computed(() => {
-		return projects.value.slice(0, 5);
-	});
+    import type { Stack } from '@/types/feature/stacks';
 
-	// Technologies mises en avant
-	const featuredStacks = computed(() => {
-		return stacks.value.slice(0, 5);
-	});
+    // SEO
+    useHomeSeo();
 
-	// Configuration des liens sociaux
-	const socialMediaLinks = [
-		{
-			name: 'LinkedIn',
-			icon: 'linkedin',
-			url: 'https://www.linkedin.com/in/juba-aitadda/',
-		},
-		{
-			name: 'GitHub',
-			icon: 'github',
-			url: 'https://github.com/jubskan3ki',
-		},
-	];
+    // Preload hero image (LCP element) via IPX processed URL
+    useHead({
+        link: [
+            {
+                rel: 'preload',
+                as: 'image',
+                type: 'image/webp',
+                href: '/_ipx/f_webp&q_75&s_280x280/images/profile.jpg',
+                fetchpriority: 'high',
+            },
+        ],
+    });
 
-	// Préchargement des données
-	onMounted(async () => {
-		try {
-			await Promise.all([fetchProjects(10), fetchExperience(), fetchStacks(10), fetchArticles()]);
-		} catch (err) {
-			console.error('Erreur lors du préchargement des données:', err);
-		}
-	});
+    // Accessibility - respect reduced motion preference
+    const { prefersReducedMotion } = useReducedMotion();
+
+    // Responsive - disable parallax on mobile for performance
+    const { isMobile } = useResponsive();
+
+    // Should parallax be disabled (reduced motion OR mobile)
+    const shouldDisableParallax = computed(() => prefersReducedMotion.value || isMobile.value);
+
+    // Deferred animations
+    const pageReady = ref(false);
+
+    // Parallax refs
+    const pageRef = ref<HTMLElement | null>(null);
+    const shapeRefs = ref<Map<number, HTMLElement>>(new Map());
+
+    // Floating blob shapes configuration
+    const shapes = [
+        { id: 1, type: 'blob-1', size: 120, x: 3, y: 8, depth: 25, opacity: 0.12 },
+        { id: 2, type: 'blob-3', size: 150, x: 88, y: 45, depth: 30, opacity: 0.08 },
+        { id: 3, type: 'blob-2', size: 70, x: 15, y: 85, depth: 45, opacity: 0.12 },
+    ];
+
+    const setShapeRef = (el: HTMLElement | null, id: number) => {
+        if (el) {
+            shapeRefs.value.set(id, el);
+        }
+    };
+
+    // Parallax animation
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let animationId: number;
+
+    const onMouseMove = (e: MouseEvent) => {
+        if (!pageRef.value || shouldDisableParallax.value) {
+            return;
+        }
+        const { width, height } = pageRef.value.getBoundingClientRect();
+        targetX = (e.clientX / width - 0.5) * 2;
+        targetY = (e.clientY / height - 0.5) * 2;
+    };
+
+    const animate = () => {
+        if (shouldDisableParallax.value) {
+            return;
+        }
+
+        currentX += (targetX - currentX) * 0.05;
+        currentY += (targetY - currentY) * 0.05;
+
+        shapeRefs.value.forEach((el, id) => {
+            const shape = shapes.find((s) => s.id === id);
+            if (shape) {
+                const x = currentX * shape.depth;
+                const y = currentY * shape.depth;
+                el.style.transform = `translate(${x}px, ${y}px)`;
+            }
+        });
+
+        animationId = requestAnimationFrame(animate);
+    };
+
+    const startParallax = () => {
+        if (!shouldDisableParallax.value) {
+            window.addEventListener('mousemove', onMouseMove);
+            animationId = requestAnimationFrame(animate);
+        }
+    };
+
+    const stopParallax = () => {
+        window.removeEventListener('mousemove', onMouseMove);
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+        }
+    };
+
+    const handleVisibilityChange = () => {
+        if (document.hidden) {
+            stopParallax();
+        } else {
+            startParallax();
+        }
+    };
+
+    onMounted(() => {
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+                pageReady.value = true;
+                startParallax();
+            });
+        } else {
+            setTimeout(() => {
+                pageReady.value = true;
+                startParallax();
+            }, 300);
+        }
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+    });
+
+    onBeforeUnmount(() => {
+        stopParallax();
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+    });
+
+    // API Queries
+    const { data: projectsData } = useFeaturedProjects(5);
+    const { data: stacksData } = useFeaturedStacks(10);
+    const { data: experiencesData } = useProfessionalExperiences();
+    const { data: articlesData } = useRecentArticles(4);
+    const { data: contactInfo } = useContactInfo();
+
+    // Projets mis en avant
+    const featuredProjects = computed(() => projectsData.value ?? []);
+
+    // Technologies avec fallback (sans images locales - utiliser les icônes)
+    const defaultStacks: Stack[] = [
+        {
+            id: 1,
+            name: 'Vue.js',
+            slug: 'vue',
+            logo: '',
+            category: 'Frontend',
+            tags: ['JavaScript', 'Framework'],
+            experience: 4,
+            level: 90,
+        },
+        {
+            id: 2,
+            name: 'React',
+            slug: 'react',
+            logo: '',
+            category: 'Frontend',
+            tags: ['JavaScript', 'Library'],
+            experience: 4,
+            level: 85,
+        },
+        {
+            id: 3,
+            name: 'TypeScript',
+            slug: 'typescript',
+            logo: '',
+            category: 'Language',
+            tags: ['JavaScript', 'Typed'],
+            experience: 4,
+            level: 90,
+        },
+        {
+            id: 4,
+            name: 'Node.js',
+            slug: 'nodejs',
+            logo: '',
+            category: 'Backend',
+            tags: ['JavaScript', 'Runtime'],
+            experience: 4,
+            level: 80,
+        },
+        {
+            id: 5,
+            name: 'Go',
+            slug: 'go',
+            logo: '',
+            category: 'Backend',
+            tags: ['Systems', 'Fast'],
+            experience: 2,
+            level: 70,
+        },
+    ];
+    const stacks = computed(() => stacksData.value ?? []);
+
+    // Technologies mises en avant pour le hero (top 5 par niveau)
+    const featuredStacks = computed(() => {
+        const apiStacks = [...stacks.value];
+        const sorted = apiStacks.sort((a, b) => b.level - a.level).slice(0, 5);
+        return sorted.length > 0 ? sorted : defaultStacks;
+    });
+
+    // Experiences
+    const professionalExperiences = computed(() => {
+        const data = experiencesData.value;
+        return Array.isArray(data) ? data : [];
+    });
+
+    // Articles
+    const articles = computed(() => articlesData.value ?? []);
+
+    // Bio pour le hero — useAsyncData pour SSR + hydration stable
+    const { data: heroBio } = await useAsyncData(
+        'hero-bio',
+        async () => {
+            const info = await contactApi.getInfo();
+            return info?.bio ?? '';
+        },
+        { default: () => '' },
+    );
+
+    // Contact info with fallbacks
+    const contactAddress = computed(() => contactInfo.value?.address?.city ?? 'Paris, France');
+    const contactEmail = computed(() => contactInfo.value?.email ?? 'contact@aitaddajuba.fr');
+    const contactPhone = computed(() => contactInfo.value?.phone ?? '+33 6 95 21 71 97');
+
+    // Configuration des liens sociaux
+    const socialMediaLinks = computed(() => {
+        if (contactInfo.value?.socialMedia) {
+            const social = contactInfo.value.socialMedia;
+            const links = [];
+            if (social.linkedin) {
+                links.push({ name: 'LinkedIn', icon: 'linkedin', url: social.linkedin });
+            }
+            if (social.github) {
+                links.push({ name: 'GitHub', icon: 'github', url: social.github });
+            }
+            return links;
+        }
+        return [
+            { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
+            { name: 'GitHub', icon: 'github', url: 'https://github.com/jubskan3ki' },
+        ];
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	// Element racine pour l'encapsulation
-	.home-page {
-		display: block;
-		width: 100%;
-	}
+    .home-page {
+        position: relative;
+        min-height: 100vh;
+        overflow-x: hidden;
 
-	// Stats Section
-	.stats-section {
-		margin-top: -80px;
-		position: relative;
-		z-index: 5;
-		padding-bottom: vars.$spacing-xl;
-	}
+        /* Ambient glow effects - inspired by portfolio-summary */
+        &__orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+            contain: layout style paint;
+            animation-play-state: paused;
 
-	.stats-grid {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: vars.$spacing-md;
+            @media (prefers-reduced-motion: reduce) {
+                animation: none !important;
+            }
 
-		@include mix.responsive(tablet) {
-			grid-template-columns: repeat(2, 1fr);
-		}
+            &--primary {
+                width: 45%;
+                height: 55%;
+                top: -15%;
+                right: -10%;
+                background: radial-gradient(circle, fn.color-alpha(vars.$primary-color, 0.12) 0%, transparent 70%);
+                animation: glow-drift 25s ease-in-out infinite;
+                animation-play-state: paused;
+            }
 
-		@include mix.responsive(mobile) {
-			grid-template-columns: 1fr;
-		}
-	}
+            &--secondary {
+                width: 40%;
+                height: 50%;
+                bottom: -20%;
+                left: -10%;
+                background: radial-gradient(circle, fn.color-alpha(vars.$secondary-color, 0.08) 0%, transparent 70%);
+                animation: glow-drift 30s ease-in-out infinite reverse;
+                animation-play-state: paused;
+            }
+        }
 
-	// Expertise Section
-	.expertise-intro {
-		max-width: 800px;
-		margin: 0 auto vars.$spacing-xl;
-		text-align: center;
+        /* Floating organic shapes */
+        &__shapes {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            contain: layout style paint;
+            content-visibility: auto;
+        }
 
-		&__text {
-			color: vars.$gray-dark;
-			line-height: 1.8;
-		}
-	}
+        &__shape {
+            position: absolute;
+            will-change: transform;
+            transition: transform 0.15s ease-out;
+            filter: blur(40px);
+            contain: layout style paint;
 
-	.expertise-grid {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: vars.$spacing-md;
+            @media (prefers-reduced-motion: reduce) {
+                animation: none !important;
+            }
 
-		@include mix.responsive(tablet) {
-			grid-template-columns: repeat(2, 1fr);
-		}
+            &--blob-1 {
+                background: fn.color-alpha(vars.$primary-color, 0.6);
+                border-radius: 60% 40% 30% 70%;
+                animation: blob-float-1 22s ease-in-out infinite;
+                animation-play-state: paused;
+            }
 
-		@include mix.responsive(mobile) {
-			grid-template-columns: 1fr;
-		}
-	}
+            &--blob-2 {
+                background: fn.color-alpha(vars.$secondary-color, 0.5);
+                border-radius: 40% 60% 70% 30%;
+                animation: blob-float-2 28s ease-in-out infinite;
+                animation-play-state: paused;
+            }
 
-	// Project Timeline
-	.project-timeline {
-		&__title {
-			text-align: center;
-			margin-bottom: vars.$spacing-xl;
-			position: relative;
+            &--blob-3 {
+                background: fn.color-alpha(vars.$primary-light, 0.4);
+                border-radius: 50% 50% 40% 60%;
+                animation: blob-float-3 20s ease-in-out infinite;
+                animation-play-state: paused;
+            }
+        }
 
-			&::after {
-				content: '';
-				position: absolute;
-				bottom: -10px;
-				left: 50%;
-				transform: translateX(-50%);
-				width: 60px;
-				height: 3px;
-				background-color: vars.$primary-color;
-			}
-		}
-	}
+        &--ready &__orb,
+        &--ready &__shape {
+            animation-play-state: running;
+        }
+    }
 
-	// Tech Categories
-	.tech-categories {
-		margin-top: vars.$spacing-xxl;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: vars.$spacing-xl;
-	}
+    /* Smooth glow animation */
+    @keyframes glow-drift {
+        0%,
+        100% {
+            transform: translate(0, 0) scale(1);
+        }
 
-	.tech-category {
-		&__title {
-			font-weight: 600;
-			margin-bottom: vars.$spacing-md;
-			padding-bottom: vars.$spacing-xs;
-			border-bottom: 2px solid func.color-alpha(vars.$primary-color, 0.2);
-			position: relative;
+        50% {
+            transform: translate(20px, -15px) scale(1.03);
+        }
+    }
 
-			&::after {
-				content: '';
-				position: absolute;
-				bottom: -2px;
-				left: 0;
-				width: 60px;
-				height: 2px;
-				background-color: vars.$primary-color;
-			}
-		}
+    /* Organic blob animations */
+    @keyframes blob-float-1 {
+        0%,
+        100% {
+            border-radius: 60% 40% 30% 70%;
+            transform: translateY(0) rotate(0deg);
+        }
 
-		&__items {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-sm;
-		}
-	}
+        33% {
+            border-radius: 30% 60% 70% 40%;
+            transform: translateY(-8px) rotate(3deg);
+        }
 
-	// Blog Section
-	.blog-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-		gap: vars.$spacing-lg;
+        66% {
+            border-radius: 50% 60% 30% 65%;
+            transform: translateY(5px) rotate(-2deg);
+        }
+    }
 
-		@include mix.responsive(mobile) {
-			grid-template-columns: 1fr;
-		}
-	}
+    @keyframes blob-float-2 {
+        0%,
+        100% {
+            border-radius: 40% 60% 70% 30%;
+            transform: translateX(0) rotate(0deg);
+        }
 
-	// Contact Wrapper
-	.contact-wrapper {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: vars.$spacing-xl;
+        50% {
+            border-radius: 70% 30% 50% 50%;
+            transform: translateX(-12px) rotate(-4deg);
+        }
+    }
 
-		@include mix.responsive(tablet) {
-			grid-template-columns: 1fr;
-		}
+    @keyframes blob-float-3 {
+        0%,
+        100% {
+            border-radius: 50% 50% 40% 60%;
+            transform: scale(1) rotate(0deg);
+        }
 
-		&__form {
-			background-color: vars.$white;
-			border-radius: vars.$border-radius-lg;
-			padding: vars.$spacing-lg;
-			box-shadow: vars.$box-shadow-medium;
-		}
+        50% {
+            border-radius: 40% 60% 60% 40%;
+            transform: scale(1.04) rotate(2deg);
+        }
+    }
 
-		&__info {
-			color: vars.$white;
-		}
-	}
+    /* Expertise Section */
+    .expertise-section {
+        position: relative;
+        z-index: 10;
+        margin-top: -100px;
+        padding-bottom: vars.$spacing-xxl;
 
-	// Shared Section Actions
-	.section-actions {
-		display: flex;
-		justify-content: center;
-		margin-top: vars.$spacing-lg;
-	}
+        @include mix.responsive(mobile) {
+            margin-top: -60px;
+        }
+    }
+
+    .expertise-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: vars.$spacing-lg;
+
+        @include mix.responsive(tablet) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @include mix.responsive(mobile) {
+            grid-template-columns: 1fr;
+            gap: vars.$spacing-md;
+        }
+    }
+
+    /* Contact Section - premium feel */
+    .contact-section {
+        position: relative;
+        z-index: 10;
+        padding: vars.$spacing-xxl 0;
+        background: linear-gradient(135deg, vars.$primary-color 0%, vars.$primary-dark 100%);
+        overflow: hidden;
+
+        /* Subtle pattern overlay */
+        &::before {
+            content: '';
+            position: absolute;
+            inset: -20%;
+
+            @include mix.dots-pattern(fn.color-alpha(vars.$white, 0.04), 1.5px, 24px);
+
+            pointer-events: none;
+        }
+
+        /* Glow accents */
+        &::after {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -15%;
+            width: 50%;
+            height: 70%;
+            background: radial-gradient(circle, fn.color-alpha(vars.$white, 0.06) 0%, transparent 60%);
+            filter: blur(60px);
+            pointer-events: none;
+        }
+
+        &__header {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            margin-bottom: vars.$spacing-xl;
+        }
+
+        &__title {
+            font-weight: vars.$font-weight-bold;
+            color: vars.$white;
+            margin-bottom: vars.$spacing-xs;
+            letter-spacing: -0.02em;
+        }
+
+        &__subtitle {
+            color: fn.color-alpha(vars.$white, 0.8);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+    }
+
+    /* Contact Wrapper */
+    .contact-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: vars.$spacing-xl;
+        position: relative;
+        z-index: 2;
+
+        @include mix.responsive(tablet) {
+            grid-template-columns: 1fr;
+        }
+
+        &__form {
+            padding: vars.$spacing-xl;
+            background: fn.color-alpha(vars.$white, 0.95);
+            backdrop-filter: blur(16px) saturate(1.2);
+            border-radius: vars.$border-radius-xl;
+            border: 1px solid fn.color-alpha(vars.$white, 0.3);
+            box-shadow:
+                0 8px 32px fn.color-alpha(vars.$black, 0.12),
+                0 0 0 1px fn.color-alpha(vars.$white, 0.1) inset;
+            transition:
+                transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease;
+
+            &:hover {
+                transform: translateY(-4px);
+                box-shadow:
+                    0 16px 48px fn.color-alpha(vars.$black, 0.15),
+                    0 0 0 1px fn.color-alpha(vars.$white, 0.2) inset;
+            }
+
+            @include mix.responsive(mobile) {
+                padding: vars.$spacing-lg;
+            }
+        }
+
+        &__info {
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    /* Section Actions */
+    .section-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: vars.$spacing-xl;
+        gap: vars.$spacing-md;
+    }
+
+    /* Project Timeline */
+    .project-timeline {
+        position: relative;
+        z-index: 1;
+    }
 </style>

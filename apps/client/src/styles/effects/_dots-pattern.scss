@@ -1,0 +1,125 @@
+// Decorative Dots Pattern Effects
+@use '../abstracts/variables' as vars;
+@use '../abstracts/mixins' as mix;
+
+// Dots background utility class
+.dots-bg {
+    @include mix.dots-pattern;
+
+    &--light {
+        @include mix.dots-pattern(vars.$dots-color-light);
+    }
+
+    &--dark {
+        @include mix.dots-pattern(vars.$dots-color-dark);
+    }
+
+    &--sm {
+        @include mix.dots-pattern(vars.$dots-color, vars.$dots-size-sm, vars.$dots-spacing-sm);
+    }
+
+    &--lg {
+        @include mix.dots-pattern(vars.$dots-color, vars.$dots-size-lg, vars.$dots-spacing-lg);
+    }
+}
+
+// Dots overlay (for sections)
+.dots-overlay {
+    position: relative;
+
+    &::before {
+        @include mix.dots-overlay;
+    }
+
+    &--light::before {
+        @include mix.dots-overlay(vars.$dots-color-light);
+    }
+
+    &--top::before {
+        bottom: 50%;
+    }
+
+    &--bottom::before {
+        top: 50%;
+    }
+}
+
+// Animated dots background
+.dots-animated {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: -50%;
+
+        @include mix.dots-pattern;
+
+        animation: dots-drift 60s linear infinite;
+    }
+}
+
+@keyframes dots-drift {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(vars.$dots-spacing, vars.$dots-spacing);
+    }
+}
+
+// Hero section with dots
+.hero-dots {
+    position: relative;
+    overflow: hidden;
+
+    &::before,
+    &::after {
+        content: '';
+        position: absolute;
+        pointer-events: none;
+    }
+
+    &::before {
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40%;
+
+        @include mix.dots-pattern(vars.$dots-color-light, vars.$dots-size, vars.$dots-spacing-lg);
+
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent);
+    }
+
+    &::after {
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30%;
+
+        @include mix.dots-pattern(vars.$dots-color-light, vars.$dots-size-sm, vars.$dots-spacing-sm);
+
+        mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
+    }
+}
+
+// Decorative corner dots
+.corner-dots {
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        width: 100px;
+        height: 100px;
+
+        @include mix.dots-pattern(vars.$dots-color, vars.$dots-size-sm, vars.$dots-spacing-sm);
+
+        mask-image: radial-gradient(circle at top right, black 30%, transparent 70%);
+        pointer-events: none;
+    }
+}

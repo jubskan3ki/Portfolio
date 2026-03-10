@@ -1,232 +1,211 @@
-<!--
-  ArticleTags.vue
-  Composant polyvalent pour afficher les tags d'articles
-  - Mode affichage simple pour la page détail (display="simple")
-  - Mode nuage interactif pour la page de liste (display="cloud")
--->
 <template>
-	<Card v-if="hasTags" class="article-tags">
-		<h3 class="article-tags__title">{{ title }}</h3>
+    <div v-if="hasTags" class="article-tags">
+        <h3 v-if="showTitle" class="article-tags__title">
+            <BaseIcon name="hash" :size="16" />
+            {{ title }}
+        </h3>
 
-		<!-- Mode affichage simple (pour détail d'article) -->
-		<div v-if="display === 'simple'" class="article-tags__grid">
-			<BaseLink v-for="tag in stringTags" :key="tag" :to="`/blog?tag=${tag}`" class="article-tags__item">
-				<BaseIcon name="hash" :size="14" />
-				<span>{{ tag }}</span>
-			</BaseLink>
-		</div>
+        <!-- Simple mode (links) -->
+        <div v-if="display === 'simple'" class="article-tags__list">
+            <BaseLink v-for="tag in stringTags" :key="tag" :to="`/blog?tag=${tag}`" class="article-tags__link">
+                {{ tag }}
+            </BaseLink>
+        </div>
 
-		<!-- Mode nuage de tags interactif (pour page liste) -->
-		<div v-else class="article-tags__cloud">
-			<button
-				v-for="tag in objectTags"
-				:key="tag.id"
-				:class="['article-tags__tag', { 'article-tags__tag--active': isTagActive(tag.id) }]"
-				@click="toggleTag(tag.id)"
-			>
-				<span class="article-tags__tag-name">{{ tag.name }}</span>
-				<span v-if="hasCount(tag)" class="article-tags__tag-count">
-					{{ getCount(tag) }}
-				</span>
-			</button>
-		</div>
-	</Card>
+        <!-- Cloud mode (toggleable buttons) -->
+        <div v-else class="article-tags__list">
+            <button
+                v-for="tag in objectTags"
+                :key="tag.name || tag.id"
+                class="article-tags__btn"
+                :class="{ 'article-tags__btn--active': isTagActive(tag.name) }"
+                type="button"
+                @click="toggleTag(tag.name)"
+            >
+                {{ tag.name }}
+                <span v-if="hasCount(tag)" class="article-tags__count">{{ getCount(tag) }}</span>
+            </button>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import BaseLink from '@/components/base/BaseLink.vue';
-	import Card from '@/components/ui/Card.vue';
-	import type { Tag } from '@/types/feature/blog';
-	import { computed } from 'vue';
+    import { computed } from 'vue';
 
-	const props = defineProps({
-		title: {
-			type: String,
-			default: 'Tags',
-		},
-		tags: {
-			type: Array as () => string[] | readonly string[] | Tag[] | readonly Tag[],
-			default: () => [],
-		},
-		modelValue: {
-			type: Array as () => (string | number)[],
-			default: () => [],
-		},
-		display: {
-			type: String,
-			default: 'cloud', // 'cloud' ou 'simple'
-			validator: (value: string) => ['cloud', 'simple'].includes(value),
-		},
-		multiSelect: {
-			type: Boolean,
-			default: true,
-		},
-	});
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import BaseLink from '@/components/base/BaseLink.vue';
 
-	const emit = defineEmits(['update:modelValue', 'tag-toggle', 'tag-select']);
+    import type { ArticleTagsProps, Tag } from '@/types/feature/blog';
 
-	// Vérifier s'il y a des tags à afficher
-	const hasTags = computed(() => props.tags && props.tags.length > 0);
+    const props = withDefaults(defineProps<ArticleTagsProps & { showTitle?: boolean }>(), {
+        title: 'Tags',
+        tags: () => [],
+        modelValue: () => [],
+        display: 'cloud',
+        multiSelect: true,
+        showTitle: false,
+    });
 
-	// Détecter si les tags sont des objets ou des chaînes
-	const isTagsObjects = computed(() => {
-		if (props.tags.length === 0) return false;
-		return typeof props.tags[0] !== 'string';
-	});
+    const emit = defineEmits<{
+        'update:modelValue': [value: Array<string | number>];
+        tagToggle: [tagId: string | number];
+        tagSelect: [value: Array<string | number>];
+    }>();
 
-	// Convertir les tags en tableaux de chaînes pour le mode simple
-	const stringTags = computed(() => {
-		if (!isTagsObjects.value) {
-			return props.tags as string[] | readonly string[];
-		}
+    const hasTags = computed(() => props.tags && props.tags.length > 0);
 
-		// Type guard pour vérifier si un objet a une propriété name
-		const hasName = (obj: any): obj is { name: string } => {
-			return obj && typeof obj === 'object' && 'name' in obj;
-		};
+    const isTagsObjects = computed(() => {
+        if (props.tags.length === 0) {
+            return false;
+        }
+        return typeof props.tags[0] !== 'string';
+    });
 
-		return (props.tags as any[]).map((tag) => (hasName(tag) ? tag.name : String(tag)));
-	});
+    const stringTags = computed(() => {
+        if (!isTagsObjects.value) {
+            return props.tags as string[] | readonly string[];
+        }
 
-	// Convertir les tags en objets pour le mode cloud
-	const objectTags = computed(() => {
-		if (isTagsObjects.value) {
-			return props.tags as Tag[] | readonly Tag[];
-		}
+        const hasName = (obj: unknown): obj is { name: string } => {
+            return obj !== null && typeof obj === 'object' && 'name' in obj;
+        };
 
-		return (props.tags as string[] | readonly string[]).map((tag) => ({
-			id: tag,
-			name: tag,
-		}));
-	});
+        return (props.tags as unknown[]).map((tag) => (hasName(tag) ? tag.name : String(tag)));
+    });
 
-	// Fonctions helper pour vérifier et obtenir le count
-	const hasCount = (tag: any): boolean => {
-		return tag && typeof tag === 'object' && 'count' in tag && tag.count !== undefined;
-	};
+    const objectTags = computed(() => {
+        if (isTagsObjects.value) {
+            return props.tags as Tag[] | readonly Tag[];
+        }
 
-	const getCount = (tag: any): number => {
-		return hasCount(tag) ? tag.count : 0;
-	};
+        return (props.tags as string[] | readonly string[]).map((tag) => ({
+            id: tag,
+            name: tag,
+        }));
+    });
 
-	// Vérifier si un tag est actif
-	const isTagActive = (tagId: string | number) => {
-		return props.modelValue.includes(tagId);
-	};
+    const hasCount = (tag: unknown): tag is { count: number } => {
+        return (
+            tag !== null
+            && typeof tag === 'object'
+            && 'count' in tag
+            && (tag as { count?: unknown }).count !== undefined
+        );
+    };
 
-	// Gérer le toggle d'un tag
-	const toggleTag = (tagId: string | number) => {
-		let newValue;
+    const getCount = (tag: unknown): number => {
+        return hasCount(tag) ? tag.count : 0;
+    };
 
-		if (props.multiSelect) {
-			// En mode multi-sélection
-			newValue = [...props.modelValue];
+    const isTagActive = (tagId: string | number) => {
+        return props.modelValue.includes(tagId);
+    };
 
-			const index = newValue.indexOf(tagId);
-			if (index === -1) {
-				// Ajouter le tag s'il n'est pas déjà sélectionné
-				newValue.push(tagId);
-			} else {
-				// Retirer le tag s'il est déjà sélectionné
-				newValue.splice(index, 1);
-			}
-		} else {
-			// En mode sélection unique
-			newValue = isTagActive(tagId) ? [] : [tagId];
-		}
+    const toggleTag = (tagId: string | number) => {
+        let newValue;
 
-		emit('update:modelValue', newValue);
-		emit('tag-toggle', tagId);
-		emit('tag-select', newValue);
-	};
+        if (props.multiSelect) {
+            newValue = [...props.modelValue];
+            const index = newValue.indexOf(tagId);
+            if (index === -1) {
+                newValue.push(tagId);
+            } else {
+                newValue.splice(index, 1);
+            }
+        } else {
+            newValue = isTagActive(tagId) ? [] : [tagId];
+        }
+
+        emit('update:modelValue', newValue);
+        emit('tagToggle', tagId);
+        emit('tagSelect', newValue);
+    };
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.article-tags {
-		margin-bottom: vars.$spacing-lg;
+    .article-tags {
+        padding: vars.$spacing-lg;
 
-		&__title {
-			margin-bottom: vars.$spacing-md;
-			padding-bottom: vars.$spacing-sm;
-			border-bottom: 1px solid vars.$white-dark;
-			color: vars.$primary-color;
-			font-weight: 600;
-		}
+        &__title {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            margin: 0 0 vars.$spacing-md;
+            padding-bottom: vars.$spacing-sm;
+            font-size: vars.$font-size-sm;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-primary;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid fn.color-alpha(vars.$border-color, 0.5);
+        }
 
-		// Style pour mode simple (liens)
-		&__grid {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-sm;
-		}
+        &__list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: vars.$spacing-xs;
+        }
 
-		&__item {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-xs;
-			padding: vars.$spacing-xs vars.$spacing-sm;
-			background-color: vars.$white-dark;
-			border-radius: vars.$border-radius-full;
-			color: vars.$primary-color;
-			transition: all vars.$transition-base;
+        &__link {
+            padding: vars.$spacing-xxs vars.$spacing-sm;
+            font-size: vars.$font-size-xs;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$text-secondary;
+            background: vars.$bg-secondary;
+            border-radius: vars.$border-radius-full;
+            text-decoration: none;
+            transition: all 0.2s ease;
 
-			&:hover {
-				background-color: func.color-alpha(vars.$primary-color, 0.1);
-				transform: translateY(-2px);
-			}
-		}
+            &:hover {
+                color: vars.$primary-color;
+                background: fn.color-alpha(vars.$primary-color, 0.08);
+            }
+        }
 
-		// Style pour mode cloud (boutons)
-		&__cloud {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-sm;
-		}
+        &__btn {
+            display: inline-flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+            padding: vars.$spacing-xxs vars.$spacing-sm;
+            font-size: vars.$font-size-xs;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$text-secondary;
+            background: vars.$bg-secondary;
+            border: 1px solid transparent;
+            border-radius: vars.$border-radius-full;
+            cursor: pointer;
+            transition: all 0.2s ease;
 
-		&__tag {
-			display: inline-flex;
-			align-items: center;
-			padding: vars.$spacing-xs vars.$spacing-sm;
-			background-color: vars.$white-dark;
-			border: none;
-			border-radius: vars.$border-radius-full;
-			color: vars.$gray-dark;
-			cursor: pointer;
-			transition: all vars.$transition-base;
+            &:hover:not(&--active) {
+                color: vars.$primary-color;
+                border-color: fn.color-alpha(vars.$primary-color, 0.2);
+                background: fn.color-alpha(vars.$primary-color, 0.04);
+            }
 
-			&:hover {
-				background-color: func.color-alpha(vars.$primary-color, 0.1);
-				color: vars.$primary-color;
-				transform: translateY(-2px);
-			}
+            &--active {
+                color: vars.$primary-color;
+                background: fn.color-alpha(vars.$primary-color, 0.1);
+                border-color: fn.color-alpha(vars.$primary-color, 0.25);
+                font-weight: vars.$font-weight-semibold;
 
-			&--active {
-				background-color: vars.$primary-color;
-				color: vars.$white;
-				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                .article-tags__count {
+                    color: vars.$white;
+                    background: vars.$primary-color;
+                }
+            }
+        }
 
-				&:hover {
-					background-color: func.adjust-color-brightness(vars.$primary-color, -10%);
-					color: vars.$white;
-				}
-			}
-		}
-
-		&__tag-count {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			margin-left: vars.$spacing-xs;
-			min-width: 20px;
-			height: 20px;
-			border-radius: 10px;
-			background-color: rgba(255, 255, 255, 0.4);
-			padding: 0 vars.$spacing-xxs;
-		}
-	}
+        &__count {
+            padding: 1px 6px;
+            font-size: 10px;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-muted;
+            background: fn.color-alpha(vars.$black, 0.06);
+            border-radius: vars.$border-radius-full;
+            transition: all 0.2s ease;
+        }
+    }
 </style>

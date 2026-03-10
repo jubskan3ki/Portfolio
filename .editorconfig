@@ -1,55 +1,104 @@
-# Définit l'encodage par défaut
+# EditorConfig - https://editorconfig.org
+# Assure la cohérence du style de code entre éditeurs et IDEs
 root = true
 
-# --- 🌐 Configuration Générale --- #
+# Règles par défaut pour tous les fichiers
 [*]
-charset = utf-8
+indent_style = space
+indent_size = 4
+tab_width = 4
 end_of_line = lf
-indent_style = space
-indent_size = 4  # Synchronisé avec Python
+charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
+max_line_length = 120
 
-# --- 🐍 Python (Django) --- #
+# Frontend - Vue, TypeScript, JavaScript, SCSS
+[*.{vue,ts,tsx,js,jsx,mjs,cjs}]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+[*.{css,scss,sass,less}]
+indent_style = space
+indent_size = 4
+
+[*.html]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+# Configuration files (JSON, YAML, TOML)
+[*.{json,jsonc}]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 4
+
+[*.toml]
+indent_style = space
+indent_size = 4
+
+# Python (Backend Django/DRF)
 [*.py]
+indent_style = space
 indent_size = 4
-max_line_length = 100  # Synchronisé avec Black, Flake8 et Pylint
-trim_trailing_whitespace = true
-insert_final_newline = true
+max_line_length = 120
 
-# --- ⚡️ JavaScript / TypeScript (Nuxt 3) --- #
-[*.{js,ts,jsx,tsx}]
+[*.pyi]
+indent_style = space
 indent_size = 4
-max_line_length = 100
-trim_trailing_whitespace = true
-insert_final_newline = true
 
-# --- 🎨 Vue (Nuxt 3) --- #
-[*.vue]
+# Shell scripts & Makefiles
+[*.{sh,bash,zsh}]
+indent_style = space
 indent_size = 4
-trim_trailing_whitespace = true
-insert_final_newline = true
+end_of_line = lf
 
-# --- 📜 JSON, YAML, Markdown --- #
-[*.{json,yml,yaml,md}]
+[Makefile]
+indent_style = tab
+
+[Dockerfile*]
+indent_style = space
 indent_size = 4
-trim_trailing_whitespace = false
-insert_final_newline = true
 
-# --- 📝 HTML, CSS, SCSS --- #
-[*.{html,css,scss}]
-indent_size = 4
-trim_trailing_whitespace = true
-insert_final_newline = true
-
-# --- 🔧 Configuration Docker, GitHub Actions & Scripts --- #
-[*.{sh,bash}]
-indent_size = 4
-trim_trailing_whitespace = true
-insert_final_newline = true
-
-[Dockerfile]
+# Documentation & Markdown
+[*.md]
 indent_style = space
 indent_size = 4
 trim_trailing_whitespace = false
-insert_final_newline = true
+max_line_length = off
+
+[*.{txt,rst}]
+indent_style = space
+indent_size = 4
+
+# Git & CI/CD
+[.gitignore]
+indent_style = space
+
+[.github/**/*]
+indent_style = space
+indent_size = 4
+
+# Config files spécifiques
+[{.prettierrc,.eslintrc,.stylelintrc}]
+indent_style = space
+indent_size = 4
+
+[{package.json,package-lock.json,pnpm-lock.yaml}]
+indent_style = space
+indent_size = 4
+
+[*.env*]
+indent_style = space
+
+[*.{xml,svg}]
+indent_style = space
+indent_size = 4
+
+[*.sql]
+indent_style = space
+indent_size = 4

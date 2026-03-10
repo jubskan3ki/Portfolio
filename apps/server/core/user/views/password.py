@@ -1,57 +1,134 @@
-"""
-Gestion de l'administrateur unique via l'API.
-"""
+"""Vues pour la gestion des mots de passe."""
 
-from rest_framework import permissions, status
+import logging
+from typing import Any, cast
+
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import serializers, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..serializers.password import (
-    RequestResetPasswordSerializer,
-    ResetPasswordSerializer,
-)
-from ..tasks import send_reset_password_email
-from ..throttles import ResetPasswordThrottle
+from ..docs import CHANGE_PASSWORD_RESPONSES, REQUEST_RESET_RESPONSES, RESET_PASSWORD_RESPONSES
+from ..serializers.password import ChangePasswordSerializer, RequestResetPasswordSerializer, ResetPasswordSerializer
+from ..services.password import PasswordService
+from ..throttles import ChangePasswordThrottle, ResetPasswordThrottle
+
+logger = logging.getLogger("core.user")
 
 
 class RequestResetPasswordView(APIView):
-    """
-    Vue API pour demander un code de réinitialisation du mot de passe.
-    """
+    """Demande de reinitialisation de mot de passe."""
 
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
     throttle_classes = [ResetPasswordThrottle]
 
+    @swagger_auto_schema(
+        operation_summary="Demander la reinitialisation",
+        operation_description="Envoie un email avec un code de reinitialisation.",
+        request_body=RequestResetPasswordSerializer,
+        responses=REQUEST_RESET_RESPONSES,
+        tags=["Password"],
+    )
     def post(self, request):
-        """
-        Envoi du code de réinitialisation par email.
-        """
-        serializer = RequestResetPasswordSerializer(data=request.data)
-        if serializer.is_valid():
-            send_reset_password_email.delay(serializer.validated_data["email"])
-            return Response(
-                {"message": "Un code de réinitialisation a été envoyé par email."},
-                status=status.HTTP_200_OK,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        """Traite une demande de reinitialisation de mot de passe."""
+        try:
+            serializer = RequestResetPasswordSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = cast(dict[str, Any], serializer.validated_data)
+            PasswordService.request_password_reset(data["email"])
+        except (ValidationError, serializers.ValidationError):
+            logger.exception("Erreur de validation reinitialisation")
+
+        # Toujours retourner succes pour securite (pas d'enumeration d'emails)
+        return Response(
+            {"detail": "Si votre email est valide, vous recevrez un code de reinitialisation."},
+            status=status.HTTP_200_OK,
+        )
 
 
 class ResetPasswordView(APIView):
-    """
-    Vue API pour valider le code de réinitialisation et changer le mot de passe en une seule étape.
-    """
+    """Reinitialisation du mot de passe."""
 
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
+    throttle_classes = [ResetPasswordThrottle]
 
+    @swagger_auto_schema(
+        operation_summary="Reinitialiser le mot de passe",
+        operation_description="Reinitialise le mot de passe avec le code fourni.",
+        request_body=ResetPasswordSerializer,
+        responses=RESET_PASSWORD_RESPONSES,
+        tags=["Password"],
+    )
     def post(self, request):
-        """
-        Validation du code et mise à jour du mot de passe.
-        """
+        """Traite la reinitialisation effective du mot de passe."""
         serializer = ResetPasswordSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        serializer.is_valid(raise_exception=True)
+        data = cast(dict[str, Any], serializer.validated_data)
+
+        try:
+            PasswordService.reset_password(
+                email=data["email"],
+                reset_code=data["reset_code"],
+                new_password=data["new_password"],
+            )
+        except ObjectDoesNotExist as e:
+            return Response({"detail": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError:
+            return Response({"detail": "Format de donnees invalide"}, status=status.HTTP_400_BAD_REQUEST)
+        except OSError:
+            logger.exception("Erreur IO reinitialisation")
             return Response(
-                {"message": "Le mot de passe a été mis à jour avec succès."},
+                {"detail": "Erreur systeme."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except (AttributeError, TypeError, ImportError):
+            logger.exception("Erreur inattendue reinitialisation")
+            return Response(
+                {"detail": "Erreur interne du serveur."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        else:
+            return Response(
+                {"detail": "Votre mot de passe a ete reinitialise avec succes."},
                 status=status.HTTP_200_OK,
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(APIView):
+    """Changement de mot de passe pour utilisateur connecte."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ChangePasswordThrottle]
+
+    @swagger_auto_schema(
+        operation_summary="Changer le mot de passe",
+        operation_description="Change le mot de passe de l'utilisateur connecte.",
+        request_body=ChangePasswordSerializer,
+        responses=CHANGE_PASSWORD_RESPONSES,
+        tags=["Password"],
+    )
+    def post(self, request):
+        """Traite le changement de mot de passe."""
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = cast(dict[str, Any], serializer.validated_data)
+
+        try:
+            PasswordService.change_password(
+                user=request.user,
+                old_password=data["old_password"],
+                new_password=data["new_password"],
+            )
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except (ValueError, TypeError):
+            return Response({"detail": "Format de donnees invalide"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(
+                {"detail": "Mot de passe modifie avec succes."},
+                status=status.HTTP_200_OK,
+            )

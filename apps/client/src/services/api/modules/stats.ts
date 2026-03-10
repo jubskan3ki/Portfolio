@@ -1,0 +1,24 @@
+import { API_ENDPOINTS } from '@/config/api';
+
+import { httpClient, createKeys, createRealtimeQuery } from '../core';
+
+import type { DashboardOverview } from '@/types/api/stats';
+
+export const statsKeys = {
+    ...createKeys('stats'),
+    overview: () => ['stats', 'overview'] as const,
+    history: (limit: number) => ['stats', 'history', 'activities', limit] as const,
+};
+
+export const statsApi = {
+    getOverview: (): Promise<DashboardOverview> => httpClient.get(API_ENDPOINTS.STATS.OVERVIEW),
+
+    getActivity: <T = unknown>(limit?: number): Promise<T> =>
+        httpClient.get(`${API_ENDPOINTS.STATS.ACTIVITY}${limit ? `?limit=${limit}` : ''}`),
+
+    getStats: <T = unknown>(): Promise<T> => httpClient.get(API_ENDPOINTS.STATS.BASE),
+};
+
+export function useDashboardOverview() {
+    return createRealtimeQuery(statsKeys.overview(), statsApi.getOverview);
+}

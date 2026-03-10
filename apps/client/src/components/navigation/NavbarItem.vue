@@ -1,118 +1,157 @@
-<!-- src/components/navigation/NavbarItem.vue -->
 <template>
-	<li class="navbar__item" @mouseenter="$emit('mouseenter', index)" @mouseleave="$emit('mouseleave')">
-		<NuxtLink
-			:to="item.path"
-			:class="[
-				'navbar__link',
-				{ 'navbar__link--active': isActive },
-				{ 'navbar__link--has-children': item.children },
-			]"
-		>
-			<span v-if="item.icon" class="navbar__icon">
-				<BaseIcon :name="item.icon" :size="16" />
-			</span>
-			{{ item.label }}
-		</NuxtLink>
-	</li>
+    <li :class="itemClasses" role="none" @mouseenter="emit('mouseenter', index)" @mouseleave="emit('mouseleave')">
+        <NuxtLink :to="item.path" :class="linkClasses" :aria-current="isActive ? 'page' : undefined" role="menuitem">
+            <span v-if="item.icon" class="navbar-item__icon" aria-hidden="true">
+                <BaseIcon :name="item.icon" :size="16" />
+            </span>
+            <span class="navbar-item__label">{{ item.label }}</span>
+            <span v-if="item.children" class="navbar-item__arrow" aria-hidden="true">
+                <BaseIcon name="chevron-down" :size="12" />
+            </span>
+        </NuxtLink>
+    </li>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { computed } from 'vue';
 
-	// Types
-	interface NavChildItem {
-		label: string;
-		path: string;
-		icon?: string;
-	}
+    import BaseIcon from '@/components/base/BaseIcon.vue';
 
-	interface NavItem {
-		label: string;
-		path: string;
-		icon?: string;
-		children?: NavChildItem[];
-	}
+    import type { NavbarItemProps } from '@/types/components/navigation';
 
-	defineProps({
-		item: {
-			type: Object as () => NavItem,
-			required: true,
-		},
-		index: {
-			type: Number,
-			required: true,
-		},
-		isActive: {
-			type: Boolean,
-			required: true,
-		},
-	});
+    type Props = NavbarItemProps;
 
-	// Emits
-	defineEmits(['mouseenter', 'mouseleave']);
+    const props = defineProps<Props>();
+
+    const emit = defineEmits<{
+        mouseenter: [index: number];
+        mouseleave: [];
+    }>();
+
+    const itemClasses = computed(() => [
+        'navbar-item',
+        {
+            'navbar-item--active': props.isActive,
+            'navbar-item--has-children': props.item.children,
+        },
+    ]);
+
+    const linkClasses = computed(() => [
+        'navbar-item__link',
+        {
+            'navbar-item__link--active': props.isActive,
+        },
+    ]);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.navbar {
-		&__item {
-			position: relative;
-		}
+    .navbar-item {
+        position: relative;
+        list-style: none;
 
-		&__link {
-			display: flex;
-			align-items: center;
-			padding: vars.$spacing-xs vars.$spacing-sm;
-			font-weight: 500;
-			border-radius: vars.$border-radius-full;
-			transition: all 0.3s ease;
-			position: relative;
+        &__link {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+            padding: vars.$spacing-xxs vars.$spacing-xs;
+            font-weight: 500;
+            color: vars.$text-secondary;
+            text-decoration: none;
+            border-radius: vars.$border-radius-lg;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
 
-			&::after {
-				content: '';
-				position: absolute;
-				bottom: -4px;
-				left: 50%;
-				width: 0;
-				height: 2px;
-				background-color: currentColor;
-				transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-				transform: translateX(-50%);
-				opacity: 0;
-			}
+            /* Glass background on hover */
+            &::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: transparent;
+                border-radius: inherit;
+                border: 1px solid transparent;
+                transition: all 0.3s ease;
+                z-index: -1;
+            }
 
-			&:hover {
-				transform: translateY(-2px);
+            &:hover {
+                color: vars.$primary-color;
+                transform: translateY(-2px);
 
-				&::after {
-					width: 30px;
-					opacity: 1;
-				}
-			}
+                &::before {
+                    background: func.color-alpha(vars.$primary-color, 0.06);
+                    border-color: func.color-alpha(vars.$primary-color, 0.1);
+                }
 
-			&--active {
-				font-weight: 600;
+                .navbar-item__arrow {
+                    transform: rotate(180deg);
+                }
+            }
 
-				&::after {
-					width: 30px;
-					opacity: 1;
-				}
-			}
+            &:focus-visible {
+                outline: 2px solid vars.$primary-color;
+                outline-offset: 2px;
+            }
 
-			&--has-children {
-				padding-right: vars.$spacing-lg;
-			}
-		}
+            &:active {
+                transform: translateY(-1px) scale(0.98);
+            }
 
-		&__icon {
-			margin-right: vars.$spacing-xs;
-			display: flex;
-			align-items: center;
-			color: func.color-alpha(vars.$primary-color, 0.9);
-		}
-	}
+            &--active {
+                color: vars.$primary-color;
+                font-weight: 600;
+
+                &::before {
+                    background: func.color-alpha(vars.$primary-color, 0.08);
+                    border-color: func.color-alpha(vars.$primary-color, 0.12);
+                }
+            }
+        }
+
+        &__icon {
+            @include mix.flex-center;
+
+            color: inherit;
+            transition: transform 0.3s ease;
+
+            .navbar-item__link:hover & {
+                transform: scale(1.1);
+            }
+        }
+
+        &__label {
+            white-space: nowrap;
+        }
+
+        &__arrow {
+            @include mix.flex-center;
+
+            margin-left: vars.$spacing-xxxxs;
+            opacity: 0.5;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        &__indicator {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: func.color-alpha(vars.$primary-color, 0.6);
+            border-radius: vars.$border-radius-full;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        &--has-children {
+            .navbar-item__link {
+                padding-right: vars.$spacing-xs;
+            }
+        }
+    }
 </style>

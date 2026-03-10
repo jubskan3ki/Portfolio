@@ -1,334 +1,493 @@
 <template>
-	<div
-		:class="[
-			'select',
-			{ 'select--disabled': disabled },
-			{ 'select--error': error },
-			{ 'select--success': success },
-			{ 'select--focused': isFocused },
-			{ 'select--multiple': multiple },
-			customClass,
-		]"
-	>
-		<label v-if="label" :for="selectId" class="select__label">
-			{{ label }}
-			<span v-if="required" class="select__required">*</span>
-		</label>
+    <div ref="containerRef" :class="selectClasses">
+        <label v-if="label" :id="`${inputId}-label`" :for="inputId" class="select__label">
+            {{ label }}
+            <span v-if="required" class="select__required">*</span>
+        </label>
 
-		<div class="select__container">
-			<select
-				:id="selectId"
-				:name="name"
-				:value="modelValue"
-				:disabled="disabled"
-				:required="required"
-				:multiple="multiple"
-				class="select__field"
-				@change="handleChange"
-				@blur="handleBlur"
-				@focus="handleFocus"
-			>
-				<option v-if="placeholder && !multiple" value="" disabled :selected="!modelValue">
-					{{ placeholder }}
-				</option>
-				<option
-					v-for="option in options"
-					:key="option.value"
-					:value="option.value"
-					:selected="isSelected(option.value)"
-					:disabled="option.disabled"
-				>
-					{{ option.label }}
-				</option>
-				<slot></slot>
-			</select>
+        <div
+            class="select__trigger"
+            role="combobox"
+            tabindex="0"
+            :aria-expanded="isOpen"
+            aria-haspopup="listbox"
+            :aria-controls="isOpen ? `${inputId}-listbox` : undefined"
+            :aria-activedescendant="activeDescendant"
+            :aria-labelledby="label ? `${inputId}-label` : undefined"
+            :aria-invalid="!!error || undefined"
+            :aria-describedby="messageId || undefined"
+            :aria-required="required || undefined"
+            @click="toggleDropdown"
+            @keydown.enter.prevent="toggleDropdown"
+            @keydown.space.prevent="toggleDropdown"
+            @keydown.escape="close"
+            @keydown.down.prevent="handleKeyDown"
+            @keydown.up.prevent="handleKeyUp"
+        >
+            <div class="select__value">
+                <img
+                    v-if="showImage && selectedOption?.image"
+                    :src="selectedOption.image"
+                    :alt="selectedOption.label"
+                    class="select__value-image"
+                />
+                <span v-if="selectedOption" class="select__value-text">{{ selectedOption.label }}</span>
+                <span v-else class="select__placeholder">{{ placeholder }}</span>
+            </div>
 
-			<div class="select__arrow" :class="{ 'select__arrow--active': isFocused }">
-				<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M1 1.5L6 6.5L11 1.5"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-			</div>
-		</div>
+            <div class="select__icons">
+                <button
+                    v-if="model && !required"
+                    type="button"
+                    class="select__clear"
+                    aria-label="Effacer"
+                    @mousedown.prevent
+                    @click.stop="clearSelection"
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M18 6L6 18M6 6L18 18"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
+                <div class="select__arrow" :class="{ 'select__arrow--active': isOpen }">
+                    <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+                        <path
+                            d="M1 1.5L6 6.5L11 1.5"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+            </div>
+        </div>
 
-		<p v-if="error" class="select__message select__message--error">{{ error }}</p>
-		<p v-else-if="success" class="select__message select__message--success">{{ success }}</p>
-		<p v-else-if="hint" class="select__message select__message--hint">{{ hint }}</p>
-	</div>
+        <Transition name="dropdown">
+            <div v-if="isOpen" class="select__dropdown">
+                <!-- Options -->
+                <div
+                    :id="`${inputId}-listbox`"
+                    ref="optionsRef"
+                    class="select__options"
+                    role="listbox"
+                    :aria-labelledby="label ? `${inputId}-label` : undefined"
+                >
+                    <button
+                        v-for="(option, index) in options"
+                        :id="`${inputId}-option-${index}`"
+                        :key="String(option.value)"
+                        type="button"
+                        class="select__option"
+                        :class="{
+                            'select__option--selected': isSelected(option),
+                            'select__option--highlighted': highlightedIndex === index,
+                        }"
+                        role="option"
+                        :aria-selected="isSelected(option)"
+                        @mousedown.prevent
+                        @click="selectOption(option)"
+                        @mouseenter="highlightedIndex = index"
+                    >
+                        <img
+                            v-if="showImage && option.image"
+                            :src="option.image"
+                            :alt="option.label"
+                            class="select__option-image"
+                        />
+                        <span class="select__option-text">{{ option.label }}</span>
+                        <svg
+                            v-if="isSelected(option)"
+                            class="select__option-check"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M20 6L9 17L4 12"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </button>
+
+                    <div v-if="options.length === 0" class="select__empty" @mousedown.prevent>
+                        Aucune option disponible
+                    </div>
+                </div>
+
+                <!-- Create option -->
+                <div v-if="allowCreate" class="select__create-section">
+                    <div class="select__create-form">
+                        <label :for="`${inputId}-create`" class="sr-only">{{ createPlaceholder }}</label>
+                        <input
+                            :id="`${inputId}-create`"
+                            ref="createInputRef"
+                            v-model="newItemName"
+                            type="text"
+                            class="select__create-input"
+                            :placeholder="createPlaceholder"
+                            @keydown.enter.prevent="handleCreate"
+                            @keydown.stop
+                        />
+                        <button
+                            type="button"
+                            class="select__create-btn"
+                            :disabled="!newItemName.trim()"
+                            @mousedown.prevent
+                            @click="handleCreate"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path
+                                    d="M12 5v14M5 12h14"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                            {{ createLabel }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+
+        <p v-if="error" :id="messageId" class="select__message select__message--error" role="alert">{{ error }}</p>
+        <p v-else-if="success" :id="messageId" class="select__message select__message--success">{{ success }}</p>
+        <p v-else-if="hint" :id="messageId" class="select__message select__message--hint">{{ hint }}</p>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import { computed, onMounted, ref } from 'vue';
+    import { computed, ref, useId, toRef } from 'vue';
 
-	interface SelectOption {
-		value: string | number;
-		label: string;
-		disabled?: boolean;
-	}
+    import { useDropdown } from '@/composables/ui/useDropdown';
 
-	const props = defineProps({
-		modelValue: {
-			type: [String, Number, Array],
-			default: '',
-		},
-		options: {
-			type: Array as () => SelectOption[],
-			default: () => [],
-		},
-		id: {
-			type: String,
-			default: '',
-		},
-		name: {
-			type: String,
-			default: '',
-		},
-		label: {
-			type: String,
-			default: '',
-		},
-		placeholder: {
-			type: String,
-			default: 'Sélectionnez une option',
-		},
-		required: {
-			type: Boolean,
-			default: false,
-		},
-		disabled: {
-			type: Boolean,
-			default: false,
-		},
-		multiple: {
-			type: Boolean,
-			default: false,
-		},
-		error: {
-			type: String,
-			default: '',
-		},
-		success: {
-			type: String,
-			default: '',
-		},
-		hint: {
-			type: String,
-			default: '',
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import type { SelectOption } from '@/types/composables/forms';
 
-	const emit = defineEmits(['update:modelValue', 'blur', 'focus']);
-	const isFocused = ref(false);
+    interface Props {
+        options?: SelectOption[];
+        id?: string;
+        label?: string;
+        placeholder?: string;
+        required?: boolean;
+        disabled?: boolean;
+        error?: string;
+        success?: string;
+        hint?: string;
+        showImage?: boolean;
+        allowCreate?: boolean;
+        createLabel?: string;
+        createPlaceholder?: string;
+    }
 
-	// Générer un ID stable qui sera le même côté serveur et client
-	const componentId = ref('');
+    const props = withDefaults(defineProps<Props>(), {
+        options: () => [],
+        id: '',
+        label: '',
+        placeholder: 'Sélectionner...',
+        required: false,
+        disabled: false,
+        error: '',
+        success: '',
+        hint: '',
+        showImage: false,
+        allowCreate: false,
+        createLabel: 'Créer nouveau',
+        createPlaceholder: 'Nom...',
+    });
 
-	onMounted(() => {
-		// Utiliser une valeur unique mais stable pour l'attribut id
-		if (!componentId.value) {
-			componentId.value = `select-${Math.random().toString(36).substring(2, 9)}`;
-		}
-	});
+    const emit = defineEmits<{
+        blur: [event: FocusEvent];
+        focus: [event: FocusEvent];
+        create: [value: string];
+    }>();
 
-	// Utiliser un ID calculé qui sera stable entre client et serveur
-	const selectId = computed(() => {
-		return props.id || componentId.value || 'select';
-	});
+    const model = defineModel<string | number>({ default: '' });
 
-	const isSelected = (value: string | number) => {
-		if (Array.isArray(props.modelValue)) {
-			return props.modelValue.includes(value);
-		}
-		return props.modelValue === value;
-	};
+    // Refs
+    const containerRef = ref<HTMLElement | null>(null);
+    const optionsRef = ref<HTMLElement | null>(null);
+    const newItemName = ref('');
+    const generatedId = useId();
 
-	const handleChange = (event: Event) => {
-		const target = event.target as HTMLSelectElement;
+    // Use dropdown composable
+    const {
+        isOpen,
+        highlightedIndex,
+        open: openDropdown,
+        close,
+        navigate,
+        scrollToHighlighted,
+        getActiveDescendant,
+    } = useDropdown(containerRef, {
+        disabled: toRef(props, 'disabled'),
+        closeOnSelect: true,
+        onClose: () => {
+            newItemName.value = '';
+        },
+    });
 
-		if (target) {
-			const value = props.multiple
-				? Array.from(target.selectedOptions).map((option) => option.value)
-				: target.value;
+    // Computed
+    const inputId = computed(() => props.id || generatedId);
+    const messageId = computed(() =>
+        props.error || props.success || props.hint ? `${inputId.value}-message` : undefined,
+    );
 
-			emit('update:modelValue', value);
-		}
-	};
+    const selectedOption = computed(() => {
+        if (!model.value && model.value !== 0) {
+            return null;
+        }
+        return props.options.find((opt) => opt.value === model.value) || null;
+    });
 
-	const handleBlur = (event: FocusEvent) => {
-		isFocused.value = false;
-		emit('blur', event);
-	};
+    const selectClasses = computed(() => [
+        'select',
+        {
+            'select--disabled': props.disabled,
+            'select--error': props.error,
+            'select--success': props.success,
+            'select--open': isOpen.value,
+            'select--has-value': !!selectedOption.value,
+        },
+    ]);
 
-	const handleFocus = (event: FocusEvent) => {
-		isFocused.value = true;
-		emit('focus', event);
-	};
+    const activeDescendant = computed(() => getActiveDescendant(inputId.value));
+
+    // Methods
+    const isSelected = (option: SelectOption): boolean => {
+        return model.value === option.value;
+    };
+
+    const selectOption = (option: SelectOption) => {
+        if (option.disabled) {
+            return;
+        }
+        model.value = option.value;
+        close();
+    };
+
+    const clearSelection = () => {
+        model.value = '';
+    };
+
+    const toggleDropdown = () => {
+        if (props.disabled) {
+            return;
+        }
+        if (isOpen.value) {
+            close();
+        } else {
+            openDropdown();
+            // Set highlighted to selected option or first
+            highlightedIndex.value = selectedOption.value
+                ? props.options.findIndex((opt) => opt.value === model.value)
+                : 0;
+        }
+    };
+
+    const handleKeyDown = () => {
+        if (!isOpen.value) {
+            toggleDropdown();
+        } else {
+            navigate(1, props.options.length);
+            scrollToHighlighted(optionsRef, 'select__option');
+        }
+    };
+
+    const handleKeyUp = () => {
+        if (isOpen.value) {
+            navigate(-1, props.options.length);
+            scrollToHighlighted(optionsRef, 'select__option');
+        }
+    };
+
+    const handleCreate = () => {
+        if (!newItemName.value.trim()) {
+            return;
+        }
+        emit('create', newItemName.value.trim());
+        newItemName.value = '';
+    };
+
+    defineExpose({
+        focus: () => containerRef.value?.querySelector<HTMLElement>('.select__trigger')?.focus(),
+        blur: () => containerRef.value?.querySelector<HTMLElement>('.select__trigger')?.blur(),
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
+    @use '@/styles/components/select' as sel;
 
-	.select {
-		display: flex;
-		flex-direction: column;
-		margin-bottom: vars.$spacing-md;
-		width: 100%;
+    .select {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
 
-		&__label {
-			display: block;
-			margin-bottom: vars.$spacing-xs;
-			font-weight: 500;
-			color: vars.$black-light;
-		}
+        @include mix.form-field-chrome;
 
-		&__required {
-			color: vars.$danger-color;
-			margin-left: 2px;
-		}
+        &__trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: vars.$spacing-xs;
+            height: 48px;
+            padding: 0 vars.$spacing-md;
+            border: 1px solid vars.$border-color;
+            border-radius: vars.$border-radius-md;
+            background-color: vars.$bg-primary;
+            cursor: pointer;
+            transition:
+                border-color vars.$transition-base,
+                box-shadow vars.$transition-base,
+                background-color vars.$transition-base;
 
-		&__container {
-			position: relative;
-			display: flex;
-			align-items: center;
-		}
+            &:focus {
+                outline: none;
+                border-color: vars.$primary-color;
+                box-shadow: 0 0 0 3px func.color-alpha(vars.$primary-color, 0.12);
+            }
+        }
 
-		&__field {
-			width: 100%;
-			border: none;
-			border-bottom: 2px solid vars.$gray;
-			padding: vars.$spacing-sm 0;
-			padding-right: 30px; // Space for arrow
-			background-color: transparent;
-			color: vars.$black-light;
-			appearance: none; // Remove default arrow
-			cursor: pointer;
-			font-family: vars.$font-family;
-			height: 42px;
+        &__value {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            flex: 1;
+            min-width: 0;
+        }
 
-			@include mix.transition(border-color, box-shadow);
-			@include mix.focus-outline;
+        &__value-image {
+            @include sel.option-image(20px);
+        }
 
-			&:focus {
-				outline: none;
-				border-color: vars.$primary-color;
-				box-shadow: 0 2px 0 rgba(vars.$primary-color, 0.2);
-			}
+        &__value-text {
+            color: vars.$text-primary;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-			&:disabled {
-				cursor: not-allowed;
-				opacity: 0.6;
-				background-color: func.color-alpha(vars.$gray-light, 0.1);
-			}
+        &__placeholder {
+            color: vars.$text-muted;
+        }
 
-			option {
-				background-color: vars.$white;
-				color: vars.$black-light;
-				padding: vars.$spacing-sm vars.$spacing-md;
+        &__icons {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+            flex-shrink: 0;
+        }
 
-				&:disabled {
-					color: vars.$gray;
-				}
-			}
-		}
+        &__clear {
+            @include sel.clear-button;
+        }
+        &__arrow {
+            @include sel.arrow-icon;
+        }
 
-		&__arrow {
-			position: absolute;
-			right: 0;
-			pointer-events: none;
-			display: flex;
-			align-items: center;
-			color: vars.$gray-dark;
-			transition:
-				transform vars.$transition-base,
-				color vars.$transition-base;
+        &__dropdown {
+            @include sel.dropdown-panel;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
 
-			&--active {
-				transform: rotate(180deg);
-				color: vars.$primary-color;
-			}
-		}
+        &__options {
+            @include sel.options-list;
+        }
+        &__option {
+            @include sel.option-item('select');
+            &--selected {
+                font-weight: vars.$font-weight-medium;
+            }
+        }
+        &__option-image {
+            @include sel.option-image(24px);
+            border-radius: 4px;
+        }
+        &__option-text {
+            @include sel.option-text;
+        }
+        &__option-check {
+            @include sel.option-check;
+        }
+        &__empty {
+            @include sel.empty-state;
+        }
 
-		&__message {
-			margin-top: vars.$spacing-xs;
+        &__create-section {
+            @include sel.create-section;
+        }
+        &__create-form {
+            @include sel.create-form;
+        }
+        &__create-input {
+            @include sel.create-input;
+        }
+        &__create-btn {
+            @include sel.create-button;
+        }
 
-			&--error {
-				color: vars.$danger-color;
-			}
+        // States
+        &--open {
+            .select__trigger {
+                border-color: vars.$primary-color;
+                box-shadow: 0 0 0 3px func.color-alpha(vars.$primary-color, 0.12);
+                background-color: vars.$white;
+            }
 
-			&--success {
-				color: vars.$success-color;
-			}
+            .select__label {
+                color: vars.$primary-color;
+            }
+        }
 
-			&--hint {
-				color: vars.$gray;
-			}
-		}
+        &--error {
+            @include sel.state-error('.select__trigger');
 
-		&--disabled {
-			opacity: 0.7;
+            .select__trigger:focus {
+                box-shadow: 0 0 0 3px func.color-alpha(vars.$danger-color, 0.12);
+            }
+        }
 
-			.select__field,
-			.select__arrow {
-				cursor: not-allowed;
-			}
-		}
+        &--success {
+            .select__trigger {
+                border-color: vars.$success-color;
+                background-color: func.color-alpha(vars.$success-color, 0.03);
+            }
+        }
 
-		&--error {
-			.select__field {
-				border-color: vars.$danger-color;
-			}
+        &--disabled {
+            @include sel.state-disabled('.select__trigger');
+        }
 
-			.select__arrow {
-				color: vars.$danger-color;
-			}
-		}
+        &:hover:not(&--disabled, &--open) {
+            .select__trigger:not(:focus) {
+                border-color: vars.$text-muted;
+            }
+        }
 
-		&--success {
-			.select__field {
-				border-color: vars.$success-color;
-			}
-		}
+        @include mix.responsive(mobile) {
+            &__trigger {
+                height: 44px;
+            }
 
-		&--focused {
-			.select__label {
-				color: vars.$primary-color;
-			}
-		}
+            &__value-text,
+            &__placeholder {
+                font-size: 1rem;
+            }
+        }
+    }
 
-		&--multiple {
-			.select__field {
-				height: auto;
-				min-height: 42px;
-				padding-top: vars.$spacing-xs;
-				padding-bottom: vars.$spacing-xs;
-			}
-		}
-
-		&:hover:not(&--disabled) {
-			.select__field:not(:focus) {
-				border-color: func.adjust-color-brightness(vars.$gray, -15%);
-			}
-
-			.select__arrow:not(.select__arrow--active) {
-				color: func.adjust-color-brightness(vars.$gray-dark, -15%);
-			}
-		}
-
-		@include mix.responsive(mobile) {
-			.select__field {
-				height: 38px;
-			}
-		}
-	}
+    @include sel.dropdown-transition;
 </style>

@@ -1,4 +1,9 @@
+packages:
+  - '.'
+
 ignoredBuiltDependencies:
-    - '@parcel/watcher'
-    - esbuild
-    - unrs-resolver
+  - '@parcel/watcher'
+  - esbuild
+  - sharp
+  - unrs-resolver
+  - vue-demi

@@ -1,286 +1,124 @@
 <template>
-	<BaseLink :to="articleLink" class="article-card-wrapper">
-		<Card :class="['article-card', customClass]" :hoverable="hoverable" :flat="flat" :bordered="bordered">
-			<template v-if="article.image" #image>
-				<div class="article-card__image">
-					<img :src="article.image" :alt="article.title" />
-				</div>
-			</template>
+    <BaseContentCard
+        :to="articleLink"
+        :image="article.image"
+        :image-alt="article.title"
+        placeholder-icon="file-text"
+        :badge="article.category"
+        :title="article.title"
+        :description="truncatedExcerpt"
+        :tags="article.tags"
+        :max-tags="maxTags"
+        v-bind="prefetchHandlers"
+        :class="customClass"
+    >
+        <template #before-title>
+            <div v-if="article.date || article.readTime" class="article-card__meta">
+                <time v-if="article.date" :datetime="article.date" class="article-card__meta-item">
+                    {{ formattedDate }}
+                </time>
+                <span v-if="article.readTime" class="article-card__meta-item"> {{ article.readTime }} min </span>
+            </div>
+        </template>
 
-			<template #header>
-				<div class="article-card__meta">
-					<div v-if="article.publishedAt || article.date" class="article-card__date">
-						<BaseIcon name="calendar" :size="14" />
-						<small>{{ formatDate(article.publishedAt || article.date) }}</small>
-					</div>
-					<div v-if="article.readTime" class="article-card__read-time">
-						<BaseIcon name="clock" :size="14" />
-						<small>{{ article.readTime }} min</small>
-					</div>
-					<div v-if="article.views" class="article-card__views">
-						<BaseIcon name="eye" :size="14" />
-						<small>{{ formatViews(article.views) }}</small>
-					</div>
-				</div>
-				<h4 class="article-card__title">
-					{{ article.title }}
-				</h4>
-			</template>
+        <template #footer-left>
+            <span v-if="article.views" class="article-card__views">
+                <BaseIcon name="eye" :size="12" />
+                {{ formatViews(article.views) }}
+            </span>
+        </template>
 
-			<div class="article-card__content">
-				<p v-if="article.excerpt" class="article-card__excerpt">
-					{{ truncateText(article.excerpt, excerptLength) }}
-				</p>
-				<div v-if="showTags && article.tags?.length" class="article-card__tags">
-					<Badge
-						v-for="(tag, index) in article.tags.slice(0, maxTags)"
-						:key="index"
-						:text="'#' + tag"
-						type="secondary"
-						variant="subtle"
-						rounded
-						class="article-card__tag-badge"
-					/>
-				</div>
-			</div>
-		</Card>
-	</BaseLink>
+        <template #footer-right>
+            <span class="article-card__action">
+                Lire l'article
+                <BaseIcon name="arrow-right" :size="14" class="article-card__arrow" />
+            </span>
+        </template>
+    </BaseContentCard>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import BaseLink from '@/components/base/BaseLink.vue';
-	import Badge from '@/components/ui/Badge.vue';
-	import Card from '@/components/ui/Card.vue';
-	import { computed } from 'vue';
+    import { computed } from 'vue';
 
-	interface Author {
-		name: string;
-		avatar?: string;
-		bio?: string;
-		social?: {
-			github?: string;
-			linkedin?: string;
-			twitter?: string;
-		};
-	}
+    import BaseContentCard from '@/components/base/BaseContentCard.vue';
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { useCardPrefetch } from '@/composables/performance/usePrefetch';
+    import { queryKeys } from '@/services/api/modules';
+    import { articlesApi } from '@/services/api/modules/articles';
+    import { formatDateShort } from '@/services/utils/date';
+    import { formatViews, truncateText } from '@/services/utils/helpers';
 
-	interface Article {
-		id: string | number;
-		slug?: string;
-		title: string;
-		excerpt?: string;
-		content?: string[] | readonly string[];
-		image?: string;
-		category?: string;
-		tags?: string[] | readonly string[];
-		date?: string;
-		publishedAt?: string | Date;
-		readTime?: number;
-		views?: number;
-		commentsCount?: number;
-		likesCount?: number;
-		toc?: string[] | readonly string[];
-		author?: Author;
-		[key: string]: any;
-	}
+    import type { ArticleCardProps } from '@/types/feature/blog';
 
-	const props = defineProps({
-		article: {
-			type: Object as () => Article,
-			required: true,
-		},
-		hoverable: {
-			type: Boolean,
-			default: true,
-		},
-		flat: {
-			type: Boolean,
-			default: false,
-		},
-		bordered: {
-			type: Boolean,
-			default: false,
-		},
-		excerptLength: {
-			type: Number,
-			default: 150,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-		showTags: {
-			type: Boolean,
-			default: true,
-		},
-		maxTags: {
-			type: Number,
-			default: 3,
-		},
-	});
+    const props = withDefaults(defineProps<ArticleCardProps>(), {
+        hoverable: true,
+        flat: false,
+        excerptLength: 120,
+        customClass: '',
+        showTags: true,
+        maxTags: 3,
+    });
 
-	// Calculer le lien vers l'article
-	const articleLink = computed(() => {
-		if (props.article.slug) {
-			return `/blog/${props.article.slug}`;
-		}
-		return `/blog/${props.article.id}`;
-	});
+    const articleLink = computed(() => (props.article.slug ? `/blog/${props.article.slug}` : ''));
 
-	// Formater la date
-	const formatDate = (date: string | Date | undefined) => {
-		if (!date) return '';
+    // Prefetch on hover
+    const prefetchHandlers = useCardPrefetch(
+        () => props.article.slug,
+        (s) => queryKeys.articles.detail(s),
+        (s) => articlesApi.getBySlug(s),
+    );
 
-		try {
-			const dateObj = date instanceof Date ? date : new Date(date);
-			return dateObj.toLocaleDateString('fr-FR', {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric',
-			});
-		} catch (e) {
-			return '';
-		}
-	};
-
-	// Formater le nombre de vues
-	const formatViews = (views: number) => {
-		if (views >= 1000) {
-			return `${Math.floor(views / 100) / 10}k`;
-		}
-		return views.toString();
-	};
-
-	// Tronquer le texte
-	const truncateText = (text: string, length: number) => {
-		if (text.length <= length) return text;
-		return text.slice(0, length) + '...';
-	};
+    const formattedDate = computed(() => formatDateShort(props.article.date));
+    const truncatedExcerpt = computed(() => truncateText(props.article.excerpt || '', props.excerptLength));
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
 
-	.article-card-wrapper {
-		display: block;
-		height: 100%;
-		text-decoration: none;
-		color: inherit;
-	}
+    // Article-specific styles (meta, views, action)
+    .article-card__meta {
+        display: flex;
+        align-items: center;
+        gap: vars.$spacing-sm;
+        margin-bottom: vars.$spacing-xs;
+    }
 
-	.article-card {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		transition:
-			transform vars.$transition-base,
-			box-shadow vars.$transition-base;
-		overflow: hidden;
+    .article-card__meta-item {
+        font-size: vars.$font-size-xs;
+        color: vars.$text-muted;
+    }
 
-		&:hover {
-			transform: translateY(-3px);
-		}
+    .article-card__views {
+        display: inline-flex;
+        align-items: center;
+        gap: vars.$spacing-xxxs;
+        font-size: vars.$font-size-xs;
+        color: vars.$text-muted;
+    }
 
-		:deep(.card__body) {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-		}
+    .article-card__action {
+        display: inline-flex;
+        align-items: center;
+        gap: vars.$spacing-xxs;
+        font-size: vars.$font-size-sm;
+        font-weight: vars.$font-weight-medium;
+        color: vars.$text-muted;
+        transition: color 0.2s ease;
+    }
 
-		&__image {
-			position: relative;
-			overflow: hidden;
-			height: 200px;
+    .article-card__arrow {
+        opacity: 0.5;
+        transition: all 0.2s ease;
+    }
 
-			img {
-				width: 100%;
-				height: 200px;
+    :deep(.content-card):hover {
+        .article-card__arrow {
+            transform: translateX(4px);
+            opacity: 1;
+        }
 
-				object-fit: cover;
-				transition: transform vars.$transition-base;
-
-				.article-card:hover & {
-					transform: scale(1.05);
-				}
-			}
-		}
-
-		&__category {
-			position: absolute;
-			top: vars.$spacing-sm;
-			left: vars.$spacing-sm;
-			z-index: 10;
-		}
-
-		&__meta {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-md;
-			margin-bottom: vars.$spacing-xs;
-			color: vars.$gray-dark;
-
-			@include mix.responsive(mobile) {
-				gap: vars.$spacing-sm;
-			}
-		}
-
-		&__date,
-		&__read-time,
-		&__views {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-xxs;
-		}
-
-		&__title {
-			margin: 0;
-			margin-bottom: vars.$spacing-sm;
-			line-height: 1.3;
-			color: vars.$black-light;
-			transition: color vars.$transition-base;
-
-			.article-card:hover & {
-				color: vars.$primary-color;
-			}
-		}
-
-		&__content {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-		}
-
-		&__excerpt {
-			color: vars.$gray-dark;
-			margin-bottom: vars.$spacing-md;
-			line-height: 1.6;
-			@include mix.truncate(3);
-		}
-
-		&__tags {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-xs;
-			margin-top: auto;
-			padding-top: vars.$spacing-sm;
-		}
-
-		&__tag-badge {
-			font-weight: 400;
-			transition: transform vars.$transition-fast;
-
-			&:hover {
-				transform: translateY(-2px);
-			}
-		}
-
-		@include mix.responsive(tablet) {
-			&__excerpt {
-				@include mix.truncate(2);
-			}
-		}
-	}
+        .article-card__action {
+            color: vars.$primary-color;
+        }
+    }
 </style>

@@ -1,141 +1,142 @@
-<!--
-  ArticleCategories.vue
-  Composant pour afficher et filtrer par catégories d'articles
--->
 <template>
-	<Card class="article-categories">
-		<h3 class="article-categories__title">{{ title }}</h3>
-		<ul class="article-categories__list">
-			<li v-for="category in categories" :key="category.id || category.slug" class="article-categories__item">
-				<button
-					class="article-categories__button"
-					:class="{ 'article-categories__button--active': isActive(category) }"
-					@click="handleSelect(category)"
-				>
-					<span class="article-categories__name">{{ category.name }}</span>
-					<Badge
-						v-if="category.count !== undefined"
-						:text="category.count.toString()"
-						type="primary"
-						variant="subtle"
-						rounded
-					/>
-				</button>
-			</li>
-		</ul>
-	</Card>
+    <div class="article-categories">
+        <h3 class="article-categories__title">
+            <BaseIcon name="folder" :size="16" />
+            {{ title }}
+        </h3>
+
+        <ul class="article-categories__list">
+            <li v-for="category in categories" :key="category.id || category.slug">
+                <button
+                    class="article-categories__btn"
+                    :class="{ 'article-categories__btn--active': isActive(category) }"
+                    type="button"
+                    @click="handleSelect(category)"
+                >
+                    <span class="article-categories__name">{{ category.name }}</span>
+                    <span v-if="category.count !== undefined" class="article-categories__count">
+                        {{ category.count }}
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import Badge from '@/components/ui/Badge.vue';
-	import Card from '@/components/ui/Card.vue';
+    import BaseIcon from '@/components/base/BaseIcon.vue';
 
-	interface Category {
-		id: string | number;
-		name: string;
-		count?: number;
-		slug?: string;
-	}
+    import type { ArticleCategoriesProps, ArticleCategoryItem } from '@/types/feature/blog';
 
-	const props = defineProps({
-		title: {
-			type: String,
-			default: 'Catégories',
-		},
-		categories: {
-			type: Array as () => Category[] | readonly Category[],
-			default: () => [],
-		},
-		modelValue: {
-			type: [String, Number, Object],
-			default: null,
-		},
-	});
+    const props = withDefaults(defineProps<ArticleCategoriesProps>(), {
+        title: 'Catégories',
+        categories: () => [],
+        modelValue: null,
+    });
 
-	const emit = defineEmits(['update:modelValue', 'select']);
+    const emit = defineEmits<{
+        'update:modelValue': [value: string | number | null];
+        select: [value: string | number | null];
+    }>();
 
-	const isActive = (category: Category) => {
-		if (!props.modelValue) return false;
+    const isActive = (category: ArticleCategoryItem) => {
+        if (!props.modelValue) {
+            return !category.id && !category.slug;
+        }
 
-		if (typeof props.modelValue === 'object') {
-			return (
-				(category.id && props.modelValue.id === category.id) ||
-				(category.slug && props.modelValue.slug === category.slug)
-			);
-		}
+        const value = String(props.modelValue);
+        return String(category.id) === value || String(category.slug) === value;
+    };
 
-		return (
-			(category.id && props.modelValue === category.id) || (category.slug && props.modelValue === category.slug)
-		);
-	};
+    const handleSelect = (category: ArticleCategoryItem) => {
+        if (isActive(category)) {
+            return;
+        }
 
-	const handleSelect = (category: Category) => {
-		const categoryId = category.id || category.slug;
-
-		// Si la catégorie est déjà active, on la désélectionne
-		if (isActive(category)) {
-			emit('update:modelValue', null);
-			emit('select', null);
-		} else {
-			emit('update:modelValue', categoryId);
-			emit('select', categoryId);
-		}
-	};
+        const value = category.slug || (category.id ? String(category.id) : null);
+        emit('update:modelValue', value);
+        emit('select', value);
+    };
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.article-categories {
-		margin-bottom: vars.$spacing-lg;
+    .article-categories {
+        padding: vars.$spacing-lg;
 
-		&__title {
-			margin-bottom: vars.$spacing-md;
-			padding-bottom: vars.$spacing-sm;
-			border-bottom: 1px solid vars.$white-dark;
-			color: vars.$primary-color;
-			font-weight: 600;
-		}
+        &__title {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            margin: 0 0 vars.$spacing-md;
+            padding-bottom: vars.$spacing-sm;
+            font-size: vars.$font-size-sm;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-primary;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid fn.color-alpha(vars.$border-color, 0.5);
+        }
 
-		&__list {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-xs;
-		}
+        &__list {
+            display: flex;
+            flex-direction: column;
+            gap: vars.$spacing-xxs;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
 
-		&__button {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			width: 100%;
-			padding: vars.$spacing-sm vars.$spacing-md;
-			background-color: vars.$white-dark;
-			border: none;
-			border-radius: vars.$border-radius-sm;
-			text-align: left;
-			color: vars.$black-light;
-			cursor: pointer;
-			transition: all vars.$transition-base;
-			font-weight: 500;
+        &__btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: vars.$spacing-xs vars.$spacing-sm;
+            font-size: vars.$font-size-sm;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$text-secondary;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: vars.$border-radius-md;
+            cursor: pointer;
+            transition: all 0.2s ease;
 
-			&:hover {
-				background-color: func.color-alpha(vars.$primary-color, 0.1);
-				color: vars.$primary-color;
-				transform: translateX(5px);
-			}
+            &:hover:not(&--active) {
+                color: vars.$primary-color;
+                background: fn.color-alpha(vars.$primary-color, 0.04);
+                border-color: fn.color-alpha(vars.$primary-color, 0.1);
+            }
 
-			&--active {
-				background-color: vars.$primary-color;
-				color: vars.$white;
-				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            &--active {
+                color: vars.$primary-color;
+                background: fn.color-alpha(vars.$primary-color, 0.08);
+                border-color: fn.color-alpha(vars.$primary-color, 0.15);
+                font-weight: vars.$font-weight-semibold;
 
-				&:hover {
-					background-color: func.adjust-color-brightness(vars.$primary-color, -10%);
-					color: vars.$white;
-				}
-			}
-		}
-	}
+                .article-categories__count {
+                    color: vars.$white;
+                    background: vars.$primary-color;
+                }
+            }
+        }
+
+        &__name {
+            @include mix.truncate(1);
+        }
+
+        &__count {
+            flex-shrink: 0;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-muted;
+            background: vars.$bg-secondary;
+            border-radius: vars.$border-radius-full;
+            transition: all 0.2s ease;
+        }
+    }
 </style>

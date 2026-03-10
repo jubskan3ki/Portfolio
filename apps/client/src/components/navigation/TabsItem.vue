@@ -1,145 +1,172 @@
 <template>
-	<!-- Si on est en mode onglet (navigation) -->
-	<button
-		v-if="isTab"
-		:id="`tab-${tabsId}-${id}`"
-		:class="['tabs-item__tab', { 'tabs-item__tab--active': isActive }]"
-		:disabled="disabled"
-		:aria-controls="`panel-${tabsId}-${id}`"
-		:aria-selected="isActive"
-		role="tab"
-		@click="$emit('select')"
-	>
-		<span v-if="icon" class="tabs-item__tab-icon">
-			<BaseIcon :name="icon" :size="16" />
-		</span>
-		<span class="tabs-item__tab-text">{{ label }}</span>
-		<span v-if="badge" class="tabs-item__tab-badge">
-			<Badge
-				:text="String(badge.text)"
-				:type="badge.type || 'primary'"
-				size="small"
-				:variant="badge.variant || 'filled'"
-				rounded
-			/>
-		</span>
-	</button>
+    <button
+        v-if="isTab"
+        :id="`tab-${tabsId}-${id}`"
+        :class="tabClasses"
+        :disabled="disabled"
+        :aria-controls="`panel-${tabsId}-${id}`"
+        :aria-selected="isActive"
+        role="tab"
+        :tabindex="isActive ? 0 : -1"
+        @click="emit('select')"
+    >
+        <span v-if="icon" class="tabs-item__icon" aria-hidden="true">
+            <BaseIcon :name="icon" :size="16" />
+        </span>
+        <span class="tabs-item__label">{{ label }}</span>
+        <span v-if="badge" class="tabs-item__badge">
+            <Badge :text="String(badge.text)" :variant="(badge.type as BadgeVariant) || 'primary'" size="sm" rounded />
+        </span>
+    </button>
 
-	<!-- Si on est en mode panneau (contenu) -->
-	<div
-		v-else
-		:id="`panel-${tabsId}-${id}`"
-		:class="['tabs-item__panel', { 'tabs-item__panel--active': isActive }]"
-		:aria-labelledby="`tab-${tabsId}-${id}`"
-		role="tabpanel"
-		tabindex="0"
-	>
-		<slot></slot>
-	</div>
+    <div
+        v-else
+        :id="`panel-${tabsId}-${id}`"
+        :class="panelClasses"
+        :aria-labelledby="`tab-${tabsId}-${id}`"
+        :hidden="!isActive"
+        role="tabpanel"
+        tabindex="0"
+    >
+        <slot></slot>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import Badge from '@/components/ui/Badge.vue';
+    import { computed } from 'vue';
 
-	interface BadgeType {
-		text: string | number;
-		type?: string;
-		variant?: string;
-	}
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import Badge from '@/components/ui/Badge.vue';
 
-	defineProps({
-		// Props communs
-		id: {
-			type: String,
-			required: true,
-		},
-		tabsId: {
-			type: String,
-			required: true,
-		},
-		isActive: {
-			type: Boolean,
-			default: false,
-		},
+    import type { BadgeVariant } from '@/types/components/base';
 
-		// Props pour le mode onglet
-		isTab: {
-			type: Boolean,
-			default: false,
-		},
-		label: {
-			type: String,
-			default: '',
-		},
-		icon: {
-			type: String,
-			default: '',
-		},
-		disabled: {
-			type: Boolean,
-			default: false,
-		},
-		badge: {
-			type: Object as () => BadgeType,
-			default: null,
-		},
-	});
+    interface TabBadge {
+        text: string | number;
+        type?: string;
+        variant?: string;
+    }
 
-	defineEmits(['select']);
+    interface Props {
+        id: string;
+        tabsId: string;
+        isActive?: boolean;
+        isTab?: boolean;
+        label?: string;
+        icon?: string;
+        disabled?: boolean;
+        badge?: TabBadge | null;
+    }
+
+    const props = withDefaults(defineProps<Props>(), {
+        isActive: false,
+        isTab: false,
+        label: '',
+        icon: '',
+        disabled: false,
+        badge: null,
+    });
+
+    const emit = defineEmits<{
+        select: [];
+    }>();
+
+    const tabClasses = computed(() => [
+        'tabs-item__tab',
+        {
+            'tabs-item__tab--active': props.isActive,
+            'tabs-item__tab--disabled': props.disabled,
+            'tabs-item__tab--with-icon': props.icon,
+            'tabs-item__tab--with-badge': props.badge,
+        },
+    ]);
+
+    const panelClasses = computed(() => ['tabs-item__panel', { 'tabs-item__panel--active': props.isActive }]);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	// Styles pour le mode onglet (navigation)
-	.tabs-item__tab {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: vars.$spacing-sm vars.$spacing-md;
-		font-weight: 500;
-		color: vars.$gray-dark;
-		border: none;
-		background: none;
-		cursor: pointer;
-		transition: all vars.$transition-base;
-		position: relative;
-		white-space: nowrap;
+    .tabs-item__tab {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: vars.$spacing-xxs;
+        padding: vars.$spacing-xs vars.$spacing-md;
+        border: none;
+        background: transparent;
+        font-weight: 500;
+        color: vars.$text-secondary;
+        white-space: nowrap;
+        cursor: pointer;
+        border-radius: vars.$border-radius-md;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-		&--active {
-			color: vars.$primary-color;
-		}
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            border-radius: inherit;
+            transition: background 0.3s ease;
+            z-index: -1;
+        }
 
-		&:hover:not(&--active):not(:disabled) {
-			color: func.adjust-color-brightness(vars.$primary-color, -15%);
-		}
+        &:hover:not(:disabled, &--active) {
+            color: vars.$text-primary;
 
-		&:disabled {
-			opacity: 0.5;
-			cursor: not-allowed;
-		}
+            &::before {
+                background: func.color-alpha(vars.$gray-light, 0.5);
+            }
 
-		&-icon {
-			margin-right: vars.$spacing-xs;
-			display: flex;
-			align-items: center;
-		}
+            .tabs-item__icon {
+                transform: scale(1.1);
+            }
+        }
 
-		&-badge {
-			margin-left: vars.$spacing-xs;
-		}
-	}
+        &:focus-visible {
+            outline: 2px solid vars.$primary-color;
+            outline-offset: 2px;
+        }
 
-	// Styles pour le mode panneau (contenu)
-	.tabs-item__panel {
-		display: none;
-		padding: vars.$spacing-md 0;
+        &--active {
+            color: vars.$primary-color;
 
-		&--active {
-			display: block;
-		}
-	}
+            .tabs-item__icon {
+                color: vars.$primary-color;
+            }
+        }
+
+        &--disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    .tabs-item__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+    }
+
+    .tabs-item__label {
+        line-height: 1;
+    }
+
+    .tabs-item__badge {
+        margin-left: vars.$spacing-xxxs;
+    }
+
+    .tabs-item__panel {
+        outline: none;
+
+        &:focus-visible {
+            outline: 2px solid vars.$primary-color;
+            outline-offset: 4px;
+            border-radius: vars.$border-radius-md;
+        }
+    }
 </style>

@@ -1,6 +1,69 @@
+# Dependencies
 node_modules
+.pnpm-store
+pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+.nuxt
+.output
 dist
-output
-.DS_Store
+build
+.next
+
+# Environment & Secrets
 .env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE files
+.idea
+.vscode
+*.sublime-*
+.vs
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Logs
 *.log
+logs/
+
+# Test & Coverage
+coverage
+.nyc_output
+__tests__
+*.test.*
+*.spec.*
+
+# Docs & Examples
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+examples/
+
+# Development files
+.editorconfig
+.prettierrc*
+.eslintrc*
+.stylelintrc*
+eslint.config.*
+stylelint.config.*
+tsconfig.eslint.json
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml

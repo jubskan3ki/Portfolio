@@ -1,198 +1,198 @@
 <template>
-	<div :class="['spinner', `spinner--${size}`, `spinner--${type}`, customClass]" role="status" aria-live="polite">
-		<div class="spinner__content">
-			<div v-if="type === 'circle'" class="spinner__circle"></div>
-			<div v-else-if="type === 'dots'" class="spinner__dots">
-				<div class="spinner__dot"></div>
-				<div class="spinner__dot"></div>
-				<div class="spinner__dot"></div>
-			</div>
-			<div v-else-if="type === 'pulse'" class="spinner__pulse"></div>
-			<span v-if="label" class="spinner__text">{{ label }}</span>
-		</div>
-	</div>
+    <div :class="classes" role="status" :aria-label="label">
+        <!-- Spinner visual -->
+        <svg v-if="type === 'circle'" class="spinner__circle" viewBox="0 0 24 24">
+            <circle
+                class="spinner__track"
+                cx="12"
+                cy="12"
+                r="10"
+                fill="none"
+                stroke-width="2.5"
+            />
+            <circle
+                class="spinner__path"
+                cx="12"
+                cy="12"
+                r="10"
+                fill="none"
+                stroke-width="2.5"
+            />
+        </svg>
+
+        <div v-else class="spinner__dots">
+            <span v-for="i in 3" :key="i" class="spinner__dot"></span>
+        </div>
+
+        <!-- Label -->
+        <span v-if="showLabel && label" class="spinner__label">{{ label }}</span>
+
+        <!-- Screen reader -->
+        <span class="sr-only">{{ label }}</span>
+    </div>
 </template>
 
 <script setup lang="ts">
-	defineProps({
-		size: {
-			type: String,
-			default: 'medium',
-			validator: (value: string) => ['small', 'medium', 'large'].includes(value),
-		},
-		type: {
-			type: String,
-			default: 'circle',
-			validator: (value: string) => ['circle', 'dots', 'pulse'].includes(value),
-		},
-		label: {
-			type: String,
-			default: 'Chargement...',
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import { computed } from 'vue';
+
+    import type { SpinnerSize } from '@/types/components/loaders';
+
+    interface Props {
+        type?: 'circle' | 'dots';
+        size?: SpinnerSize;
+        label?: string;
+        showLabel?: boolean;
+    }
+
+    const props = withDefaults(defineProps<Props>(), {
+        type: 'circle',
+        size: 'md',
+        label: 'Chargement...',
+        showLabel: false,
+    });
+
+    const classes = computed(() => ['spinner', `spinner--${props.type}`, `spinner--${props.size}`]);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as v;
 
-	.spinner {
-		display: inline-flex;
-		justify-content: center;
-		align-items: center;
+    .spinner {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: v.$spacing-xs;
+        color: v.$primary-color;
 
-		&__content {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		}
+        &__label {
+            font-size: v.$font-size-sm;
+            color: v.$text-secondary;
+            font-weight: v.$font-weight-medium;
+        }
 
-		&__text {
-			margin-top: vars.$spacing-sm;
-			color: vars.$gray-dark;
-		}
+        // Circle
+        &__circle {
+            animation: rotate 1s linear infinite;
+        }
 
-		// Type: Circle
-		&__circle {
-			border-radius: 50%;
-			border: 2px solid rgba(vars.$primary-color, 0.2);
-			border-top-color: vars.$primary-color;
-			animation: spinner-rotate 0.8s linear infinite;
-		}
+        &__track {
+            stroke: currentcolor;
+            opacity: 0.15;
+        }
 
-		// Type: Dots
-		&__dots {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 4px;
-		}
+        &__path {
+            stroke: currentcolor;
+            stroke-linecap: round;
+            stroke-dasharray: 62.83;
+            stroke-dashoffset: 47.12;
+        }
 
-		&__dot {
-			width: 8px;
-			height: 8px;
-			border-radius: 50%;
-			background-color: vars.$primary-color;
-			animation: spinner-scale 1.5s infinite ease-in-out;
+        // Dots
+        &__dots {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
 
-			&:nth-child(1) {
-				animation-delay: 0s;
-			}
+        &__dot {
+            border-radius: v.$border-radius-full;
+            background: currentcolor;
+            animation: bounce 1.4s ease-in-out infinite both;
 
-			&:nth-child(2) {
-				animation-delay: 0.2s;
-			}
+            @for $i from 1 through 3 {
+                &:nth-child(#{$i}) {
+                    animation-delay: #{($i - 1) * 0.16}s;
+                }
+            }
+        }
 
-			&:nth-child(3) {
-				animation-delay: 0.4s;
-			}
-		}
+        // Sizes
+        &--xs {
+            .spinner__circle {
+                width: 16px;
+                height: 16px;
+            }
+            .spinner__dot {
+                width: 4px;
+                height: 4px;
+            }
+        }
 
-		// Type: Pulse
-		&__pulse {
-			width: 20px;
-			height: 20px;
-			border-radius: 50%;
-			background-color: vars.$primary-color;
-			animation: spinner-pulse 1.2s infinite cubic-bezier(0.4, 0, 0.2, 1);
-		}
+        &--sm {
+            .spinner__circle {
+                width: 20px;
+                height: 20px;
+            }
+            .spinner__dot {
+                width: 5px;
+                height: 5px;
+            }
+        }
 
-		// Tailles
-		&--small {
-			.spinner__circle {
-				width: 16px;
-				height: 16px;
-				border-width: 2px;
-			}
+        &--md {
+            .spinner__circle {
+                width: 24px;
+                height: 24px;
+            }
+            .spinner__dot {
+                width: 6px;
+                height: 6px;
+            }
+        }
 
-			.spinner__dot {
-				width: 6px;
-				height: 6px;
-			}
+        &--lg {
+            .spinner__circle {
+                width: 32px;
+                height: 32px;
+            }
+            .spinner__dot {
+                width: 8px;
+                height: 8px;
+            }
+        }
 
-			.spinner__pulse {
-				width: 16px;
-				height: 16px;
-			}
-		}
+        &--xl {
+            .spinner__circle {
+                width: 48px;
+                height: 48px;
+            }
+            .spinner__dot {
+                width: 10px;
+                height: 10px;
+            }
+        }
+    }
 
-		&--medium {
-			.spinner__circle {
-				width: 24px;
-				height: 24px;
-				border-width: 2px;
-			}
+    // Animations
+    @keyframes rotate {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 
-			.spinner__dot {
-				width: 8px;
-				height: 8px;
-			}
+    @keyframes bounce {
+        0%,
+        80%,
+        100% {
+            transform: scale(0.6);
+            opacity: 0.5;
+        }
+        40% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
 
-			.spinner__pulse {
-				width: 24px;
-				height: 24px;
-			}
-		}
-
-		&--large {
-			.spinner__circle {
-				width: 40px;
-				height: 40px;
-				border-width: 3px;
-			}
-
-			.spinner__dot {
-				width: 12px;
-				height: 12px;
-			}
-
-			.spinner__pulse {
-				width: 40px;
-				height: 40px;
-			}
-		}
-	}
-
-	// Animations
-	@keyframes spinner-rotate {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(360deg);
-		}
-	}
-
-	@keyframes spinner-scale {
-		0%,
-		100% {
-			transform: scale(0.6);
-			opacity: 0.6;
-		}
-		50% {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
-
-	@keyframes spinner-pulse {
-		0% {
-			transform: scale(0.8);
-			opacity: 1;
-		}
-		50% {
-			transform: scale(1.2);
-			opacity: 0.5;
-		}
-		100% {
-			transform: scale(0.8);
-			opacity: 1;
-		}
-	}
+    // Screen reader only
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
 </style>

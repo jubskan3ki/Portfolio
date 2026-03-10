@@ -3,72 +3,77 @@
   Composant pour afficher les tags associés à la technologie
 -->
 <template>
-	<div v-if="tags && tags.length > 0" class="stack-tags animate-fade-in delay-3">
-		<h2>Tags associés</h2>
-		<div class="stack-tags__list">
-			<div v-for="tag in tags" :key="tag as string" class="stack-tags__item">
-				<BaseIcon name="code" :size="14" />
-				<span>{{ tag }}</span>
-			</div>
-		</div>
-	</div>
+    <div v-if="tags && tags.length > 0" class="stack-tags">
+        <h3 class="stack-tags__heading">
+            <BaseIcon name="hash" :size="16" />
+            Tags associés
+        </h3>
+        <div class="stack-tags__list">
+            <div v-for="tag in tags" :key="tag as string" class="stack-tags__item">
+                <BaseIcon name="code" :size="14" />
+                <span>{{ tag }}</span>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
+    import BaseIcon from '@/components/base/BaseIcon.vue';
 
-	defineProps({
-		tags: {
-			type: Array as () => string[] | readonly string[],
-			default: () => [],
-		},
-	});
+    interface Props {
+        tags?: string[];
+    }
+
+    withDefaults(defineProps<Props>(), {
+        tags: () => [],
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.stack-tags {
-		background-color: vars.$white;
-		border-radius: vars.$border-radius-lg;
-		padding: vars.$spacing-lg;
-		box-shadow: vars.$box-shadow-small;
+    .stack-tags {
+        background: fn.color-alpha(vars.$white, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid fn.color-alpha(vars.$white, 0.8);
+        border-radius: vars.$border-radius-xl;
+        padding: vars.$spacing-lg;
+        box-shadow:
+            0 8px 32px fn.color-alpha(vars.$black, 0.06),
+            0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
 
-		h2 {
-			margin-bottom: vars.$spacing-md;
-			position: relative;
-			padding-bottom: vars.$spacing-sm;
-			color: vars.$primary-color;
+        &__heading {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            margin: 0 0 vars.$spacing-md;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-primary;
+            letter-spacing: vars.$letter-spacing-tight;
+        }
 
-			&::after {
-				content: '';
-				position: absolute;
-				bottom: 0;
-				left: 0;
-				width: 60px;
-				height: 3px;
-				background-color: vars.$primary-color;
-				border-radius: vars.$border-radius-full;
-			}
-		}
+        &__list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: vars.$spacing-xs;
+        }
 
-		&__list {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-sm;
-			margin-top: vars.$spacing-md;
-		}
+        &__item {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+            padding: vars.$spacing-xxs vars.$spacing-sm;
+            background: fn.color-alpha(vars.$primary-color, 0.06);
+            border-radius: vars.$border-radius-full;
+            color: vars.$primary-color;
+            font-weight: vars.$font-weight-medium;
+            transition: all 0.2s ease;
 
-		&__item {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-xs;
-			padding: vars.$spacing-xs vars.$spacing-sm;
-			background-color: vars.$white-dark;
-			border-radius: vars.$border-radius-full;
-			color: vars.$primary-color;
-		}
-	}
+            &:hover {
+                background: fn.color-alpha(vars.$primary-color, 0.12);
+            }
+        }
+    }
 </style>

@@ -1,41 +1,77 @@
-# Étape 1 : Utiliser une image légère de Python 3.11
-FROM python:3.11-slim
+# ──────────────────────────────────────────────
+# Build arguments (overridable from docker-compose)
+# ──────────────────────────────────────────────
+ARG PYTHON_VERSION=3.13
 
-# Définition du répertoire de travail
+# Étape 1: Image de construction
+FROM python:${PYTHON_VERSION}-alpine AS builder
+
+# Mise à jour des paquets Alpine + dépendances de compilation
+RUN apk upgrade --no-cache --available && \
+    apk add --no-cache \
+    build-base \
+    postgresql-dev \
+    jpeg-dev \
+    zlib-dev \
+    libffi-dev
+
+# Création de l'environnement virtuel
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Préparation pour l'installation des dépendances
 WORKDIR /app
-
-# Installation des dépendances système nécessaires
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    netcat-openbsd \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Création du dossier logs et ajustement des permissions
-RUN mkdir -p /app/logs && chmod -R 777 /app/logs
-
-# Copier uniquement les fichiers de dépendances en premier pour optimiser le cache Docker
 COPY requirements.txt .
 
-# Vérifier que le fichier requirements.txt existe avant d'installer les dépendances
-RUN if [ -f "requirements.txt" ]; then pip install --no-cache-dir -r requirements.txt; fi
+# Installer les dépendances
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir wheel && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Installer Gunicorn et dotenv
-RUN pip install --no-cache-dir gunicorn python-dotenv
+# Étape 2: Image finale
+FROM python:${PYTHON_VERSION}-alpine
 
-# Copier le reste de l'application
+# Mise à jour des paquets Alpine + dépendances d'exécution
+RUN apk upgrade --no-cache --available && \
+    apk add --no-cache \
+    libpq \
+    libjpeg-turbo \
+    curl \
+    bash \
+    netcat-openbsd
+
+# Copier l'environnement virtuel
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Configuration de l'environnement (valeurs par défaut, surchargées par docker-compose)
+ENV DJANGO_SETTINGS_MODULE=config.settings \
+    GUNICORN_WORKERS=3 \
+    GUNICORN_TIMEOUT=120 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Créer un utilisateur non-root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Créer les répertoires nécessaires
+RUN mkdir -p /app/logs /app/media /app/staticfiles /app/.cache /app/swagger
+
 COPY . .
 
-# Donner les droits d'exécution au script setup.sh
-RUN chmod +x /app/scripts/setup.sh
+# Définir les permissions
+RUN chmod +x /app/scripts/*.sh \
+    && chmod +x /app/scripts/*.py \
+    && chown -R appuser:appgroup /app/logs /app/media /app/staticfiles /app/.cache /app/swagger
 
-# Exposer les ports 8000 et 80
-EXPOSE 8000 80
+# Passer à l'utilisateur non-root
+USER appuser
 
-# Définir le nombre de workers dynamiquement (en fonction du CPU)
-ENV GUNICORN_WORKERS=3
-ENV GUNICORN_TIMEOUT=120
+# Exposer le port
+EXPOSE 8000
 
-# Lancer l'application Django avec Gunicorn 
+# Commande de démarrage
 CMD ["/app/scripts/setup.sh"]

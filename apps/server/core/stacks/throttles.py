@@ -1,16 +1,17 @@
-"""
-Throttles pour les vues de l'application stack
-"""
+"""Throttles pour le module Stacks."""
 
-from rest_framework.throttling import SimpleRateThrottle
+from utils.throttles.base import BaseModuleThrottle
 
 
-class StacksThrottle(SimpleRateThrottle):
+class StacksThrottle(BaseModuleThrottle):
     """
-    Throttle pour les tentatives de stack
+    Throttle pour les requetes sur les stacks.
+
+    Rates:
+        - GET/HEAD/OPTIONS: 100/minute (lecture)
+        - POST/PUT/PATCH/DELETE: 10/minute (ecriture)
     """
 
     scope = "stack"
-
-    def get_cache_key(self, request, view):
-        return self.get_ident(request)
+    read_rate = "100/minute"
+    write_rate = "10/minute"

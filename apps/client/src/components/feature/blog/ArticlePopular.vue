@@ -1,134 +1,194 @@
-<!--
-  PopularArticles.vue
-  Composant pour afficher les articles populaires dans la sidebar
--->
 <template>
-	<Card class="popular-articles">
-		<h3 class="popular-articles__title">Articles populaires</h3>
-		<div class="popular-articles__list">
-			<BaseLink
-				v-for="article in articles"
-				:key="article.id"
-				:to="`/blog/${article.slug}`"
-				class="popular-articles__item"
-			>
-				<div class="popular-articles__image">
-					<img :src="article.image" :alt="article.title" />
-				</div>
-				<div class="popular-articles__info">
-					<h4 class="popular-articles__name">{{ article.title }}</h4>
-					<div class="popular-articles__meta">
-						<span>{{ formatDate(article.date) }}</span>
-						<span>•</span>
-						<span>{{ article.readTime }} min</span>
-					</div>
-				</div>
-			</BaseLink>
-		</div>
-	</Card>
+    <div class="popular-articles">
+        <h3 v-if="showTitle" class="popular-articles__title">
+            <BaseIcon name="trending-up" :size="16" />
+            {{ title }}
+        </h3>
+
+        <div class="popular-articles__list">
+            <BaseLink
+                v-for="article in articles"
+                :key="article.id"
+                :to="`/blog/${article.slug}`"
+                class="popular-articles__item"
+            >
+                <div class="popular-articles__image">
+                    <BaseImage
+                        v-if="article.image"
+                        :src="article.image"
+                        :alt="article.title"
+                        :width="56"
+                        :height="56"
+                        object-fit="cover"
+                        :show-placeholder="false"
+                        class="popular-articles__img"
+                    />
+                    <BaseIcon v-else name="file-text" :size="20" />
+                </div>
+
+                <div class="popular-articles__info">
+                    <h4 class="popular-articles__name">{{ article.title }}</h4>
+                    <div class="popular-articles__meta">
+                        <span>{{ formatRelative(article.date) }}</span>
+                        <span v-if="article.readTime" class="popular-articles__dot"></span>
+                        <span v-if="article.readTime">{{ article.readTime }} min</span>
+                        <span v-if="article.views" class="popular-articles__dot"></span>
+                        <span v-if="article.views" class="popular-articles__views">
+                            <BaseIcon name="eye" :size="11" />
+                            {{ formatViews(article.views) }}
+                        </span>
+                    </div>
+                </div>
+            </BaseLink>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseLink from '@/components/base/BaseLink.vue';
-	import Card from '@/components/ui/Card.vue';
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import BaseLink from '@/components/base/BaseLink.vue';
+    import { formatRelativeDate } from '@/services/utils/date';
+    import { formatViews } from '@/services/utils/helpers';
 
-	interface Article {
-		id: string | number;
-		slug: string;
-		title: string;
-		image: string;
-		date: string;
-		readTime: number;
-	}
+    interface PopularArticle {
+        id: string | number;
+        slug: string;
+        title: string;
+        image?: string;
+        date: string;
+        readTime?: number;
+        views?: number;
+    }
 
-	defineProps({
-		articles: {
-			type: Array as () => Article[] | readonly Article[],
-			default: () => [],
-		},
-	});
+    interface Props {
+        articles?: PopularArticle[];
+        title?: string;
+        showTitle?: boolean;
+    }
 
-	// Formater la date
-	const formatDate = (date: string | Date) => {
-		try {
-			const dateObj = date instanceof Date ? date : new Date(date);
-			return dateObj.toLocaleDateString('fr-FR', {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric',
-			});
-		} catch (e) {
-			return '';
-		}
-	};
+    withDefaults(defineProps<Props>(), {
+        articles: () => [],
+        title: 'Articles populaires',
+        showTitle: true,
+    });
+
+    const formatRelative = (date: string | Date) => formatRelativeDate(date);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.popular-articles {
-		&__title {
-			margin-bottom: vars.$spacing-md;
-			padding-bottom: vars.$spacing-sm;
-			border-bottom: 1px solid vars.$white-dark;
-			color: vars.$primary-color;
-		}
+    .popular-articles {
+        padding: vars.$spacing-lg;
 
-		&__list {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-md;
-		}
+        &__title {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            margin: 0 0 vars.$spacing-md;
+            padding-bottom: vars.$spacing-sm;
+            font-size: vars.$font-size-sm;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-primary;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid fn.color-alpha(vars.$border-color, 0.5);
+        }
 
-		&__item {
-			display: flex;
-			gap: vars.$spacing-md;
-			padding-bottom: vars.$spacing-sm;
-			border-bottom: 1px solid vars.$white-dark;
-			transition: transform 0.3s ease;
+        &__list {
+            display: flex;
+            flex-direction: column;
+            gap: vars.$spacing-xxxs;
+        }
 
-			&:last-child {
-				border-bottom: none;
-				padding-bottom: 0;
-			}
+        &__item {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-sm;
+            padding: vars.$spacing-xs;
+            text-decoration: none;
+            border-radius: vars.$border-radius-md;
+            transition: all 0.2s ease;
 
-			&:hover {
-				transform: translateX(5px);
-			}
-		}
+            &:hover {
+                background: fn.color-alpha(vars.$primary-color, 0.04);
+                text-decoration: none;
 
-		&__image {
-			width: 80px;
-			height: 60px;
-			border-radius: vars.$border-radius-md;
-			overflow: hidden;
-			flex-shrink: 0;
+                .popular-articles__name {
+                    color: vars.$primary-color;
+                }
 
-			img {
-				width: 100%;
-				height: 100%;
-				object-fit: cover;
-			}
-		}
+                .popular-articles__img {
+                    transform: scale(1.05);
+                }
+            }
+        }
 
-		&__info {
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-		}
+        &__image {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            overflow: hidden;
+            background: vars.$bg-secondary;
+            border-radius: vars.$border-radius-md;
+            color: vars.$text-muted;
+        }
 
-		&__name {
-			font-weight: 500;
-			color: vars.$black-light;
-			@include mix.truncate(2);
-		}
+        &__img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
 
-		&__meta {
-			color: vars.$gray;
-			display: flex;
-			gap: vars.$spacing-xs;
-		}
-	}
+        &__info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        &__name {
+            margin: 0 0 vars.$spacing-xxxs;
+            font-size: vars.$font-size-sm;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$text-primary;
+            line-height: 1.4;
+            transition: color 0.2s ease;
+
+            @include mix.truncate(2);
+        }
+
+        &__meta {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xxs;
+            font-size: 11px;
+            color: vars.$text-muted;
+        }
+
+        &__dot {
+            width: 3px;
+            height: 3px;
+            background: vars.$text-muted;
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+
+        &__views {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+    }
+
+    // Reduced motion
+    @media (prefers-reduced-motion: reduce) {
+        .popular-articles__img {
+            transition: none;
+        }
+    }
 </style>

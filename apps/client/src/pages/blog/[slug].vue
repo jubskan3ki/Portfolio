@@ -1,324 +1,562 @@
 <template>
-	<div>
-		<div v-if="isLoading" class="article-loader">
-			<Spinner type="circle" size="large" label="Chargement de l'article..." />
-		</div>
+    <div class="article-page">
+        <!-- Reading Progress Bar -->
+        <div
+            v-if="progressVisible"
+            class="reading-progress"
+            :style="{ width: `${progress}%` }"
+            role="progressbar"
+            :aria-valuenow="Math.round(progress)"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-label="Progression de lecture"
+        ></div>
 
-		<div v-else-if="error" class="article-error">
-			<ErrorMessage :message="error" action-text="Retour au blog" :to="ROUTES.BLOG" />
-		</div>
+        <!-- Loading -->
+        <LoadingState v-if="isLoading" message="Chargement de l'article..." size="lg" />
 
-		<template v-else-if="currentArticle">
-			<!-- En-tête de l'article avec le composant Hero -->
-			<Hero :title="currentArticle.title" variant="primary" has-meta>
-				<template #meta>
-					<div class="hero__meta-item">
-						<BaseIcon name="calendar" :size="16" />
-						<span>{{ formatDate(currentArticle.date) }}</span>
-					</div>
-					<div class="hero__meta-item">
-						<BaseIcon name="clock" :size="16" />
-						<span>{{ currentArticle.readTime }} min de lecture</span>
-					</div>
-					<div class="hero__meta-item">
-						<BaseIcon name="eye" :size="16" />
-						<span>{{ formatViews(currentArticle.views) }} vues</span>
-					</div>
-					<div class="hero__meta-item">
-						<BaseIcon name="folder" :size="16" />
-						<span>{{ getCategoryName(currentArticle.category) }}</span>
-					</div>
-				</template>
-			</Hero>
+        <!-- Error -->
+        <div v-else-if="error" class="article-error">
+            <ErrorMessage
+                :message="error?.message ?? 'Une erreur est survenue'"
+                action-text="Retour au blog"
+                :to="ROUTES.BLOG"
+            />
+        </div>
 
-			<!-- Contenu de l'article -->
-			<Section class="article-content">
-				<div class="container">
-					<div class="article-layout">
-						<div class="article-layout__main">
-							<div class="article-layout__image animate-fade-in">
-								<img :src="currentArticle.image" :alt="currentArticle.title" />
-							</div>
+        <template v-else-if="currentArticle">
+            <!-- Hero -->
+            <Hero :title="currentArticle.title" variant="secondary" has-meta>
+                <template #meta>
+                    <div class="hero__meta-item">
+                        <BaseIcon name="folder" :size="16" />
+                        <span>{{ getCategoryName(currentArticle.category) }}</span>
+                    </div>
+                    <div class="hero__meta-item">
+                        <BaseIcon name="calendar" :size="16" />
+                        <span>{{ formatDate(currentArticle.date) }}</span>
+                    </div>
+                    <div class="hero__meta-item">
+                        <BaseIcon name="clock" :size="16" />
+                        <span>{{ currentArticle.readTime }} min de lecture</span>
+                    </div>
+                    <div v-if="currentArticle.views" class="hero__meta-item">
+                        <BaseIcon name="eye" :size="16" />
+                        <span>{{ currentArticle.views }} vues</span>
+                    </div>
+                </template>
+            </Hero>
 
-							<div class="article-layout__content">
-								<p class="article-layout__intro animate-fade-in delay-1">
-									{{ currentArticle.excerpt }}
-								</p>
+            <!-- Content -->
+            <Main variant="default" size="large">
+                <!-- Article Intro -->
+                <div class="article-intro">
+                    <div v-if="currentArticle.image" class="article-intro__media">
+                        <BaseImage
+                            :src="currentArticle.image"
+                            :alt="currentArticle.title"
+                            object-fit="cover"
+                            class="article-intro__img"
+                        />
+                        <div class="article-intro__overlay"></div>
+                    </div>
+                    <div class="article-intro__body">
+                        <span class="article-intro__label">Introduction</span>
+                        <p class="article-intro__text">{{ currentArticle.excerpt }}</p>
+                    </div>
+                </div>
 
-								<div class="article-layout__body animate-fade-in delay-2">
-									<p v-for="(paragraph, index) in currentArticle.content" :key="index">
-										{{ paragraph }}
-									</p>
-								</div>
-							</div>
-						</div>
+                <DetailPageLayout>
+                    <template #main>
+                        <!-- Article Body -->
+                        <article ref="articleRef" class="detail-card">
+                            <ArticleBlockRenderer :blocks="contentBlocks" />
+                        </article>
+                    </template>
 
-						<div class="article-layout__sidebar animate-fade-in-up">
-							<!-- Auteur de l'article (composant) -->
-							<AuthorInfo
-								:name="currentArticle.author?.name"
-								:avatar="currentArticle.author?.avatar"
-								:bio="currentArticle.author?.bio"
-								:github="currentArticle.author?.social?.github"
-								:linkedin="currentArticle.author?.social?.linkedin"
-								:twitter="currentArticle.author?.social?.twitter"
-							/>
+                    <template #sidebar>
+                        <!-- Table of Contents -->
+                        <nav v-if="tocHeadings.length" class="toc-card" aria-label="Table des matières">
+                            <div class="toc-card__header">
+                                <span class="toc-card__label">Sommaire</span>
+                                <span class="toc-card__count">{{ tocHeadings.length }}</span>
+                            </div>
+                            <div class="toc-card__track">
+                                <ul class="toc-card__list">
+                                    <li
+                                        v-for="(heading, index) in tocHeadings"
+                                        :key="heading.id"
+                                        class="toc-card__item"
+                                        :class="[
+                                            `toc-card__item--h${heading.level}`,
+                                            { 'toc-card__item--active': activeHeadingId === heading.id },
+                                        ]"
+                                    >
+                                        <a :href="`#${heading.id}`" class="toc-card__link">
+                                            <span class="toc-card__index">{{
+                                                String(index + 1).padStart(2, '0')
+                                            }}</span>
+                                            <span class="toc-card__text">{{ heading.text }}</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </nav>
 
-							<!-- Tags de l'article (composant) -->
-							<ArticleTags :tags="currentArticle.tags" />
+                        <!-- Share -->
+                        <ShareCard :title="currentArticle.title" />
 
-							<!-- Articles populaires (composant) -->
-							<PopularArticles :articles="popularArticlesProcessed" />
-						</div>
-					</div>
-				</div>
-			</Section>
+                        <!-- Popular Articles -->
+                        <div v-if="popularArticles?.length" class="sidebar-card sidebar-card--flush">
+                            <PopularArticles :articles="popularArticles" show-title />
+                        </div>
 
-			<!-- Articles similaires avec ArticleList au lieu de ArticleCard -->
-			<Section v-if="relatedArticles && relatedArticles.length > 0" class="article-related" variant="light">
-				<div class="container">
-					<ArticleList
-						:articles="relatedArticlesProcessed"
-						title="Articles similaires"
-						layout="grid"
-						:card-hoverable="true"
-						:show-author="true"
-					/>
-				</div>
-			</Section>
+                        <!-- Tags -->
+                        <div v-if="currentArticle.tags?.length" class="sidebar-card sidebar-card--flush">
+                            <ArticleTags :tags="currentArticle.tags" display="simple" show-title />
+                        </div>
+                    </template>
+                </DetailPageLayout>
+            </Main>
 
-			<!-- Call-to-action avec le composant CTA -->
-			<CTA
-				title="Vous avez un projet en tête ?"
-				description="Discutons de vos besoins et voyons comment je peux vous aider à concrétiser votre vision avec mon expertise."
-				type="card"
-				variant="light"
-				:primary-button="{
-					label: 'Me contacter',
-					to: ROUTES.CONTACT,
-					variant: 'secondary',
-					icon: 'mail',
-				}"
-				:secondary-button="{
-					label: 'Voir tous les articles',
-					to: ROUTES.BLOG,
-					variant: 'outline',
-					icon: 'blog',
-				}"
-			/>
-		</template>
-	</div>
+            <!-- Related Articles -->
+            <Section v-if="displayedRelatedArticles?.length" variant="light" size="default">
+                <template #header>
+                    <h2 class="article-page__section-title">
+                        <BaseIcon name="book-open" :size="22" class="article-page__section-icon" />
+                        À lire ensuite
+                    </h2>
+                </template>
+                <div class="related-grid">
+                    <ArticleCard v-for="article in displayedRelatedArticles" :key="article.id" :article="article" />
+                </div>
+            </Section>
+
+            <!-- CTA -->
+            <CTA
+                key="article-cta"
+                title="Vous avez un projet ?"
+                description="Discutons de vos besoins et voyons comment je peux vous aider."
+                variant="secondary"
+                :primary-button="{
+                    label: 'Me contacter',
+                    to: ROUTES.CONTACT.path,
+                    icon: 'mail',
+                }"
+                :secondary-button="{
+                    label: 'Tous les articles',
+                    to: ROUTES.BLOG.path,
+                }"
+            />
+        </template>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
-	import Section from '@/components/layouts/Section.vue';
-	import Spinner from '@/components/loaders/Spinner.vue';
-	import CTA from '@/components/ui/CTA.vue';
-	import Hero from '@/components/ui/Hero.vue';
-	import { ROUTES } from '@/config/routes';
-	import { useMock } from '@/services/api/useMock';
-	import { computed, onMounted, watch } from 'vue';
-	import { useRoute, useRouter } from 'vue-router';
+    import { computed, ref, watch } from 'vue';
 
-	// Importation des composants personnalisés
-	import ArticleList from '@/components/feature/blog/ArticleList.vue';
-	import PopularArticles from '@/components/feature/blog/ArticlePopular.vue';
-	import ArticleTags from '@/components/feature/blog/ArticleTags.vue';
-	import AuthorInfo from '@/components/feature/blog/AuthorInfo.vue';
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import ArticleBlockRenderer from '@/components/feature/blog/ArticleBlockRenderer.vue';
+    import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
+    import PopularArticles from '@/components/feature/blog/ArticlePopular.vue';
+    import ArticleTags from '@/components/feature/blog/ArticleTags.vue';
+    import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
+    import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
+    import Main from '@/components/layouts/Main.vue';
+    import Section from '@/components/layouts/Section.vue';
+    import LoadingState from '@/components/loaders/LoadingState.vue';
+    import CTA from '@/components/ui/CTA.vue';
+    import Hero from '@/components/ui/Hero.vue';
+    import ShareCard from '@/components/ui/ShareCard.vue';
+    import { useAnnounce } from '@/composables/accessibility/useAnnounce';
+    import { useDetailSlug } from '@/composables/data/useDetailSlug';
+    import { useViewRecording } from '@/composables/data/useViewRecording';
+    import { useArticleSeo } from '@/composables/seo/useSeo';
+    import { useReadingProgress } from '@/composables/ui/useReadingProgress';
+    import { useTableOfContents } from '@/composables/ui/useTableOfContents';
+    import { ROUTES } from '@/config/routes';
+    import {
+        useArticle,
+        usePopularArticles,
+        useRelatedArticles,
+        useRecordArticleView,
+    } from '@/services/api/modules/articles';
+    import { normalizeContent } from '@/services/utils/contentParser';
 
-	// Router et route
-	const route = useRoute();
-	const router = useRouter();
-	const slug = computed(() => route.params.slug as string);
+    const router = useRouter();
 
-	// Utiliser le service useMock pour récupérer les données
-	const {
-		isLoading,
-		error,
-		currentArticle,
-		relatedArticles,
-		popularArticles,
-		fetchArticleBySlug,
-		fetchPopularArticles,
-	} = useMock();
+    // Validate slug parameter
+    const { slug } = useDetailSlug(ROUTES.BLOG.path);
 
-	// Conversion des articles en lecture seule vers le format attendu par les composants
-	const relatedArticlesProcessed = computed(() => {
-		if (!relatedArticles.value) return [];
-		return Array.from(relatedArticles.value).map((article) => {
-			return {
-				...article,
-				content: article.content ? Array.from(article.content) : [],
-				tags: article.tags ? Array.from(article.tags) : [],
-			};
-		});
-	});
+    // API
+    const { data: currentArticle, isLoading, isError, error } = useArticle(slug);
+    const { data: popularArticles } = usePopularArticles(3);
+    const { data: relatedArticles } = useRelatedArticles(slug);
 
-	const popularArticlesProcessed = computed(() => {
-		if (!popularArticles.value) return [];
-		return Array.from(popularArticles.value).map((article) => {
-			return {
-				...article,
-				content: article.content ? Array.from(article.content) : [],
-				tags: article.tags ? Array.from(article.tags) : [],
-			};
-		});
-	});
+    // Normalize content blocks (handles raw markdown, JSON string, or mixed blocks)
+    const contentBlocks = computed(() => normalizeContent(currentArticle.value?.content));
 
-	// Charger les données lorsque le slug change
-	watch(
-		() => route.params.slug,
-		async (newSlug) => {
-			if (newSlug) {
-				await fetchArticleBySlug(newSlug as string);
-			}
-		}
-	);
+    // Related articles (dedicated endpoint with popular fallback)
+    const displayedRelatedArticles = computed(() => {
+        if (relatedArticles.value?.length) {
+            return relatedArticles.value;
+        }
+        return popularArticles.value?.filter((a) => a.slug !== slug.value) ?? [];
+    });
 
-	// Chargement initial des données
-	onMounted(async () => {
-		if (slug.value) {
-			await fetchArticleBySlug(slug.value);
-			await fetchPopularArticles(3); // Charger 3 articles populaires
+    // Record view
+    const { mutate: recordView } = useRecordArticleView();
+    useViewRecording(currentArticle, recordView);
 
-			// Redirection en cas d'échec
-			if (error.value && !currentArticle.value) {
-				router.push(ROUTES.BLOG);
-			}
-		}
-	});
+    // Accessibility
+    const { announceNavigation } = useAnnounce();
 
-	// Formatage de la date
-	const formatDate = (dateString: string) => {
-		const date = new Date(dateString);
-		return new Intl.DateTimeFormat('fr-FR', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-		}).format(date);
-	};
+    // SEO
+    watch(
+        currentArticle,
+        (article) => {
+            if (article) {
+                useArticleSeo(article);
+                announceNavigation(`Article: ${article.title}`);
+            }
+        },
+        { immediate: true },
+    );
 
-	// Formatage du nombre de vues
-	const formatViews = (views: number) => {
-		if (views >= 1000) {
-			return `${(views / 1000).toFixed(1)}k`;
-		}
-		return views;
-	};
+    // Error redirect
+    watch(isError, (hasError) => {
+        if (hasError) {
+            router.push(ROUTES.BLOG.path);
+        }
+    });
 
-	// Obtenir le nom de la catégorie
-	const getCategoryName = (categoryId: string) => {
-		const categories: Record<string, string> = {
-			web: 'Web',
-			vue: 'Vue.js',
-			react: 'React',
-			typescript: 'TypeScript',
-			javascript: 'JavaScript',
-			node: 'Node.js',
-			devops: 'DevOps',
-			design: 'Design',
-			ux: 'UX/UI',
-			tools: 'Outils',
-			tutorials: 'Tutoriels',
-			other: 'Divers',
-		};
-		return categories[categoryId] || categoryId;
-	};
+    // Reading progress
+    const articleRef = ref<HTMLElement | null>(null);
+    const { progress, isVisible: progressVisible } = useReadingProgress(articleRef);
+
+    // Table of contents (uses normalized blocks)
+    const { headings: tocHeadings, activeId: activeHeadingId } = useTableOfContents(contentBlocks);
+
+    // Formatting
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        }).format(date);
+    };
+
+    const getCategoryName = (category: string) => category;
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	// Loader et écrans d'erreur
-	.article-loader,
-	.article-error {
-		min-height: 60vh;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		padding: vars.$spacing-xl 0;
-	}
+    .article-page {
+        min-height: 100vh;
 
-	// Contenu principal
-	.article-content {
-		padding: vars.$spacing-xl 0;
-	}
+        &__section-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: vars.$spacing-sm;
+            color: vars.$text-primary;
+            letter-spacing: vars.$letter-spacing-tight;
 
-	.article-layout {
-		display: grid;
-		grid-template-columns: 2fr 1fr;
-		gap: vars.$spacing-xl;
+            &::before,
+            &::after {
+                content: '';
+                flex: 1;
+                max-width: 80px;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, fn.color-alpha(vars.$primary-color, 0.2));
+            }
 
-		@include mix.responsive(tablet) {
-			grid-template-columns: 1fr;
-		}
+            &::after {
+                background: linear-gradient(90deg, fn.color-alpha(vars.$primary-color, 0.2), transparent);
+            }
+        }
 
-		&__main {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-lg;
-		}
+        &__section-icon {
+            color: vars.$secondary-color;
+            flex-shrink: 0;
+        }
+    }
 
-		&__image {
-			border-radius: vars.$border-radius-lg;
-			overflow: hidden;
-			box-shadow: vars.$box-shadow-medium;
+    /* Reading Progress */
+    .reading-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, vars.$primary-color, vars.$secondary-color);
+        z-index: vars.$z-index-fixed;
+        transition: width 150ms linear;
 
-			img {
-				width: 100%;
-				height: auto;
-				display: block;
-			}
-		}
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+        }
+    }
 
-		&__content {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-lg;
-			background-color: vars.$white;
-			border-radius: vars.$border-radius-lg;
-			padding: vars.$spacing-lg;
-			box-shadow: vars.$box-shadow-small;
-		}
+    .article-error {
+        min-height: 60vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: vars.$spacing-xl 0;
+    }
 
-		&__intro {
-			font-weight: 500;
-			color: vars.$black-light;
-			line-height: 1.6;
-			padding-left: vars.$spacing-md;
-			border-left: 3px solid vars.$primary-color;
-		}
+    /* Detail Cards */
+    .detail-card {
+        background: fn.color-alpha(vars.$white, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid fn.color-alpha(vars.$white, 0.8);
+        border-radius: vars.$border-radius-xl;
+        padding: vars.$spacing-xl;
+        box-shadow:
+            0 8px 32px fn.color-alpha(vars.$black, 0.06),
+            0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
 
-		&__body {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-md;
+        @include mix.responsive(mobile) {
+            padding: vars.$spacing-lg;
+        }
+    }
 
-			p {
-				line-height: 1.8;
-				color: vars.$black-light;
-			}
-		}
+    /* Article Intro */
+    .article-intro {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        margin-bottom: vars.$spacing-xl;
+        background: fn.color-alpha(vars.$white, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid fn.color-alpha(vars.$white, 0.8);
+        border-radius: vars.$border-radius-xl;
+        overflow: hidden;
+        box-shadow:
+            0 8px 32px fn.color-alpha(vars.$black, 0.06),
+            0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
 
-		// Sidebar
-		&__sidebar {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-lg;
-			height: fit-content;
+        @include mix.responsive(tablet) {
+            flex-direction: column;
+        }
 
-			@include mix.responsive(tablet) {
-				order: -1;
-			}
-		}
-	}
+        &__media {
+            flex-shrink: 0;
+            width: 320px;
+            position: relative;
 
-	// Articles similaires - Styles réduits car ArticleList gère l'affichage
-	.article-related {
-		padding: vars.$spacing-xl 0;
-	}
+            @include mix.responsive(tablet) {
+                width: 100%;
+                height: 200px;
+            }
+        }
+
+        &__img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        &__overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to right,
+                transparent 30%,
+                fn.color-alpha(vars.$white, 0.4) 70%,
+                fn.color-alpha(vars.$white, 0.95) 100%
+            );
+            pointer-events: none;
+
+            @include mix.responsive(tablet) {
+                background: linear-gradient(
+                    to bottom,
+                    transparent 20%,
+                    fn.color-alpha(vars.$white, 0.4) 65%,
+                    fn.color-alpha(vars.$white, 0.95) 100%
+                );
+            }
+        }
+
+        &__body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: vars.$spacing-xl;
+            gap: vars.$spacing-sm;
+
+            @include mix.responsive(mobile) {
+                padding: vars.$spacing-lg;
+            }
+        }
+
+        &__label {
+            font-size: vars.$font-size-xs;
+            font-weight: vars.$font-weight-semibold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: vars.$primary-color;
+        }
+
+        &__text {
+            font-size: vars.$font-size-lg;
+            color: vars.$text-secondary;
+            line-height: 1.75;
+            margin: 0;
+
+            @include mix.responsive(mobile) {
+                font-size: vars.$font-size-base;
+            }
+        }
+    }
+
+    /* Sidebar Cards */
+    .sidebar-card {
+        background: fn.color-alpha(vars.$white, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid fn.color-alpha(vars.$white, 0.8);
+        border-radius: vars.$border-radius-xl;
+        padding: vars.$spacing-lg;
+        box-shadow:
+            0 8px 32px fn.color-alpha(vars.$black, 0.06),
+            0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
+        overflow: hidden;
+
+        &--flush {
+            padding: 0;
+        }
+
+        &__heading {
+            display: flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            margin: 0 0 vars.$spacing-md;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$text-primary;
+            letter-spacing: vars.$letter-spacing-tight;
+        }
+
+        &__heading-icon {
+            color: vars.$secondary-color;
+            flex-shrink: 0;
+        }
+    }
+
+
+    /* TOC Card */
+    .toc-card {
+        background: fn.color-alpha(vars.$white, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid fn.color-alpha(vars.$white, 0.8);
+        border-radius: vars.$border-radius-xl;
+        overflow: hidden;
+        box-shadow:
+            0 8px 32px fn.color-alpha(vars.$black, 0.06),
+            0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
+
+        &__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: vars.$spacing-md vars.$spacing-lg;
+            border-bottom: 1px solid fn.color-alpha(vars.$border-color, 0.12);
+        }
+
+        &__label {
+            font-size: vars.$font-size-xs;
+            font-weight: vars.$font-weight-semibold;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: vars.$text-muted;
+        }
+
+        &__count {
+            font-size: vars.$font-size-xs;
+            font-weight: vars.$font-weight-medium;
+            color: vars.$primary-color;
+            background: fn.color-alpha(vars.$primary-color, 0.08);
+            padding: 2px 8px;
+            border-radius: vars.$border-radius-full;
+            line-height: 1.4;
+        }
+
+        &__track {
+            padding: vars.$spacing-sm vars.$spacing-lg vars.$spacing-lg;
+        }
+
+        &__list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        &__item {
+            &--h3 {
+                padding-left: vars.$spacing-lg;
+            }
+
+            &--h4 {
+                padding-left: calc(vars.$spacing-lg * 2);
+            }
+
+            &--active .toc-card__link {
+                color: vars.$text-primary;
+
+                .toc-card__index {
+                    color: vars.$primary-color;
+                }
+
+                .toc-card__text {
+                    font-weight: vars.$font-weight-medium;
+                }
+            }
+        }
+
+        &__link {
+            display: flex;
+            align-items: baseline;
+            gap: vars.$spacing-sm;
+            padding: vars.$spacing-xs 0;
+            font-size: vars.$font-size-sm;
+            color: vars.$text-muted;
+            text-decoration: none;
+            transition: color 0.2s ease;
+
+            &:hover {
+                color: vars.$text-primary;
+
+                .toc-card__index {
+                    color: vars.$primary-color;
+                }
+            }
+        }
+
+        &__index {
+            font-size: 10px;
+            font-weight: vars.$font-weight-medium;
+            font-variant-numeric: tabular-nums;
+            color: fn.color-alpha(vars.$text-muted, 0.4);
+            flex-shrink: 0;
+            transition: color 0.2s ease;
+        }
+
+        &__text {
+            line-height: 1.5;
+        }
+    }
+
+    /* Related Grid */
+    .related-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: vars.$spacing-lg;
+    }
 </style>

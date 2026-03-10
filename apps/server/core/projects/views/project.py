@@ -1,89 +1,168 @@
-"""
-Gestion des projets du portfolio via API.
-"""
+"""Vues pour les projets."""
 
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
-from rest_framework.parsers import JSONParser, MultiPartParser
+from django.db.models import QuerySet
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions
+from rest_framework.decorators import action
+from rest_framework.request import Request
 from rest_framework.response import Response
 
+from utils.api import BaseAPIViewSet, parse_limit
+from utils.pagination import APIResponsePagination
+
+from ..doc import (
+    PAGINATION_PARAMS,
+    PARAM_FEATURED_LIMIT,
+    PROJECT_LIST_PARAMS,
+    RESPONSE_200_LIST,
+    RESPONSE_204,
+    RESPONSE_400,
+    RESPONSE_404,
+    TAGS_PROJECTS,
+)
+from ..filters import ProjectFilter
 from ..models import Project
-from ..serializers.project import ProjectSerializer
-from ..throttles import ProjectThrottle
+from ..serializers.project import ProjectDetailSerializer, ProjectListSerializer, ProjectWriteSerializer
+from ..services.interaction import InteractionService
+from ..services.project import ProjectService
+from ..throttles import ProjectsThrottle, ProjectViewThrottle
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
-    """
-    Vue enrichie pour gérer entièrement les projets :
-    - Accès en lecture public.
-    - Modifications restreintes aux utilisateurs authentifiés.
-    """
+class ProjectViewSet(BaseAPIViewSet):
+    """API endpoint pour les projets."""
 
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    parser_classes = [MultiPartParser, JSONParser]
-    throttle_classes = [ProjectThrottle]
+    queryset = Project.objects.select_related("category", "status")
+    serializer_class = ProjectDetailSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    throttle_classes = [ProjectsThrottle]
+    pagination_class = APIResponsePagination
+    filterset_class = ProjectFilter
+    lookup_field = "slug"
 
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
-    search_fields = ["title", "tags", "description"]
-    ordering_fields = ["created_at", "updated_at", "title", "priority", "start_date", "end_date"]
-    filterset_fields = ["status", "priority"]
+    # Configuration pour SerializerByActionMixin
+    serializer_classes = {
+        "list": ProjectListSerializer,
+        "featured": ProjectListSerializer,
+        "by_category": ProjectListSerializer,
+        "create": ProjectWriteSerializer,
+        "update": ProjectWriteSerializer,
+        "partial_update": ProjectWriteSerializer,
+    }
 
-    def get_permissions(self):
-        """
-        SAFE_METHODS => accès public.
-        Méthodes d'écriture => authentification obligatoire.
-        """
-        if self.request.method in permissions.SAFE_METHODS:
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+    @swagger_auto_schema(
+        operation_summary="Liste des projets",
+        operation_description="Recupere la liste des projets, filtrable par differents criteres.",
+        manual_parameters=PROJECT_LIST_PARAMS,
+        responses={200: RESPONSE_200_LIST},
+        tags=TAGS_PROJECTS,
+    )
+    def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Recupere la liste des projets."""
+        return super().list(request, *args, **kwargs)
 
-    def active(self, request):
-        """
-        Retourne uniquement les projets actifs (planification ou en cours).
-        """
-        _ = request
-        queryset = self.queryset.filter(status__in=["planning", "in_progress"])
-        page = self.paginate_queryset(queryset)
-        if page:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
+    @swagger_auto_schema(
+        operation_summary="Details d'un projet",
+        operation_description="Recupere les details d'un projet par son slug ou ID.",
+        responses={200: ProjectDetailSerializer(), 404: RESPONSE_404},
+        tags=TAGS_PROJECTS,
+    )
+    def retrieve(self, _request: Request, *_args: object, **_kwargs: object) -> Response:
+        """Recupere les details d'un projet par son slug ou ID."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    def recent(self, request):
-        """
-        Renvoie les 5 derniers projets créés.
-        """
-        _ = request
-        recent_projects = self.queryset.order_by("-created_at")[:5]
-        serializer = self.get_serializer(recent_projects, many=True)
+    @swagger_auto_schema(
+        operation_summary="Creer un projet",
+        operation_description="Cree un nouveau projet.",
+        request_body=ProjectWriteSerializer,
+        responses={201: ProjectListSerializer(), 400: RESPONSE_400},
+        tags=TAGS_PROJECTS,
+    )
+    def create(self, request: Request, *_args: object, **_kwargs: object) -> Response:
+        """Cree un nouveau projet."""
+        return self.write_with_response_serializer(request, ProjectListSerializer)
+
+    @swagger_auto_schema(
+        operation_summary="Mettre a jour un projet",
+        operation_description="Met a jour completement un projet existant.",
+        request_body=ProjectWriteSerializer,
+        responses={200: ProjectListSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+        tags=TAGS_PROJECTS,
+    )
+    def update(self, request: Request, *_args: object, **_kwargs: object) -> Response:
+        """Met a jour completement un projet existant."""
+        return self.write_with_response_serializer(request, ProjectListSerializer, instance=self.get_object())
+
+    @swagger_auto_schema(
+        operation_summary="Mettre a jour partiellement un projet",
+        operation_description="Met a jour partiellement un projet existant.",
+        request_body=ProjectWriteSerializer,
+        responses={200: ProjectListSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+        tags=TAGS_PROJECTS,
+    )
+    def partial_update(self, request: Request, *_args: object, **_kwargs: object) -> Response:
+        """Met a jour partiellement un projet existant."""
+        return self.write_with_response_serializer(
+            request, ProjectListSerializer, instance=self.get_object(), partial=True
+        )
+
+    @swagger_auto_schema(
+        operation_summary="Supprimer un projet",
+        operation_description="Supprime un projet existant.",
+        responses={204: RESPONSE_204, 404: RESPONSE_404},
+        tags=TAGS_PROJECTS,
+    )
+    def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Supprime un projet existant."""
+        return super().destroy(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Projets par categorie",
+        operation_description="Recupere les projets d'une categorie specifique.",
+        manual_parameters=PAGINATION_PARAMS,
+        responses={200: RESPONSE_200_LIST, 404: RESPONSE_404},
+        tags=TAGS_PROJECTS,
+    )
+    @action(detail=False, methods=["get"], url_path="by-category/(?P<category_slug>[^/.]+)")
+    def by_category(self, _request: Request, category_slug: str | None = None) -> Response:
+        """Recupere les projets par categorie."""
+        queryset = ProjectService.get_by_category(category_slug or "")
+        return self.paginated_response(queryset, ProjectListSerializer)
+
+    @swagger_auto_schema(
+        operation_summary="Projets mis en avant",
+        operation_description="Recupere les projets mis en avant (les plus aimes).",
+        manual_parameters=[PARAM_FEATURED_LIMIT],
+        responses={200: ProjectListSerializer(many=True)},
+        tags=TAGS_PROJECTS,
+    )
+    @action(detail=False, methods=["get"])
+    def featured(self, request: Request) -> Response:
+        """Recupere les projets mis en avant."""
+        limit = parse_limit(request.query_params.get("limit"), default=3)
+        projects = ProjectService.get_featured(limit)
+        serializer = ProjectListSerializer(projects, many=True, context={"request": request})
         return Response(serializer.data)
 
-    def archived(self, request):
-        """
-        Renvoie les projets archivés.
-        """
-        _ = request
-        archived_projects = self.queryset.filter(status="archived")
-        page = self.paginate_queryset(archived_projects)
-        if page:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(archived_projects, many=True)
+    @swagger_auto_schema(
+        operation_summary="Incrementer les vues d'un projet",
+        operation_description="Incremente le compteur de vues d'un projet.",
+        responses={200: ProjectDetailSerializer(), 404: RESPONSE_404},
+        tags=TAGS_PROJECTS,
+    )
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.AllowAny],
+        throttle_classes=[ProjectViewThrottle],
+    )
+    def view(self, _request: Request, slug: str | None = None) -> Response:
+        """Incremente le compteur de vues d'un projet."""
+        project = InteractionService.increment_view_and_get(slug or "")
+        serializer = self.get_serializer(project)
         return Response(serializer.data)
 
-    def by_tag(self, request):
-        """
-        Filtre les projets par un tag spécifique passé en paramètre.
-        """
-        tag = request.query_params.get("tag", None)
-        if tag:
-            projects_by_tag = self.queryset.filter(tags__icontains=tag)
-            page = self.paginate_queryset(projects_by_tag)
-            if page:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data)
-            serializer = self.get_serializer(projects_by_tag, many=True)
-            return Response(serializer.data)
-        return Response({"detail": "Veuillez spécifier un tag via le paramètre 'tag'."}, status=400)
+    def _get_base_queryset(self) -> QuerySet[Project]:
+        """Retourne les projets avec relations pre-chargees."""
+        return Project.objects.select_related("category", "status")

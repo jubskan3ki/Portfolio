@@ -1,0 +1,208 @@
+// Parallax Effects (Flat Style - Solid Colors)
+@use '../abstracts/variables' as vars;
+@use '../abstracts/mixins' as mix;
+
+// Parallax container
+.parallax-container {
+    @include mix.parallax-container;
+}
+
+// Parallax layers
+.parallax-layer {
+    @include mix.parallax-layer;
+
+    &--1 {
+        transform: translateZ(vars.$parallax-depth-1);
+    }
+
+    &--2 {
+        transform: translateZ(vars.$parallax-depth-2);
+    }
+
+    &--3 {
+        transform: translateZ(vars.$parallax-depth-3);
+    }
+
+    &--back {
+        transform: translateZ(-#{vars.$parallax-depth-1});
+    }
+}
+
+// Parallax hero section
+.parallax-hero {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    perspective: vars.$tilt-perspective-lg;
+    perspective-origin: center;
+
+    &__background {
+        position: absolute;
+        inset: -10%;
+        background-size: cover;
+        background-position: center;
+        transform: translateZ(-#{vars.$parallax-depth-2}) scale(1.2);
+    }
+
+    &__content {
+        position: relative;
+        z-index: 1;
+        transform: translateZ(vars.$parallax-depth-1);
+    }
+
+    &__decoration {
+        position: absolute;
+        pointer-events: none;
+
+        &--left {
+            left: 5%;
+            top: 20%;
+            transform: translateZ(vars.$parallax-depth-2);
+        }
+
+        &--right {
+            right: 5%;
+            bottom: 20%;
+            transform: translateZ(vars.$parallax-depth-3);
+        }
+    }
+}
+
+// Mouse-responsive parallax (requires JS)
+.parallax-mouse {
+    transition: transform 0.1s ease-out;
+    will-change: transform;
+}
+
+// Scroll parallax effect
+.parallax-scroll {
+    position: relative;
+
+    &__slow {
+        transform: translateY(calc(var(--scroll-y, 0) * -0.3));
+        transition: transform 0.1s linear;
+    }
+
+    &__fast {
+        transform: translateY(calc(var(--scroll-y, 0) * 0.5));
+        transition: transform 0.1s linear;
+    }
+}
+
+// Floating elements
+.float {
+    @include mix.float-animation;
+
+    &--slow {
+        @include mix.float-animation(8s, 8px);
+    }
+
+    &--fast {
+        @include mix.float-animation(4s, 12px);
+    }
+
+    &--delayed {
+        animation-delay: 1s;
+    }
+}
+
+// Floating decorative shapes (Flat - Solid Colors)
+.floating-shapes {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+
+    &__shape {
+        position: absolute;
+        opacity: 0.5;
+
+        &--circle {
+            border-radius: 50%;
+            background: vars.$primary-light;
+        }
+
+        &--square {
+            border-radius: vars.$border-radius-md;
+            background: vars.$secondary-color;
+        }
+
+        &--1 {
+            width: 60px;
+            height: 60px;
+            top: 10%;
+            left: 5%;
+
+            @include mix.float-animation(7s, 15px);
+        }
+
+        &--2 {
+            width: 40px;
+            height: 40px;
+            top: 30%;
+            right: 10%;
+
+            @include mix.float-animation(5s, 10px);
+
+            animation-delay: 1s;
+        }
+
+        &--3 {
+            width: 80px;
+            height: 80px;
+            bottom: 20%;
+            left: 15%;
+
+            @include mix.float-animation(9s, 20px);
+
+            animation-delay: 2s;
+        }
+
+        &--4 {
+            width: 30px;
+            height: 30px;
+            bottom: 30%;
+            right: 20%;
+
+            @include mix.float-animation(6s, 12px);
+
+            animation-delay: 0.5s;
+        }
+    }
+}
+
+// Gradient orbs (Flat - Solid Colors with blur)
+.gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.4;
+    pointer-events: none;
+
+    &--primary {
+        background: vars.$primary-color;
+    }
+
+    &--secondary {
+        background: vars.$secondary-color;
+    }
+
+    &--accent {
+        background: vars.$primary-color;
+    }
+
+    &--sm {
+        width: 150px;
+        height: 150px;
+    }
+
+    &--md {
+        width: 250px;
+        height: 250px;
+    }
+
+    &--lg {
+        width: 400px;
+        height: 400px;
+    }
+}

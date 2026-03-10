@@ -1,0 +1,75 @@
+// Variables des composants
+
+@use 'spacing' as s;
+
+// Boutons
+$button-padding-sm: 8px 12px;
+$button-padding-md: 10px 16px;
+$button-padding-lg: 12px 24px;
+
+// Inputs
+$input-padding: 10px 12px;
+$input-border-radius: s.$border-radius-md;
+$input-height: 48px;
+$input-height-sm: 36px;
+$input-height-lg: 56px;
+
+// Form elements
+$checkbox-size: 18px;
+$checkbox-size-sm: 16px;
+$checkbox-size-lg: 20px;
+$radio-size: 18px;
+$switch-width: 44px;
+$switch-height: 24px;
+$switch-thumb-size: 20px;
+
+// Cards
+$card-padding: 24px;
+$card-border-radius: s.$border-radius-lg;
+$card-image-height: 200px;
+$card-image-height-compact: 150px;
+$card-hover-translate: -3px;
+
+// Badges
+$badge-padding: 4px 8px;
+$badge-border-radius: s.$border-radius-full;
+
+// Icons
+$icon-size-xs: 14px;
+$icon-size-sm: 16px;
+$icon-size-md: 20px;
+$icon-size-lg: 24px;
+$icon-size-xl: 32px;
+$icon-container-sm: 40px;
+$icon-container-md: 52px;
+$icon-container-lg: 64px;
+
+// Avatars
+$avatar-size-sm: 32px;
+$avatar-size-md: 48px;
+$avatar-size-lg: 64px;
+$avatar-size-xl: 96px;
+
+// Shadows
+$shadow-card-icon: 0 4px 8px rgb(0 0 0 / 8%);
+$shadow-card-icon-hover: 0 6px 12px rgb(0 0 0 / 12%);
+
+// Gradients
+$gradient-overlay-dark: linear-gradient(to bottom, rgb(0 0 0 / 40%), transparent 40%);
+$gradient-overlay-light: linear-gradient(to bottom, rgb(255 255 255 / 90%), transparent);
+
+// Skeleton
+$skeleton-height-text: 16px;
+$skeleton-height-title: 24px;
+$skeleton-height-image: 200px;
+
+// Modals
+$modal-width-sm: 400px;
+$modal-width-md: 560px;
+$modal-width-lg: 720px;
+$modal-width-xl: 960px;
+
+// Tables
+$table-row-height: 52px;
+$table-header-height: 48px;
+$table-cell-padding: 12px 16px;

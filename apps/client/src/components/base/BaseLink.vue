@@ -1,175 +1,127 @@
 <template>
-	<NuxtLink
-		v-if="isInternalLink"
-		:to="resolvedTo"
-		:class="[
-			'link',
-			variant && `link--${variant}`,
-			{ 'link--block': block },
-			{ 'link--underline': underline },
-			customClass,
-		]"
-		:target="target"
-		:aria-label="ariaLabel"
-	>
-		<slot name="icon-left"></slot>
-		<slot>{{ text }}</slot>
-		<slot name="icon-right"></slot>
-	</NuxtLink>
+    <NuxtLink v-if="isInternalLink" v-bind="componentProps" :class="linkClasses">
+        <slot name="icon-left"></slot>
+        <slot>{{ text }}</slot>
+        <slot name="icon-right"></slot>
+    </NuxtLink>
 
-	<a
-		v-else
-		:href="resolvedTo"
-		:class="[
-			'link',
-			variant && `link--${variant}`,
-			{ 'link--block': block },
-			{ 'link--underline': underline },
-			customClass,
-		]"
-		:target="target"
-		:rel="target === '_blank' ? 'noopener noreferrer' : undefined"
-		:aria-label="ariaLabel"
-	>
-		<slot name="icon-left"></slot>
-		<slot>{{ text }}</slot>
-		<slot name="icon-right"></slot>
-	</a>
+    <a v-else-if="isExternalLink" v-bind="componentProps" :class="linkClasses">
+        <slot name="icon-left"></slot>
+        <slot>{{ text }}</slot>
+        <slot name="icon-right"></slot>
+    </a>
+
+    <button v-else v-bind="componentProps" :class="linkClasses">
+        <slot name="icon-left"></slot>
+        <slot>{{ text }}</slot>
+        <slot name="icon-right"></slot>
+    </button>
 </template>
 
 <script setup lang="ts">
-	import { createPath } from '@/config/routes';
-	import { computed, PropType } from 'vue';
+    import { computed } from 'vue';
 
-	// Type pour les objets route
-	type RouteObject = { path: string; name?: string };
+    import { useLinkResolver } from '@/composables/ui/useLinkResolver';
 
-	const props = defineProps({
-		to: {
-			type: [String, Object] as PropType<string | RouteObject>,
-			required: true,
-		},
-		params: {
-			type: Object as PropType<Record<string, string | number>>,
-			default: () => ({}),
-		},
-		text: {
-			type: String,
-			default: '',
-		},
-		variant: {
-			type: String,
-			default: '',
-			validator: (value: string) => ['', 'primary', 'secondary', 'subtle', 'white'].includes(value),
-		},
-		target: {
-			type: String,
-			default: '',
-			validator: (value: string) => ['', '_blank', '_self', '_parent', '_top'].includes(value),
-		},
-		block: {
-			type: Boolean,
-			default: false,
-		},
-		underline: {
-			type: Boolean,
-			default: false,
-		},
-		ariaLabel: {
-			type: String,
-			default: '',
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import type { LinkProps, LinkVariant, LinkTarget } from '@/types/components/base';
 
-	// Résoudre l'URL
-	const resolvedTo = computed(() => {
-		if (typeof props.to === 'object' && props.to && 'path' in props.to) {
-			return createPath(props.to, props.params);
-		}
-		return props.to as string;
-	});
+    // Extended Props to allow empty strings
+    type Props = Omit<LinkProps, 'variant' | 'target'> & {
+        variant?: LinkVariant | '';
+        target?: LinkTarget | '';
+    };
 
-	// Détermine si le lien est interne ou externe
-	const isInternalLink = computed(() => {
-		const url = resolvedTo.value;
-		return !(
-			url.startsWith('http://') ||
-			url.startsWith('https://') ||
-			url.startsWith('//') ||
-			url.startsWith('tel:') ||
-			url.startsWith('mailto:')
-		);
-	});
+    const props = withDefaults(defineProps<Props>(), {
+        params: () => ({}),
+        text: '',
+        variant: '',
+        target: '',
+        block: false,
+        underline: false,
+        ariaLabel: '',
+        customClass: '',
+    });
+
+    const { isInternalLink, isExternalLink, linkProps } = useLinkResolver(() => ({
+        to: props.to,
+        params: props.params,
+        target: props.target,
+    }));
+
+    const componentProps = computed(() => ({
+        ...linkProps.value,
+        'aria-label': props.ariaLabel || undefined,
+    }));
+
+    const linkClasses = computed(() => [
+        'link',
+        props.variant && `link--${props.variant}`,
+        {
+            'link--block': props.block,
+            'link--underline': props.underline,
+        },
+        props.customClass,
+    ]);
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.link {
-		display: inline-flex;
-		align-items: center;
-		gap: vars.$spacing-xs;
-		color: vars.$primary-color;
-		@include mix.transition(color);
-		text-decoration: none;
+    .link {
+        display: inline-flex;
+        align-items: center;
+        gap: vars.$spacing-xxs;
+        color: vars.$primary-color;
+        text-decoration: none;
+        transition: color vars.$transition-base;
 
-		&:hover {
-			color: func.adjust-color-brightness(vars.$primary-color, -15%);
+        @include mix.focus-outline;
 
-			&.link--underline,
-			&:not(.link--underline) {
-				text-decoration: underline;
-			}
-		}
+        &:hover {
+            color: vars.$primary-dark;
+            text-decoration: underline;
+        }
 
-		&:focus-visible {
-			@include mix.focus-outline;
-		}
+        &--primary {
+            color: vars.$primary-color;
 
-		&--primary {
-			color: vars.$primary-color;
+            &:hover {
+                color: vars.$primary-dark;
+            }
+        }
 
-			&:hover {
-				color: func.adjust-color-brightness(vars.$primary-color, -15%);
-			}
-		}
+        &--secondary {
+            color: vars.$secondary-color;
 
-		&--secondary {
-			color: vars.$secondary-color;
+            &:hover {
+                color: vars.$secondary-dark;
+            }
+        }
 
-			&:hover {
-				color: func.adjust-color-brightness(vars.$secondary-color, -15%);
-			}
-		}
+        &--white {
+            color: vars.$white;
 
-		&--white {
-			color: vars.$white;
+            &:hover {
+                color: func.adjust-color-brightness(vars.$white, -15%);
+            }
+        }
 
-			&:hover {
-				color: func.adjust-color-brightness(vars.$white, -15%);
-			}
-		}
+        &--subtle {
+            color: vars.$gray-dark;
 
-		&--subtle {
-			color: vars.$gray-dark;
+            &:hover {
+                color: vars.$black-light;
+            }
+        }
 
-			&:hover {
-				color: vars.$black-light;
-			}
-		}
+        &--block {
+            display: flex;
+        }
 
-		&--block {
-			display: flex;
-		}
-
-		&--underline {
-			text-decoration: underline;
-		}
-	}
+        &--underline {
+            text-decoration: underline;
+        }
+    }
 </style>

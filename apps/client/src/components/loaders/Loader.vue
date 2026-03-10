@@ -1,170 +1,154 @@
-<!-- src/components/loaders/Loader.vue -->
 <template>
-	<div class="loader-wrapper">
-		<!-- Loader fullscreen -->
-		<transition-group name="fade">
-			<div
-				v-for="loader in fullscreenLoaders"
-				:key="loader.id"
-				class="loader loader--fullscreen"
-				:class="{ 'loader--with-overlay': loader.hasOverlay }"
-			>
-				<div class="loader__content">
-					<Spinner :type="loader.type" :size="loader.size" :label="loader.label" />
+    <div>
+        <!-- Fullscreen loaders -->
+        <TransitionGroup name="fade">
+            <div
+                v-for="loader in fullscreenLoaders"
+                :key="loader.id"
+                class="loader loader--fullscreen"
+                :class="{ 'loader--overlay': loader.hasOverlay }"
+                role="status"
+                aria-live="polite"
+            >
+                <div class="loader__content">
+                    <Spinner :type="loader.type" :size="loader.size" :label="loader.label" show-label />
+                    <button v-if="loader.cancelable" type="button" class="loader__cancel" @click="cancel(loader.id)">
+                        Annuler
+                    </button>
+                </div>
+            </div>
+        </TransitionGroup>
 
-					<button v-if="loader.cancelable" class="loader__cancel" @click="cancelLoader(loader.id)">
-						Annuler
-					</button>
-				</div>
-			</div>
-		</transition-group>
-
-		<!-- Loaders container pour les sections -->
-		<teleport v-if="containerLoaders.length > 0" to="body">
-			<div
-				v-for="loader in containerLoaders"
-				:key="loader.id"
-				class="loader loader--container"
-				:class="{ 'loader--with-overlay': loader.hasOverlay }"
-				:style="getLoaderStyle(loader)"
-			>
-				<div class="loader__content">
-					<Spinner :type="loader.type" :size="loader.size" :label="loader.label" />
-
-					<button v-if="loader.cancelable" class="loader__cancel" @click="cancelLoader(loader.id)">
-						Annuler
-					</button>
-				</div>
-			</div>
-		</teleport>
-
-		<!-- Les loaders inline sont généralement gérés directement dans les composants -->
-	</div>
+        <!-- Container loaders -->
+        <Teleport v-if="containerLoaders.length" to="body">
+            <div
+                v-for="loader in containerLoaders"
+                :key="loader.id"
+                class="loader loader--container"
+                :class="{ 'loader--overlay': loader.hasOverlay }"
+                :style="getStyle(loader)"
+                role="status"
+                aria-live="polite"
+            >
+                <div class="loader__content">
+                    <Spinner :type="loader.type" :size="loader.size" :label="loader.label" show-label />
+                    <button v-if="loader.cancelable" type="button" class="loader__cancel" @click="cancel(loader.id)">
+                        Annuler
+                    </button>
+                </div>
+            </div>
+        </Teleport>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import Spinner from '@/components/loaders/Spinner.vue';
-	import { useLoaderStore } from '@/store/loader';
-	import type { LoaderItem } from '@/types/store/loader';
-	import { computed, onUnmounted } from 'vue';
+    import { storeToRefs } from 'pinia';
 
-	const loaderStore = useLoaderStore();
+    import { useLoaderStore } from '@/stores/loader';
 
-	// Obtenir les loaders actifs par type
-	const fullscreenLoaders = computed(() => loaderStore.fullscreenLoaders);
-	const containerLoaders = computed(() => loaderStore.containerLoaders);
+    import Spinner from './Spinner.vue';
 
-	// Annuler un loader
-	function cancelLoader(id: string) {
-		loaderStore.stop(id);
-	}
+    import type { LoaderItem } from '@/types/stores/loader';
 
-	// Calculer le style pour les loaders container basé sur le sélecteur cible
-	function getLoaderStyle(loader: LoaderItem): Record<string, string> {
-		if (!loader.targetSelector) {
-			return {};
-		}
+    const store = useLoaderStore();
+    const { fullscreenLoaders, containerLoaders } = storeToRefs(store);
 
-		// Trouver l'élément cible
-		const target = document.querySelector(loader.targetSelector);
+    const cancel = (id: string) => store.stop(id);
 
-		if (!target) {
-			return {};
-		}
+    const getStyle = (loader: LoaderItem): Record<string, string> => {
+        if (!loader.targetSelector) {
+            return {};
+        }
 
-		// Obtenir la position et les dimensions de l'élément cible
-		const rect = target.getBoundingClientRect();
+        const el = document.querySelector(loader.targetSelector);
+        if (!el) {
+            return {};
+        }
 
-		return {
-			position: 'absolute',
-			top: `${rect.top + window.scrollY}px`,
-			left: `${rect.left + window.scrollX}px`,
-			width: `${rect.width}px`,
-			height: `${rect.height}px`,
-		};
-	}
+        const rect = el.getBoundingClientRect();
 
-	// Nettoyage des loaders au démontage du composant
-	onUnmounted(() => {
-		// Optionnel : nettoyage des loaders au démontage
-		// loaderStore.stopAll();
-	});
+        return {
+            position: 'absolute',
+            top: `${rect.top + window.scrollY}px`,
+            left: `${rect.left + window.scrollX}px`,
+            width: `${rect.width}px`,
+            height: `${rect.height}px`,
+        };
+    };
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as v;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.loader-wrapper {
-		position: relative;
-	}
+    .loader {
+        position: fixed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: v.$z-index-toast;
 
-	.loader {
-		position: fixed;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: func.z('modal') + 10; // Au-dessus des modales
+        &--fullscreen {
+            inset: 0;
+        }
 
-		&--fullscreen {
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-		}
+        &--container {
+            border-radius: v.$border-radius-md;
+            overflow: hidden;
+        }
 
-		&--container {
-			border-radius: vars.$border-radius-md;
-			overflow: hidden;
-		}
+        &--overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: fn.color-alpha(v.$white, 0.9);
+            backdrop-filter: blur(4px);
+        }
 
-		&--with-overlay {
-			&::before {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				background-color: func.color-alpha(vars.$white, 0.8);
-			}
-		}
+        &__content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: v.$spacing-md;
+            padding: v.$spacing-xl;
+            background: v.$white;
+            border-radius: v.$border-radius-lg;
+            box-shadow: v.$box-shadow-medium;
+        }
 
-		&__content {
-			position: relative;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			padding: vars.$spacing-md;
-		}
+        &__cancel {
+            padding: v.$spacing-xs v.$spacing-md;
+            border-radius: v.$border-radius-md;
+            background: v.$bg-secondary;
+            color: v.$text-primary;
+            border: 1px solid v.$border-color;
+            font-size: v.$font-size-sm;
+            font-weight: v.$font-weight-medium;
+            cursor: pointer;
+            transition: all v.$transition-fast;
 
-		&__cancel {
-			margin-top: vars.$spacing-md;
-			padding: vars.$spacing-xs vars.$spacing-sm;
-			border-radius: vars.$border-radius-sm;
-			background-color: vars.$white;
-			color: vars.$gray-dark;
-			border: 1px solid vars.$gray-light;
-			cursor: pointer;
-			@include mix.transition(background-color, color);
+            &:hover {
+                background: v.$white;
+                border-color: v.$primary-color;
+                color: v.$primary-color;
+            }
 
-			&:hover {
-				background-color: vars.$white-dark;
-				color: vars.$black;
-			}
-		}
-	}
+            &:focus-visible {
+                outline: 2px solid v.$primary-color;
+                outline-offset: 2px;
+            }
+        }
+    }
 
-	// Animations
-	.fade-enter-active,
-	.fade-leave-active {
-		transition: opacity 0.3s ease;
-	}
+    // Transitions
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 0.25s ease;
+    }
 
-	.fade-enter-from,
-	.fade-leave-to {
-		opacity: 0;
-	}
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
+    }
 </style>

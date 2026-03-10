@@ -1,131 +1,137 @@
-"""
-Modèle de gestion des messages de contact.
-"""
+"""Modeles pour la gestion des contacts et FAQs."""
 
-from django.core.validators import MinLengthValidator, RegexValidator
-from django.db import models
-from django.utils.translation import gettext_lazy as _
+from typing import Any
 
+from django.db import models, transaction
+from django.utils import formats
 
-class ContactMessageManager(models.Manager):
-    """
-    Manager personnalisé enrichi pour la gestion des messages de contact.
-    """
-
-    def get_queryset(self):
-        """
-        Retourne les messages triés par date de création décroissante.
-        """
-        return super().get_queryset().order_by("-created_at")
-
-    def unread(self):
-        """
-        Retourne uniquement les messages non lus.
-        """
-        return self.get_queryset().filter(is_read=False)
-
-    def recent(self, limit=5):
-        """
-        Retourne les derniers messages reçus, limités à un nombre spécifié.
-        """
-        return self.get_queryset()[:limit]
-
-    def by_email(self, email):
-        """
-        Retourne tous les messages provenant d'une adresse email spécifique.
-        """
-        return self.get_queryset().filter(email=email)
+from .managers import ContactInfoManager, ContactManager, FAQManager
 
 
-class ContactMessage(models.Model):
-    """
-    Modèle complet représentant un message reçu depuis le formulaire de contact.
-    """
+class FAQ(models.Model):
+    """Modele pour les questions frequemment posees."""
 
-    SUBJECT_CHOICES = [
-        ("general", "Général"),
-        ("project", "Projet"),
-        ("job", "Opportunité professionnelle"),
-        ("support", "Support technique"),
-        ("other", "Autre"),
-    ]
+    id: int
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+    order = models.PositiveIntegerField(default=0)
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    name = models.CharField(
-        max_length=255,
-        verbose_name=_("Nom complet"),
-        validators=[MinLengthValidator(2, _("Le nom doit contenir au moins 2 caractères."))],
-    )
-
-    email = models.EmailField(
-        verbose_name=_("Adresse email"),
-        validators=[
-            RegexValidator(
-                regex=r"^[\w\.-]+@[\w\.-]+\.\w+$",
-                message=_("Veuillez fournir une adresse email valide."),
-            )
-        ],
-    )
-
-    subject = models.CharField(
-        max_length=50, choices=SUBJECT_CHOICES, default="general", verbose_name=_("Sujet du message")
-    )
-
-    message = models.TextField(
-        verbose_name=_("Contenu du message"),
-        validators=[MinLengthValidator(10, _("Le message doit contenir au moins 10 caractères."))],
-    )
-
-    phone_number = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True,
-        verbose_name=_("Numéro de téléphone"),
-        validators=[
-            RegexValidator(
-                regex=r"^\+?1?\d{8,15}$",
-                message=_("Veuillez entrer un numéro de téléphone valide."),
-            )
-        ],
-        help_text=_("Numéro de téléphone facultatif au format international."),
-    )
-
-    is_read = models.BooleanField(default=False, verbose_name=_("Lu ?"))
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Date de réception"))
-    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Date de dernière modification"))
-
-    objects = ContactMessageManager()
+    objects: FAQManager = FAQManager()
 
     class Meta:
-        """
-        Métadonnées du modèle.
-        """
-
-        ordering = ["-created_at"]
-        db_table = "contact_messages"
-        verbose_name = _("Message de contact")
-        verbose_name_plural = _("Messages de contact")
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQs"
+        ordering = ["order", "question"]
+        db_table = "faq"
         indexes = [
-            models.Index(fields=["email"], name="email_idx"),
-            models.Index(fields=["is_read"], name="read_status_idx"),
+            models.Index(fields=["is_published", "order"]),
         ]
 
     def __str__(self) -> str:
-        subject_display = getattr(self, "get_subject_display", lambda: self.subject)()
-        return f"Message de {self.name} ({self.email}) - {subject_display}"
+        return str(self.question)
 
-    def mark_as_read(self):
-        """
-        Marque le message comme lu.
-        """
-        if not self.is_read:
-            self.is_read = True
-            self.save(update_fields=["is_read"])
 
-    @property
-    def short_message(self) -> str:
-        """
-        Renvoie un aperçu du message (50 caractères max).
-        """
-        message = str(self.message)
-        return f"{message[:47]}..." if len(message) > 50 else message
+class Contact(models.Model):
+    """Modele pour enregistrer les soumissions de formulaire de contact."""
+
+    STATUS_CHOICES = (
+        ("new", "Nouveau"),
+        ("responded", "Repondu"),
+        ("closed", "Cloture"),
+    )
+
+    id: int
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    phone = models.CharField(max_length=20, blank=True)
+    company = models.CharField(max_length=100, blank=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    reference_id = models.CharField(max_length=50, unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new")
+    response_message = models.TextField(blank=True)
+    response_date = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects: ContactManager = ContactManager()
+
+    class Meta:
+        verbose_name = "Contact"
+        verbose_name_plural = "Contacts"
+        db_table = "contact"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["status", "-created_at"]),
+            models.Index(fields=["email"]),
+            models.Index(fields=["reference_id"]),
+            models.Index(fields=["ip_address"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        date_str = formats.date_format(self.created_at, format="SHORT_DATE_FORMAT")
+        return f"{self.name} - {self.subject} ({date_str})"
+
+
+class ContactInfo(models.Model):
+    """Modele pour stocker les informations de contact."""
+
+    AVAILABILITY_CHOICES = (
+        ("available", "Disponible"),
+        ("limited", "Disponibilite limitee"),
+        ("unavailable", "Indisponible"),
+    )
+
+    id: int
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+    street = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    zip_code = models.CharField(max_length=20, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    linkedin = models.URLField(blank=True)
+    github = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    medium = models.URLField(blank=True)
+    availability_status = models.CharField(
+        max_length=20,
+        choices=AVAILABILITY_CHOICES,
+        default="available",
+    )
+    availability_message = models.TextField(blank=True)
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects: ContactInfoManager = ContactInfoManager()
+
+    class Meta:
+        verbose_name = "Information de contact"
+        verbose_name_plural = "Informations de contact"
+        db_table = "contact_info"
+        ordering = ["-is_primary", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["is_primary"],
+                condition=models.Q(is_primary=True),
+                name="unique_primary_contact_info",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return str(self.email)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Si marque comme primaire, desactive les autres comme primaires."""
+        with transaction.atomic():
+            if self.is_primary:
+                # Verrouiller les lignes pour eviter les race conditions
+                ContactInfo.objects.select_for_update().filter(is_primary=True).exclude(pk=self.pk).update(
+                    is_primary=False
+                )
+            super().save(*args, **kwargs)

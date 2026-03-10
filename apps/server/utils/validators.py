@@ -1,32 +1,186 @@
-"""
-Validation personnalisée des données utilisateurs et formulaires.
-"""
+"""Validation des donnees utilisateurs et formulaires."""
 
+import ipaddress
 import re
+from datetime import datetime
+from pathlib import Path
 
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email as django_validate_email
+
+EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+PHONE_REGEX = re.compile(r"^\+?[0-9]{1,4}[-\s]?[0-9]{6,14}$")
+URL_REGEX = re.compile(r"^https?://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$")
+SLUG_REGEX = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+SPECIAL_CHARS = "!@#$%^&*()-_=+{}[]|;:'\",.<>?/`~"
+DEFAULT_EXTENSIONS = (".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png")
 
 
 def validate_email(value):
-    """Vérifie si l'email est valide."""
-    email_regex = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
-    if not re.match(email_regex, value):
+    """Verifie si l'email est valide selon les standards RFC."""
+    try:
+        django_validate_email(value)
+    except ValidationError as exc:
+        raise ValidationError("L'email fourni n'est pas valide.") from exc
+
+    if not EMAIL_REGEX.match(value):
         raise ValidationError("L'email fourni n'est pas valide.")
 
 
 def validate_password(value):
-    """Vérifie la sécurité du mot de passe (8+ caractères, majuscules, chiffres, symboles)."""
+    """Verifie la securite du mot de passe (8+ chars, majuscule, chiffre, symbole)."""
+    errors = []
+
     if len(value) < 8:
-        raise ValidationError("Le mot de passe doit contenir au moins 8 caractères.")
+        errors.append("Le mot de passe doit contenir au moins 8 caracteres.")
+
     if not any(char.isupper() for char in value):
-        raise ValidationError("Le mot de passe doit contenir au moins une majuscule.")
+        errors.append("Le mot de passe doit contenir au moins une majuscule.")
+
     if not any(char.isdigit() for char in value):
-        raise ValidationError("Le mot de passe doit contenir au moins un chiffre.")
-    if not any(char in "!@#$%^&*()-_=+{}[]|;:'\",.<>?/`~" for char in value):
-        raise ValidationError("Le mot de passe doit contenir au moins un caractère spécial.")
+        errors.append("Le mot de passe doit contenir au moins un chiffre.")
+
+    if not any(char in SPECIAL_CHARS for char in value):
+        errors.append("Le mot de passe doit contenir au moins un caractere special.")
+
+    if errors:
+        raise ValidationError(errors)
+
+
+RESET_CODE_REGEX = re.compile(r"^[A-Z0-9]{8}$")
 
 
 def validate_reset_code(value):
-    """Vérifie si le code de réinitialisation est un nombre à 6 chiffres."""
-    if not value.isdigit() or len(value) != 6:
-        raise ValidationError("Le code de réinitialisation doit être un nombre à 6 chiffres.")
+    """Verifie si le code de reinitialisation est valide (8 caracteres alphanumeriques majuscules)."""
+    if not RESET_CODE_REGEX.match(value):
+        raise ValidationError(
+            "Le code de reinitialisation doit contenir 8 caracteres alphanumeriques (majuscules et chiffres)."
+        )
+
+
+def validate_phone_number(value):
+    """Verifie si le numero de telephone est au format international valide."""
+    if not PHONE_REGEX.match(value):
+        raise ValidationError("Le numero de telephone doit etre au format international valide.")
+
+
+def validate_url(value):
+    """Verifie si l'URL commence par http:// ou https://."""
+    if not URL_REGEX.match(value):
+        raise ValidationError("L'URL doit commencer par http:// ou https:// et etre valide.")
+
+
+def validate_date_format(value, format_str="%Y-%m-%d"):
+    """Verifie si la date est au format specifie."""
+    try:
+        datetime.strptime(value, format_str)  # noqa: DTZ007
+    except ValueError as exc:
+        raise ValidationError(f"La date doit etre au format {format_str}.") from exc
+
+
+def validate_slug(value):
+    """Verifie si le slug ne contient que des caracteres autorises."""
+    if not SLUG_REGEX.match(value):
+        raise ValidationError("Le slug ne peut contenir que des lettres minuscules, chiffres et tirets.")
+
+
+def validate_alphanumeric(value):
+    """Verifie si la chaine ne contient que des caracteres alphanumeriques."""
+    if not value.isalnum():
+        raise ValidationError("Ce champ ne peut contenir que des lettres et des chiffres.")
+
+
+def validate_numeric(value):
+    """Verifie si la chaine ne contient que des chiffres."""
+    if not value.isdigit():
+        raise ValidationError("Ce champ ne peut contenir que des chiffres.")
+
+
+def validate_image_size(image, max_size_kb=2048):
+    """Verifie si la taille de l'image ne depasse pas la limite specifiee."""
+    if image.size > max_size_kb * 1024:
+        raise ValidationError(f"L'image ne doit pas depasser {max_size_kb} KB.")
+
+
+def validate_string_list(value, item_label="element"):
+    """Valide qu'une valeur est une liste de strings.
+
+    Args:
+        value: La valeur a valider.
+        item_label: Label pour les messages d'erreur (ex: 'technologie', 'fonctionnalite').
+
+    Returns:
+        La liste validee.
+
+    Raises:
+        ValidationError: Si la valeur n'est pas une liste ou contient des non-strings.
+    """
+    if not isinstance(value, list):
+        raise ValidationError("Doit etre une liste.")
+    for item in value:
+        if not isinstance(item, str):
+            raise ValidationError(f"Chaque {item_label} doit etre une chaine.")
+    return value
+
+
+def validate_file_extension(value, allowed_extensions=None):
+    """Verifie si l'extension du fichier est autorisee."""
+    if allowed_extensions is None:
+        allowed_extensions = DEFAULT_EXTENSIONS
+
+    ext = Path(value.name).suffix.lower()
+    if ext not in allowed_extensions:
+        raise ValidationError(f"Seules les extensions suivantes sont autorisees: {', '.join(allowed_extensions)}")
+
+
+IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg")
+
+
+def validate_image_upload(value):
+    """Valide qu'un fichier uploade est une image avec extension autorisee."""
+    ext = Path(value.name).suffix.lower()
+    if ext not in IMAGE_EXTENSIONS:
+        raise ValidationError(
+            f"Extension '{ext}' non autorisee. Extensions acceptees: {', '.join(IMAGE_EXTENSIONS)}"
+        )
+
+
+# Plages IP privees/reservees interdites pour les webhooks (anti-SSRF)
+_BLOCKED_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),  # Link-local / metadata
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fe80::/10"),
+    ipaddress.ip_network("fc00::/7"),
+]
+
+_BLOCKED_HOSTNAMES = {"localhost", "metadata.google.internal"}
+
+
+def validate_webhook_url(value):
+    """Valide qu'une URL de webhook ne pointe pas vers une adresse privee (SSRF)."""
+    import socket
+    from urllib.parse import urlparse
+
+    parsed = urlparse(value)
+    hostname = parsed.hostname
+
+    if not hostname:
+        raise ValidationError("URL invalide : hostname manquant.")
+
+    if hostname in _BLOCKED_HOSTNAMES:
+        raise ValidationError("Les URLs pointant vers des adresses internes sont interdites.")
+
+    try:
+        resolved = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+    except socket.gaierror as exc:
+        raise ValidationError(f"Impossible de resoudre le hostname : {hostname}") from exc
+
+    for _, _, _, _, sockaddr in resolved:
+        ip = ipaddress.ip_address(sockaddr[0])
+        for network in _BLOCKED_NETWORKS:
+            if ip in network:
+                raise ValidationError("Les URLs pointant vers des adresses privees ou reservees sont interdites.")

@@ -1,73 +1,71 @@
-<!-- src/components/footer/ContactItem.vue -->
 <template>
-	<div class="contact-item">
-		<BaseIcon :name="icon" :size="18" />
-		<BaseLink v-if="isLink" :to="linkHref" class="contact-item__link">
-			{{ text }}
-		</BaseLink>
-		<p v-else>{{ text }}</p>
-	</div>
+    <div class="footer-contact-item">
+        <BaseIcon :name="icon" :size="18" aria-hidden="true" />
+
+        <a v-if="isLink" :href="linkHref" class="footer-contact-item__link">
+            {{ text }}
+        </a>
+        <span v-else class="footer-contact-item__text">{{ text }}</span>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import BaseLink from '@/components/base/BaseLink.vue';
-	import { computed } from 'vue';
+    import { computed } from 'vue';
 
-	const props = defineProps({
-		icon: {
-			type: String,
-			required: true,
-		},
-		text: {
-			type: String,
-			required: true,
-		},
-		isLink: {
-			type: Boolean,
-			default: false,
-		},
-		linkType: {
-			type: String,
-			default: '',
-			validator: (value: string) => ['email', 'phone', ''].includes(value),
-		},
-	});
+    import BaseIcon from '@/components/base/BaseIcon.vue';
 
-	const linkHref = computed(() => {
-		if (props.linkType === 'email') {
-			return `mailto:${props.text}`;
-		} else if (props.linkType === 'phone') {
-			return `tel:${props.text}`;
-		}
-		return props.text;
-	});
+    import type { FooterContactItemProps, ContactItemLinkType } from '@/types/components/layouts';
+
+    const props = withDefaults(defineProps<FooterContactItemProps>(), {
+        isLink: false,
+        linkType: 'none',
+    });
+
+    // Link href mapping
+    const LINK_PREFIXES: Record<ContactItemLinkType, string> = {
+        email: 'mailto:',
+        phone: 'tel:',
+        url: '',
+        none: '',
+    };
+
+    const linkHref = computed(() => {
+        const prefix = LINK_PREFIXES[props.linkType];
+        return `${prefix}${props.text}`;
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
 
-	.contact-item {
-		display: flex;
-		align-items: center;
-		gap: vars.$spacing-sm;
-		color: vars.$gray-dark;
-		transition: transform 0.2s ease;
+    .footer-contact-item {
+        display: flex;
+        align-items: center;
+        gap: vars.$spacing-xs;
+        color: vars.$gray-dark;
+        transition: transform vars.$transition-fast;
 
-		&:hover {
-			transform: translateX(5px);
-		}
+        &:hover {
+            transform: translateX(5px);
+        }
 
-		&__link {
-			color: inherit;
-			text-decoration: none;
-			transition: color vars.$transition-base;
+        &__link {
+            color: inherit;
+            text-decoration: none;
+            transition: color vars.$transition-fast;
 
-			&:hover {
-				color: vars.$primary-color;
-			}
-		}
-	}
+            &:hover {
+                color: vars.$primary-color;
+            }
+
+            &:focus-visible {
+                outline: 2px solid vars.$primary-color;
+                outline-offset: 2px;
+            }
+        }
+
+        &__text {
+            color: inherit;
+        }
+    }
 </style>

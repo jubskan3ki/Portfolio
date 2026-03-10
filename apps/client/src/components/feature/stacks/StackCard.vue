@@ -1,304 +1,451 @@
 <template>
-	<Card :class="['stack-card', customClass]" :hoverable="hoverable" :flat="flat" :bordered="bordered">
-		<template #header>
-			<div class="stack-card__header">
-				<div class="stack-card__icon">
-					<img v-if="stack.logo" :src="stack.logo" :alt="`${stack.name} icon`" class="stack-card__image" />
-					<div v-else class="stack-card__letter">
-						{{ getFirstLetter(stack.name) }}
-					</div>
-				</div>
+    <article
+        class="stack-card"
+        :class="[levelColorClass, { 'stack-card--flat': flat, 'stack-card--compact': compact }, customClass]"
+        tabindex="0"
+        role="button"
+        :aria-label="`Voir ${stack.name}`"
+        v-bind="prefetchHandlers"
+        @click="$emit('click')"
+        @keydown.enter="$emit('click')"
+        @keydown.space.prevent="$emit('click')"
+    >
+        <!-- Accent Line -->
+        <div class="stack-card__accent" aria-hidden="true"></div>
 
-				<div class="stack-card__titles">
-					<h3 class="stack-card__name">{{ stack.name }}</h3>
-					<div class="stack-card__experience-info">
-						<BaseIcon name="clock" :size="16" class="stack-card__experience-icon" />
-						<span class="stack-card__experience-years">
-							{{ stack.experience }} {{ stack.experience > 1 ? 'années' : 'année' }}
-						</span>
-					</div>
-				</div>
-			</div>
-		</template>
+        <!-- Header: Logo + Name + Category + Level -->
+        <header class="stack-card__header">
+            <div class="stack-card__logo">
+                <BaseImage
+                    v-if="stack.logo"
+                    :src="stack.logo"
+                    :alt="`Logo ${stack.name}`"
+                    :width="40"
+                    :height="40"
+                    object-fit="contain"
+                    :show-placeholder="false"
+                    class="stack-card__logo-img"
+                />
+                <span v-else class="stack-card__logo-letter">{{ stack.name.charAt(0) }}</span>
+            </div>
 
-		<div class="stack-card__content">
-			<p v-if="stack.description" class="stack-card__description">
-				{{ truncateText(stack.description, descriptionLength) }}
-			</p>
+            <div class="stack-card__title-group">
+                <h3 class="stack-card__name">{{ stack.name }}</h3>
+                <span v-if="stack.category" class="stack-card__category">{{ stack.category }}</span>
+            </div>
 
-			<div v-if="stack.tags && stack.tags.length > 0" class="stack-card__tags">
-				<Badge
-					v-for="(tag, index) in stack.tags.slice(0, 3)"
-					:key="index"
-					:text="tag"
-					type="primary"
-					variant="subtle"
-					rounded
-					class="stack-card__tag-badge"
-				/>
-			</div>
+            <div v-if="stack.level" class="stack-card__level-badge" :class="levelClass">
+                {{ levelLabel }}
+            </div>
+        </header>
 
-			<slot></slot>
-		</div>
+        <!-- Description -->
+        <p v-if="stack.description && !compact" class="stack-card__description">
+            {{ truncateText(stack.description, descriptionLength) }}
+        </p>
 
-		<!-- Section d'expérience en footer -->
-		<template v-if="stack.experience > 0" #footer>
-			<div class="stack-card__experience">
-				<div class="stack-card__expertise-level">
-					<div class="stack-card__expertise-label">Niveau d'expertise</div>
-					<div class="stack-card__expertise-dots">
-						<RatingStars :model-value="stack.level" :max="5" readonly :size="14" :show-value="false" />
-					</div>
-				</div>
-			</div>
-		</template>
-	</Card>
+        <!-- Tags -->
+        <div v-if="displayedTags.length > 0" class="stack-card__tags">
+            <span v-for="tag in displayedTags" :key="tag" class="stack-card__tag">
+                {{ tag }}
+            </span>
+            <span v-if="remainingTagsCount > 0" class="stack-card__tag stack-card__tag--more">
+                +{{ remainingTagsCount }}
+            </span>
+        </div>
+
+        <!-- Footer: Experience + Action -->
+        <footer class="stack-card__footer">
+            <span v-if="experienceDisplay" class="stack-card__experience">
+                <BaseIcon name="clock" :size="12" />
+                {{ experienceDisplay }}
+            </span>
+            <span class="stack-card__action">
+                Voir détails
+                <BaseIcon name="arrow-right" :size="14" class="stack-card__arrow" />
+            </span>
+        </footer>
+    </article>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import Badge from '@/components/ui/Badge.vue';
-	import Card from '@/components/ui/Card.vue';
-	import RatingStars from '@/components/ui/RatingStars.vue';
-	import type { Stack } from '@/types/feature/stacks';
+    import { computed } from 'vue';
 
-	defineProps({
-		stack: {
-			type: Object as () => Stack,
-			required: true,
-		},
-		hoverable: {
-			type: Boolean,
-			default: true,
-		},
-		flat: {
-			type: Boolean,
-			default: false,
-		},
-		bordered: {
-			type: Boolean,
-			default: false,
-		},
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { useCardPrefetch } from '@/composables/performance/usePrefetch';
+    import { TEXT_LIMITS } from '@/config/constants';
+    import { queryKeys } from '@/services/api/modules';
+    import { stacksApi } from '@/services/api/modules/stacks';
+    import { sliceTags, truncateText } from '@/services/utils/helpers';
 
-		descriptionLength: {
-			type: Number,
-			default: 200,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import type { StackCardProps } from '@/types/feature/stacks';
 
-	// Extraire la première lettre du nom
-	const getFirstLetter = (name: string) => {
-		return name.charAt(0).toUpperCase();
-	};
+    const props = withDefaults(defineProps<StackCardProps>(), {
+        hoverable: true,
+        flat: false,
+        compact: false,
+        descriptionLength: TEXT_LIMITS.STACK_DESCRIPTION,
+        customClass: '',
+    });
 
-	// Tronquer le texte de description
-	const truncateText = (text: string, length: number) => {
-		if (!text || text.length <= length) return text;
-		return text.slice(0, length) + '...';
-	};
+    defineEmits<{
+        click: [];
+    }>();
+
+    // Tags
+    const tagInfo = computed(() => sliceTags(props.stack.tags, 3));
+    const displayedTags = computed(() => tagInfo.value.displayed);
+    const remainingTagsCount = computed(() => tagInfo.value.remaining);
+
+    // Level configuration — single source of truth
+    const LEVEL_CONFIG = [
+        { min: 5, label: 'Expert', badge: 'stack-card__level-badge--expert', color: 'level-expert' },
+        { min: 4, label: 'Avancé', badge: 'stack-card__level-badge--advanced', color: 'level-advanced' },
+        { min: 3, label: 'Confirmé', badge: 'stack-card__level-badge--confirmed', color: 'level-confirmed' },
+        { min: 2, label: 'Intermédiaire', badge: 'stack-card__level-badge--beginner', color: 'level-beginner' },
+        { min: 0, label: 'Débutant', badge: 'stack-card__level-badge--beginner', color: 'level-beginner' },
+    ] as const;
+
+    const levelInfo = computed(() => {
+        const level = Number(props.stack.level) || 0;
+        const found = LEVEL_CONFIG.find((c) => level >= c.min);
+        return found ?? LEVEL_CONFIG[LEVEL_CONFIG.length - 1];
+    });
+
+    const levelLabel = computed(() => levelInfo.value.label);
+    const levelClass = computed(() => levelInfo.value.badge);
+    const levelColorClass = computed(() => levelInfo.value.color);
+
+    // Experience display (experience is in months from API)
+    const experienceDisplay = computed(() => {
+        const months = Number(props.stack.experience) || 0;
+        if (months === 0) {
+            return '';
+        }
+        if (months < 12) {
+            return `${months} mois`;
+        }
+        const years = Math.floor(months / 12);
+        const remaining = months % 12;
+        const yearLabel = years === 1 ? '1 an' : `${years} ans`;
+        return remaining === 0 ? yearLabel : `${yearLabel} ${remaining} mois`;
+    });
+
+    // Prefetch on hover
+    const prefetchHandlers = useCardPrefetch(
+        () => props.stack.slug,
+        (s) => queryKeys.stacks.detail(s),
+        (s) => stacksApi.getBySlug(s),
+    );
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as fn;
 
-	.stack-card {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		position: relative;
-		overflow: hidden;
-		cursor: pointer;
+    // Level color CSS custom properties
+    .level-expert {
+        --level-color: #{vars.$success-color};
+        --level-color-light: #{fn.color-alpha(vars.$success-color, 0.1)};
+        --level-color-medium: #{fn.color-alpha(vars.$success-color, 0.15)};
+    }
 
-		&::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 4px;
-			background: linear-gradient(
-				90deg,
-				vars.$primary-color,
-				func.adjust-color-brightness(vars.$primary-color, 20%)
-			);
-			z-index: 2;
-			transform: translateY(-100%);
-			transition: transform vars.$transition-base;
-		}
+    .level-advanced {
+        --level-color: #{vars.$primary-color};
+        --level-color-light: #{fn.color-alpha(vars.$primary-color, 0.1)};
+        --level-color-medium: #{fn.color-alpha(vars.$primary-color, 0.15)};
+    }
 
-		&:hover::before {
-			transform: translateY(0);
-		}
+    .level-confirmed {
+        --level-color: #{vars.$secondary-color};
+        --level-color-light: #{fn.color-alpha(vars.$secondary-color, 0.1)};
+        --level-color-medium: #{fn.color-alpha(vars.$secondary-color, 0.15)};
+    }
 
-		:deep(.card__body) {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-		}
+    .level-beginner {
+        --level-color: #{vars.$gray};
+        --level-color-light: #{fn.color-alpha(vars.$gray, 0.1)};
+        --level-color-medium: #{fn.color-alpha(vars.$gray, 0.15)};
+    }
 
-		:deep(.card__footer) {
-			padding: vars.$spacing-sm vars.$spacing-md;
-			background-color: func.color-alpha(vars.$white-dark, 0.5);
-		}
+    .stack-card {
+        --card-padding: #{vars.$spacing-lg};
 
-		&__header {
-			display: flex;
-			align-items: flex-start;
-			gap: vars.$spacing-md;
-			position: relative;
-		}
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: var(--card-padding);
+        background: vars.$white;
+        border: 1px solid fn.color-alpha(vars.$border-color, 0.5);
+        border-radius: vars.$border-radius-xl;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px fn.color-alpha(vars.$black, 0.04);
 
-		&__icon {
-			width: 52px;
-			height: 52px;
-			border-radius: vars.$border-radius-md;
-			overflow: hidden;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background-color: vars.$white-dark;
-			flex-shrink: 0;
-			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-			transition:
-				transform vars.$transition-base,
-				box-shadow vars.$transition-base;
+        &:hover {
+            border-color: var(--level-color);
+            box-shadow:
+                0 12px 32px fn.color-alpha(vars.$black, 0.08),
+                0 4px 12px fn.color-alpha(var(--level-color), 0.12);
+            transform: translateY(-4px);
 
-			.stack-card:hover & {
-				transform: scale(1.08);
-				box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
-			}
-		}
+            .stack-card__accent {
+                transform: scaleX(1);
+            }
 
-		&__image {
-			width: 75%;
-			height: 75%;
-			object-fit: contain;
-		}
+            .stack-card__logo {
+                transform: scale(1.05);
+                box-shadow: 0 4px 16px var(--level-color-medium);
+            }
 
-		&__letter {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-weight: 700;
-			color: vars.$white;
-			background-color: vars.$primary-color;
-		}
+            .stack-card__name {
+                color: var(--level-color);
+            }
 
-		&__titles {
-			flex: 1;
-			padding-top: vars.$spacing-xxs;
-		}
+            .stack-card__arrow {
+                transform: translateX(4px);
+                opacity: 1;
+            }
 
-		&__name {
-			margin: 0;
-			color: vars.$black-light;
-			font-weight: 600;
-			transition: color vars.$transition-base;
+            .stack-card__action {
+                color: var(--level-color);
+            }
+        }
 
-			.stack-card:hover & {
-				color: vars.$primary-color;
-			}
-		}
+        &:focus-visible {
+            outline: 2px solid var(--level-color);
+            outline-offset: 2px;
+        }
 
-		&__level-container {
-			display: flex;
-			flex-direction: column;
-			align-items: flex-end;
-			gap: vars.$spacing-xxs;
-			padding-top: vars.$spacing-xxs;
-		}
+        &--flat {
+            box-shadow: none;
+            border-color: transparent;
+            background: vars.$bg-secondary;
 
-		&__level-value {
-			font-weight: 600;
-			color: vars.$primary-color;
-		}
+            &:hover {
+                background: vars.$white;
+            }
+        }
 
-		&__category {
-			margin: vars.$spacing-xs 0 0 0;
-		}
+        &--compact {
+            --card-padding: #{vars.$spacing-md};
+        }
+    }
 
-		&__content {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-		}
+    // Accent line at top
+    .stack-card__accent {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--level-color), fn.color-alpha(var(--level-color), 0.5));
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-		&__description {
-			color: vars.$gray-dark;
-			line-height: 1.6;
-			margin-bottom: vars.$spacing-md;
-		}
+    // Header
+    .stack-card__header {
+        display: flex;
+        align-items: flex-start;
+        gap: vars.$spacing-md;
+        margin-bottom: vars.$spacing-md;
+    }
 
-		&__tags {
-			display: flex;
-			flex-wrap: wrap;
-			gap: vars.$spacing-xs;
-			margin-bottom: vars.$spacing-md;
-		}
+    .stack-card__logo {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background: var(--level-color-light);
+        border-radius: vars.$border-radius-lg;
+        transition: all 0.3s ease;
+    }
 
-		&__tag-badge {
-			font-weight: 400;
-			transition: transform vars.$transition-fast;
+    .stack-card__logo-img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+    }
 
-			&:hover {
-				transform: translateY(-2px);
-			}
-		}
+    .stack-card__logo-letter {
+        font-size: vars.$font-size-xl;
+        font-weight: vars.$font-weight-bold;
+        color: var(--level-color);
+    }
 
-		&__experience {
-			display: flex;
-			flex-direction: column;
-			gap: vars.$spacing-sm;
-		}
+    .stack-card__title-group {
+        flex: 1;
+        min-width: 0;
+    }
 
-		&__expertise-level {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
+    .stack-card__name {
+        margin: 0 0 vars.$spacing-xxxxs;
+        font-size: vars.$font-size-lg;
+        font-weight: vars.$font-weight-bold;
+        color: vars.$text-primary;
+        line-height: 1.3;
+        transition: color 0.2s ease;
 
-		&__expertise-label {
-			color: vars.$gray-dark;
-		}
+        @include mix.truncate(1);
+    }
 
-		&__expertise-dots {
-			display: flex;
-			gap: 4px;
-		}
+    .stack-card__category {
+        font-size: vars.$font-size-xs;
+        font-weight: vars.$font-weight-medium;
+        color: vars.$text-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
 
-		&__expertise-dot {
-			width: 10px;
-			height: 10px;
-			border-radius: 50%;
-			background-color: vars.$white-dark;
-			border: 1px solid vars.$gray-light;
-			transition: all vars.$transition-base;
+    // Level badge
+    .stack-card__level-badge {
+        flex-shrink: 0;
+        padding: vars.$spacing-xxs vars.$spacing-sm;
+        font-size: 10px;
+        font-weight: vars.$font-weight-bold;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-radius: vars.$border-radius-full;
+        white-space: nowrap;
 
-			&--active {
-				background-color: vars.$primary-color;
-				border-color: vars.$primary-color;
-				transform: scale(1.1);
-			}
-		}
+        &--expert {
+            background: fn.color-alpha(vars.$success-color, 0.12);
+            color: vars.$success-color;
+        }
 
-		&__experience-info {
-			display: flex;
-			align-items: center;
-			gap: vars.$spacing-xs;
-			color: vars.$black-light;
-			font-weight: 500;
-		}
+        &--advanced {
+            background: fn.color-alpha(vars.$primary-color, 0.12);
+            color: vars.$primary-color;
+        }
 
-		&__experience-icon {
-			color: vars.$primary-color;
-		}
-	}
+        &--confirmed {
+            background: fn.color-alpha(vars.$secondary-color, 0.12);
+            color: vars.$secondary-color;
+        }
+
+        &--beginner {
+            background: fn.color-alpha(vars.$gray, 0.12);
+            color: vars.$gray;
+        }
+    }
+
+    // Description
+    .stack-card__description {
+        margin: 0 0 vars.$spacing-md;
+        font-size: vars.$font-size-sm;
+        color: vars.$text-secondary;
+        line-height: vars.$line-height-relaxed;
+
+        @include mix.truncate(3);
+    }
+
+    // Tags
+    .stack-card__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: vars.$spacing-xxs;
+        margin-bottom: vars.$spacing-md;
+    }
+
+    .stack-card__tag {
+        padding: vars.$spacing-xxxs vars.$spacing-xs;
+        font-size: 11px;
+        font-weight: vars.$font-weight-medium;
+        color: vars.$text-secondary;
+        background: vars.$bg-secondary;
+        border-radius: vars.$border-radius-sm;
+        transition: all 0.2s ease;
+
+        &--more {
+            color: var(--level-color);
+            background: var(--level-color-light);
+            font-weight: vars.$font-weight-semibold;
+        }
+    }
+
+    // Footer
+    .stack-card__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: vars.$spacing-sm;
+        border-top: 1px solid fn.color-alpha(vars.$border-color, 0.5);
+    }
+
+    .stack-card__experience {
+        display: inline-flex;
+        align-items: center;
+        gap: vars.$spacing-xxxs;
+        font-size: vars.$font-size-xs;
+        font-weight: vars.$font-weight-medium;
+        color: vars.$text-muted;
+    }
+
+    .stack-card__action {
+        display: inline-flex;
+        align-items: center;
+        gap: vars.$spacing-xxs;
+        font-size: vars.$font-size-sm;
+        font-weight: vars.$font-weight-medium;
+        color: vars.$text-muted;
+        transition: color 0.2s ease;
+    }
+
+    .stack-card__arrow {
+        opacity: 0.5;
+        transition: all 0.2s ease;
+    }
+
+    // Reduced motion
+    @media (prefers-reduced-motion: reduce) {
+        .stack-card {
+            transition: none;
+
+            &:hover {
+                transform: none;
+            }
+        }
+
+        .stack-card__accent,
+        .stack-card__logo {
+            transition: none;
+        }
+    }
+
+    // Responsive
+    @include mix.responsive(mobile) {
+        .stack-card {
+            --card-padding: #{vars.$spacing-md};
+        }
+
+        .stack-card__header {
+            gap: vars.$spacing-sm;
+        }
+
+        .stack-card__logo {
+            width: 44px;
+            height: 44px;
+        }
+
+        .stack-card__logo-img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .stack-card__name {
+            font-size: vars.$font-size-base;
+        }
+
+        .stack-card__level-badge {
+            padding: 3px vars.$spacing-xs;
+            font-size: 9px;
+        }
+    }
 </style>

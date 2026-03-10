@@ -1,317 +1,340 @@
 <template>
-	<div :class="['tabs', `tabs--${variant}`, { 'tabs--vertical': vertical }, customClass]">
-		<!-- Navigation - utilise TabsItem en mode onglet -->
-		<div
-			ref="navRef"
-			:class="[
-				'tabs__nav',
-				`tabs__nav--${align}`,
-				{ 'tabs__nav--scrollable': scrollable },
-				{ 'tabs__nav--full-width': fullWidth },
-			]"
-		>
-			<TabsItem
-				v-for="tab in tabs"
-				:id="tab.id"
-				:key="`tab-${tab.id}`"
-				:tabs-id="tabsId"
-				:is-active="activeTab === tab.id"
-				:is-tab="true"
-				:label="tab.label"
-				:icon="tab.icon"
-				:disabled="tab.disabled"
-				:badge="tab.badge"
-				@select="setActiveTab(tab.id)"
-			/>
+    <div :class="tabsClasses" role="tablist" :aria-orientation="vertical ? 'vertical' : 'horizontal'">
+        <div ref="navRef" :class="navClasses">
+            <TabsItem
+                v-for="tab in tabs"
+                :id="tab.id"
+                :key="`tab-${tab.id}`"
+                :tabs-id="tabsId"
+                :is-active="activeTab === tab.id"
+                is-tab
+                :label="tab.label"
+                :icon="tab.icon"
+                :disabled="tab.disabled"
+                :badge="tab.badge"
+                @select="setActiveTab(tab.id)"
+            />
 
-			<!-- Indicateur -->
-			<div v-if="!vertical && showIndicator" class="tabs__indicator" :style="indicatorStyle"></div>
-		</div>
+            <div
+                v-if="!vertical && showIndicator"
+                class="tabs__indicator"
+                :style="indicatorStyle"
+                aria-hidden="true"
+            ></div>
+        </div>
 
-		<!-- Contenus - utilise TabsItem en mode panneau -->
-		<div class="tabs__panels">
-			<TabsItem
-				v-for="(tab, index) in tabs"
-				:id="tab.id"
-				:key="`panel-${tab.id}`"
-				:tabs-id="tabsId"
-				:is-active="activeTab === tab.id"
-			>
-				<slot :name="`tab-${index}`">
-					<div v-if="tab.content" v-html="tab.content"></div>
-				</slot>
-			</TabsItem>
-		</div>
-	</div>
+        <div class="tabs__panels">
+            <Transition :name="animated ? 'tab-fade' : undefined" mode="out-in">
+                <TabsItem
+                    v-if="activeTabData"
+                    :id="activeTabData.id"
+                    :key="`panel-${activeTabData.id}`"
+                    :tabs-id="tabsId"
+                    is-active
+                >
+                    <slot :name="`tab-${activeTabIndex}`">
+                        <!-- Using v-text for XSS safety - use slot for rich content -->
+                        <div v-if="activeTabData.content" v-text="activeTabData.content"></div>
+                    </slot>
+                </TabsItem>
+            </Transition>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import TabsItem from '@/components/navigation/TabsItem.vue';
-	import { computed, nextTick, onMounted, ref, watch } from 'vue';
+    import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 
-	interface TabItem {
-		id: string;
-		label: string;
-		icon?: string;
-		content?: string;
-		disabled?: boolean;
-		badge?: {
-			text: string | number;
-			type?: string;
-			variant?: string;
-		};
-	}
+    import TabsItem from '@/components/navigation/TabsItem.vue';
 
-	const props = defineProps({
-		modelValue: {
-			type: [String, Number],
-			default: '',
-		},
-		tabs: {
-			type: Array as () => Array<TabItem>,
-			default: () => [],
-		},
-		variant: {
-			type: String,
-			default: 'default',
-			validator: (value: string) => ['default', 'outline', 'pills', 'underlined'].includes(value),
-		},
-		vertical: {
-			type: Boolean,
-			default: false,
-		},
-		align: {
-			type: String,
-			default: 'left',
-			validator: (value: string) => ['left', 'center', 'right'].includes(value),
-		},
-		scrollable: {
-			type: Boolean,
-			default: false,
-		},
-		fullWidth: {
-			type: Boolean,
-			default: false,
-		},
-		showIndicator: {
-			type: Boolean,
-			default: true,
-		},
-		customClass: {
-			type: String,
-			default: '',
-		},
-	});
+    import type { TabsProps } from '@/types/components/navigation';
 
-	const emit = defineEmits(['update:modelValue', 'tab-change']);
+    type Props = TabsProps;
 
-	// Générer un ID unique pour ce composant tabs
-	const tabsId = computed(() => {
-		if (props.tabs.length > 0) {
-			return props.tabs.map((tab) => tab.id).join('-');
-		}
-		return 'default-tabs';
-	});
+    const props = withDefaults(defineProps<Props>(), {
+        modelValue: '',
+        tabs: () => [],
+        variant: 'default',
+        vertical: false,
+        align: 'left',
+        scrollable: false,
+        fullWidth: false,
+        showIndicator: true,
+        animated: true,
+        customClass: '',
+    });
 
-	// Trouver l'onglet actif par défaut
-	const getDefaultActiveTab = () => {
-		if (props.tabs.length === 0) return '';
+    const emit = defineEmits<{
+        'update:modelValue': [value: string | number];
+        tabChange: [id: string | number];
+    }>();
 
-		const firstEnabledTab = props.tabs.find((tab) => !tab.disabled);
-		return firstEnabledTab ? firstEnabledTab.id : props.tabs[0].id;
-	};
+    const id = useId();
+    const navRef = ref<HTMLElement | null>(null);
+    const indicatorStyle = ref({ width: '0px', transform: 'translateX(0px)' });
 
-	// État local de l'onglet actif
-	const activeTab = ref(props.modelValue || getDefaultActiveTab());
+    const tabsId = computed(() => {
+        if (props.tabs.length > 0) {
+            return `tabs-${id}`;
+        }
+        return 'default-tabs';
+    });
 
-	// Navigation DOM et style de l'indicateur
-	const navRef = ref<HTMLElement | null>(null);
-	const indicatorStyle = ref({ width: '0px', transform: 'translateX(0px)' });
+    const tabsClasses = computed(() => [
+        'tabs',
+        `tabs--${props.variant}`,
+        {
+            'tabs--vertical': props.vertical,
+            'tabs--animated': props.animated,
+        },
+        props.customClass,
+    ]);
 
-	// Gérer le changement d'onglet
-	const setActiveTab = (id: string | number) => {
-		const tab = props.tabs.find((tab) => tab.id === id);
-		if (tab?.disabled) return;
+    const navClasses = computed(() => [
+        'tabs__nav',
+        `tabs__nav--${props.align}`,
+        {
+            'tabs__nav--scrollable': props.scrollable,
+            'tabs__nav--full-width': props.fullWidth,
+        },
+    ]);
 
-		activeTab.value = id;
-		emit('update:modelValue', id);
-		emit('tab-change', id);
-		updateIndicator();
-	};
+    const getDefaultActiveTab = () => {
+        if (props.tabs.length === 0) {
+            return '';
+        }
+        const firstEnabledTab = props.tabs.find((tab) => !tab.disabled);
+        const firstTab = props.tabs[0];
+        return firstEnabledTab ? firstEnabledTab.id : (firstTab?.id ?? '');
+    };
 
-	// Mettre à jour la position de l'indicateur
-	const updateIndicator = async () => {
-		if (props.vertical || !props.showIndicator || !navRef.value) return;
+    const activeTab = ref(props.modelValue || getDefaultActiveTab());
 
-		await nextTick();
-		const tabs = navRef.value.querySelectorAll('.tabs-item__tab');
-		const activeIndex = props.tabs.findIndex((tab) => tab.id === activeTab.value);
+    const activeTabIndex = computed(() => props.tabs.findIndex((tab) => tab.id === activeTab.value));
 
-		if (activeIndex === -1) return;
+    const activeTabData = computed(() => props.tabs.find((tab) => tab.id === activeTab.value));
 
-		const activeTabElement = tabs[activeIndex] as HTMLElement;
-		if (activeTabElement) {
-			indicatorStyle.value = {
-				width: `${activeTabElement.offsetWidth}px`,
-				transform: `translateX(${activeTabElement.offsetLeft}px)`,
-			};
-		}
-	};
+    const setActiveTab = (tabId: string | number) => {
+        const tab = props.tabs.find((t) => t.id === tabId);
+        if (tab?.disabled) {
+            return;
+        }
 
-	// Observer les changements de modelValue
-	watch(
-		() => props.modelValue,
-		(newValue) => {
-			if (newValue !== activeTab.value) {
-				activeTab.value = newValue;
-				updateIndicator();
-			}
-		}
-	);
+        activeTab.value = tabId;
+        emit('update:modelValue', tabId);
+        emit('tabChange', tabId);
+        updateIndicator();
+    };
 
-	// Observer les changements dans les onglets
-	watch(
-		() => props.tabs,
-		async () => {
-			await nextTick();
-			updateIndicator();
-		},
-		{ deep: true }
-	);
+    const updateIndicator = async () => {
+        if (props.vertical || !props.showIndicator || !navRef.value) {
+            return;
+        }
 
-	// Initialisation
-	onMounted(async () => {
-		await nextTick();
-		updateIndicator();
-		window.addEventListener('resize', updateIndicator);
-	});
+        await nextTick();
+        const tabElements = navRef.value.querySelectorAll('.tabs-item__tab');
+        const activeIndex = props.tabs.findIndex((tab) => tab.id === activeTab.value);
+
+        if (activeIndex === -1) {
+            return;
+        }
+
+        const activeTabElement = tabElements[activeIndex] as HTMLElement;
+        if (activeTabElement) {
+            indicatorStyle.value = {
+                width: `${activeTabElement.offsetWidth}px`,
+                transform: `translateX(${activeTabElement.offsetLeft}px)`,
+            };
+        }
+    };
+
+    watch(
+        () => props.modelValue,
+        (newValue) => {
+            if (newValue !== activeTab.value) {
+                activeTab.value = newValue;
+                updateIndicator();
+            }
+        },
+    );
+
+    watch(
+        () => props.tabs,
+        async () => {
+            await nextTick();
+            updateIndicator();
+        },
+        { deep: true },
+    );
+
+    onMounted(async () => {
+        await nextTick();
+        updateIndicator();
+        window.addEventListener('resize', updateIndicator);
+    });
+
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', updateIndicator);
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/functions' as func;
 
-	.tabs {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
+    .tabs {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
 
-		// Variante verticale
-		&--vertical {
-			flex-direction: row;
+        &--vertical {
+            flex-direction: row;
 
-			.tabs__nav {
-				flex-direction: column;
-				width: 200px;
-				flex-shrink: 0;
-				border-right: 1px solid vars.$gray-light;
-			}
+            .tabs__nav {
+                flex-direction: column;
+                width: 220px;
+                flex-shrink: 0;
+                border-right: 1px solid func.color-alpha(vars.$gray-light, 0.5);
+                border-bottom: none;
+                padding-right: vars.$spacing-md;
+                gap: vars.$spacing-xxxs;
+            }
 
-			.tabs__panels {
-				flex: 1;
-				padding-left: vars.$spacing-md;
-			}
-		}
+            .tabs__panels {
+                flex: 1;
+                padding-left: vars.$spacing-lg;
+            }
+        }
 
-		// Navigation
-		&__nav {
-			position: relative;
-			display: flex;
-			border-bottom: 1px solid vars.$gray-light;
+        &__nav {
+            position: relative;
+            display: flex;
+            gap: vars.$spacing-xxxs;
+            border-bottom: 1px solid func.color-alpha(vars.$gray-light, 0.5);
+            padding-bottom: vars.$spacing-xxs;
 
-			// Alignement
-			&--center {
-				justify-content: center;
-			}
+            &--center {
+                justify-content: center;
+            }
 
-			&--right {
-				justify-content: flex-end;
-			}
+            &--right {
+                justify-content: flex-end;
+            }
 
-			// Défilement pour beaucoup d'onglets
-			&--scrollable {
-				overflow-x: auto;
-				scroll-behavior: smooth;
-				-webkit-overflow-scrolling: touch;
+            &--scrollable {
+                overflow-x: auto;
+                scroll-behavior: smooth;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
 
-				// Masquer la barre de défilement
-				&::-webkit-scrollbar {
-					display: none;
-				}
-				scrollbar-width: none;
-			}
+                &::-webkit-scrollbar {
+                    display: none;
+                }
+            }
 
-			// Onglets en pleine largeur
-			&--full-width {
-				:deep() .tabs-item__tab {
-					flex: 1;
-				}
-			}
-		}
+            &--full-width {
+                :deep(.tabs-item__tab) {
+                    flex: 1;
+                }
+            }
+        }
 
-		// Indicateur pour l'onglet actif
-		&__indicator {
-			position: absolute;
-			bottom: 0;
-			height: 2px;
-			background-color: vars.$primary-color;
-			transition:
-				transform vars.$transition-base,
-				width vars.$transition-base;
-		}
+        &__indicator {
+            position: absolute;
+            bottom: 0;
+            height: 2px;
+            background: vars.$primary-color;
+            border-radius: vars.$border-radius-full;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
 
-		// Conteneur des panels
-		&__panels {
-			flex: 1;
-			position: relative;
-		}
-	}
+        &__panels {
+            flex: 1;
+            position: relative;
+            padding-top: vars.$spacing-md;
+        }
 
-	// Variantes - écrites séparément pour éviter les problèmes de nesting avec :deep
-	.tabs--vertical :deep() .tabs-item__tab {
-		text-align: left;
-		width: 100%;
-		border-bottom: none;
-	}
+        // Variants
+        &--outline {
+            .tabs__nav {
+                border-bottom: none;
+                gap: vars.$spacing-xxs;
+            }
 
-	.tabs--outline {
-		.tabs__nav {
-			border-bottom: none;
-		}
-	}
+            :deep(.tabs-item__tab) {
+                border: 1px solid func.color-alpha(vars.$gray-light, 0.5);
+                border-radius: vars.$border-radius-lg;
+            }
 
-	.tabs--outline :deep() .tabs-item__tab {
-		border: 1px solid vars.$gray-light;
-		border-radius: vars.$border-radius-md;
-		margin-right: vars.$spacing-xs;
-		margin-bottom: vars.$spacing-xs;
-	}
+            :deep(.tabs-item__tab--active) {
+                border-color: vars.$primary-color;
+                background: func.color-alpha(vars.$primary-color, 0.05);
+            }
+        }
 
-	.tabs--outline :deep() .tabs-item__tab--active {
-		border-color: vars.$primary-color;
-		color: vars.$primary-color;
-	}
+        &--pills {
+            .tabs__nav {
+                border-bottom: none;
+                gap: vars.$spacing-xxs;
+                background: func.color-alpha(vars.$gray-light, 0.3);
+                padding: vars.$spacing-xxxs;
+                border-radius: vars.$border-radius-lg;
+            }
 
-	.tabs--pills .tabs__nav {
-		border-bottom: none;
-		gap: vars.$spacing-xs;
-	}
+            :deep(.tabs-item__tab) {
+                border-radius: vars.$border-radius-md;
+            }
 
-	.tabs--pills :deep() .tabs-item__tab {
-		border-radius: vars.$border-radius-full;
-	}
+            :deep(.tabs-item__tab--active) {
+                background: vars.$white;
+                box-shadow: vars.$box-shadow-medium;
+            }
+        }
 
-	.tabs--pills :deep() .tabs-item__tab--active {
-		background-color: vars.$primary-color;
-		color: vars.$white;
-	}
+        &--segmented {
+            .tabs__nav {
+                border-bottom: none;
+                background: func.color-alpha(vars.$gray-light, 0.4);
+                padding: 4px;
+                border-radius: vars.$border-radius-lg;
+                gap: 0;
+            }
 
-	.tabs--underlined .tabs__indicator {
-		height: 3px;
-	}
+            :deep(.tabs-item__tab) {
+                border-radius: vars.$border-radius-md;
+            }
 
-	.tabs--underlined :deep() .tabs-item__tab--active {
-		font-weight: 600;
-	}
+            :deep(.tabs-item__tab--active) {
+                background: vars.$white;
+                box-shadow: 0 1px 3px func.color-alpha(vars.$black, 0.1);
+            }
+        }
+
+        &--underlined {
+            .tabs__indicator {
+                height: 3px;
+            }
+
+            :deep(.tabs-item__tab--active) {
+                font-weight: 600;
+            }
+        }
+    }
+
+    // Tab transition
+    .tab-fade-enter-active,
+    .tab-fade-leave-active {
+        transition: all 0.2s ease;
+    }
+
+    .tab-fade-enter-from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .tab-fade-leave-to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
 </style>

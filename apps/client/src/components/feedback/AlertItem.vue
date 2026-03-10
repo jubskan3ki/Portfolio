@@ -1,238 +1,221 @@
-<!-- src/components/feedback/AlertItem.vue -->
 <template>
-	<div
-		class="alert-item"
-		:class="[`alert-item--${alert.type}`, { 'alert-item--closing': isClosing }]"
-		role="alert"
-		@mouseenter="pauseAutoClose"
-		@mouseleave="resumeAutoClose"
-	>
-		<div class="alert-item__icon">
-			<BaseIcon :name="iconName" />
-		</div>
+    <div :class="alertClasses" role="alert" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+        <!-- Icon -->
+        <div class="alert-item__icon">
+            <BaseIcon :name="iconName" :size="20" />
+        </div>
 
-		<div class="alert-item__content">
-			<h4 v-if="alert.title" class="alert-item__title">
-				{{ alert.title }}
-			</h4>
-			<p class="alert-item__message">{{ alert.message }}</p>
-		</div>
+        <!-- Content -->
+        <div class="alert-item__content">
+            <h6 v-if="alert.title" class="alert-item__title">{{ alert.title }}</h6>
+            <p class="alert-item__message">{{ alert.message }}</p>
+        </div>
 
-		<button v-if="alert.dismissible" class="alert-item__close" aria-label="Fermer" @click="close">
-			<BaseIcon name="close" size="16" />
-		</button>
-	</div>
+        <!-- Close button -->
+        <button
+            v-if="alert.dismissible !== false"
+            type="button"
+            class="alert-item__close"
+            aria-label="Fermer"
+            @click="close"
+        >
+            <BaseIcon name="x" :size="16" />
+        </button>
+    </div>
 </template>
 
 <script setup lang="ts">
-	import BaseIcon from '@/components/base/BaseIcon.vue';
-	import type { Alert } from '@/types/store/alert';
-	import { computed, onBeforeUnmount, ref } from 'vue';
+    import { computed, ref } from 'vue';
 
-	const props = defineProps<{
-		alert: Alert;
-	}>();
+    import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { useProgressTimer } from '@/composables/ui/useProgressTimer';
 
-	const emit = defineEmits<{
-		(e: 'close', id: string): void;
-	}>();
+    import type { AlertItemProps, FeedbackType } from '@/types/components/feedback';
 
-	// Animation de fermeture
-	const isClosing = ref(false);
+    type Props = AlertItemProps;
 
-	// Gestion de l'auto-fermeture
-	let closeTimeout: ReturnType<typeof setTimeout> | null = null;
-	let remainingTime = props.alert.timeout || 5000;
-	let startTime: number;
+    const props = defineProps<Props>();
 
-	// Icône en fonction du type d'alerte
-	const iconName = computed(() => {
-		switch (props.alert.type) {
-			case 'success':
-				return 'success';
-			case 'error':
-				return 'error';
-			case 'warning':
-				return 'warning';
-			case 'info':
-				return 'info';
-			default:
-				return 'info';
-		}
-	});
+    const emit = defineEmits<{
+        close: [id: string];
+    }>();
 
-	// Configuration de l'auto-fermeture si nécessaire
-	function setupAutoClose() {
-		if (props.alert.autoClose !== false) {
-			startTime = Date.now();
-			closeTimeout = setTimeout(() => {
-				close();
-			}, remainingTime);
-		}
-	}
+    const isClosing = ref(false);
 
-	// Pause de l'auto-fermeture lorsque la souris est sur l'alerte
-	function pauseAutoClose() {
-		if (closeTimeout && props.alert.autoClose !== false) {
-			clearTimeout(closeTimeout);
-			closeTimeout = null;
+    const ICON_MAP: Record<FeedbackType, string> = {
+        success: 'check-circle',
+        error: 'x-circle',
+        warning: 'alert-triangle',
+        info: 'info',
+    };
 
-			// Calculer le temps restant
-			const elapsedTime = Date.now() - startTime;
-			remainingTime = Math.max(0, (props.alert.timeout || 5000) - elapsedTime);
-		}
-	}
+    const iconName = computed(() => ICON_MAP[props.alert.type] || 'info');
 
-	// Reprise de l'auto-fermeture lorsque la souris quitte l'alerte
-	function resumeAutoClose() {
-		if (props.alert.autoClose !== false && !closeTimeout && remainingTime > 0) {
-			startTime = Date.now();
-			closeTimeout = setTimeout(() => {
-				close();
-			}, remainingTime);
-		}
-	}
+    const alertClasses = computed(() => [
+        'alert-item',
+        `alert-item--${props.alert.type}`,
+        { 'alert-item--closing': isClosing.value },
+    ]);
 
-	// Fermeture de l'alerte
-	function close() {
-		if (closeTimeout) {
-			clearTimeout(closeTimeout);
-			closeTimeout = null;
-		}
+    const handleMouseEnter = () => {
+        if (props.alert.autoClose !== false) {
+            timer.pause();
+        }
+    };
 
-		// Animation de fermeture
-		isClosing.value = true;
+    const handleMouseLeave = () => {
+        if (props.alert.autoClose !== false) {
+            timer.resume();
+        }
+    };
 
-		// Attendre la fin de l'animation avant d'émettre l'événement de fermeture
-		setTimeout(() => {
-			emit('close', props.alert.id);
-		}, 300);
-	}
+    const close = () => {
+        timer.stop();
+        isClosing.value = true;
+        setTimeout(() => emit('close', props.alert.id), 300);
+    };
 
-	// Configuration de l'auto-fermeture au montage
-	setupAutoClose();
-
-	// Nettoyage avant la destruction
-	onBeforeUnmount(() => {
-		if (closeTimeout) {
-			clearTimeout(closeTimeout);
-		}
-	});
+    const timer = useProgressTimer({
+        duration: props.alert.timeout || 5000,
+        autoStart: props.alert.autoClose !== false,
+        onComplete: close,
+    });
 </script>
 
 <style lang="scss" scoped>
-	@use '@/styles/abstracts/variables' as vars;
-	@use '@/styles/abstracts/mixins' as mix;
-	@use '@/styles/abstracts/functions' as func;
+    @use '@/styles/abstracts/variables' as vars;
+    @use '@/styles/abstracts/functions' as func;
 
-	.alert-item {
-		position: relative;
-		display: flex;
-		align-items: flex-start;
-		padding: vars.$spacing-md;
-		border-radius: vars.$border-radius-md;
-		margin-bottom: vars.$spacing-sm;
-		box-shadow: vars.$box-shadow;
-		background-color: vars.$white;
-		max-width: 400px;
-		width: 100%;
-		opacity: 1;
-		transform: translateX(0);
-		transition:
-			transform 0.3s ease,
-			opacity 0.3s ease;
+    .alert-item {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: vars.$spacing-xs;
+        width: 100%;
+        max-width: 400px;
+        padding: vars.$spacing-md;
+        border-radius: vars.$border-radius-lg;
+        background-color: vars.$white;
+        box-shadow: vars.$box-shadow-medium;
+        animation: alert-enter 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 
-		&--closing {
-			transform: translateX(100%);
-			opacity: 0;
-		}
+        &--closing {
+            animation: alert-leave 0.3s ease-out forwards;
+        }
 
-		&__icon {
-			flex-shrink: 0;
-			margin-right: vars.$spacing-sm;
-			color: vars.$white;
-			border-radius: vars.$border-radius-full;
-			width: 32px;
-			height: 32px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
+        // Icon
+        &__icon {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: vars.$border-radius-md;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-		&__content {
-			flex: 1;
-			min-width: 0;
-		}
+        // Content
+        &__content {
+            flex: 1;
+            min-width: 0;
+            padding-top: 2px;
+        }
 
-		&__title {
-			font-weight: 600;
-			margin-bottom: vars.$spacing-xs;
-		}
+        &__title {
+            margin: 0 0 vars.$spacing-xxs;
+            font-weight: vars.$font-weight-semibold;
+            line-height: vars.$line-height-tight;
+        }
 
-		&__message {
-			margin-bottom: 0;
-			@include mix.truncate(3);
-		}
+        &__message {
+            margin: 0;
+            color: vars.$text-secondary;
+            line-height: vars.$line-height-relaxed;
+        }
 
-		&__close {
-			flex-shrink: 0;
-			margin-left: vars.$spacing-sm;
-			color: vars.$gray;
-			padding: vars.$spacing-xxs;
-			@include mix.transition(color);
+        // Close button
+        &__close {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            border-radius: vars.$border-radius-md;
+            color: vars.$gray;
+            cursor: pointer;
+            transition: all vars.$transition-fast;
 
-			&:hover {
-				color: vars.$black;
-			}
-		}
+            &:hover {
+                background-color: func.color-alpha(vars.$black, 0.05);
+                color: vars.$text-primary;
+            }
+        }
 
-		// Styles spécifiques selon le type d'alerte
-		&--success {
-			border-left: 4px solid vars.$success-color;
+        // Variants
+        &--success {
+            .alert-item__icon {
+                background-color: func.color-alpha(vars.$success-color, 0.1);
+                color: vars.$success-color;
+            }
 
-			.alert-item__icon {
-				background-color: vars.$success-color;
-			}
+            .alert-item__title {
+                color: vars.$success-dark;
+            }
+        }
 
-			.alert-item__title {
-				color: func.adjust-color-brightness(vars.$success-color, -30%);
-			}
-		}
+        &--error {
+            .alert-item__icon {
+                background-color: func.color-alpha(vars.$danger-color, 0.1);
+                color: vars.$danger-color;
+            }
 
-		&--error {
-			border-left: 4px solid vars.$danger-color;
+            .alert-item__title {
+                color: vars.$danger-dark;
+            }
+        }
 
-			.alert-item__icon {
-				background-color: vars.$danger-color;
-			}
+        &--warning {
+            .alert-item__icon {
+                background-color: func.color-alpha(vars.$warning-color, 0.15);
+                color: vars.$warning-dark;
+            }
 
-			.alert-item__title {
-				color: func.adjust-color-brightness(vars.$danger-color, -20%);
-			}
-		}
+            .alert-item__title {
+                color: vars.$warning-dark;
+            }
+        }
 
-		&--warning {
-			border-left: 4px solid vars.$warning-color;
+        &--info {
+            .alert-item__icon {
+                background-color: func.color-alpha(vars.$info-color, 0.1);
+                color: vars.$info-color;
+            }
 
-			.alert-item__icon {
-				background-color: vars.$warning-color;
-			}
+            .alert-item__title {
+                color: vars.$info-dark;
+            }
+        }
+    }
 
-			.alert-item__title {
-				color: func.adjust-color-brightness(vars.$warning-color, -30%);
-			}
-		}
+    @keyframes alert-enter {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
 
-		&--info {
-			border-left: 4px solid vars.$info-color;
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
 
-			.alert-item__icon {
-				background-color: vars.$info-color;
-			}
-
-			.alert-item__title {
-				color: func.adjust-color-brightness(vars.$info-color, -30%);
-			}
-		}
-	}
+    @keyframes alert-leave {
+        to {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+    }
 </style>
