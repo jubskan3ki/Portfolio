@@ -46,9 +46,8 @@ export interface UpdateProfileData {
 
 // Password
 export interface ChangePasswordData {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
+    old_password: string;
+    new_password: string;
 }
 
 export interface RequestResetPasswordData {

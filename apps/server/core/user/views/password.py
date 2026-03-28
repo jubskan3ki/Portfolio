@@ -4,7 +4,7 @@ import logging
 from typing import Any, cast
 
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -24,10 +24,10 @@ class RequestResetPasswordView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [ResetPasswordThrottle]
 
-    @swagger_auto_schema(
-        operation_summary="Demander la reinitialisation",
-        operation_description="Envoie un email avec un code de reinitialisation.",
-        request_body=RequestResetPasswordSerializer,
+    @extend_schema(
+        summary="Demander la reinitialisation",
+        description="Envoie un email avec un code de reinitialisation.",
+        request=RequestResetPasswordSerializer,
         responses=REQUEST_RESET_RESPONSES,
         tags=["Password"],
     )
@@ -54,10 +54,10 @@ class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [ResetPasswordThrottle]
 
-    @swagger_auto_schema(
-        operation_summary="Reinitialiser le mot de passe",
-        operation_description="Reinitialise le mot de passe avec le code fourni.",
-        request_body=ResetPasswordSerializer,
+    @extend_schema(
+        summary="Reinitialiser le mot de passe",
+        description="Reinitialise le mot de passe avec le code fourni.",
+        request=ResetPasswordSerializer,
         responses=RESET_PASSWORD_RESPONSES,
         tags=["Password"],
     )
@@ -104,10 +104,10 @@ class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [ChangePasswordThrottle]
 
-    @swagger_auto_schema(
-        operation_summary="Changer le mot de passe",
-        operation_description="Change le mot de passe de l'utilisateur connecte.",
-        request_body=ChangePasswordSerializer,
+    @extend_schema(
+        summary="Changer le mot de passe",
+        description="Change le mot de passe de l'utilisateur connecte.",
+        request=ChangePasswordSerializer,
         responses=CHANGE_PASSWORD_RESPONSES,
         tags=["Password"],
     )

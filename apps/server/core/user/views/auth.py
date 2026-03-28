@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import DatabaseError, IntegrityError
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -39,10 +39,10 @@ class AdminLoginView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [LoginThrottle]
 
-    @swagger_auto_schema(
-        operation_summary="Connexion administrateur",
-        operation_description="Authentifie un administrateur et renvoie des tokens JWT via cookies HTTPOnly.",
-        request_body=AdminLoginSerializer,
+    @extend_schema(
+        summary="Connexion administrateur",
+        description="Authentifie un administrateur et renvoie des tokens JWT via cookies HTTPOnly.",
+        request=AdminLoginSerializer,
         responses=LOGIN_RESPONSES,
         tags=["Users"],
     )
@@ -106,9 +106,9 @@ class AdminLogoutView(APIView):
 
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(
-        operation_summary="Deconnexion administrateur",
-        operation_description="Invalide le token de rafraichissement JWT et supprime les cookies.",
+    @extend_schema(
+        summary="Deconnexion administrateur",
+        description="Invalide le token de rafraichissement JWT et supprime les cookies.",
         responses=LOGOUT_RESPONSES,
         tags=["Users"],
     )
@@ -141,9 +141,9 @@ class AdminRefreshView(APIView):
 
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(
-        operation_summary="Rafraichissement du token",
-        operation_description="Genere un nouveau token d'acces via cookie HTTPOnly.",
+    @extend_schema(
+        summary="Rafraichissement du token",
+        description="Genere un nouveau token d'acces via cookie HTTPOnly.",
         responses=REFRESH_RESPONSES,
         tags=["Users"],
     )

@@ -39,8 +39,6 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-
-
     interface Stack {
         id: string | number;
         name: string;

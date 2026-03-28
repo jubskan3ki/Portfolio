@@ -1,8 +1,8 @@
 """Views pour les stacks techniques."""
 
 from django.db.models import QuerySet
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -13,7 +13,7 @@ from core.projects.serializers import ProjectListSerializer
 from utils.api import BaseAPIViewSet
 from utils.pagination import APIResponsePagination
 
-from ..doc import RESPONSE_400, RESPONSE_404, SCHEMA_RELATED_STACK, STACK_LIST_PARAMS, TAGS_STACKS
+from ..doc import RESPONSE_400, RESPONSE_404, STACK_LIST_PARAMS, TAGS_STACKS
 from ..filters import StackFilter
 from ..models import Stack
 from ..serializers import StackDetailSerializer, StackListSerializer, StackWriteSerializer
@@ -47,10 +47,10 @@ class StackViewSet(BaseAPIViewSet):
         """Retourne les stacks avec relations pre-chargees."""
         return Stack.objects.with_related()
 
-    @swagger_auto_schema(
-        operation_summary="Liste des stacks",
-        operation_description="Recupere la liste des stacks techniques avec filtres optionnels.",
-        manual_parameters=STACK_LIST_PARAMS,
+    @extend_schema(
+        summary="Liste des stacks",
+        description="Recupere la liste des stacks techniques avec filtres optionnels.",
+        parameters=STACK_LIST_PARAMS,
         responses={200: StackListSerializer(many=True)},
         tags=TAGS_STACKS,
     )
@@ -58,10 +58,10 @@ class StackViewSet(BaseAPIViewSet):
         """Liste des stacks."""
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Details d'une stack",
-        operation_description="Recupere les details d'une stack par son slug ou ID.",
-        responses={200: StackDetailSerializer(), 404: RESPONSE_404},
+    @extend_schema(
+        summary="Details d'une stack",
+        description="Recupere les details d'une stack par son slug ou ID.",
+        responses={200: StackDetailSerializer, 404: RESPONSE_404},
         tags=TAGS_STACKS,
     )
     def retrieve(self, _request: Request, *_args: object, **_kwargs: object) -> Response:
@@ -70,52 +70,52 @@ class StackViewSet(BaseAPIViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        operation_summary="Creer une stack",
-        operation_description="Cree une nouvelle stack technique.",
-        request_body=StackWriteSerializer,
-        responses={201: StackDetailSerializer(), 400: RESPONSE_400},
+    @extend_schema(
+        summary="Creer une stack",
+        description="Cree une nouvelle stack technique.",
+        request=StackWriteSerializer,
+        responses={201: StackDetailSerializer, 400: RESPONSE_400},
         tags=TAGS_STACKS,
     )
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Cree une stack."""
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Modifier une stack",
-        operation_description="Met a jour completement une stack.",
-        request_body=StackWriteSerializer,
-        responses={200: StackDetailSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Modifier une stack",
+        description="Met a jour completement une stack.",
+        request=StackWriteSerializer,
+        responses={200: StackDetailSerializer, 400: RESPONSE_400, 404: RESPONSE_404},
         tags=TAGS_STACKS,
     )
     def update(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Met a jour une stack."""
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Modifier partiellement une stack",
-        operation_description="Met a jour partiellement une stack.",
-        request_body=StackWriteSerializer,
-        responses={200: StackDetailSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Modifier partiellement une stack",
+        description="Met a jour partiellement une stack.",
+        request=StackWriteSerializer,
+        responses={200: StackDetailSerializer, 400: RESPONSE_400, 404: RESPONSE_404},
         tags=TAGS_STACKS,
     )
     def partial_update(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Met a jour partiellement une stack."""
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Supprimer une stack",
-        operation_description="Supprime une stack existante.",
-        responses={204: "Supprime", 404: RESPONSE_404},
+    @extend_schema(
+        summary="Supprimer une stack",
+        description="Supprime une stack existante.",
+        responses={204: OpenApiResponse(description="Supprime avec succes"), 404: RESPONSE_404},
         tags=TAGS_STACKS,
     )
     def destroy(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Supprime une stack."""
         return super().destroy(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Stacks par categorie",
-        operation_description="Recupere les stacks d'une categorie specifique.",
+    @extend_schema(
+        summary="Stacks par categorie",
+        description="Recupere les stacks d'une categorie specifique.",
         responses={200: StackListSerializer(many=True), 404: RESPONSE_404},
         tags=TAGS_STACKS,
     )
@@ -125,14 +125,11 @@ class StackViewSet(BaseAPIViewSet):
         stacks = StackService.get_by_category(category_name)
         return self.paginated_response(stacks, StackListSerializer)
 
-    @swagger_auto_schema(
-        operation_summary="Stacks associees",
-        operation_description="Recupere les stacks associees a une stack.",
+    @extend_schema(
+        summary="Stacks associees",
+        description="Recupere les stacks associees a une stack.",
         responses={
-            200: openapi.Response(
-                description="Liste des stacks associees",
-                schema=openapi.Schema(type=openapi.TYPE_ARRAY, items=SCHEMA_RELATED_STACK),
-            ),
+            200: OpenApiResponse(description="Liste des stacks associees"),
             404: RESPONSE_404,
         },
         tags=TAGS_STACKS,
@@ -144,9 +141,9 @@ class StackViewSet(BaseAPIViewSet):
         related = StackService.get_related(stack)
         return Response(related)
 
-    @swagger_auto_schema(
-        operation_summary="Projets utilisant cette stack",
-        operation_description="Recupere les projets qui utilisent cette technologie.",
+    @extend_schema(
+        summary="Projets utilisant cette stack",
+        description="Recupere les projets qui utilisent cette technologie.",
         responses={200: ProjectListSerializer(many=True), 404: RESPONSE_404},
         tags=TAGS_STACKS,
     )
@@ -157,9 +154,9 @@ class StackViewSet(BaseAPIViewSet):
         projects_qs = StackService.get_projects_for_stack(stack)
         return self.paginated_response(projects_qs, ProjectListSerializer)
 
-    @swagger_auto_schema(
-        operation_summary="Articles lies a cette stack",
-        operation_description="Recupere les articles de blog lies a cette technologie.",
+    @extend_schema(
+        summary="Articles lies a cette stack",
+        description="Recupere les articles de blog lies a cette technologie.",
         responses={200: ArticleListSerializer(many=True), 404: RESPONSE_404},
         tags=TAGS_STACKS,
     )

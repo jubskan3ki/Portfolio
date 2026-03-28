@@ -22,6 +22,8 @@ autobahn==24.4.2
     # via daphne
 automat==25.4.16
     # via twisted
+bandit==1.9.4
+    # via -r requirements.in
 billiard==4.2.1
     # via celery
 black==25.1.0
@@ -29,6 +31,9 @@ black==25.1.0
 celery==5.5.2
     # via
     #   -r requirements.in
+    #   celery-types
+celery-types==0.26.0
+    # via -r requirements.in
     #   django-celery-results
 cffi==1.17.1
     # via cryptography
@@ -78,7 +83,7 @@ django==5.2.1
     #   django-redis
     #   djangorestframework
     #   djangorestframework-simplejwt
-    #   drf-yasg
+    #   drf-spectacular
 django-celery-results==2.6.0
     # via -r requirements.in
 django-cors-headers==4.7.0
@@ -99,10 +104,14 @@ djangorestframework==3.16.0
     # via
     #   -r requirements.in
     #   djangorestframework-simplejwt
-    #   drf-yasg
+    #   drf-spectacular
+django-stubs==6.0.1
+    # via -r requirements.in
 djangorestframework-simplejwt==5.5.0
     # via -r requirements.in
-drf-yasg==1.21.10
+djangorestframework-stubs==3.16.8
+    # via -r requirements.in
+drf-spectacular==0.28.0
     # via -r requirements.in
 et-xmlfile==2.0.0
     # via openpyxl
@@ -111,6 +120,10 @@ filelock==3.18.0
 flake8==7.2.0
     # via -r requirements.in
 gunicorn==23.0.0
+    # via -r requirements.in
+httpx==0.28.1
+    # via -r requirements.in
+hypothesis==6.151.9
     # via -r requirements.in
 hyperlink==21.0.0
     # via
@@ -125,7 +138,7 @@ idna==3.10
 incremental==24.7.2
     # via twisted
 inflection==0.5.1
-    # via drf-yasg
+    # via drf-spectacular
 isort==6.0.1
     # via pylint
 kombu==5.5.3
@@ -134,16 +147,22 @@ mccabe==0.7.0
     # via
     #   flake8
     #   pylint
+mypy==1.19.1
+    # via -r requirements.in
 mypy-extensions==1.1.0
-    # via black
+    # via
+    #   black
+    #   mypy
 nodeenv==1.9.1
     # via pre-commit
 openpyxl==3.1.5
     # via -r requirements.in
+orjson==3.11.7
+    # via -r requirements.in
 packaging==25.0
     # via
     #   black
-    #   drf-yasg
+    #   drf-spectacular
     #   gunicorn
 pathspec==0.12.1
     # via black
@@ -158,6 +177,8 @@ pre-commit==4.2.0
     # via -r requirements.in
 prompt-toolkit==3.0.51
     # via click-repl
+pip-audit==2.10.0
+    # via -r requirements.in
 psutil==7.0.0
     # via -r requirements.in
 pytest==8.3.5
@@ -171,6 +192,8 @@ pytest-cov==7.0.0
 pytest-django==4.9.0
     # via -r requirements.in
 pytest-mock==3.15.1
+    # via -r requirements.in
+pytest-xdist==3.8.0
     # via -r requirements.in
 factory-boy==3.3.3
     # via -r requirements.in
@@ -218,16 +241,20 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
     # via -r requirements.in
 pytz==2025.2
-    # via drf-yasg
+    # via drf-spectacular
 pyyaml==6.0.2
     # via
-    #   drf-yasg
+    #   drf-spectacular
     #   pre-commit
 redis==6.0.0
     # via
     #   -r requirements.in
     #   django-redis
 requests==2.32.3
+    # via -r requirements.in
+ruff==0.15.8
+    # via -r requirements.in
+sentry-sdk==2.56.0
     # via -r requirements.in
 service-identity==24.2.0
     # via twisted
@@ -253,7 +280,7 @@ tzdata==2025.2
 uritemplate==4.1.1
     # via
     #   -r requirements.in
-    #   drf-yasg
+    #   drf-spectacular
 vine==5.1.0
     # via
     #   amqp

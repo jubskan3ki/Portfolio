@@ -6,13 +6,12 @@ import type {
     TransferModule,
     ExportFormat,
     ExportJob,
-    ImportJob,
-    ImportPreview,
     BulkExportResult,
     BulkImportResult,
     TransferJobsResponse,
     CleanupJobsResponse,
 } from '@/types/api/transfer';
+import type { ImportJob, ImportPreview } from '@/types/composables/data/transfer';
 
 export const transferKeys = {
     ...createKeys('transfer'),

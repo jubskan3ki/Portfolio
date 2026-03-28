@@ -222,9 +222,16 @@ class BaseAPIViewSet(
         au lieu de get_queryset() pour beneficier du guard automatique.
         """
         if getattr(self, "swagger_fake_view", False):
-            if self.queryset is None:
-                return QuerySet(model=Model).none()
-            return self.queryset.model.objects.none()
+            if self.queryset is not None:
+                return self.queryset.model.objects.none()
+            # Pas de queryset défini — dériver le modèle depuis le serializer
+            serializer_class = getattr(self, "serializer_class", None)
+            if serializer_class is not None:
+                meta = getattr(serializer_class, "Meta", None)
+                model = getattr(meta, "model", None) if meta else None
+                if model is not None:
+                    return model.objects.none()
+            return QuerySet()
         return self._get_base_queryset()
 
     def _get_base_queryset(self) -> QuerySet[Any]:

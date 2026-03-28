@@ -108,8 +108,7 @@
 
     const levelInfo = computed(() => {
         const level = Number(props.stack.level) || 0;
-        const found = LEVEL_CONFIG.find((c) => level >= c.min);
-        return found ?? LEVEL_CONFIG[LEVEL_CONFIG.length - 1];
+        return LEVEL_CONFIG.find((c) => level >= c.min) ?? LEVEL_CONFIG[4];
     });
 
     const levelLabel = computed(() => levelInfo.value.label);

@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -41,10 +41,10 @@ class ResourceViewSet(BaseAPIViewSet):
 
         return filters
 
-    @swagger_auto_schema(
-        operation_summary="Liste des ressources",
-        operation_description="Recupere les ressources avec filtres optionnels.",
-        manual_parameters=RESOURCE_LIST_PARAMS,
+    @extend_schema(
+        summary="Liste des ressources",
+        description="Recupere les ressources avec filtres optionnels.",
+        parameters=RESOURCE_LIST_PARAMS,
         responses={200: StackResourceSerializer(many=True)},
         tags=TAGS_RESOURCES,
     )
@@ -52,52 +52,52 @@ class ResourceViewSet(BaseAPIViewSet):
         """Liste des ressources."""
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Details d'une ressource",
-        operation_description="Recupere une ressource par son ID.",
-        responses={200: StackResourceSerializer(), 404: RESPONSE_404},
+    @extend_schema(
+        summary="Details d'une ressource",
+        description="Recupere une ressource par son ID.",
+        responses={200: StackResourceSerializer, 404: RESPONSE_404},
         tags=TAGS_RESOURCES,
     )
     def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Details d'une ressource."""
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Creer une ressource",
-        operation_description="Cree une nouvelle ressource.",
-        request_body=StackResourceSerializer,
-        responses={201: StackResourceSerializer(), 400: RESPONSE_400},
+    @extend_schema(
+        summary="Creer une ressource",
+        description="Cree une nouvelle ressource.",
+        request=StackResourceSerializer,
+        responses={201: StackResourceSerializer, 400: RESPONSE_400},
         tags=TAGS_RESOURCES,
     )
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Cree une ressource."""
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Modifier une ressource",
-        operation_description="Met a jour completement une ressource.",
-        request_body=StackResourceSerializer,
-        responses={200: StackResourceSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Modifier une ressource",
+        description="Met a jour completement une ressource.",
+        request=StackResourceSerializer,
+        responses={200: StackResourceSerializer, 400: RESPONSE_400, 404: RESPONSE_404},
         tags=TAGS_RESOURCES,
     )
     def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Met a jour une ressource."""
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Modifier partiellement une ressource",
-        operation_description="Met a jour partiellement une ressource.",
-        request_body=StackResourceSerializer,
-        responses={200: StackResourceSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Modifier partiellement une ressource",
+        description="Met a jour partiellement une ressource.",
+        request=StackResourceSerializer,
+        responses={200: StackResourceSerializer, 400: RESPONSE_400, 404: RESPONSE_404},
         tags=TAGS_RESOURCES,
     )
     def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Met a jour partiellement une ressource."""
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Supprimer une ressource",
-        operation_description="Supprime une ressource existante.",
+    @extend_schema(
+        summary="Supprimer une ressource",
+        description="Supprime une ressource existante.",
         responses={204: RESPONSE_204, 404: RESPONSE_404},
         tags=TAGS_RESOURCES,
     )

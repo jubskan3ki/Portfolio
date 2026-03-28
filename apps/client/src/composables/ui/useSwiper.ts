@@ -2,17 +2,18 @@ import { useEventListener } from '@vueuse/core';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import type { SwiperProps } from '@/types/components/ui';
+import type { Ref } from 'vue';
 
 interface UseSwiperOptions {
     props: SwiperProps;
     emit: (event: 'change', index: number) => void;
+    swiperRef: Readonly<Ref<HTMLElement | null>>;
 }
 
 export function useSwiper(options: UseSwiperOptions) {
-    const { props, emit } = options;
+    const { props, emit, swiperRef } = options;
 
     const activeIndex = ref(0);
-    const swiperRef = ref<HTMLElement | null>(null);
     const slideWidth = ref(0);
     const translateX = ref(0);
     let autoplayTimer: number | null = null;
@@ -151,7 +152,6 @@ export function useSwiper(options: UseSwiperOptions) {
 
     return {
         activeIndex,
-        swiperRef,
         translateX,
         totalDots,
         slideStyles,

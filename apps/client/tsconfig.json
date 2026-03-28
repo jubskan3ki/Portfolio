@@ -2,13 +2,14 @@
     "extends": "./.nuxt/tsconfig.json",
     "compilerOptions": {
         "strict": true,
+        "ignoreDeprecations": "5.0",
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        "baseUrl": ".",
         "paths": {
             "@/*": ["./src/*"]
-        }
+        },
+        "types": ["node", "vite/client"]
     },
     "include": [
         ".nuxt/nuxt.d.ts",
@@ -17,7 +18,9 @@
         "src/**/*.tsx",
         "src/**/*.vue",
         "nuxt.config.ts",
-        "error.vue"
+        "error.vue",
+        "sentry.client.config.ts",
+        "sentry.server.config.ts"
     ],
     "exclude": ["node_modules", "dist"]
 }

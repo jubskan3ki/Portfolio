@@ -6,7 +6,7 @@ from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.response import Response
 
 from utils.api import BaseAPIViewSet
@@ -53,9 +53,9 @@ class CategoryViewSet(BaseAPIViewSet):
                 qs = qs.filter(published_count__gt=0)
         return qs
 
-    @swagger_auto_schema(
-        operation_summary="Liste des catégories",
-        operation_description="Récupère la liste des catégories d'articles.",
+    @extend_schema(
+        summary="Liste des catégories",
+        description="Récupère la liste des catégories d'articles.",
         responses={200: CategorySerializer(many=True)},
         tags=["Articles - Catégories"],
     )
@@ -64,10 +64,10 @@ class CategoryViewSet(BaseAPIViewSet):
         """Récupère la liste des catégories d'articles."""
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Détails d'une catégorie",
-        operation_description="Récupère les détails d'une catégorie par son slug.",
-        responses={200: CategorySerializer(), 404: "Catégorie non trouvée"},
+    @extend_schema(
+        summary="Détails d'une catégorie",
+        description="Récupère les détails d'une catégorie par son slug.",
+        responses={200: CategorySerializer, 404: OpenApiResponse(description="Categorie non trouvee")},
         tags=["Articles - Catégories"],
     )
     @method_decorator(cache_page(1800))

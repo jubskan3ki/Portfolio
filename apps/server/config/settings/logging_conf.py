@@ -83,6 +83,11 @@ LOGGING = {
             "level": "INFO" if DEBUG else "WARNING",
             "propagate": False,
         },
+        "core.stats": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "celery": {
             "handlers": ["console"],
             "level": "INFO",

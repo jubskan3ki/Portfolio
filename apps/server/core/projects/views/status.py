@@ -4,7 +4,7 @@ from typing import Any
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -24,9 +24,9 @@ class StatusViewSet(BaseAPIViewSet):
     throttle_classes = [ProjectsThrottle]
     lookup_field = "pk"
 
-    @swagger_auto_schema(
-        operation_summary="Liste des statuts",
-        operation_description="Recupere la liste de tous les statuts de projets.",
+    @extend_schema(
+        summary="Liste des statuts",
+        description="Recupere la liste de tous les statuts de projets.",
         responses={200: ProjectStatusSerializer(many=True)},
         tags=TAGS_STATUSES,
     )
@@ -35,10 +35,10 @@ class StatusViewSet(BaseAPIViewSet):
         """Recupere la liste de tous les statuts."""
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Details d'un statut",
-        operation_description="Recupere les details d'un statut par son ID.",
-        responses={200: ProjectStatusSerializer(), 404: RESPONSE_404},
+    @extend_schema(
+        summary="Details d'un statut",
+        description="Recupere les details d'un statut par son ID.",
+        responses={200: ProjectStatusSerializer, 404: RESPONSE_404},
         tags=TAGS_STATUSES,
     )
     @method_decorator(cache_page(1800))
@@ -46,42 +46,42 @@ class StatusViewSet(BaseAPIViewSet):
         """Recupere les details d'un statut par son ID."""
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Creer un statut",
-        operation_description="Cree un nouveau statut de projet.",
-        request_body=ProjectStatusSerializer,
-        responses={201: ProjectStatusSerializer(), 400: RESPONSE_400},
+    @extend_schema(
+        summary="Creer un statut",
+        description="Cree un nouveau statut de projet.",
+        request=ProjectStatusSerializer,
+        responses={201: ProjectStatusSerializer, 400: RESPONSE_400},
         tags=TAGS_STATUSES,
     )
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Cree un nouveau statut."""
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Mettre a jour un statut",
-        operation_description="Met a jour completement un statut existant.",
-        request_body=ProjectStatusSerializer,
-        responses={200: ProjectStatusSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Mettre a jour un statut",
+        description="Met a jour completement un statut existant.",
+        request=ProjectStatusSerializer,
+        responses={200: ProjectStatusSerializer, 400: RESPONSE_400, 404: RESPONSE_404},
         tags=TAGS_STATUSES,
     )
     def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Met a jour completement un statut."""
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Mettre a jour partiellement un statut",
-        operation_description="Met a jour partiellement un statut existant.",
-        request_body=ProjectStatusSerializer,
-        responses={200: ProjectStatusSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Mettre a jour partiellement un statut",
+        description="Met a jour partiellement un statut existant.",
+        request=ProjectStatusSerializer,
+        responses={200: ProjectStatusSerializer, 400: RESPONSE_400, 404: RESPONSE_404},
         tags=TAGS_STATUSES,
     )
     def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Met a jour partiellement un statut."""
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Supprimer un statut",
-        operation_description="Supprime un statut existant.",
+    @extend_schema(
+        summary="Supprimer un statut",
+        description="Supprime un statut existant.",
         responses={204: RESPONSE_204, 404: RESPONSE_404},
         tags=TAGS_STATUSES,
     )

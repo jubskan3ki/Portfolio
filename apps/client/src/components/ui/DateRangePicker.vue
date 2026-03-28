@@ -44,9 +44,10 @@
         }),
     });
 
+    const dropdownRef = useTemplateRef<HTMLElement>('dropdownRef');
+
     const {
         isOpen,
-        dropdownRef,
         weekDays,
         displayValue,
         currentMonthYear,
@@ -65,6 +66,7 @@
         minDays: computed(() => props.minDays ?? 7),
         maxDays: computed(() => props.maxDays ?? 14),
         disabled: computed(() => props.disabled ?? false),
+        dropdownRef,
     });
 </script>
 

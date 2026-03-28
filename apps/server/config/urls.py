@@ -5,9 +5,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
-from rest_framework import permissions
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 API_PREFIX = "api/"
 
@@ -16,24 +14,9 @@ def health_check(_request):
     """Health check endpoint."""
     return JsonResponse({"status": "ok"})
 
-
-api_info = openapi.Info(
-    title="Portfolio API",
-    default_version="v1",
-    description="API pour le portfolio personnel",
-    terms_of_service="https://www.aitaddajuba.fr/terms/",
-    contact=openapi.Contact(email=settings.ADMIN_EMAIL),
-    license=openapi.License(name="BSD License"),
-)
-
-SchemaView = get_schema_view(
-    api_info,
-    public=settings.DEBUG,
-    permission_classes=[permissions.AllowAny if settings.DEBUG else permissions.IsAdminUser],
-)
-
 urlpatterns = [
     path("", health_check, name="root"),
+    path("", include("django_prometheus.urls")),
     path("django-admin/", admin.site.urls),
     path(f"{API_PREFIX}users/", include("core.user.urls")),
     path(f"{API_PREFIX}articles/", include("core.articles.urls")),
@@ -49,9 +32,9 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += [
-        path("api/schema/", SchemaView.without_ui(cache_timeout=0), name="schema-json"),
-        path("swagger/", SchemaView.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
-        path("redoc/", SchemaView.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        path("swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+        path("redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     ]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

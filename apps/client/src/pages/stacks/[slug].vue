@@ -242,7 +242,6 @@
     import { computed, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
-
     import BaseLink from '@/components/base/BaseLink.vue';
     import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
     import ProjectCard from '@/components/feature/projects/ProjectCard.vue';
@@ -624,7 +623,6 @@
     .skill-level {
         margin-top: vars.$spacing-md;
     }
-
 
     /* Section titles (full-width sections) */
     .stack-page__section-title {

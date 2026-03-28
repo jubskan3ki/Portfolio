@@ -43,6 +43,7 @@ USE_TZ = True
 # APPLICATIONS
 
 INSTALLED_APPS = [
+    "django_prometheus",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -56,7 +57,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_extensions",
     "django_filters",
-    "drf_yasg",
+    "drf_spectacular",
     *(["debug_toolbar"] if ENABLE_DEBUG_TOOLBAR else []),
     "core.user.apps.UserConfig",
     "core.articles.apps.ArticlesConfig",
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "middlewares.correlation.CorrelationIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -95,6 +97,7 @@ MIDDLEWARE = [
         if not DEBUG
         else []
     ),
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 # TEMPLATES

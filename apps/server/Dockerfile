@@ -21,11 +21,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Préparation pour l'installation des dépendances
 WORKDIR /app
-COPY requirements.txt .
+COPY requirements.in .
 
-# Installer les dépendances
+# Compiler et installer les dépendances
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir wheel && \
+    pip install --no-cache-dir pip-tools wheel && \
+    pip-compile --quiet requirements.in -o requirements.txt && \
     pip install --no-cache-dir -r requirements.txt
 
 # Étape 2: Image finale

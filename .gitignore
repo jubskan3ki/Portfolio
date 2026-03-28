@@ -1,8 +1,14 @@
-# --- Global --- #
+# ============================================================
+# .gitignore — Portfolio Monorepo
+# ============================================================
+
+# ── OS ───────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 ehthumbs.db
 __MACOSX/
+*.orig
+*.rej
 *.bak
 *.tmp
 *.swp
@@ -10,103 +16,102 @@ __MACOSX/
 *.swn
 *.~lock
 
-# --- Python & Django --- #
+# ── Secrets & Environment ────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# ── Python & Django ──────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 *.pot
+*.mo
 *.sqlite3
-db.sqlite3
-Pipfile.lock
+local_settings.py
 celerybeat-schedule
-staticfiles/
-**/migrations/__pycache__/
-**/media/*
+celerybeat.pid
+*.pid
 
-# --- Virtualenv & Pip --- #
+# Collected static / uploaded media
+apps/server/staticfiles/
+apps/server/media/
+
+# Python packaging
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Virtual environments
 .venv/
 venv/
 env/
 .virtualenv/
-**/venv/
-**/env/
-**/.virtualenvs/
 
-# --- Node.js, Nuxt & Frontend --- #
-node_modules/
-.npm/
-.npmrc
-.nuxtrc
-.nuxt/
-.output/
-output/
-dist/
-build/
-.next/
-out/
-.cache/
-.nitro/
-.eslintcache
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-**/public/assets/
+# Type checking & linting caches
+.mypy_cache/
+.ruff_cache/
+.pylint.d/
 
-# --- Docker --- #
-docker-compose.override.yml
-docker-compose.override.yaml
-docker/db-data/
-docker/nginx/
-docker-logs/
-**/docker-entrypoint.sh
-
-# --- IDEs & Editors --- #
-.vscode/
-.idea/
-*.sublime-workspace
-*.sublime-project
-
-# --- Coverage & Test Reports --- #
+# Testing
 .tox/
+.nox/
 .coverage
 coverage.xml
 htmlcov/
 junit.xml
-.nox/
 .pytest_cache/
+.hypothesis/
 nosetests.xml
 
-# --- Secrets & Credentials --- #
-secrets.json
-.env
-.env.*
-!.env.example
-!.env.production.example
-.env.local
-.env.development
-.env.production
-.env.test
-.env.staging
+# ── Node.js & Nuxt ───────────────────────────────────────────
+node_modules/
+.npm/
+.nuxt/
+.output/
+.nitro/
+.vite/
+.turbo/
+dist/
+.cache/
+.eslintcache
 
-# --- Logs --- #
-*.log
-logs/
-debug.log
-django.log
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# --- Dependencies Lockfiles (non-pnpm) --- #
+# Non-pnpm lockfiles (projet utilise pnpm)
 package-lock.json
 yarn.lock
+
+# ── Docker ───────────────────────────────────────────────────
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# ── Backups & Data persistants ───────────────────────────────
+backups/
+postgres-data/
+monitoring/grafana/data/
+monitoring/loki/
+
+# ── Lighthouse CI ────────────────────────────────────────────
+**/.lighthouseci/
+lhr-*.html
+lhr-*.json
+
+# ── IDEs & Éditeurs ──────────────────────────────────────────
+.idea/
+*.sublime-workspace
+*.sublime-project
+
 
 # --- Claude Code (AI tooling) --- #
 CLAUDE.md
 CONTEXT/
 claude.config.json
 .claude/
-
-# --- Lighthouse CI (results only) --- #
-**/.lighthouseci/
-lhr-*.html
-lhr-*.json

@@ -211,7 +211,7 @@ class StackRelationship(models.Model):
                 name="unique_stack_relationship",
             ),
             models.CheckConstraint(
-                check=~models.Q(from_stack=models.F("to_stack")),
+                condition=~models.Q(from_stack=models.F("to_stack")),
                 name="prevent_self_relationship",
             ),
         ]

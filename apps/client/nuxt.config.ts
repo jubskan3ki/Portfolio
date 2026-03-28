@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url';
 
 import { defineNuxtConfig } from 'nuxt/config';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineNuxtConfig({
 
@@ -11,6 +12,7 @@ export default defineNuxtConfig({
         '@nuxt/fonts',
         '@nuxtjs/seo',
         'nuxt-delay-hydration',
+        'nuxt-security',
     ],
 
     plugins: [
@@ -87,6 +89,7 @@ export default defineNuxtConfig({
             webVitalsSampleRate: process.env.NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE || (process.env.NODE_ENV === 'development' ? '1' : '0.2'),
         },
     },
+
     dir: {
         pages: 'src/pages',
         layouts: 'src/layouts',
@@ -104,14 +107,7 @@ export default defineNuxtConfig({
     },
 
     routeRules: {
-        '/**': {
-            headers: {
-                'X-Content-Type-Options': 'nosniff',
-                'X-Frame-Options': 'DENY',
-                'Referrer-Policy': 'strict-origin-when-cross-origin',
-                'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-            },
-        },
+        // headers gérés par nuxt-security (cf. bloc security ci-dessous)
         '/': { swr: 600 },
         '/blog': { swr: 300 },
         '/blog/**': { swr: 600 },
@@ -136,8 +132,8 @@ export default defineNuxtConfig({
     },
 
     sourcemap: {
-        server: process.env.NODE_ENV === 'development',
-        client: process.env.NODE_ENV === 'development',
+        server: true,
+        client: true,
     },
 
     watch: ['./src/styles/**/*.scss'],
@@ -190,6 +186,16 @@ export default defineNuxtConfig({
 
     vite: {
         cacheDir: 'node_modules/.cache/vite',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        plugins: process.env.ANALYZE === 'true'
+            ? [visualizer({
+                open: true,
+                filename: '.nuxt/bundle-stats.html',
+                gzipSize: true,
+                brotliSize: true,
+                template: 'treemap',
+            }) as any]
+            : [],
         css: {
             preprocessorOptions: {
                 scss: {
@@ -235,6 +241,7 @@ export default defineNuxtConfig({
             exclude: ['chart.js'],
         },
     },
+
     typescript: {
         strict: true,
         typeCheck: false,
@@ -352,6 +359,42 @@ export default defineNuxtConfig({
         sources: ['/api/__sitemap__/urls'],
         exclude: ['/admin/**', '/login'],
         cacheMaxAgeSeconds: 3600,
+    },
+
+    // ── Security headers (remplace les headers manuels dans routeRules) ───────
+    security: {
+        headers: {
+            contentSecurityPolicy: false,            // à activer après audit CSP complet
+            crossOriginEmbedderPolicy: false,
+            crossOriginOpenerPolicy: process.env.NODE_ENV === 'development' ? false : 'same-origin',
+            crossOriginResourcePolicy: 'same-origin',
+            strictTransportSecurity: {
+                maxAge: 31536000,
+                includeSubdomains: true,
+                preload: true,
+            },
+            xFrameOptions: 'DENY',
+            xContentTypeOptions: 'nosniff',
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            permissionsPolicy: {
+                camera: [],
+                microphone: [],
+                geolocation: [],
+            },
+        },
+        requestSizeLimiter: {
+            maxRequestSizeInBytes: 5_000_000,
+            maxUploadFileRequestInBytes: 5_000_000,
+        },
+        rateLimiter: false,       // géré côté Django
+        corsHandler: false,       // géré côté Django/nginx
+        allowedMethodsRestricter: false,
+        hidePoweredBy: true,
+        basicAuth: false,
+        csrf: false,
+        nonce: false,
+        ssg: false,
+        sri: false,
     },
 
 });

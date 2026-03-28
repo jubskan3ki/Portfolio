@@ -6,7 +6,7 @@ from datetime import timedelta
 from statistics import fmean
 
 from django.utils import timezone
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.request import Request
@@ -36,8 +36,8 @@ class DashboardStatsView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [StatsThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Recupere les statistiques globales du dashboard",
+    @extend_schema(
+        description="Recupere les statistiques globales du dashboard",
         responses={200: DashboardStatsSerializer},
     )
     def get(self, _request: Request) -> Response:
@@ -52,8 +52,8 @@ class DashboardChartDataView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [StatsThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Recupere les donnees pour les graphiques",
+    @extend_schema(
+        description="Recupere les donnees pour les graphiques",
         responses={200: ChartDataSerializer},
     )
     def get(self, _request: Request) -> Response:
@@ -68,8 +68,8 @@ class DashboardActivityView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [StatsThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Recupere l'activite recente",
+    @extend_schema(
+        description="Recupere l'activite recente",
         responses={200: RecentActivitySerializer},
     )
     def get(self, request: Request) -> Response:
@@ -92,8 +92,8 @@ class DashboardQuickStatsView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [StatsThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Recupere les stats rapides",
+    @extend_schema(
+        description="Recupere les stats rapides",
         responses={200: QuickStatsSerializer},
     )
     def get(self, _request: Request) -> Response:
@@ -108,9 +108,9 @@ class DashboardOverviewView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [StatsThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Recupere toutes les donnees du dashboard en une requete",
-        responses={200: "Dashboard overview data"},
+    @extend_schema(
+        description="Recupere toutes les donnees du dashboard en une requete",
+        responses={200: OpenApiResponse(description="Dashboard overview data")},
     )
     def get(self, _request: Request) -> Response:
         """Retourne toutes les donnees du dashboard."""
@@ -136,10 +136,10 @@ class WebVitalsIngestView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [WebVitalsThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Ingestion des metriques Web Vitals",
-        request_body=WebVitalsIngestSerializer,
-        responses={202: "Accepted"},
+    @extend_schema(
+        description="Ingestion des metriques Web Vitals",
+        request=WebVitalsIngestSerializer,
+        responses={202: OpenApiResponse(description="Accepted")},
     )
     def post(self, request: Request) -> Response:
         """Accepte et persiste un evenement Web Vitals."""
@@ -154,7 +154,14 @@ class WebVitalsIngestView(APIView):
         serializer = WebVitalsIngestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        WebVitalsService.ingest(serializer.validated_data)
+        data = serializer.validated_data
+        WebVitalsService.ingest(data)
+
+        logger.info(
+            "web_vital name=%s value=%.2f rating=%s page=%s",
+            data.get("name"), float(data.get("value", 0)),
+            data.get("rating"), data.get("page"),
+        )
 
         return Response({"status": "accepted"}, status=status.HTTP_202_ACCEPTED)
 
@@ -165,8 +172,8 @@ class WebVitalsSummaryView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [StatsThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Synthese des Web Vitals sur une fenetre glissante",
+    @extend_schema(
+        description="Synthese des Web Vitals sur une fenetre glissante",
         responses={200: WebVitalsSummarySerializer},
     )
     def get(self, request: Request) -> Response:

@@ -448,7 +448,6 @@
         }
     }
 
-
     /* TOC Card */
     .toc-card {
         background: fn.color-alpha(vars.$white, 0.95);

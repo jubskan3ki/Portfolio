@@ -1,7 +1,7 @@
 """Vues pour les articles avec CRUD complet et actions supplementaires."""
 
 from django.db.models import QuerySet
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -50,10 +50,10 @@ class ArticleViewSet(BaseAPIViewSet):
         "partial_update": ArticleWriteSerializer,
     }
 
-    @swagger_auto_schema(
-        operation_summary="Liste des articles",
-        operation_description="Recupere la liste des articles, filtrable par differents criteres.",
-        manual_parameters=PARAMS_LIST,
+    @extend_schema(
+        summary="Liste des articles",
+        description="Recupere la liste des articles, filtrable par differents criteres.",
+        parameters=PARAMS_LIST,
         responses={200: RESPONSE_200_ARTICLES},
         tags=TAGS_ARTICLES,
     )
@@ -61,10 +61,10 @@ class ArticleViewSet(BaseAPIViewSet):
         """Recupere la liste des articles."""
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Details d'un article",
-        operation_description="Recupere les details d'un article par son slug ou ID.",
-        responses={200: ArticleDetailSerializer(), 404: RESPONSE_404},
+    @extend_schema(
+        summary="Details d'un article",
+        description="Recupere les details d'un article par son slug ou ID.",
+        responses={200: ArticleDetailSerializer, 404: RESPONSE_404},
         tags=TAGS_ARTICLES,
     )
     def retrieve(self, _request: Request, *_args: object, **_kwargs: object) -> Response:
@@ -73,42 +73,42 @@ class ArticleViewSet(BaseAPIViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        operation_summary="Creer un article",
-        operation_description="Cree un nouvel article.",
-        request_body=ArticleWriteSerializer,
-        responses={201: ArticleDetailSerializer(), 400: RESPONSE_400},
+    @extend_schema(
+        summary="Creer un article",
+        description="Cree un nouvel article.",
+        request=ArticleWriteSerializer,
+        responses={201: ArticleDetailSerializer, 400: RESPONSE_400},
         tags=TAGS_ARTICLES,
     )
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Cree un nouvel article (admin uniquement)."""
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Mettre a jour un article",
-        operation_description="Met a jour un article existant.",
-        request_body=ArticleWriteSerializer,
-        responses={200: ArticleDetailSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Mettre a jour un article",
+        description="Met a jour un article existant.",
+        request=ArticleWriteSerializer,
+        responses={200: ArticleDetailSerializer, 400: RESPONSE_400, 404: RESPONSE_404},
         tags=TAGS_ARTICLES,
     )
     def update(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Met a jour un article existant (admin uniquement)."""
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Mettre a jour partiellement un article",
-        operation_description="Met a jour partiellement un article existant.",
-        request_body=ArticleWriteSerializer,
-        responses={200: ArticleDetailSerializer(), 400: RESPONSE_400, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Mettre a jour partiellement un article",
+        description="Met a jour partiellement un article existant.",
+        request=ArticleWriteSerializer,
+        responses={200: ArticleDetailSerializer, 400: RESPONSE_400, 404: RESPONSE_404},
         tags=TAGS_ARTICLES,
     )
     def partial_update(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Met a jour partiellement un article existant (admin uniquement)."""
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Supprimer un article",
-        operation_description="Supprime un article existant.",
+    @extend_schema(
+        summary="Supprimer un article",
+        description="Supprime un article existant.",
         responses={204: RESPONSE_204, 404: RESPONSE_404},
         tags=TAGS_ARTICLES,
     )
@@ -116,10 +116,10 @@ class ArticleViewSet(BaseAPIViewSet):
         """Supprime un article existant (admin uniquement)."""
         return super().destroy(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Incrementer les vues d'un article",
-        operation_description="Incremente le compteur de vues d'un article.",
-        responses={200: ArticleDetailSerializer(), 404: RESPONSE_404},
+    @extend_schema(
+        summary="Incrementer les vues d'un article",
+        description="Incremente le compteur de vues d'un article.",
+        responses={200: ArticleDetailSerializer, 404: RESPONSE_404},
         tags=TAGS_ARTICLES,
     )
     @action(
@@ -134,10 +134,10 @@ class ArticleViewSet(BaseAPIViewSet):
         serializer = self.get_serializer(article)
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        operation_summary="Articles mis en avant",
-        operation_description="Recupere les articles mis en avant.",
-        manual_parameters=[PARAM_LIMIT],
+    @extend_schema(
+        summary="Articles mis en avant",
+        description="Recupere les articles mis en avant.",
+        parameters=[PARAM_LIMIT],
         responses={200: ArticleListSerializer(many=True)},
         tags=TAGS_ARTICLES,
     )
@@ -149,10 +149,10 @@ class ArticleViewSet(BaseAPIViewSet):
         serializer = ArticleListSerializer(articles, many=True, context={"request": request})
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        operation_summary="Articles populaires",
-        operation_description="Recupere les articles les plus populaires.",
-        manual_parameters=[PARAM_LIMIT],
+    @extend_schema(
+        summary="Articles populaires",
+        description="Recupere les articles les plus populaires.",
+        parameters=[PARAM_LIMIT],
         responses={200: ArticleListSerializer(many=True)},
         tags=TAGS_ARTICLES,
     )
@@ -164,10 +164,10 @@ class ArticleViewSet(BaseAPIViewSet):
         serializer = ArticleListSerializer(articles, many=True, context={"request": request})
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        operation_summary="Articles lies",
-        operation_description="Recupere les articles similaires a cet article.",
-        manual_parameters=[PARAM_LIMIT],
+    @extend_schema(
+        summary="Articles lies",
+        description="Recupere les articles similaires a cet article.",
+        parameters=[PARAM_LIMIT],
         responses={200: ArticleListSerializer(many=True)},
         tags=TAGS_ARTICLES,
     )
@@ -180,10 +180,10 @@ class ArticleViewSet(BaseAPIViewSet):
         serializer = ArticleListSerializer(related_articles, many=True, context={"request": request})
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        operation_summary="Articles par categorie",
-        operation_description="Recupere les articles d'une categorie specifique.",
-        manual_parameters=PARAMS_PAGINATION,
+    @extend_schema(
+        summary="Articles par categorie",
+        description="Recupere les articles d'une categorie specifique.",
+        parameters=PARAMS_PAGINATION,
         responses={200: RESPONSE_200_ARTICLES, 404: RESPONSE_404},
         tags=TAGS_ARTICLES,
     )
@@ -193,10 +193,10 @@ class ArticleViewSet(BaseAPIViewSet):
         queryset = ArticleService.get_by_category(category_slug or "")
         return self.paginated_response(queryset, ArticleListSerializer)
 
-    @swagger_auto_schema(
-        operation_summary="Articles par tag",
-        operation_description="Recupere les articles avec un tag specifique.",
-        manual_parameters=PARAMS_PAGINATION,
+    @extend_schema(
+        summary="Articles par tag",
+        description="Recupere les articles avec un tag specifique.",
+        parameters=PARAMS_PAGINATION,
         responses={200: RESPONSE_200_ARTICLES, 404: RESPONSE_404},
         tags=TAGS_ARTICLES,
     )

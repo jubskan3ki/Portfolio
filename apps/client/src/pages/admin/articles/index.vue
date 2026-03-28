@@ -103,7 +103,6 @@
     import { formatDateShort } from '@/services/utils/date';
     import { asAdminArticle } from '@/services/utils/guards/admin';
 
-
     import type { ListParams } from '@/types/composables';
     import type { AdminArticle, DataItem, PaginatedResponse } from '@/types/feature/admin';
 
@@ -113,7 +112,7 @@
 
     const router = useRouter();
     const { error: showError, success: showSuccess } = useAlert();
-    const listPage = ref<InstanceType<typeof AdminListPage> | null>(null);
+    const listPage = ref<{ deletion?: { confirm: (item: AdminArticle) => void } | null } | null>(null);
 
     const columns = [
         { key: 'title', label: 'Titre', sortable: true, width: '40%' },

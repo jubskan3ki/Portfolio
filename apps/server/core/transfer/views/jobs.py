@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from django.utils import timezone
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAdminUser
 from rest_framework.request import Request
@@ -18,9 +18,9 @@ class JobViewSet(viewsets.ViewSet):
 
     permission_classes = [IsAdminUser]
 
-    @swagger_auto_schema(
-        operation_description="Liste tous les jobs de l'utilisateur",
-        responses={200: "Liste des jobs"},
+    @extend_schema(
+        description="Liste tous les jobs de l'utilisateur",
+        responses={200: OpenApiResponse(description="Liste des jobs")},
     )
     def list(self, request: Request) -> Response:
         """Liste tous les jobs de l'utilisateur."""
@@ -34,9 +34,9 @@ class JobViewSet(viewsets.ViewSet):
             }
         )
 
-    @swagger_auto_schema(
-        operation_description="Detail d'un job d'export",
-        responses={200: ExportJobSerializer, 404: "Job non trouve"},
+    @extend_schema(
+        description="Detail d'un job d'export",
+        responses={200: ExportJobSerializer, 404: OpenApiResponse(description="Job non trouve")},
     )
     def export_detail(self, request: Request, job_id: str) -> Response:
         """Detail d'un job d'export."""
@@ -49,9 +49,9 @@ class JobViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-    @swagger_auto_schema(
-        operation_description="Detail d'un job d'import",
-        responses={200: ImportJobSerializer, 404: "Job non trouve"},
+    @extend_schema(
+        description="Detail d'un job d'import",
+        responses={200: ImportJobSerializer, 404: OpenApiResponse(description="Job non trouve")},
     )
     def import_detail(self, request: Request, job_id: str) -> Response:
         """Detail d'un job d'import."""
@@ -64,9 +64,9 @@ class JobViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-    @swagger_auto_schema(
-        operation_description="Supprime les anciens jobs",
-        responses={200: "Jobs supprimes"},
+    @extend_schema(
+        description="Supprime les anciens jobs",
+        responses={200: OpenApiResponse(description="Jobs supprimes")},
     )
     def cleanup(self, request: Request) -> Response:
         """Supprime les anciens jobs de l'utilisateur."""

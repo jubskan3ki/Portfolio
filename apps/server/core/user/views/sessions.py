@@ -2,7 +2,7 @@
 
 import logging
 
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -23,9 +23,9 @@ class AdminSessionsView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [SessionThrottle]
 
-    @swagger_auto_schema(
-        operation_summary="Lister les sessions",
-        operation_description="Recupere la liste des sessions actives de l'utilisateur.",
+    @extend_schema(
+        summary="Lister les sessions",
+        description="Recupere la liste des sessions actives de l'utilisateur.",
         responses=SESSION_LIST_RESPONSES,
         tags=["Users"],
     )
@@ -58,9 +58,9 @@ class AdminSessionsView(APIView):
             status=status.HTTP_200_OK,
         )
 
-    @swagger_auto_schema(
-        operation_summary="Revoquer des sessions",
-        operation_description="Revoque une session specifique ou toutes les autres sessions.",
+    @extend_schema(
+        summary="Revoquer des sessions",
+        description="Revoque une session specifique ou toutes les autres sessions.",
         responses=SESSION_REVOKE_RESPONSES,
         tags=["Users"],
     )

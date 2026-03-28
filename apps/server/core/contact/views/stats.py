@@ -1,6 +1,6 @@
 """Vues pour les statistiques de contact."""
 
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, views
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -16,9 +16,9 @@ class ContactStatsView(views.APIView):
     permission_classes = [permissions.IsAdminUser]
     throttle_classes = [ContactsThrottle]
 
-    @swagger_auto_schema(
-        operation_summary="Statistiques de contact",
-        operation_description="Recupere les statistiques globales de contact.",
+    @extend_schema(
+        summary="Statistiques de contact",
+        description="Recupere les statistiques globales de contact.",
         responses={200: RESPONSE_200_STATS},
         tags=TAGS_STATS,
     )

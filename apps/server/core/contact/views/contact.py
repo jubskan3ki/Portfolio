@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -54,9 +54,9 @@ class ContactViewSet(BaseAPIViewSet):
             return Contact.objects.all().order_by("-created_at")
         return Contact.objects.none()
 
-    @swagger_auto_schema(
-        operation_summary="Liste des soumissions",
-        operation_description="Recupere la liste des soumissions de contact (admin uniquement).",
+    @extend_schema(
+        summary="Liste des soumissions",
+        description="Recupere la liste des soumissions de contact (admin uniquement).",
         responses={200: ContactSerializer(many=True), 401: RESPONSE_401, 403: RESPONSE_403},
         tags=TAGS_CONTACT,
     )
@@ -64,10 +64,10 @@ class ContactViewSet(BaseAPIViewSet):
         """Liste les soumissions de contact (admin uniquement)."""
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Soumettre un formulaire",
-        operation_description="Soumet un formulaire de contact.",
-        request_body=ContactSerializer,
+    @extend_schema(
+        summary="Soumettre un formulaire",
+        description="Soumet un formulaire de contact.",
+        request=ContactSerializer,
         responses={201: RESPONSE_201_CONTACT, 400: RESPONSE_400, 500: RESPONSE_500},
         tags=TAGS_CONTACT,
     )
@@ -89,22 +89,22 @@ class ContactViewSet(BaseAPIViewSet):
 
         return self._build_success_response("Votre message a ete envoye avec succes.", reference_id)
 
-    @swagger_auto_schema(
-        operation_summary="Details d'une soumission",
-        operation_description="Recupere les details d'une soumission de contact (admin uniquement).",
-        responses={200: ContactSerializer(), 401: RESPONSE_401, 403: RESPONSE_403, 404: RESPONSE_404},
+    @extend_schema(
+        summary="Details d'une soumission",
+        description="Recupere les details d'une soumission de contact (admin uniquement).",
+        responses={200: ContactSerializer, 401: RESPONSE_401, 403: RESPONSE_403, 404: RESPONSE_404},
         tags=TAGS_CONTACT,
     )
     def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Recupere les details d'une soumission (admin uniquement)."""
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Mettre a jour une soumission",
-        operation_description="Met a jour une soumission de contact (admin uniquement).",
-        request_body=ContactSerializer,
+    @extend_schema(
+        summary="Mettre a jour une soumission",
+        description="Met a jour une soumission de contact (admin uniquement).",
+        request=ContactSerializer,
         responses={
-            200: ContactSerializer(),
+            200: ContactSerializer,
             400: RESPONSE_400,
             401: RESPONSE_401,
             403: RESPONSE_403,
@@ -116,12 +116,12 @@ class ContactViewSet(BaseAPIViewSet):
         """Met a jour une soumission (admin uniquement)."""
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Mettre a jour partiellement une soumission",
-        operation_description="Met a jour partiellement une soumission de contact (admin uniquement).",
-        request_body=ContactSerializer,
+    @extend_schema(
+        summary="Mettre a jour partiellement une soumission",
+        description="Met a jour partiellement une soumission de contact (admin uniquement).",
+        request=ContactSerializer,
         responses={
-            200: ContactSerializer(),
+            200: ContactSerializer,
             400: RESPONSE_400,
             401: RESPONSE_401,
             403: RESPONSE_403,
@@ -133,9 +133,9 @@ class ContactViewSet(BaseAPIViewSet):
         """Met a jour partiellement une soumission (admin uniquement)."""
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Supprimer une soumission",
-        operation_description="Supprime une soumission de contact (admin uniquement).",
+    @extend_schema(
+        summary="Supprimer une soumission",
+        description="Supprime une soumission de contact (admin uniquement).",
         responses={204: RESPONSE_204, 401: RESPONSE_401, 403: RESPONSE_403, 404: RESPONSE_404},
         tags=TAGS_CONTACT,
     )

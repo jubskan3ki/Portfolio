@@ -139,6 +139,7 @@ services:
             - backend_logs:/app/logs
             - backend_static:/app/staticfiles
             - backend_media:/app/media
+            - backend_swagger:/app/swagger
         ports:
             - "${SERVER_PORT:-8000}:8000"
         depends_on:
@@ -197,11 +198,11 @@ services:
             DB_PORT: "5432"
             USE_PGBOUNCER: "true"
         healthcheck:
-            test: ["CMD-SHELL", "celery -A config inspect ping --timeout 10 || exit 1"]
+            test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$$HOSTNAME --timeout 10 || exit 1"]
             interval: 60s
             timeout: 15s
             retries: 3
-            start_period: 30s
+            start_period: 60s
 
     frontend:
         container_name: nuxt-app
@@ -270,7 +271,7 @@ services:
         ports:
             - "${SWAGGER_PORT:-8085}:8080"
         volumes:
-            - ./apps/server/swagger:/app:ro
+            - backend_swagger:/app:ro
         depends_on:
             backend:
                 condition: service_healthy
@@ -433,6 +434,7 @@ volumes:
     backend_logs:
     backend_static:
     backend_media:
+    backend_swagger:
     pgadmin_data:
 
 networks:

@@ -127,12 +127,14 @@
         props.customClass,
     ]);
 
-    const handleClick = (event: MouseEvent) => {
+    const handleClick = (event: MouseEvent | KeyboardEvent) => {
         if (props.disabled || props.loading) {
             event.preventDefault();
             return;
         }
-        emit('click', event);
+        if (event instanceof MouseEvent) {
+            emit('click', event);
+        }
     };
 </script>
 

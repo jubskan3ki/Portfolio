@@ -36,7 +36,7 @@ _DEV_ORIGINS = [
     "http://swagger:8080",
 ]
 _DEV_PORTS = [3000, 8000, 8085]
-_DEV_HOSTS = ["localhost"]
+_DEV_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
 
 if DEBUG:
     CORS_ALLOWED_ORIGINS = _DEV_ORIGINS + [f"http://{host}:{port}" for host in _DEV_HOSTS for port in _DEV_PORTS]
@@ -70,19 +70,3 @@ CORS_EXPOSE_HEADERS = [
     "etag",
 ]
 
-# SWAGGER
-
-SWAGGER_SETTINGS = {
-    "DEFAULT_INFO": "config.urls.api_info",
-    "SECURITY_DEFINITIONS": {
-        "Bearer": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header",
-            "description": 'JWT authorization using Bearer scheme. Example: "Bearer {token}"',
-        }
-    },
-    "USE_SESSION_AUTH": False,
-    "VALIDATOR_URL": None,
-    "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg.inspectors.SwaggerAutoSchema",
-}

@@ -44,7 +44,7 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],
     "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
+        "utils.renderers.ORJSONRenderer",
         *(["rest_framework.renderers.BrowsableAPIRenderer"] if DEBUG else []),
     ],
     "DEFAULT_PARSER_CLASSES": [
@@ -52,6 +52,16 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
     ],
-    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.openapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "NUM_PROXIES": 1,
+}
+
+# DRF SPECTACULAR
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Portfolio API",
+    "DESCRIPTION": "API pour le portfolio personnel",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": "/api/",
 }

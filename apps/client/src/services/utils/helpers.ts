@@ -1,14 +1,16 @@
 const ENTITY_RE = /&(?:#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/;
 
 function decodeStr(s: string): string {
-    if (!ENTITY_RE.test(s)) return s;
+    if (!ENTITY_RE.test(s)) {
+        return s;
+    }
     return s
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
-        .replace(/&#0?39;/g, "'")
-        .replace(/&#x27;/g, "'")
+        .replace(/&#0?39;/g, '\'')
+        .replace(/&#x27;/g, '\'')
         .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)))
         .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
@@ -18,9 +20,15 @@ function decodeStr(s: string): string {
  * Useful to clean API responses that contain double-encoded entities.
  */
 export function decodeHtmlEntities<T>(obj: T): T {
-    if (obj == null) return obj;
-    if (typeof obj === 'string') return decodeStr(obj) as T;
-    if (Array.isArray(obj)) return obj.map((item) => decodeHtmlEntities(item)) as T;
+    if (obj == null) {
+        return obj;
+    }
+    if (typeof obj === 'string') {
+        return decodeStr(obj) as T;
+    }
+    if (Array.isArray(obj)) {
+        return obj.map((item) => decodeHtmlEntities(item)) as T;
+    }
     if (typeof obj === 'object') {
         const result = { ...obj } as Record<string, unknown>;
         for (const key of Object.keys(result)) {

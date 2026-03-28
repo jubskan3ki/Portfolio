@@ -220,7 +220,6 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
-    import ShareCard from '@/components/ui/ShareCard.vue';
     import ProjectCard from '@/components/feature/projects/ProjectCard.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
@@ -229,6 +228,7 @@
     import LoadingState from '@/components/loaders/LoadingState.vue';
     import CTA from '@/components/ui/CTA.vue';
     import Hero from '@/components/ui/Hero.vue';
+    import ShareCard from '@/components/ui/ShareCard.vue';
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
     import { useDetailSlug } from '@/composables/data/useDetailSlug';
     import { useViewRecording } from '@/composables/data/useViewRecording';

@@ -5,8 +5,8 @@ import logging
 from django.db import DatabaseError, OperationalError
 from django.http import FileResponse, HttpResponse
 from django.utils import timezone
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.request import Request
@@ -27,28 +27,28 @@ class ExportModuleView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [ExportThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Exporte les donnees d'un module",
-        manual_parameters=[
-            openapi.Parameter(
+    @extend_schema(
+        description="Exporte les donnees d'un module",
+        parameters=[
+            OpenApiParameter(
                 "module",
-                openapi.IN_PATH,
+                location=OpenApiParameter.PATH,
                 description="Module a exporter (articles, projects, stacks, experiences, contacts)",
-                type=openapi.TYPE_STRING,
+                type=str,
                 required=True,
             ),
-            openapi.Parameter(
+            OpenApiParameter(
                 "export_format",
-                openapi.IN_QUERY,
+                location=OpenApiParameter.QUERY,
                 description="Format d'export (json, csv, xlsx)",
-                type=openapi.TYPE_STRING,
+                type=str,
                 default="json",
             ),
         ],
         responses={
             200: ExportJobSerializer,
-            400: "Requete invalide",
-            403: "Non autorise",
+            400: OpenApiResponse(description="Requete invalide"),
+            403: OpenApiResponse(description="Non autorise"),
         },
     )
     def get(self, request: Request, module: str) -> Response:
@@ -112,29 +112,29 @@ class ExportDownloadView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [ExportThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Telecharge directement le fichier d'export",
-        manual_parameters=[
-            openapi.Parameter(
+    @extend_schema(
+        description="Telecharge directement le fichier d'export",
+        parameters=[
+            OpenApiParameter(
                 "module",
-                openapi.IN_PATH,
+                location=OpenApiParameter.PATH,
                 description="Module a exporter",
-                type=openapi.TYPE_STRING,
+                type=str,
                 required=True,
             ),
-            openapi.Parameter(
+            OpenApiParameter(
                 "export_format",
-                openapi.IN_QUERY,
+                location=OpenApiParameter.QUERY,
                 description="Format d'export (json, csv, xlsx)",
-                type=openapi.TYPE_STRING,
+                type=str,
                 default="json",
             ),
         ],
         responses={
-            200: "Fichier d'export",
-            400: "Requete invalide",
-            401: "Non authentifie",
-            403: "Non autorise",
+            200: OpenApiResponse(description="Fichier d'export"),
+            400: OpenApiResponse(description="Requete invalide"),
+            401: OpenApiResponse(description="Non authentifie"),
+            403: OpenApiResponse(description="Non autorise"),
         },
     )
     def get(self, request: Request, module: str) -> Response | FileResponse:
@@ -200,27 +200,27 @@ class ExportBulkView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [ExportThrottle]
 
-    @swagger_auto_schema(
-        operation_description="Export bulk de plusieurs modules dans un fichier ZIP",
-        manual_parameters=[
-            openapi.Parameter(
+    @extend_schema(
+        description="Export bulk de plusieurs modules dans un fichier ZIP",
+        parameters=[
+            OpenApiParameter(
                 "modules",
-                openapi.IN_QUERY,
+                location=OpenApiParameter.QUERY,
                 description="Liste de modules separes par virgule (ex: articles,projects) ou 'all'",
-                type=openapi.TYPE_STRING,
+                type=str,
                 default="all",
             ),
-            openapi.Parameter(
+            OpenApiParameter(
                 "export_format",
-                openapi.IN_QUERY,
+                location=OpenApiParameter.QUERY,
                 description="Format d'export pour les fichiers dans le ZIP (json, csv, xlsx)",
-                type=openapi.TYPE_STRING,
+                type=str,
                 default="json",
             ),
         ],
         responses={
-            200: "Fichier ZIP contenant les exports",
-            400: "Requete invalide",
+            200: OpenApiResponse(description="Fichier ZIP contenant les exports"),
+            400: OpenApiResponse(description="Requete invalide"),
         },
     )
     def get(self, request: Request) -> Response | HttpResponse:

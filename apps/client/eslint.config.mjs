@@ -46,7 +46,7 @@ export default withNuxt()
             'vue/attributes-order': 'warn',
 
             // Strict Vue rules
-            'vue/no-undef-components': ['error', { ignorePatterns: ['Nuxt*', 'Client*', 'Lazy*', 'Icon'] }],
+            'vue/no-undef-components': ['error', { ignorePatterns: ['Nuxt*', 'Client*', 'Lazy*', 'Icon', 'Base*'] }],
             'vue/no-undef-properties': 'error',
             'vue/require-explicit-emits': 'error',
             'vue/no-ref-object-reactivity-loss': 'error',

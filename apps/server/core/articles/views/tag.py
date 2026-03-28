@@ -6,7 +6,7 @@ from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.response import Response
 
 from utils.api import BaseAPIViewSet
@@ -53,9 +53,9 @@ class TagViewSet(BaseAPIViewSet):
                 qs = qs.filter(published_count__gt=0)
         return qs
 
-    @swagger_auto_schema(
-        operation_summary="Liste des tags",
-        operation_description="Récupère la liste des tags d'articles.",
+    @extend_schema(
+        summary="Liste des tags",
+        description="Récupère la liste des tags d'articles.",
         responses={200: TagSerializer(many=True)},
         tags=["Articles - Tags"],
     )
@@ -64,10 +64,10 @@ class TagViewSet(BaseAPIViewSet):
         """Récupère la liste des tags d'articles."""
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Détails d'un tag",
-        operation_description="Récupère les détails d'un tag par son nom.",
-        responses={200: TagSerializer(), 404: "Tag non trouvé"},
+    @extend_schema(
+        summary="Détails d'un tag",
+        description="Récupère les détails d'un tag par son nom.",
+        responses={200: TagSerializer, 404: OpenApiResponse(description="Tag non trouve")},
         tags=["Articles - Tags"],
     )
     @method_decorator(cache_page(1800))

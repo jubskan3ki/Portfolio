@@ -4,6 +4,9 @@
             "numberOfRuns": 1,
             "startServerCommand": "pnpm preview:lhci",
             "startServerReadyPattern": "Listening",
+            "settings": {
+                "chromeFlags": "--no-sandbox --disable-dev-shm-usage --disable-gpu"
+            },
             "url": [
                 "http://127.0.0.1:4173/",
                 "http://127.0.0.1:4173/blog",

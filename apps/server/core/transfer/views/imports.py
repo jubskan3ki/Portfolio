@@ -7,8 +7,8 @@ from typing import Any, cast
 from django.core.files.uploadedfile import UploadedFile
 from django.db import DatabaseError, OperationalError
 from django.utils.datastructures import MultiValueDict
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
@@ -60,27 +60,27 @@ class ImportViewSet(viewsets.ViewSet):
     throttle_classes = [ImportThrottle]
     parser_classes = [MultiPartParser, FormParser]
 
-    @swagger_auto_schema(
-        operation_description="Preview des donnees avant import",
-        manual_parameters=[
-            openapi.Parameter(
+    @extend_schema(
+        description="Preview des donnees avant import",
+        parameters=[
+            OpenApiParameter(
                 "module",
-                openapi.IN_PATH,
+                location=OpenApiParameter.PATH,
                 description="Module cible",
-                type=openapi.TYPE_STRING,
+                type=str,
                 required=True,
             ),
-            openapi.Parameter(
+            OpenApiParameter(
                 "file",
-                openapi.IN_FORM,
-                description="Fichier a importer",
-                type=openapi.TYPE_FILE,
+                location=OpenApiParameter.QUERY,
+                description="Fichier a importer (multipart/form-data)",
+                type=str,
                 required=True,
             ),
         ],
         responses={
             200: ImportPreviewSerializer,
-            400: "Requete invalide",
+            400: OpenApiResponse(description="Requete invalide"),
         },
     )
     def preview(self, request: Request, module: str) -> Response:
@@ -124,34 +124,27 @@ class ImportViewSet(viewsets.ViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    @swagger_auto_schema(
-        operation_description="Importe les donnees dans un module",
-        manual_parameters=[
-            openapi.Parameter(
+    @extend_schema(
+        description="Importe les donnees dans un module",
+        parameters=[
+            OpenApiParameter(
                 "module",
-                openapi.IN_PATH,
+                location=OpenApiParameter.PATH,
                 description="Module cible",
-                type=openapi.TYPE_STRING,
+                type=str,
                 required=True,
             ),
-            openapi.Parameter(
-                "file",
-                openapi.IN_FORM,
-                description="Fichier a importer",
-                type=openapi.TYPE_FILE,
-                required=True,
-            ),
-            openapi.Parameter(
+            OpenApiParameter(
                 "update_existing",
-                openapi.IN_FORM,
+                location=OpenApiParameter.QUERY,
                 description="Mettre a jour les enregistrements existants",
-                type=openapi.TYPE_BOOLEAN,
+                type=bool,
                 default=False,
             ),
         ],
         responses={
             201: ImportJobSerializer,
-            400: "Requete invalide",
+            400: OpenApiResponse(description="Requete invalide"),
         },
     )
     def import_module(self, request: Request, module: str) -> Response:
@@ -217,9 +210,9 @@ class ImportViewSet(viewsets.ViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    @swagger_auto_schema(
-        operation_description="Import bulk depuis plusieurs fichiers",
-        responses={201: "Liste des jobs d'import"},
+    @extend_schema(
+        description="Import bulk depuis plusieurs fichiers",
+        responses={201: OpenApiResponse(description="Liste des jobs d'import")},
     )
     def bulk_import(self, request: Request) -> Response:
         """Import bulk de plusieurs fichiers."""

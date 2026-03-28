@@ -1,116 +1,296 @@
 stages:
-    - build
+    - validate
     - test
+    - security
+    - build
+    - perf
     - deploy
 
 variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_BUILDKIT: "1"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+    PNPM_STORE_PATH: "$CI_PROJECT_DIR/.pnpm-store"
+    PYTHON_VERSION: "3.13"
+    NODE_VERSION: "24"
+    PNPM_VERSION: "10.28.0"
 
-# ── Build ────────────────────────────────────
+# ── Règles réutilisables ──────────────────────────────────────────────────────
 
-build-backend:
-    stage: build
-    image: docker:latest
-    services:
-        - docker:dind
-    script:
-        - docker build -t portfolio-backend ./apps/server
+.rules:all:
     rules:
         - if: $CI_PIPELINE_SOURCE == "merge_request_event"
         - if: $CI_COMMIT_BRANCH == "main"
         - if: $CI_COMMIT_BRANCH == "develop"
 
-build-frontend:
-    stage: build
-    image: docker:latest
-    services:
-        - docker:dind
-    script:
-        - docker build -t portfolio-frontend ./apps/client
+.rules:main_or_develop:
     rules:
-        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
         - if: $CI_COMMIT_BRANCH == "main"
         - if: $CI_COMMIT_BRANCH == "develop"
 
-# ── Tests ────────────────────────────────────
+# ── Templates de cache ────────────────────────────────────────────────────────
 
-test-backend:
+.python_cache:
+    cache:
+        key: "python-${PYTHON_VERSION}-${CI_COMMIT_REF_SLUG}"
+        paths:
+            - .pip-cache
+        policy: pull-push
+
+.node_cache:
+    cache:
+        key: "pnpm-${NODE_VERSION}-${CI_COMMIT_REF_SLUG}"
+        paths:
+            - .pnpm-store
+            - apps/client/node_modules
+        policy: pull-push
+
+# ── Templates de base ─────────────────────────────────────────────────────────
+
+.backend_base:
+    image: python:${PYTHON_VERSION}-slim
+    extends: .python_cache
+    before_script:
+        - pip install --cache-dir $PIP_CACHE_DIR --quiet -r apps/server/requirements.txt
+
+.frontend_base:
+    image: node:${NODE_VERSION}-alpine
+    extends: .node_cache
+    before_script:
+        - corepack enable pnpm
+        - pnpm --dir apps/client install --frozen-lockfile --store-dir $PNPM_STORE_PATH
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 1 — validate (jobs parallèles, rapides)
+# ══════════════════════════════════════════════════════════════════════════════
+
+validate:backend:format:
+    stage: validate
+    extends: [.backend_base, .rules:all]
+    script:
+        - cd apps/server
+        - python -m black --check .
+        - python -m isort --check-only .
+
+validate:backend:lint:
+    stage: validate
+    extends: [.backend_base, .rules:all]
+    script:
+        - cd apps/server && python -m ruff check .
+
+validate:backend:types:
+    stage: validate
+    extends: [.backend_base, .rules:all]
+    before_script:
+        - pip install --cache-dir $PIP_CACHE_DIR --quiet -r apps/server/requirements.txt
+          django-stubs[compatible-mypy]
+          djangorestframework-stubs[compatible-mypy]
+          celery-types
+    script:
+        - cd apps/server && python -m mypy .
+    allow_failure: true  # advisory : les erreurs remontent sans bloquer le pipeline
+
+validate:frontend:types:
+    stage: validate
+    extends: [.frontend_base, .rules:all]
+    script:
+        - cd apps/client && pnpm type-check
+
+validate:frontend:eslint:
+    stage: validate
+    extends: [.frontend_base, .rules:all]
+    script:
+        - cd apps/client && pnpm lint
+
+validate:frontend:css:
+    stage: validate
+    extends: [.frontend_base, .rules:all]
+    script:
+        - cd apps/client && pnpm lint:css
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 2 — test
+# ══════════════════════════════════════════════════════════════════════════════
+
+test:backend:unit:
     stage: test
-    image: docker:latest
+    image: python:${PYTHON_VERSION}-slim
+    extends: [.python_cache, .rules:all]
     services:
-        - docker:dind
         - name: postgres:17-alpine
           alias: test-db
           variables:
               POSTGRES_DB: test_portfolio
               POSTGRES_USER: test_user
               POSTGRES_PASSWORD: test_password
+    variables:
+        DB_HOST: test-db
+        DB_PORT: "5432"
+        DB_NAME: test_portfolio
+        DB_USER: test_user
+        DB_PASSWORD: test_password
+        DJANGO_SECRET_KEY: ci-secret-key-not-for-production
+        JWT_SECRET_ACCESS_KEY: ci-jwt-key-not-for-production
+        ALLOWED_HOSTS: "*"
+        DJANGO_DEBUG: "false"
+        CELERY_TASK_ALWAYS_EAGER: "true"
+    before_script:
+        - pip install --cache-dir $PIP_CACHE_DIR --quiet -r apps/server/requirements.txt
     script:
-        - docker build -t portfolio-backend ./apps/server
-        - docker run --rm
-          -e DB_HOST=test-db
-          -e DB_PORT=5432
-          -e DB_NAME=test_portfolio
-          -e DB_USER=test_user
-          -e DB_PASSWORD=test_password
-          -e DJANGO_SECRET_KEY=test-secret-key
-          -e JWT_SECRET_ACCESS_KEY=test-jwt-key
-          -e ALLOWED_HOSTS=*
-          --network host
-          portfolio-backend python manage.py check
-        - docker run --rm
-          -e DB_HOST=test-db
-          -e DB_PORT=5432
-          -e DB_NAME=test_portfolio
-          -e DB_USER=test_user
-          -e DB_PASSWORD=test_password
-          -e DJANGO_SECRET_KEY=test-secret-key
-          -e JWT_SECRET_ACCESS_KEY=test-jwt-key
-          -e ALLOWED_HOSTS=*
-          --network host
-          portfolio-backend python -m pytest --cov=core --cov-report=term-missing
-    rules:
-        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-        - if: $CI_COMMIT_BRANCH == "main"
-        - if: $CI_COMMIT_BRANCH == "develop"
+        - cd apps/server
+        - python -m pytest
+          --cov=core
+          --cov=utils
+          --cov-report=term-missing
+          --cov-report=xml:coverage.xml
+          -n auto
+          -v
+          --tb=short
+          -x
+    coverage: '/TOTAL.*\s+(\d+%)$/'
+    artifacts:
+        reports:
+            coverage_report:
+                coverage_format: cobertura
+                path: apps/server/coverage.xml
+        expire_in: 1 week
 
-lint-backend:
-    stage: test
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 3 — security
+# ══════════════════════════════════════════════════════════════════════════════
+
+security:backend:bandit:
+    stage: security
+    image: python:${PYTHON_VERSION}-slim
+    extends: [.python_cache, .rules:all]
+    before_script:
+        - pip install --cache-dir $PIP_CACHE_DIR --quiet bandit
+    script:
+        - bandit -r apps/server
+          -x apps/server/tests,apps/server/migrations
+          --severity-level medium
+          --confidence-level medium
+          -q
+    allow_failure: true
+
+security:backend:pip-audit:
+    stage: security
+    image: python:${PYTHON_VERSION}-slim
+    extends: [.python_cache, .rules:all]
+    before_script:
+        - pip install --cache-dir $PIP_CACHE_DIR --quiet pip-audit
+    script:
+        - pip-audit --requirement apps/server/requirements.txt --skip-editable
+    allow_failure: true
+
+security:frontend:audit:
+    stage: security
+    extends: [.frontend_base, .rules:all]
+    script:
+        - cd apps/client && pnpm audit --audit-level=high
+    allow_failure: true
+
+security:trivy:
+    stage: security
+    image: aquasec/trivy:latest
+    extends: .rules:all
+    script:
+        - trivy fs --scanners vuln
+          --exit-code 1
+          --severity HIGH,CRITICAL
+          --no-progress
+          --ignore-unfixed
+          .
+        - trivy config
+          --exit-code 0
+          --severity HIGH,CRITICAL
+          apps/server/Dockerfile apps/client/Dockerfile
+    allow_failure: true
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 4 — build (BuildKit activé — uniquement main/develop ou changements Docker)
+# ══════════════════════════════════════════════════════════════════════════════
+
+build:backend:
+    stage: build
     image: docker:latest
     services:
         - docker:dind
+    variables:
+        DOCKER_BUILDKIT: "1"
     script:
         - docker build -t portfolio-backend ./apps/server
-        - docker run --rm portfolio-backend python -m black --check .
-        - docker run --rm portfolio-backend python -m isort --check-only .
-        - docker run --rm portfolio-backend python -m ruff check .
     rules:
-        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
         - if: $CI_COMMIT_BRANCH == "main"
         - if: $CI_COMMIT_BRANCH == "develop"
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+          changes:
+              - apps/server/**/*
+              - docker-compose.yml
 
-lint-frontend:
-    stage: test
+build:frontend:
+    stage: build
     image: docker:latest
     services:
         - docker:dind
+    variables:
+        DOCKER_BUILDKIT: "1"
     script:
-        - docker build --target builder -t portfolio-frontend-builder ./apps/client
-        - docker run --rm portfolio-frontend-builder pnpm run type-check
-        - docker run --rm portfolio-frontend-builder pnpm run lint
+        - docker build -t portfolio-frontend ./apps/client
     rules:
-        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
         - if: $CI_COMMIT_BRANCH == "main"
         - if: $CI_COMMIT_BRANCH == "develop"
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+          changes:
+              - apps/client/**/*
+              - docker-compose.yml
 
-# ── Deploy ───────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 5 — perf (Lighthouse CI — main/develop uniquement)
+# ══════════════════════════════════════════════════════════════════════════════
 
-deploy:
+perf:lighthouse:
+    stage: perf
+    image: node:24
+    extends: [.node_cache, .rules:main_or_develop]
+    variables:
+        NUXT_PUBLIC_API_BASE: "http://localhost:8000"
+        NUXT_API_BASE_SERVER: "http://localhost:8000"
+        NODE_OPTIONS: "--max-old-space-size=4096"
+    before_script:
+        - apt-get update -qq && apt-get install -y -qq chromium
+        - export CHROME_PATH=$(which chromium)
+        - corepack enable pnpm
+        - pnpm --dir apps/client install --frozen-lockfile --store-dir $PNPM_STORE_PATH
+    script:
+        - cd apps/client && pnpm build && pnpm lighthouse:ci
+    artifacts:
+        paths:
+            - apps/client/.lighthouseci/
+        expire_in: 2 weeks
+    allow_failure: true
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 6 — deploy (main uniquement)
+# ══════════════════════════════════════════════════════════════════════════════
+
+deploy:production:
     stage: deploy
     image: alpine:latest
+    environment:
+        name: production
+        url: https://$SSH_HOST
     rules:
         - if: $CI_COMMIT_BRANCH == "main"
+    needs:
+        - job: test:backend:unit
+        - job: validate:backend:format
+        - job: validate:backend:lint
+        - job: validate:frontend:types
+        - job: validate:frontend:eslint
+        - job: build:backend
+        - job: build:frontend
     before_script:
         - apk add --no-cache openssh-client
         - mkdir -p ~/.ssh
@@ -122,7 +302,7 @@ deploy:
         - ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
           cd /home/$SSH_USER/projects/Portfolio &&
           git pull origin main &&
-          docker compose down &&
+          docker compose pull 2>/dev/null || true &&
           docker compose up -d --build &&
           docker compose ps
           "

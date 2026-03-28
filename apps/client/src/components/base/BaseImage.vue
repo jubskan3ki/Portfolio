@@ -19,7 +19,7 @@
             :class="{ 'base-image__img--loaded': !isLoading }"
             @load="handleLoad"
             @error="handleError"
-        >
+        />
 
         <!-- Local/static images — NuxtImg with IPX optimization -->
         <NuxtImg
@@ -58,8 +58,9 @@
 <script setup lang="ts">
     import { ref, computed } from 'vue';
 
-    import BaseIcon from './BaseIcon.vue';
     import { resolveMediaUrl } from '@/services/utils/helpers';
+
+    import BaseIcon from './BaseIcon.vue';
 
     import type { ImageProps } from '@/types/components/base';
 

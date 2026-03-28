@@ -72,9 +72,10 @@
 
     const emit = defineEmits(['change']);
 
+    const swiperRef = useTemplateRef<HTMLElement>('swiperRef');
+
     const {
         activeIndex,
-        swiperRef,
         translateX,
         totalDots,
         slideStyles,
@@ -84,7 +85,7 @@
         prev,
         next,
         goToSlide,
-    } = useSwiper({ props, emit });
+    } = useSwiper({ props, emit, swiperRef });
 
     defineExpose({
         prev,

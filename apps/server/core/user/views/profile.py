@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import DatabaseError, IntegrityError
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -20,9 +20,9 @@ class AdminProfileView(APIView):
 
     permission_classes = [IsAdminUser]
 
-    @swagger_auto_schema(
-        operation_summary="Obtenir le profil",
-        operation_description="Recupere le profil administrateur connecte.",
+    @extend_schema(
+        summary="Obtenir le profil",
+        description="Recupere le profil administrateur connecte.",
         responses=PROFILE_GET_RESPONSES,
         tags=["Users"],
     )
@@ -37,10 +37,10 @@ class AdminProfileView(APIView):
         else:
             return Response(AdminProfileSerializer(admin).data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        operation_summary="Mettre a jour le profil",
-        operation_description="Met a jour le profil administrateur connecte.",
-        request_body=AdminUpdateProfileSerializer,
+    @extend_schema(
+        summary="Mettre a jour le profil",
+        description="Met a jour le profil administrateur connecte.",
+        request=AdminUpdateProfileSerializer,
         responses=PROFILE_PUT_RESPONSES,
         tags=["Users"],
     )

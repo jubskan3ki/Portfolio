@@ -1,6 +1,6 @@
 """Vues pour les statistiques des experiences."""
 
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, views
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -17,9 +17,9 @@ class StatsView(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     throttle_classes = (ExperienceThrottle,)
 
-    @swagger_auto_schema(
-        operation_summary="Statistiques des experiences",
-        operation_description="Recupere les statistiques globales des experiences.",
+    @extend_schema(
+        summary="Statistiques des experiences",
+        description="Recupere les statistiques globales des experiences.",
         responses={200: RESPONSE_200_STATS},
         tags=TAGS_STATS,
     )
@@ -35,9 +35,9 @@ class TimelineView(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     throttle_classes = (ExperienceThrottle,)
 
-    @swagger_auto_schema(
-        operation_summary="Timeline des experiences",
-        operation_description="Recupere les experiences groupees par annee.",
+    @extend_schema(
+        summary="Timeline des experiences",
+        description="Recupere les experiences groupees par annee.",
         responses={200: RESPONSE_200_TIMELINE},
         tags=TAGS_STATS,
     )

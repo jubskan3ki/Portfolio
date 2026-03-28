@@ -15,11 +15,13 @@ interface UseDateRangePickerOptions {
     minDays: Ref<number>;
     maxDays: Ref<number>;
     disabled: Ref<boolean>;
+    dropdownRef: Readonly<Ref<HTMLElement | null>>;
 }
 
-export function useDateRangePicker({ model, availableDates, minDays, maxDays, disabled }: UseDateRangePickerOptions) {
+export function useDateRangePicker(
+    { model, availableDates, minDays, maxDays, disabled, dropdownRef }: UseDateRangePickerOptions,
+) {
     const isOpen = ref(false);
-    const dropdownRef = ref<HTMLElement | null>(null);
 
     const selection = useDateRangeSelection({ model, availableDates, minDays, maxDays });
 
@@ -90,7 +92,6 @@ export function useDateRangePicker({ model, availableDates, minDays, maxDays, di
 
     return {
         isOpen,
-        dropdownRef,
         weekDays: grid.weekDays,
         displayValue: selection.displayValue,
         currentMonthYear: grid.currentMonthYear,
