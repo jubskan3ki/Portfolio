@@ -1,24 +1,85 @@
 <template>
-    <div>
-        <!-- En-tête de contact avec le composant Hero -->
+    <div class="contact-page">
+        <!-- Hero -->
         <Hero
-            title="Contact"
-            description="Vous avez un projet ou une opportunité professionnelle ? N'hésitez pas à me contacter."
+            title="À propos & Contact"
+            description="Développeur full-stack et DevOps basé à Paris, passionné par la création d'applications
+                web performantes et maintenables."
             variant="light"
             show-title-underline
         />
 
-        <!-- Contenu principal avec formulaire et infos -->
-        <Section class="contact-content">
+        <!-- About Section -->
+        <Section class="about-section">
             <div class="container">
-                <div class="contact-content__wrapper">
+                <div class="about-section__wrapper">
+                    <!-- Photo + identité -->
+                    <div class="about-section__profile animate-fade-in-up">
+                        <div class="about-section__photo">
+                            <NuxtImg
+                                src="/images/profile.jpg"
+                                :alt="`${name} - ${jobTitle}`"
+                                width="280"
+                                height="280"
+                                loading="eager"
+                                class="about-section__img"
+                            />
+                        </div>
+                        <h2 class="about-section__name">{{ name }}</h2>
+                        <p class="about-section__job">{{ jobTitle }}</p>
+                        <div class="about-section__links">
+                            <a
+                                v-for="link in socialLinks"
+                                :key="link.name"
+                                :href="link.url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="about-section__link"
+                                :aria-label="link.name"
+                            >
+                                <BaseIcon :name="link.icon" :size="20" />
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Bio -->
+                    <div class="about-section__bio animate-fade-in-up delay-1">
+                        <h2 class="about-section__title">Qui suis-je ?</h2>
+                        <p>
+                            Je suis Juba Ait-Adda, développeur full-stack basé à Paris. Passionné par le
+                            développement web depuis plusieurs années, je conçois des applications modernes,
+                            performantes et maintenables en combinant les meilleures pratiques frontend et backend.
+                        </p>
+                        <p>
+                            Mon expertise couvre l'ensemble du cycle de développement : de la conception d'interfaces
+                            réactives avec Vue.js et React, à la mise en place d'APIs robustes avec Django et Node.js,
+                            en passant par l'infrastructure et le déploiement avec Docker et Kubernetes.
+                        </p>
+                        <p>
+                            Je suis convaincu que la qualité du code, l'accessibilité et la performance ne sont
+                            pas des options mais des fondamentaux. Chaque projet est une opportunité d'apprendre
+                            et de repousser les limites du possible.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </Section>
+
+        <!-- Contact Section -->
+        <Section class="contact-section" variant="light">
+            <div class="container">
+                <h2 class="contact-section__heading animate-fade-in">Me contacter</h2>
+                <p class="contact-section__subheading animate-fade-in">
+                    Vous avez un projet ou une opportunité professionnelle ? N'hésitez pas à me contacter.
+                </p>
+                <div class="contact-section__wrapper">
                     <!-- Formulaire de contact -->
-                    <div class="contact-content__form animate-fade-in-up">
+                    <div class="contact-section__form animate-fade-in-up delay-1">
                         <ContactForm form-id="contact-form-fixed" />
                     </div>
 
                     <!-- Informations de contact -->
-                    <div class="contact-content__info animate-fade-in-up delay-2">
+                    <div class="contact-section__info animate-fade-in-up delay-2">
                         <ContactInfos
                             title="Mes coordonnées"
                             subtitle="N'hésitez pas à me contacter par ces moyens"
@@ -32,91 +93,42 @@
                 </div>
             </div>
         </Section>
-
-        <!-- FAQ - Questions fréquentes (désactivé temporairement)
-        <Section class="contact-faq" variant="light">
-            <div class="container">
-                <h2 class="contact-faq__title animate-fade-in">Questions fréquentes</h2>
-
-                <SkeletonList
-                    v-if="faqsLoading"
-                    :count="4"
-                    variant="default"
-                    layout="list"
-                    :show-image="false"
-                    show-description
-                    :show-tags="false"
-                    custom-class="faq-skeleton"
-                />
-
-                <div v-else class="faq-list animate-fade-in delay-1">
-                    <div v-for="(faq, index) in faqs" :key="faq.id" class="faq-item">
-                        <button
-                            class="faq-item__question"
-                            :class="{ 'faq-item__question--active': expandedFaq === index }"
-                            :aria-expanded="expandedFaq === index"
-                            :aria-controls="`faq-answer-${faq.id}`"
-                            @click="toggleFaq(index)"
-                        >
-                            <h3>{{ faq.question }}</h3>
-                            <BaseIcon :name="expandedFaq === index ? 'chevron-up' : 'chevron-down'" :size="16" />
-                        </button>
-                        <div
-                            :id="`faq-answer-${faq.id}`"
-                            role="region"
-                            :aria-labelledby="`faq-question-${faq.id}`"
-                            class="faq-item__answer"
-                            :class="{ 'faq-item__answer--active': expandedFaq === index }"
-                        >
-                            <p>{{ faq.answer }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Section>
-        -->
     </div>
 </template>
 
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    // import BaseIcon from '@/components/base/BaseIcon.vue';
+    import BaseIcon from '@/components/base/BaseIcon.vue';
     import ContactForm from '@/components/feature/contact/ContactForm.vue';
     import ContactInfos from '@/components/feature/contact/ContactInfos.vue';
     import Section from '@/components/layouts/Section.vue';
-    // import SkeletonList from '@/components/loaders/SkeletonList.vue';
     import Hero from '@/components/ui/Hero.vue';
-    // import { useAnnounce } from '@/composables/accessibility/useAnnounce';
-    import { useContactSeo } from '@/composables/seo/useSeo';
+    import { useContactSeo, SITE_CONFIG } from '@/composables/seo/useSeo';
     import { useScrollToTop } from '@/composables/ui/useScrollToTop';
-    import { /* useFaqs, */ useContactInfo } from '@/services/api/modules/contact';
+    import { useContactInfo } from '@/services/api/modules/contact';
 
-    // SEO with Schema.org
+    // SEO with Schema.org (ContactPage + AboutPage + Person)
     useContactSeo();
-
-    // Accessibility & UX
-    // const { announce } = useAnnounce();
     useScrollToTop();
 
-    // API Queries
-    // const { data: faqsData, isLoading: faqsLoading } = useFaqs();
+    // About data
+    const { author } = SITE_CONFIG;
+    const name = author.name;
+    const jobTitle = author.jobTitle;
+
+    const socialLinks = [
+        { name: 'GitHub', icon: 'github', url: 'https://github.com/jubskan3ki' },
+        { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
+    ];
+
+    // Contact API
     const { data: contactInfo } = useContactInfo();
 
-    // FAQs (filter published only) — désactivé temporairement
-    // const faqs = computed(() => {
-    //     return faqsData.value?.filter((faq) => faq.isPublished) ?? [];
-    // });
-
-    // Contact info with fallbacks
     const contactAddress = computed(() => contactInfo.value?.address?.city ?? 'Paris, France');
     const contactEmail = computed(() => contactInfo.value?.email ?? 'contact@aitaddajuba.fr');
     const contactPhone = computed(() => contactInfo.value?.phone ?? '+33 6 95 21 71 97');
 
-    // État — désactivé temporairement
-    // const expandedFaq = ref<number | null>(null);
-
-    // Configuration des liens sociaux
     const socialMediaLinks = computed(() => {
         if (contactInfo.value?.socialMedia) {
             const social = contactInfo.value.socialMedia;
@@ -127,43 +139,137 @@
             if (social.github) {
                 links.push({ name: 'GitHub', icon: 'github', url: social.github });
             }
-            if (social.twitter) {
-                links.push({ name: 'Twitter', icon: 'twitter', url: social.twitter });
-            }
             if (social.medium) {
                 links.push({ name: 'Medium', icon: 'medium', url: social.medium });
             }
             return links;
         }
-        // Fallback
         return [
             { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
             { name: 'GitHub', icon: 'github', url: 'https://github.com/jubskan3ki' },
         ];
     });
-
-    // Méthodes — désactivé temporairement
-    // const toggleFaq = (index: number) => {
-    //     const isExpanding = expandedFaq.value !== index;
-    //     expandedFaq.value = isExpanding ? index : null;
-    //
-    //     // Accessibilité: annoncer l'état de la FAQ
-    //     if (isExpanding && faqs.value[index]) {
-    //         announce(`Question ouverte: ${faqs.value[index].question}`);
-    //     } else {
-    //         announce('Question fermée');
-    //     }
-    // };
 </script>
 
 <style lang="scss" scoped>
     @use '@/styles/abstracts/variables' as vars;
     @use '@/styles/abstracts/mixins' as mix;
-    @use '@/styles/abstracts/functions' as func;
 
-    // Contenu principal
-    .contact-content {
+    /* About Section */
+    .about-section {
         padding: vars.$spacing-xl 0;
+
+        &__wrapper {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: vars.$spacing-xl;
+            align-items: start;
+
+            @include mix.responsive(tablet) {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        &__profile {
+            text-align: center;
+            position: sticky;
+            top: calc(vars.$spacing-xl + 80px);
+
+            @include mix.responsive(tablet) {
+                position: static;
+            }
+        }
+
+        &__photo {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto vars.$spacing-md;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: vars.$box-shadow-medium;
+        }
+
+        &__img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        &__name {
+            margin: 0 0 vars.$spacing-xs;
+            color: vars.$primary-color;
+        }
+
+        &__job {
+            margin: 0 0 vars.$spacing-md;
+            color: vars.$gray-dark;
+        }
+
+        &__links {
+            display: flex;
+            justify-content: center;
+            gap: vars.$spacing-sm;
+        }
+
+        &__link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: vars.$white-dark;
+            color: vars.$gray-dark;
+            transition: all vars.$transition-base;
+
+            &:hover {
+                background-color: vars.$primary-color;
+                color: vars.$white;
+            }
+        }
+
+        &__bio {
+            p {
+                line-height: 1.8;
+                color: vars.$gray-dark;
+                margin-bottom: vars.$spacing-md;
+            }
+        }
+
+        &__title {
+            color: vars.$primary-color;
+            margin: vars.$spacing-lg 0 vars.$spacing-md;
+            position: relative;
+
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: -6px;
+                left: 0;
+                width: 40px;
+                height: 3px;
+                background-color: vars.$primary-color;
+                border-radius: vars.$border-radius-full;
+            }
+        }
+
+    }
+
+    /* Contact Section */
+    .contact-section {
+        padding: vars.$spacing-xl 0;
+
+        &__heading {
+            text-align: center;
+            color: vars.$primary-color;
+            margin-bottom: vars.$spacing-xs;
+        }
+
+        &__subheading {
+            text-align: center;
+            color: vars.$gray-dark;
+            margin-bottom: vars.$spacing-xl;
+        }
 
         &__wrapper {
             display: grid;
@@ -189,100 +295,7 @@
         }
     }
 
-    /* FAQ - Questions fréquentes */
-    .contact-faq {
-        padding: vars.$spacing-xl 0;
-
-        &__title {
-            text-align: center;
-            margin-bottom: vars.$spacing-xl;
-            position: relative;
-            color: vars.$primary-color;
-
-            &::after {
-                content: '';
-                position: absolute;
-                bottom: -10px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 60px;
-                height: 3px;
-                background-color: vars.$primary-color;
-                border-radius: vars.$border-radius-full;
-            }
-        }
-    }
-
-    .faq-skeleton {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .faq-list {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .faq-item {
-        margin-bottom: vars.$spacing-md;
-        border-radius: vars.$border-radius-md;
-        overflow: hidden;
-        box-shadow: vars.$box-shadow;
-        background-color: vars.$white;
-
-        &__question {
-            width: 100%;
-            border: none;
-            font: inherit;
-            text-align: left;
-            padding: vars.$spacing-md;
-            background-color: vars.$white;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.3s ease;
-
-            &:hover {
-                background-color: vars.$white-dark;
-            }
-
-            &--active {
-                background-color: func.color-alpha(vars.$primary-color, 0.1);
-
-                h3 {
-                    color: vars.$primary-color;
-                }
-            }
-
-            h3 {
-                margin: 0;
-                transition: color 0.3s ease;
-            }
-        }
-
-        &__answer {
-            max-height: 0;
-            overflow: hidden;
-            transition:
-                max-height 0.3s ease,
-                padding 0.3s ease;
-
-            &--active {
-                max-height: 500px;
-                padding: vars.$spacing-md;
-                border-top: 1px solid vars.$white-dark;
-            }
-
-            p {
-                margin: 0;
-                color: vars.$gray-dark;
-                line-height: 1.6;
-            }
-        }
-    }
-
-    /* Animation */
+    /* Animations */
     .animate-fade-in {
         animation: fadeIn vars.$transition-base forwards;
     }

@@ -18,7 +18,10 @@ export type RequestInterceptor = (config: RequestInit, url: string) => RequestIn
 export type ResponseInterceptor = (response: Response, request: RequestInit) => Response | Promise<Response>;
 export type ErrorInterceptor = (error: ApiError) => ApiError | Promise<ApiError>;
 
-export type QueryOptions<TData> = Omit<UseQueryOptions<TData, Error, TData, QueryKey>, 'queryKey' | 'queryFn'>;
+export type QueryOptions<TData, TSelect = TData> = Omit<
+    UseQueryOptions<TData, Error, TSelect, QueryKey>,
+    'queryKey' | 'queryFn'
+>;
 
 interface MutationCallbacks<TData, TVariables> {
     onSuccess?: (data: TData, variables: TVariables, context: unknown) => void;

@@ -84,6 +84,11 @@
 		}
 	);
 
+	// Empêcher l'indexation des pages d'erreur
+	useSeoMeta({
+		robots: 'noindex, nofollow',
+	});
+
 	const pageRef = ref<HTMLElement | null>(null);
 	const shapeRefs = ref<Map<number, HTMLElement>>(new Map());
 

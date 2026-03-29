@@ -38,6 +38,10 @@ export const ROUTES: AppRoutes = {
     },
 
     // Autres routes principales
+    ABOUT: {
+        path: '/about',
+        name: 'About',
+    },
     CONTACT: {
         path: '/contact',
         name: 'Contact',

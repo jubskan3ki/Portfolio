@@ -42,6 +42,9 @@ def invalidate_model_cache(model_name: str) -> None:
     """
     Invalidate all cache keys for a specific model.
 
+    Clears both service-layer cache (CacheKeys patterns) and
+    view-layer cache (cache_page keys).
+
     Args:
         model_name: Name of the model (e.g., "Article", "Project")
     """
@@ -65,6 +68,28 @@ def invalidate_model_cache(model_name: str) -> None:
         cache.delete(CacheKeys.stats_global())
     else:
         logger.debug("No cache pattern defined for model: %s", model_name)
+
+    # Invalidate cache_page keys for affected views
+    view_prefixes = VIEW_CACHE_PREFIXES.get(model_name, [])
+    for prefix in view_prefixes:
+        invalidate_cache(f"*cache_page.{prefix}*")
+        invalidate_cache(f"*cache_header.{prefix}*")
+
+
+# Mapping: model name -> cache_page key_prefix values to invalidate
+VIEW_CACHE_PREFIXES: dict[str, list[str]] = {
+    "Article": [
+        "portfolio:v1:views:articles:list",
+        "portfolio:v1:views:articles:detail",
+    ],
+    "Category": ["portfolio:v1:views:articles:list"],
+    "Tag": ["portfolio:v1:views:articles:list"],
+    "Project": [
+        "portfolio:v1:views:projects:list",
+        "portfolio:v1:views:projects:detail",
+    ],
+    "ProjectCategory": ["portfolio:v1:views:projects:list"],
+}
 
 
 def clear_specific_keys(*keys: str) -> None:

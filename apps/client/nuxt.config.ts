@@ -86,7 +86,7 @@ export default defineNuxtConfig({
         apiBaseServer: process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
         public: {
             apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
-            webVitalsSampleRate: process.env.NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE || (process.env.NODE_ENV === 'development' ? '1' : '0.2'),
+            webVitalsSampleRate: process.env.NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE || (process.env.NODE_ENV === 'development' ? '0' : '0.2'),
         },
     },
 
@@ -115,6 +115,7 @@ export default defineNuxtConfig({
         '/projects/**': { swr: 600 },
         '/stacks': { swr: 300 },
         '/stacks/**': { swr: 600 },
+        '/about': { redirect: { to: '/contact', statusCode: 301 } },
         '/experience': { swr: 600 },
         '/contact': { swr: 3600 },
         '/legal': { swr: 86400 },
@@ -132,8 +133,12 @@ export default defineNuxtConfig({
     },
 
     sourcemap: {
-        server: true,
-        client: true,
+        server: process.env.NODE_ENV === 'development',
+        client: process.env.NODE_ENV === 'development',
+    },
+
+    devServer: {
+        host: 'localhost',
     },
 
     watch: ['./src/styles/**/*.scss'],
@@ -155,6 +160,9 @@ export default defineNuxtConfig({
     compatibilityDate: '2025-12-30',
 
     nitro: {
+        alias: {
+            '@': fileURLToPath(new URL('./src', import.meta.url)),
+        },
         preset: 'node-server',
         compressPublicAssets: {
             brotli: true,
@@ -186,7 +194,7 @@ export default defineNuxtConfig({
 
     vite: {
         cacheDir: 'node_modules/.cache/vite',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         plugins: process.env.ANALYZE === 'true'
             ? [visualizer({
                 open: true,
@@ -248,7 +256,7 @@ export default defineNuxtConfig({
     },
 
     delayHydration: {
-        mode: 'mount',
+        mode: process.env.NODE_ENV === 'development' ? false : 'mount',
         debug: false,
         exclude: ['/admin/**'],
     },
@@ -331,7 +339,12 @@ export default defineNuxtConfig({
     },
 
     ogImage: {
-        enabled: false,
+        enabled: true,
+        defaults: {
+            width: 1200,
+            height: 630,
+            component: 'OgImageDefault',
+        },
     },
 
     robots: {
@@ -350,21 +363,20 @@ export default defineNuxtConfig({
             type: 'Person',
             name: 'Juba Ait-Adda',
             url: 'https://juba-aitadda.dev',
+            image: 'https://juba-aitadda.dev/images/profile.jpg',
             logo: '/logo.svg',
-            sameAs: ['https://github.com/jubskan3ki', 'https://www.linkedin.com/in/juba-aitadda/'],
+            sameAs: [
+                'https://github.com/jubskan3ki',
+                'https://www.linkedin.com/in/juba-aitadda/',
+                'https://x.com/juba_aitadda',
+            ],
         },
-    },
-
-    sitemap: {
-        sources: ['/api/__sitemap__/urls'],
-        exclude: ['/admin/**', '/login'],
-        cacheMaxAgeSeconds: 3600,
     },
 
     // ── Security headers (remplace les headers manuels dans routeRules) ───────
     security: {
         headers: {
-            contentSecurityPolicy: false,            // à activer après audit CSP complet
+            contentSecurityPolicy: false, // à activer après audit CSP complet
             crossOriginEmbedderPolicy: false,
             crossOriginOpenerPolicy: process.env.NODE_ENV === 'development' ? false : 'same-origin',
             crossOriginResourcePolicy: 'same-origin',
@@ -386,8 +398,8 @@ export default defineNuxtConfig({
             maxRequestSizeInBytes: 5_000_000,
             maxUploadFileRequestInBytes: 5_000_000,
         },
-        rateLimiter: false,       // géré côté Django
-        corsHandler: false,       // géré côté Django/nginx
+        rateLimiter: false, // géré côté Django
+        corsHandler: false, // géré côté Django/nginx
         allowedMethodsRestricter: false,
         hidePoweredBy: true,
         basicAuth: false,
@@ -395,6 +407,12 @@ export default defineNuxtConfig({
         nonce: false,
         ssg: false,
         sri: false,
+    },
+
+    sitemap: {
+        sources: ['/api/__sitemap__/urls'],
+        exclude: ['/admin/**', '/login'],
+        cacheMaxAgeSeconds: 3600,
     },
 
 });

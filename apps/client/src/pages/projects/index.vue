@@ -161,6 +161,7 @@
     import SearchInput from '@/components/ui/search/SearchInput.vue';
     import { useFilters } from '@/composables/data/useFilters';
     import { useInfiniteScroll } from '@/composables/data/useInfiniteScroll';
+    import { useItemListSeo } from '@/composables/seo/useItemListSeo';
     import { useProjectsSeo } from '@/composables/seo/useSeo';
     import { filterPresets } from '@/config/filterPresets';
     import { ROUTES } from '@/config/routes';
@@ -220,6 +221,16 @@
     });
 
     const hasProjects = computed(() => allProjects.value.length > 0);
+
+    // ItemList Schema.org pour resultats enrichis
+    const projectListItems = computed(() =>
+        allProjects.value.map((p) => ({ name: p.title, url: `/projects/${p.slug}`, image: p.image })),
+    );
+    watch(projectListItems, (items) => {
+        if (items.length) {
+            useItemListSeo({ items: projectListItems });
+        }
+    }, { immediate: true });
 
     // Category options
     const categoryOptions = computed<SelectOption[]>(() => {

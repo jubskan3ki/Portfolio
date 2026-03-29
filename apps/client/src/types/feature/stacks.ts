@@ -20,6 +20,8 @@ export interface Stack {
 export interface StackDetail extends Stack {
     description: string;
     isFeatured?: boolean;
+    seoTitle?: string;
+    metaDescription?: string;
     website?: string;
     websiteLabel?: string;
     github?: string;

@@ -110,6 +110,12 @@ class Stack(AutoSlugMixin, models.Model):
     id: int
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
+    seo_title = models.CharField(
+        max_length=70, blank=True, help_text="Titre SEO (max 70 car.). Utilise le nom si vide."
+    )
+    meta_description = models.CharField(
+        max_length=160, blank=True, help_text="Meta description (max 160 car.). Utilise la description si vide."
+    )
     description = models.TextField()
     logo = models.FileField(
         upload_to=stack_logo_upload_to,

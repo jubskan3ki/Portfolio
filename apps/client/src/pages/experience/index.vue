@@ -103,15 +103,21 @@
                         custom-class="skills-section__heading"
                     />
                     <div class="skills-section__list">
-                        <Badge
+                        <component
+                            :is="getSkillLink(skill.skill) ? 'NuxtLink' : 'span'"
                             v-for="(skill, index) in topSkills"
                             :key="skill.skill"
-                            :text="skill.skill"
-                            variant="primary"
-                            size="md"
-                            class="skills-section__badge"
-                            :style="{ '--badge-delay': `${index * 50}ms` }"
-                        />
+                            :to="getSkillLink(skill.skill) ? `/stacks/${getSkillLink(skill.skill)}` : undefined"
+                            class="skills-section__badge-link"
+                        >
+                            <Badge
+                                :text="skill.skill"
+                                variant="primary"
+                                size="md"
+                                class="skills-section__badge"
+                                :style="{ '--badge-delay': `${index * 50}ms` }"
+                            />
+                        </component>
                     </div>
                     <p v-if="stats?.totalYears" class="skills-section__summary">
                         <BaseIcon name="trending-up" :size="16" />
@@ -160,6 +166,7 @@
         useExperienceTypes,
         useExperienceStats,
     } from '@/services/api/modules/experiences';
+    import { useFeaturedStacks } from '@/services/api/modules/stacks';
 
     import type { ExperienceType } from '@/types/feature/experience';
 
@@ -311,6 +318,20 @@
     // Top skills from stats (all skills, no limit)
     const topSkills = computed(() => stats.value?.topSkills ?? []);
 
+    // Resolve skills against known stacks for internal linking
+    const { data: allStacksData } = useFeaturedStacks(100);
+    const skillStackMap = computed(() => {
+        const stacks = allStacksData.value ?? [];
+        const map = new Map<string, string>();
+        for (const stack of stacks) {
+            map.set(stack.name.toLowerCase(), stack.slug);
+        }
+        return map;
+    });
+    const getSkillLink = (skillName: string): string | undefined => {
+        return skillStackMap.value.get(skillName.toLowerCase());
+    };
+
     // Hero stats
     const heroStats = computed(() => [
         {
@@ -450,6 +471,10 @@
             @include mix.flex(row, center, center, vars.$spacing-xs);
 
             flex-wrap: wrap;
+        }
+
+        &__badge-link {
+            text-decoration: none;
         }
 
         &__badge {

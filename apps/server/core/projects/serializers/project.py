@@ -71,6 +71,7 @@ class ProjectListSerializer(serializers.ModelSerializer[Project]):
     category = serializers.StringRelatedField()
     status = serializers.StringRelatedField()
     views = serializers.IntegerField(source="view_count", read_only=True)
+    updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
 
     class Meta:
         model = Project
@@ -84,6 +85,7 @@ class ProjectListSerializer(serializers.ModelSerializer[Project]):
             "status",
             "technologies",
             "date",
+            "updatedAt",
             "views",
         )
 
@@ -94,6 +96,9 @@ class ProjectDetailSerializer(serializers.ModelSerializer[Project]):
     category = serializers.StringRelatedField()
     status = serializers.StringRelatedField()
     views = serializers.IntegerField(source="view_count", read_only=True)
+    updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
+    seoTitle = serializers.CharField(source="seo_title", read_only=True)
+    metaDescription = serializers.CharField(source="meta_description", read_only=True)
     longDescription = serializers.CharField(source="long_description")
 
     class Meta:
@@ -102,6 +107,8 @@ class ProjectDetailSerializer(serializers.ModelSerializer[Project]):
             "id",
             "title",
             "slug",
+            "seoTitle",
+            "metaDescription",
             "description",
             "views",
             "longDescription",
@@ -110,6 +117,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer[Project]):
             "category",
             "technologies",
             "date",
+            "updatedAt",
             "features",
             "links",
         )

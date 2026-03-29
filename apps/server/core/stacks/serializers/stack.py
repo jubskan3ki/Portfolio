@@ -61,12 +61,17 @@ class StackDetailSerializer(serializers.ModelSerializer):
     related_stacks = serializers.SerializerMethodField()
     experience = serializers.SerializerMethodField()
 
+    seoTitle = serializers.CharField(source="seo_title", read_only=True)
+    metaDescription = serializers.CharField(source="meta_description", read_only=True)
+
     class Meta:
         model = Stack
         fields = (
             "id",
             "name",
             "slug",
+            "seoTitle",
+            "metaDescription",
             "description",
             "logo",
             "category",

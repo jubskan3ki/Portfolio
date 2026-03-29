@@ -1,0 +1,227 @@
+{
+  "module": "projects",
+  "exported_at": "2026-03-29T12:34:51.180959+00:00",
+  "count": 6,
+  "data": [
+    {
+      "id": 2,
+      "title": "Effervescence 93 — Plan interactif salon B2B",
+      "slug": "effervescence-93",
+      "description": "Plan interactif web pour le salon B2B Effervescence 93 de la CCI Seine-Saint-Denis, avec carte SVG, recherche et back-office.",
+      "views": 1,
+      "longDescription": "Développé dans le cadre d&#x27;une mission avec Synerg&#x27;hetic, la Junior-Entreprise d&#x27;HETIC, ce projet est un plan interactif web pour le salon Effervescence 93 organisé par la CCI Seine-Saint-Denis.\n\nL&#x27;objectif était de permettre aux visiteurs de se repérer facilement dans le salon (stands, zones clés, parcours thématiques) et à la CCI d&#x27;administrer l&#x27;ensemble des exposants depuis un back-office dédié.\n\nLe cœur du projet est une carte SVG interactive avec zoom fluide, survol des stands avec preview, et mise en avant au clic. La recherche multi-critères (nom, secteur, numéro de stand) et les filtres par secteur d&#x27;activité permettent de trouver rapidement un exposant. Les parcours thématiques guident les visiteurs selon leurs centres d&#x27;intérêt.\n\nChaque exposant dispose d&#x27;une fiche complète avec informations, contacts, liens et position géolocalisée sur le plan. Le back-office permet aux organisateurs de gérer les exposants, stands et contenus de manière autonome jusqu&#x27;à J-3 de l&#x27;événement.",
+      "status": "completed",
+      "image": "/media/projets/effervescence-93-plan-interactif-salon-b2b/projet-6.webp",
+      "category": "web",
+      "technologies": [
+        "Vue.js",
+        "TypeScript",
+        "SVG",
+        "Sass",
+        "Vite"
+      ],
+      "date": "2025-10-15",
+      "features": [
+        "Carte SVG interactive avec zoom, pan, survol des stands et mise en avant au clic",
+        "Recherche multi-critères par nom d'entreprise, secteur d'activité ou numéro de stand",
+        "Filtres par secteur, système de favoris et parcours thématiques de visite",
+        "Fiches exposant complètes avec informations, contacts, liens et position sur le plan",
+        "Back-office d'administration pour gérer exposants, stands et contenus",
+        "Interface responsive adaptée desktop, tablette et mobile pour une utilisation sur site"
+      ],
+      "links": {
+        "github": "https://github.com/jubskan3ki/effervescence93"
+      },
+      "seoTitle": "Effervescence 93 — Plan interactif salon B2B",
+      "metaDescription": "Plan interactif web pour le salon B2B Effervescence 93 de la CCI Seine-Saint-Denis, avec carte SVG, recherche et back-office.",
+      "updatedAt": "2025-10-15"
+    },
+    {
+      "id": 1,
+      "title": "Portfolio Personnel V2",
+      "slug": "portfolio",
+      "description": "Portfolio développeur full-stack moderne avec SSR, API REST, dashboard admin complet et système de gestion de contenu.",
+      "views": 0,
+      "longDescription": "Ce portfolio est une application web full-stack construite avec Nuxt 4 (Vue 3.5, TypeScript strict) pour le frontend SSR et Django 5 + Django REST Framework pour le backend API. Il présente mes projets, compétences techniques, expériences et articles de blog de manière interactive et professionnelle.\n\nL&#x27;architecture est rigoureusement séparée : le frontend communique exclusivement via REST API, avec TanStack Query pour le data fetching (cache automatique, invalidation, mutations), Pinia pour l&#x27;état global, et Zod + Vee-Validate pour la validation des formulaires. Le backend suit un pattern strict models → services → serializers → views avec un service layer dédié.\n\nL&#x27;infrastructure Docker Compose orchestre 6 services principaux (Nuxt, Django/Gunicorn, PostgreSQL, Redis, RabbitMQ, Celery) avec des profils optionnels pour le monitoring (Prometheus, Grafana, Loki) et le développement (Swagger, pgAdmin). Le CI/CD GitLab déploie automatiquement sur VPS via SSH.",
+      "status": "in_progress",
+      "image": "/media/projets/portfolio-personnel-v2/projet-4.webp",
+      "category": "web",
+      "technologies": [
+        "Nuxt",
+        "Vue.js",
+        "TypeScript",
+        "Django",
+        "Django REST Framework",
+        "PostgreSQL",
+        "Redis",
+        "Celery",
+        "RabbitMQ",
+        "Docker",
+        "Sass",
+        "TanStack Query",
+        "Pinia",
+        "Zod",
+        "GitLab CI/CD",
+        "Nginx"
+      ],
+      "date": "2025-01-15",
+      "features": [
+        "Interface publique responsive avec SSR Nuxt 4, animations fluides et mode sombre",
+        "Dashboard d'administration complet avec CRUD pour articles, projets, stacks et expériences",
+        "Système de blog avec catégories, tags, blocs de contenu et articles populaires",
+        "Data fetching via TanStack Query avec cache SWR, invalidation automatique et prefetching",
+        "Import/export de données multi-format (JSON, CSV, Excel) via Celery avec preview et validation",
+        "Authentification JWT en cookies HTTPOnly avec refresh token rotation et device fingerprinting",
+        "Monitoring complet avec Prometheus, Grafana et Loki pour les logs centralisés",
+        "CI/CD GitLab avec build Docker et déploiement automatique sur VPS"
+      ],
+      "links": {
+        "demo": "https://aitadda.dev",
+        "github": "https://github.com/jubskan3ki/portfolio"
+      },
+      "seoTitle": "Portfolio Personnel V2",
+      "metaDescription": "Portfolio développeur full-stack moderne avec SSR, API REST, dashboard admin complet et système de gestion de contenu.",
+      "updatedAt": "2025-01-15"
+    },
+    {
+      "id": 5,
+      "title": "TechRace",
+      "slug": "techrace",
+      "description": "Solution IoT de pilotage de voitures télécommandées via smartphone avec télémétrie et dashboard de course en temps réel.",
+      "views": 0,
+      "longDescription": "TechRace est une solution innovante combinant IoT et développement mobile pour piloter des voitures télécommandées à distance depuis un smartphone, avec visualisation des performances et analyse des résultats de course en temps réel.\n\nL&#x27;application mobile React Native exploite les capteurs du smartphone (accéléromètre, gyroscope) pour un contrôle intuitif des véhicules. Le backend Go haute performance gère les communications temps réel via WebSocket et MQTT pour la communication avec les véhicules IoT.\n\nLe dashboard web React affiche la télémétrie en temps réel (vitesse, accélération, niveau de batterie), gère les courses et classements, et permet de revoir les performances passées. L&#x27;architecture microservices conteneurisée assure la scalabilité et la faible latence nécessaires au contrôle en temps réel.",
+      "status": "completed",
+      "image": "/media/projets/techrace/projet-3.webp",
+      "category": "mobile",
+      "technologies": [
+        "React Native",
+        "React",
+        "TypeScript",
+        "Go",
+        "WebSocket",
+        "Docker",
+        "MQTT"
+      ],
+      "date": "2024-06-01",
+      "features": [
+        "Contrôle de véhicules en temps réel via accéléromètre et gyroscope du smartphone",
+        "Dashboard web de suivi des performances et analyse des courses",
+        "Système de gestion des courses avec classements et historique",
+        "Télémétrie en temps réel (vitesse, accélération, batterie, position)",
+        "Communication bidirectionnelle WebSocket + MQTT pour l'IoT",
+        "Architecture microservices conteneurisée avec faible latence"
+      ],
+      "links": {
+        "github": "https://github.com/jubskan3ki/techrace"
+      },
+      "seoTitle": "TechRace",
+      "metaDescription": "Solution IoT de pilotage de voitures télécommandées via smartphone avec télémétrie et dashboard de course en temps réel.",
+      "updatedAt": "2024-06-01"
+    },
+    {
+      "id": 4,
+      "title": "DogGuesser",
+      "slug": "dogguesser",
+      "description": "Jeu en ligne ludique de reconnaissance de races de chiens à partir de photos avec scoring et classement.",
+      "views": 0,
+      "longDescription": "DogGuesser est une application web gamifiée où les utilisateurs doivent deviner les races de chiens à partir de photos en un temps limité. Développée avec React, Node.js et TypeScript, l&#x27;application propose une expérience ludique et éducative.\n\nLe gameplay repose sur un système de rounds chronométrés avec scoring basé sur la rapidité et la précision. Plusieurs niveaux de difficulté (du plus populaire au plus rare) permettent une progression naturelle. Un classement global encourage la compétition entre joueurs.\n\nLe backend Express/MongoDB gère la base d&#x27;images de races, les scores et les classements. Le frontend React offre une interface fluide avec animations de transition et feedback visuel immédiat sur les réponses.",
+      "status": "completed",
+      "image": "/media/projets/dogguesser/projet-2.webp",
+      "category": "web",
+      "technologies": [
+        "React",
+        "Node.js",
+        "TypeScript",
+        "Express",
+        "Docker",
+        "MongoDB"
+      ],
+      "date": "2024-01-20",
+      "features": [
+        "Jeu chronométré avec scoring basé sur rapidité et précision",
+        "Base de données riche d'images classées par races et difficulté",
+        "Niveaux de difficulté progressifs du débutant à l'expert",
+        "Classement des meilleurs joueurs avec historique des parties",
+        "Interface ludique et responsive avec animations fluides",
+        "Déploiement Docker optimisé avec images multi-stage"
+      ],
+      "links": {
+        "github": "https://github.com/jubskan3ki/dogguesser"
+      },
+      "seoTitle": "DogGuesser",
+      "metaDescription": "Jeu en ligne ludique de reconnaissance de races de chiens à partir de photos avec scoring et classement.",
+      "updatedAt": "2024-01-20"
+    },
+    {
+      "id": 3,
+      "title": "BlaBlaChat",
+      "slug": "blablachat",
+      "description": "Application de messagerie instantanée en temps réel avec salles de discussion privées et publiques via WebSocket.",
+      "views": 2,
+      "longDescription": "BlaBlaChat est une plateforme de messagerie instantanée moderne développée avec React, TypeScript et Node.js. L&#x27;application permet aux utilisateurs de communiquer en temps réel via WebSocket, avec la possibilité de créer des salles de discussion privées ou publiques.\n\nL&#x27;architecture repose sur un serveur Node.js/Express gérant les connexions WebSocket bidirectionnelles pour la messagerie temps réel. Le frontend React avec TypeScript offre une interface réactive avec gestion optimisée des listes de messages et scroll infini.\n\nL&#x27;authentification JWT sécurise les accès et permet la gestion de profils utilisateurs. L&#x27;historique des conversations est persisté en PostgreSQL avec des requêtes optimisées pour la pagination. L&#x27;ensemble est conteneurisé avec Docker Compose pour un déploiement reproductible.",
+      "status": "completed",
+      "image": "/media/projets/blablachat/projet-1.webp",
+      "category": "web",
+      "technologies": [
+        "React",
+        "TypeScript",
+        "Node.js",
+        "Express",
+        "WebSocket",
+        "Docker",
+        "PostgreSQL"
+      ],
+      "date": "2023-09-01",
+      "features": [
+        "Messagerie instantanée bidirectionnelle en temps réel via WebSocket",
+        "Création et gestion de salles de discussions privées et publiques",
+        "Authentification sécurisée avec JWT et gestion de profils",
+        "Historique des conversations persistant avec pagination",
+        "Notifications en temps réel et indicateurs de présence",
+        "Déploiement multi-environnements avec Docker Compose"
+      ],
+      "links": {
+        "github": "https://github.com/jubskan3ki/blablachat"
+      },
+      "seoTitle": "BlaBlaChat",
+      "metaDescription": "Application de messagerie instantanée en temps réel avec salles de discussion privées et publiques via WebSocket.",
+      "updatedAt": "2023-09-01"
+    },
+    {
+      "id": 6,
+      "title": "Infrastructure Cloud — Terraform &amp; Ansible",
+      "slug": "terraform-ansible-infra",
+      "description": "Infrastructure as Code complète pour provisionner et configurer automatiquement des environnements cloud AWS.",
+      "views": 0,
+      "longDescription": "Ce projet d&#x27;Infrastructure as Code permet de provisionner, configurer et sécuriser des environnements cloud AWS de manière entièrement automatisée. Terraform gère le provisionnement des ressources (VPC, subnets, security groups, EC2, RDS, S3, IAM) tandis qu&#x27;Ansible configure les serveurs et déploie les applications.\n\nL&#x27;architecture est modulaire : chaque composant (réseau, compute, base de données, stockage) est un module Terraform réutilisable avec des variables configurables. Les playbooks Ansible sont organisés en rôles (Docker, Nginx, PostgreSQL, application) pour une maintenance propre.\n\nLe pipeline de déploiement automatise l&#x27;intégralité du cycle : provisionnement des ressources, configuration des serveurs, déploiement des applications, et mise en place du monitoring. Les secrets sont gérés via AWS Secrets Manager et les variables d&#x27;environnement Ansible Vault.",
+      "status": "completed",
+      "image": "/media/projets/infrastructure-cloud-terraform-amp-ansible/projet-5.webp",
+      "category": "devops",
+      "technologies": [
+        "Terraform",
+        "Ansible",
+        "AWS",
+        "Docker",
+        "Linux",
+        "Python",
+        "Nginx"
+      ],
+      "date": "2023-07-01",
+      "features": [
+        "Provisionnement automatisé sur AWS (VPC, EC2, RDS, S3, IAM) via Terraform",
+        "Configuration automatique des serveurs via Ansible (Docker, Nginx, SSL)",
+        "Gestion centralisée des secrets avec AWS Secrets Manager et Ansible Vault",
+        "Architecture modulaire et réutilisable avec variables par environnement",
+        "Pipeline de déploiement end-to-end automatisé",
+        "Monitoring et alerting intégrés avec CloudWatch",
+        "Conformité aux bonnes pratiques AWS Well-Architected Framework"
+      ],
+      "links": {
+        "github": "https://github.com/jubskan3ki/terraform-ansible-infra"
+      },
+      "seoTitle": "Infrastructure Cloud — Terraform &amp; Ansible",
+      "metaDescription": "Infrastructure as Code complète pour provisionner et configurer automatiquement des environnements cloud AWS.",
+      "updatedAt": "2023-07-01"
+    }
+  ]
+}

@@ -206,6 +206,7 @@
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
     import { useFilters } from '@/composables/data/useFilters';
     import { useStacksPage } from '@/composables/data/useStacksPage';
+    import { useItemListSeo } from '@/composables/seo/useItemListSeo';
     import { useStacksSeo } from '@/composables/seo/useSeo';
     import { useScrollToTop } from '@/composables/ui/useScrollToTop';
     import { filterPresets } from '@/config/filterPresets';
@@ -286,6 +287,16 @@
         searchQuery,
         isSearchMode,
     });
+
+    // ItemList Schema.org pour resultats enrichis
+    const stackListItems = computed(() =>
+        (allStacks.value ?? []).map((s) => ({ name: s.name, url: `/stacks/${s.slug}`, image: s.logo })),
+    );
+    watch(stackListItems, (items) => {
+        if (items.length) {
+            useItemListSeo({ items: stackListItems });
+        }
+    }, { immediate: true });
 
     // Navigation
     const navigateToStack = (slug: string) => {

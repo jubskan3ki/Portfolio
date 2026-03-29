@@ -20,6 +20,7 @@ import type {
     ContactInfoUpdateData,
     ContactMessageUpdateData,
 } from '@/types/feature/contact';
+import type { QueryOptions } from '@/types/services/api';
 
 export const contactKeys = {
     ...createKeys('contact'),
@@ -87,8 +88,8 @@ export function useFaqs() {
     return createStaticQuery(contactKeys.faqs(), contactApi.getFaqs);
 }
 
-export function useContactInfo() {
-    return createStaticQuery(contactKeys.info(), contactApi.getInfo);
+export function useContactInfo(options?: QueryOptions<ContactInfo>) {
+    return createStaticQuery(contactKeys.info(), contactApi.getInfo, options);
 }
 
 export function useSubmitContact() {

@@ -1,7 +1,9 @@
 <!-- components/feature/home/ExpertiseCard.vue -->
 <template>
-    <div
+    <component
+        :is="props.to ? NuxtLink : 'div'"
         ref="cardRef"
+        :to="props.to || undefined"
         class="expertise-card"
         :class="[`expertise-card--${variant}`, { 'expertise-card--no-motion': prefersReducedMotion }]"
         tabindex="0"
@@ -32,7 +34,7 @@
 
         <!-- Shine effect on hover -->
         <div class="expertise-card__shine" :style="shineStyle"></div>
-    </div>
+    </component>
 </template>
 
 <script setup lang="ts">
@@ -42,6 +44,7 @@
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
 
     import type { ExpertiseCardProps } from '@/types/feature/home';
+    import type { ComponentPublicInstance } from 'vue';
 
     type Props = ExpertiseCardProps;
 
@@ -49,13 +52,16 @@
         color: '#673c5c',
         variant: 'light',
         animateOnScroll: false,
+        to: undefined,
     });
+
+    const NuxtLink = resolveComponent('NuxtLink');
 
     // Accessibility
     const { prefersReducedMotion } = useReducedMotion();
 
     // Refs for tilt effect
-    const cardRef = ref<HTMLElement | null>(null);
+    const cardRef = ref<HTMLElement | ComponentPublicInstance | null>(null);
     const isHovering = ref(false);
     const mouseX = ref(0.5);
     const mouseY = ref(0.5);
@@ -78,7 +84,11 @@
         if (prefersReducedMotion.value || !cardRef.value) {
             return;
         }
-        const rect = cardRef.value.getBoundingClientRect();
+        const el = (cardRef.value as ComponentPublicInstance)?.$el ?? cardRef.value;
+        if (!(el instanceof HTMLElement)) {
+            return;
+        }
+        const rect = el.getBoundingClientRect();
         mouseX.value = (e.clientX - rect.left) / rect.width;
         mouseY.value = (e.clientY - rect.top) / rect.height;
     };

@@ -47,6 +47,13 @@
                 </template>
             </Hero>
 
+            <!-- Breadcrumb -->
+            <Breadcrumb
+                v-if="breadcrumbItems.length > 1"
+                :items="breadcrumbItems"
+                separator="chevron"
+            />
+
             <!-- Content -->
             <Main variant="default" size="large">
                 <!-- Article Intro -->
@@ -56,6 +63,8 @@
                             :src="currentArticle.image"
                             :alt="currentArticle.title"
                             object-fit="cover"
+                            width="320"
+                            height="240"
                             class="article-intro__img"
                         />
                         <div class="article-intro__overlay"></div>
@@ -102,6 +111,33 @@
                                 </ul>
                             </div>
                         </nav>
+
+                        <!-- Related Stacks (maillage interne) -->
+                        <div v-if="resolvedStacks.length" class="sidebar-card">
+                            <h3 class="sidebar-card__heading">
+                                <BaseIcon name="layers" :size="16" class="sidebar-card__heading-icon" />
+                                Technologies
+                            </h3>
+                            <div class="article-stacks">
+                                <NuxtLink
+                                    v-for="stack in resolvedStacks"
+                                    :key="stack.slug"
+                                    :to="`/stacks/${stack.slug}`"
+                                    class="article-stacks__item"
+                                >
+                                    <img
+                                        v-if="stack.logo"
+                                        :src="stack.logo"
+                                        :alt="stack.name"
+                                        class="article-stacks__logo"
+                                        width="20"
+                                        height="20"
+                                        loading="lazy"
+                                    />
+                                    <span>{{ stack.name }}</span>
+                                </NuxtLink>
+                            </div>
+                        </div>
 
                         <!-- Share -->
                         <ShareCard :title="currentArticle.title" />
@@ -165,12 +201,14 @@
     import Main from '@/components/layouts/Main.vue';
     import Section from '@/components/layouts/Section.vue';
     import LoadingState from '@/components/loaders/LoadingState.vue';
+    import Breadcrumb from '@/components/navigation/Breadcrumb.vue';
     import CTA from '@/components/ui/CTA.vue';
     import Hero from '@/components/ui/Hero.vue';
     import ShareCard from '@/components/ui/ShareCard.vue';
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
     import { useDetailSlug } from '@/composables/data/useDetailSlug';
     import { useViewRecording } from '@/composables/data/useViewRecording';
+    import { useBreadcrumbSeo } from '@/composables/seo/useBreadcrumbSeo';
     import { useArticleSeo } from '@/composables/seo/useSeo';
     import { useReadingProgress } from '@/composables/ui/useReadingProgress';
     import { useTableOfContents } from '@/composables/ui/useTableOfContents';
@@ -181,7 +219,10 @@
         useRelatedArticles,
         useRecordArticleView,
     } from '@/services/api/modules/articles';
+    import { useFeaturedStacks } from '@/services/api/modules/stacks';
     import { normalizeContent } from '@/services/utils/contentParser';
+
+    import type { BreadcrumbSeoItem } from '@/types/composables/seo';
 
     const router = useRouter();
 
@@ -204,6 +245,19 @@
         return popularArticles.value?.filter((a) => a.slug !== slug.value) ?? [];
     });
 
+    // Resolve article tags against known stacks for internal linking
+    const { data: allStacks } = useFeaturedStacks(100);
+    const resolvedStacks = computed(() => {
+        const tags = currentArticle.value?.tags ?? [];
+        const stacks = allStacks.value ?? [];
+        if (!tags.length || !stacks.length) {
+            return [];
+        }
+        return stacks.filter((s) =>
+            tags.some((tag) => s.name.toLowerCase() === tag.toLowerCase()),
+        );
+    });
+
     // Record view
     const { mutate: recordView } = useRecordArticleView();
     useViewRecording(currentArticle, recordView);
@@ -211,12 +265,22 @@
     // Accessibility
     const { announceNavigation } = useAnnounce();
 
+    // Breadcrumb
+    const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
+
     // SEO
     watch(
         currentArticle,
         (article) => {
             if (article) {
                 useArticleSeo(article);
+                const { items } = useBreadcrumbSeo({
+                    meta: {
+                        title: article.title,
+                        category: article.category,
+                    },
+                });
+                breadcrumbItems.value = items.value;
                 announceNavigation(`Article: ${article.title}`);
             }
         },
@@ -549,6 +613,38 @@
 
         &__text {
             line-height: 1.5;
+        }
+    }
+
+    /* Article Stacks (maillage interne) */
+    .article-stacks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: vars.$spacing-xs;
+
+        &__item {
+            display: inline-flex;
+            align-items: center;
+            gap: vars.$spacing-xs;
+            padding: 4px 10px;
+            font-size: vars.$font-size-sm;
+            color: vars.$text-secondary;
+            background: fn.color-alpha(vars.$primary-color, 0.06);
+            border-radius: vars.$border-radius-full;
+            text-decoration: none;
+            transition: background 0.2s ease, color 0.2s ease;
+
+            &:hover {
+                background: fn.color-alpha(vars.$primary-color, 0.14);
+                color: vars.$primary-color;
+            }
+        }
+
+        &__logo {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            flex-shrink: 0;
         }
     }
 

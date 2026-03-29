@@ -4,13 +4,16 @@ import csv
 import io
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import openpyxl
 from django.apps import apps
 from django.core.files.uploadedfile import UploadedFile
 from django.db import DatabaseError, IntegrityError, OperationalError, transaction
 from django.utils import timezone
+
+if TYPE_CHECKING:
+    from django.db import models
 
 from ..models import ImportJob
 from .strategies import CsvImportStrategy, ImportStrategy, JsonImportStrategy, XlsxImportStrategy
@@ -353,7 +356,7 @@ class ImporterService:
     @classmethod
     def _import_record(
         cls,
-        model_class,
+        model_class: "type[models.Model]",
         data: dict[str, Any],
         module: str,
         *,
@@ -363,16 +366,23 @@ class ImporterService:
     ) -> Any:
         """Importe un enregistrement."""
         # Handle image field - match key in data with uploaded image
-        if image_field and images and image_field in data:
+        if image_field and image_field in data:
             image_key = data.get(image_field)
-            if isinstance(image_key, str) and image_key in images:
+            if isinstance(image_key, str) and images and image_key in images:
                 data[image_field] = images[image_key]
-            else:
-                # Remove string value if no matching image found
+            elif isinstance(image_key, str):
+                # Remove string path if no matching uploaded image — prevents
+                # SuspiciousFileOperation when the path is absolute (e.g. /media/...)
                 data.pop(image_field, None)
 
-        # Filter out fields that don't exist on the model
-        model_field_names = {f.name for f in model_class._meta.get_fields()}
+        # Filter out fields that don't exist as concrete/forward fields on the model.
+        # get_fields() includes reverse relations (e.g. resources on Stack) which
+        # cannot be directly assigned — exclude them via the auto_created check.
+        model_field_names = {
+            f.name
+            for f in model_class._meta.get_fields()
+            if not getattr(f, "auto_created", False) or getattr(f, "concrete", False)
+        }
         data = {k: v for k, v in data.items() if k in model_field_names}
 
         # Handle foreign keys
@@ -445,7 +455,7 @@ class ImporterService:
             if field in resolved and resolved[field] is not None:
                 value = resolved[field]
                 # Si c'est deja un objet, ne pas le resoudre
-                if not isinstance(value, (str, int)):
+                if not isinstance(value, str | int):
                     continue
 
                 try:
@@ -470,7 +480,7 @@ class ImporterService:
         return resolved
 
     @classmethod
-    def _extract_m2m_fields(cls, data: dict[str, Any], model_class) -> dict[str, list]:
+    def _extract_m2m_fields(cls, data: dict[str, Any], model_class: "type[models.Model]") -> dict[str, list]:
         """Extrait et supprime les champs M2M de data."""
         m2m_fields = {}
         m2m_field_names = [f.name for f in model_class._meta.get_fields() if f.many_to_many and not f.auto_created]

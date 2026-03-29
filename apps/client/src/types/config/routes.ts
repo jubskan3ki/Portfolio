@@ -26,6 +26,7 @@ export interface AppRoutes {
     BLOG: BlogRoutes;
     PROJECTS: ProjectsRoutes;
     STACKS: StacksRoutes;
+    ABOUT: Route;
     CONTACT: Route;
     EXPERIENCE: Route;
     ERROR_404: Route;

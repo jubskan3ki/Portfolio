@@ -1,0 +1,232 @@
+{
+  "module": "experiences",
+  "exported_at": "2026-03-29T12:34:51.278568+00:00",
+  "count": 8,
+  "data": [
+    {
+      "id": 4,
+      "title": "Développeur Front-end",
+      "company": "Synerg&#x27;hetic (Junior-Entreprise HETIC)",
+      "location": "Montreuil, Île-de-France, France",
+      "period": "Oct 2025 - Nov 2025",
+      "startDate": "2025-10-01",
+      "endDate": "2025-11-30",
+      "isCurrent": false,
+      "description": "Mission freelance via Synerg&#x27;hetic (Junior-Entreprise d&#x27;HETIC) pour le développement d&#x27;un plan interactif web destiné au salon B2B Effervescence 93, organisé par la CCI Seine-Saint-Denis.",
+      "logo": "/media/synerghetic",
+      "technologies": [
+        "Vue.js",
+        "TypeScript",
+        "SVG",
+        "Sass",
+        "Vite"
+      ],
+      "achievements": [
+        "Développement d'une carte SVG interactive avec zoom, survol des stands et mise en avant au clic pour une navigation intuitive du salon",
+        "Implémentation d'une recherche multi-critères (nom d'entreprise, secteur d'activité, numéro de stand) et de filtres par secteur avec système de favoris",
+        "Création de fiches exposant complètes (informations, contacts, liens, position sur le plan) et de parcours thématiques de visite",
+        "Développement d'un back-office d'administration pour la gestion des exposants, stands et contenus jusqu'à J-3 de l'événement",
+        "Projet livré en open source, démontrant des compétences en manipulation SVG, gestion d'état complexe et UX interactive"
+      ],
+      "type": "freelance"
+    },
+    {
+      "id": 3,
+      "title": "Développeur Full Stack",
+      "company": "DeviProp",
+      "location": "Vélizy-Villacoublay, Île-de-France, France",
+      "period": "Sep 2025 - Present",
+      "startDate": "2025-09-01",
+      "endDate": null,
+      "isCurrent": true,
+      "description": "Développement et évolution d&#x27;un SaaS de gestion de devis pour professionnels du bâtiment, avec un focus sur les systèmes d&#x27;abonnement, le paiement en ligne et la sécurité applicative.",
+      "logo": "/media/deviprop",
+      "technologies": [
+        "TypeScript",
+        "NestJS",
+        "Vue.js",
+        "PostgreSQL",
+        "Stripe",
+        "JWT",
+        "Docker",
+        "Redis"
+      ],
+      "achievements": [
+        "Conception et mise en place d'un système d'abonnements FREE / PREMIUM avec limites configurables (utilisateurs, projets, niveaux WBS, sessions, imports, stockage)",
+        "Intégration complète de Stripe : paiements récurrents, webhooks sécurisés, gestion des changements de plan et des échecs de paiement",
+        "Refonte complète de l'interface et de la base de code front/back : nouvelle charte graphique, amélioration de la lisibilité, mise en place d'ESLint + Prettier",
+        "Implémentation d'une authentification moderne JWT avec refresh token rotation, cookies sécurisés HTTPOnly, et device fingerprinting pour la gestion multi-sessions",
+        "Renforcement global de la sécurité : headers de sécurité (CSP, HSTS), CORS strict, validation des entrées, rate limiting, hashage bcrypt, et protection des webhooks Stripe"
+      ],
+      "type": "professional"
+    },
+    {
+      "id": 5,
+      "title": "Président",
+      "company": "HeticTacToe",
+      "location": "Montreuil, Île-de-France, France",
+      "period": "Feb 2025 - Nov 2025",
+      "startDate": "2025-02-01",
+      "endDate": "2025-11-30",
+      "isCurrent": false,
+      "description": "Direction d&#x27;une association étudiante de jeux de société au sein d&#x27;HETIC, axée sur la convivialité, la stratégie et l&#x27;esprit d&#x27;équipe entre étudiants et promotions.",
+      "logo": "/media/hetictactoe",
+      "technologies": [],
+      "achievements": [
+        "Direction globale de l'association : définition de la vision, planification stratégique des événements et coordination du bureau",
+        "Organisation de soirées jeux, tournois inter-promotions et sessions d'initiation à de nouveaux jeux de stratégie",
+        "Pilotage de la communication interne et externe : création de visuels, gestion des réseaux sociaux et annonces événementielles",
+        "Représentation de l'association auprès de l'administration HETIC et des partenaires, développement des compétences de leadership et de gestion de projet"
+      ],
+      "type": "associative"
+    },
+    {
+      "id": 6,
+      "title": "Développeur Full Stack",
+      "company": "StudiMove",
+      "location": "Bondy, Île-de-France, France",
+      "period": "Oct 2024 - Mar 2025",
+      "startDate": "2024-10-01",
+      "endDate": "2025-03-31",
+      "isCurrent": false,
+      "description": "Développement d&#x27;une plateforme complète de réservation d&#x27;événements pour étudiants et jeunes actifs, incluant une API Go, un dashboard React et une application mobile Flutter.",
+      "logo": "/media/studimove",
+      "technologies": [
+        "Go",
+        "React",
+        "TypeScript",
+        "Flutter",
+        "Docker",
+        "PostgreSQL",
+        "Nginx",
+        "Redux",
+        "Linux"
+      ],
+      "achievements": [
+        "Développement du back-end en Go : APIs REST complètes, logique métier, intégration des paiements et gestion du cycle de vie des événements",
+        "Création d'un dashboard web en React + TypeScript + Redux pour les organisateurs : gestion des événements, suivi des ventes, analytics et gestion des utilisateurs",
+        "Développement de l'application mobile Flutter : parcours de réservation, programme de fidélité, notifications push et gestion du profil utilisateur",
+        "Mise en place de l'infrastructure de production : Docker Compose, VPS Debian, Nginx (reverse proxy + SSL), PostgreSQL, stockage S3-compatible, scripts de migration et de backup automatisé"
+      ],
+      "type": "professional"
+    },
+    {
+      "id": 1,
+      "title": "Master CTO &amp; Tech Lead",
+      "company": "HETIC",
+      "location": "Montreuil, Île-de-France, France",
+      "period": "Oct 2024 - Nov 2026",
+      "startDate": "2024-10-01",
+      "endDate": "2026-11-30",
+      "isCurrent": false,
+      "description": "Formation d&#x27;excellence orientée architecture logicielle, management technique et pilotage de projets numériques complexes. Approfondissement des pratiques DevOps, cloud, sécurité et leadership technique.",
+      "logo": "/media/hetic",
+      "technologies": [
+        "Architecture logicielle",
+        "Cloud Computing",
+        "DevOps",
+        "Sécurité",
+        "REST API",
+        "GraphQL",
+        "Kubernetes",
+        "Terraform",
+        "Ansible"
+      ],
+      "achievements": [
+        "Approfondissement de l'architecture logicielle (microservices, event-driven, DDD), du Cloud (AWS), du DevOps (Docker, Kubernetes, CI/CD) et de la sécurité applicative",
+        "Conception et mise en place d'APIs REST et GraphQL robustes pour des solutions performantes et évolutives",
+        "Pratique avancée des méthodes agiles (Scrum, Kanban), tests unitaires et d'intégration, documentation technique et revue de code systématique",
+        "Développement des compétences de leadership technique, gestion d'équipe, vision produit et communication avec les parties prenantes"
+      ],
+      "type": "education"
+    },
+    {
+      "id": 7,
+      "title": "Développeur Full Stack",
+      "company": "Unboared",
+      "location": "Ville de Paris, Île-de-France, France",
+      "period": "Oct 2023 - Sep 2024",
+      "startDate": "2023-10-01",
+      "endDate": "2024-09-30",
+      "isCurrent": false,
+      "description": "Développement de jeux interactifs web et d&#x27;outils B2B autour d&#x27;une plateforme de gaming en ligne, avec un focus sur les performances graphiques et l&#x27;expérience utilisateur.",
+      "logo": "/media/unboared",
+      "technologies": [
+        "React",
+        "TypeScript",
+        "Pixi.js",
+        "Node.js",
+        "Redux",
+        "WebSocket"
+      ],
+      "achievements": [
+        "Conception et développement d'un framework de jeux basé sur la librairie interne d'Unboared et Pixi.js pour le rendu 2D haute performance",
+        "Développement de plusieurs jeux interactifs en React avec optimisation des performances (requestAnimationFrame, canvas, gestion mémoire) et expérience utilisateur soignée",
+        "Amélioration de jeux existants : ajout de fonctionnalités gameplay, refonte des interfaces, optimisation de l'engagement et de la rétention des joueurs",
+        "Développement d'un dashboard B2B en React et TypeScript pour les partenaires, avec données en temps réel via WebSocket et visualisations interactives"
+      ],
+      "type": "professional"
+    },
+    {
+      "id": 8,
+      "title": "Développeur Full Stack",
+      "company": "Siko Mobility",
+      "location": "Ville de Paris, Île-de-France, France",
+      "period": "Oct 2022 - Sep 2023",
+      "startDate": "2022-10-01",
+      "endDate": "2023-09-30",
+      "isCurrent": false,
+      "description": "Refonte et modernisation de la présence digitale et des outils internes d&#x27;une startup de mobilité, avec un focus sur l&#x27;automatisation des processus et l&#x27;expérience client.",
+      "logo": "/media/sikomobility",
+      "technologies": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "CSS",
+        "Node.js",
+        "Git"
+      ],
+      "achievements": [
+        "Refonte complète du site vitrine en Next.js et TypeScript avec SSR, modernisant l'image digitale de l'entreprise et améliorant le SEO",
+        "Développement d'interfaces React pour automatiser les souscriptions d'abonnement et simplifier le parcours client de bout en bout",
+        "Conception de formulaires avancés avec validation dynamique pour la collecte et l'analyse de données clients",
+        "Création d'un tableau de bord interactif en React pour le suivi de la satisfaction client avec graphiques, KPIs et export de données"
+      ],
+      "type": "professional"
+    },
+    {
+      "id": 2,
+      "title": "Bachelor Développement web et mobile",
+      "company": "HETIC",
+      "location": "Montreuil, Île-de-France, France",
+      "period": "Sep 2021 - Oct 2024",
+      "startDate": "2021-09-01",
+      "endDate": "2024-10-31",
+      "isCurrent": false,
+      "description": "Formation intensive en développement web et mobile full-stack, avec une forte dimension projet et immersion professionnelle en alternance dès la 2ᵉ année.",
+      "logo": "/media/hetic",
+      "technologies": [
+        "React",
+        "Next.js",
+        "TypeScript",
+        "JavaScript",
+        "Go",
+        "Python",
+        "PHP",
+        "Flutter",
+        "PostgreSQL",
+        "MongoDB",
+        "MySQL",
+        "Docker",
+        "Git"
+      ],
+      "achievements": [
+        "Maîtrise des fondamentaux du développement front-end (HTML, CSS, JavaScript, React, Vue.js) et back-end (Node.js, Python, PHP, Go)",
+        "Pratique des méthodologies agiles (Scrum) et DevOps (Docker, Git, CI/CD), avec un focus sur la performance et la sécurité",
+        "Réalisation de nombreux projets concrets en conditions réelles avec des entreprises partenaires et la Junior-Entreprise",
+        "Alternance dès la 2ᵉ année (Siko Mobility, Unboared, StudiMove), permettant d'appliquer les acquis en environnement professionnel"
+      ],
+      "type": "education"
+    }
+  ]
+}

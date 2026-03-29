@@ -171,6 +171,8 @@
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
     import { useFilters } from '@/composables/data/useFilters';
+    import { useItemListSeo } from '@/composables/seo/useItemListSeo';
+    import { usePaginationSeo } from '@/composables/seo/usePaginationSeo';
     import { useBlogSeo } from '@/composables/seo/useSeo';
     import { useScrollToTop } from '@/composables/ui/useScrollToTop';
     import { filterPresets } from '@/config/filterPresets';
@@ -234,6 +236,19 @@
     const totalArticles = computed(() => articlesData.value?.pagination?.total ?? 0);
     const totalPages = computed(() => articlesData.value?.pagination?.totalPages ?? 1);
     const popularArticles = computed(() => popularArticlesData.value ?? []);
+
+    // Pagination SEO (canonical, prev, next)
+    usePaginationSeo({ basePath: '/blog', currentPage, totalPages });
+
+    // ItemList Schema.org pour resultats enrichis
+    const articleListItems = computed(() =>
+        articles.value.map((a) => ({ name: a.title, url: `/blog/${a.slug}`, image: a.image })),
+    );
+    watch(articleListItems, (items) => {
+        if (items.length) {
+            useItemListSeo({ items: articleListItems });
+        }
+    }, { immediate: true });
     const hasArticles = computed(() => (articles.value?.length ?? 0) > 0);
 
     const contentKey = computed(() => `${selectedCategory.value ?? 'all'}-${currentPage.value}-${searchQuery.value}`);

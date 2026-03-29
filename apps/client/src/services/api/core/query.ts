@@ -15,11 +15,11 @@ const QUERY_PRESETS: Record<QueryPreset, { staleTime: number; refetchInterval?: 
     realtime: { staleTime: CACHE_TIMES.REALTIME, refetchInterval: CACHE_TIMES.REALTIME },
 };
 
-function createQuery<TData>(
+function createQuery<TData, TSelect = TData>(
     preset: QueryPreset,
     queryKey: MaybeRef<readonly unknown[]>,
     queryFn: () => Promise<TData>,
-    options?: QueryOptions<TData>,
+    options?: QueryOptions<TData, TSelect>,
 ) {
     return useQuery({
         queryKey: computed(() => unref(queryKey)),
@@ -29,26 +29,26 @@ function createQuery<TData>(
     });
 }
 
-export const createListQuery = <TData>(
+export const createListQuery = <TData, TSelect = TData>(
     queryKey: MaybeRef<readonly unknown[]>,
     queryFn: () => Promise<TData>,
-    options?: QueryOptions<TData>,
-) => createQuery('list', queryKey, queryFn, options);
+    options?: QueryOptions<TData, TSelect>,
+) => createQuery<TData, TSelect>('list', queryKey, queryFn, options);
 
-export const createDetailQuery = <TData>(
+export const createDetailQuery = <TData, TSelect = TData>(
     queryKey: MaybeRef<readonly unknown[]>,
     queryFn: () => Promise<TData>,
-    options?: QueryOptions<TData>,
-) => createQuery('detail', queryKey, queryFn, options);
+    options?: QueryOptions<TData, TSelect>,
+) => createQuery<TData, TSelect>('detail', queryKey, queryFn, options);
 
-export const createStaticQuery = <TData>(
+export const createStaticQuery = <TData, TSelect = TData>(
     queryKey: MaybeRef<readonly unknown[]>,
     queryFn: () => Promise<TData>,
-    options?: QueryOptions<TData>,
-) => createQuery('static', queryKey, queryFn, options);
+    options?: QueryOptions<TData, TSelect>,
+) => createQuery<TData, TSelect>('static', queryKey, queryFn, options);
 
-export const createRealtimeQuery = <TData>(
+export const createRealtimeQuery = <TData, TSelect = TData>(
     queryKey: MaybeRef<readonly unknown[]>,
     queryFn: () => Promise<TData>,
-    options?: QueryOptions<TData>,
-) => createQuery('realtime', queryKey, queryFn, options);
+    options?: QueryOptions<TData, TSelect>,
+) => createQuery<TData, TSelect>('realtime', queryKey, queryFn, options);

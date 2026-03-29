@@ -51,7 +51,7 @@ def worker_ready_handler(sender, **_kwargs):
 
 
 @task_failure.connect
-def handle_task_failure(task_id, exception, _traceback, _einfo, **_kwargs):
+def handle_task_failure(task_id=None, exception=None, **_kwargs):
     """Log task failures."""
     logger.exception("Task %s failed: %s", task_id, exception)
 

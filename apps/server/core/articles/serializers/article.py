@@ -80,6 +80,9 @@ class _ArticleReadFieldsMixin(serializers.Serializer):
     category = serializers.StringRelatedField()
     tags = serializers.SerializerMethodField()
     date = serializers.DateTimeField(source="published_date")
+    updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
+    seoTitle = serializers.CharField(source="seo_title", read_only=True)
+    metaDescription = serializers.CharField(source="meta_description", read_only=True)
     readTime = serializers.IntegerField(source="read_time")
     views = serializers.IntegerField(source="view_count")
 
@@ -104,6 +107,7 @@ class ArticleListSerializer(_ArticleReadFieldsMixin, serializers.ModelSerializer
             "category",
             "tags",
             "date",
+            "updatedAt",
             "readTime",
             "views",
             "is_published",
@@ -119,12 +123,15 @@ class ArticleDetailSerializer(_ArticleReadFieldsMixin, serializers.ModelSerializ
             "id",
             "title",
             "slug",
+            "seoTitle",
+            "metaDescription",
             "excerpt",
             "content",
             "image",
             "category",
             "tags",
             "date",
+            "updatedAt",
             "readTime",
             "views",
             "is_published",

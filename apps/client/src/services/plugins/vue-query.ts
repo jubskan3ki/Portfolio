@@ -81,11 +81,28 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     nuxtApp.vueApp.use(VueQueryPlugin, options);
 
-    // SSR: Dehydrate state after rendering
+    // SSR: Dehydrate only above-fold critical queries to reduce hydration payload
     if (import.meta.server) {
         nuxtApp.hooks.hook('app:rendered', () => {
             if (nuxtApp.payload) {
-                nuxtApp.payload.vueQueryState = dehydrate(queryClient);
+                const dehydratedState = dehydrate(queryClient, {
+                    shouldDehydrateQuery: (query) => {
+                        // Only dehydrate successful queries — pending promises crash devalue
+                        if (query.state.status !== 'success') {
+                            return false;
+                        }
+                        const key = query.queryKey;
+                        const criticalPrefixes = ['stacks'];
+                        return typeof key[0] === 'string' && criticalPrefixes.includes(key[0]);
+                    },
+                });
+                // Strip any residual promise fields that devalue cannot serialize
+                if (dehydratedState.queries) {
+                    for (const q of dehydratedState.queries) {
+                        delete (q as unknown as Record<string, unknown>).promise;
+                    }
+                }
+                nuxtApp.payload.vueQueryState = dehydratedState;
             }
         });
     }

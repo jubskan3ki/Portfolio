@@ -102,6 +102,12 @@ class Article(OptimizeImageMixin, AutoSlugMixin, models.Model):
     id: int
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=250, unique=True, blank=True)
+    seo_title = models.CharField(
+        max_length=70, blank=True, help_text="Titre SEO (max 70 car.). Utilise le titre si vide."
+    )
+    meta_description = models.CharField(
+        max_length=160, blank=True, help_text="Meta description (max 160 car.). Utilise l'extrait si vide."
+    )
     excerpt = models.TextField()
     content = models.JSONField(default=list)
     image = models.ImageField(

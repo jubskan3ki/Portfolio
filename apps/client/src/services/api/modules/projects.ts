@@ -29,6 +29,7 @@ import type {
     ProjectStatusCreateData,
     ProjectStatusUpdateData,
 } from '@/types/feature/project';
+import type { QueryOptions } from '@/types/services/api';
 import type { MaybeRef } from 'vue';
 
 export const projectKeys = {
@@ -128,8 +129,8 @@ export function useProject(slug: MaybeRef<string>) {
     );
 }
 
-export function useFeaturedProjects(limit = 6) {
-    return createStaticQuery(projectKeys.featured(), () => projectsApi.getFeatured(limit));
+export function useFeaturedProjects(limit = 6, options?: QueryOptions<Project[]>) {
+    return createStaticQuery(projectKeys.featured(), () => projectsApi.getFeatured(limit), options);
 }
 
 export function useProjectCategories() {

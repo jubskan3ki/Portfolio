@@ -29,6 +29,7 @@ import type {
     StackResourceUpdateData,
     StackResourceFilters,
 } from '@/types/feature/stacks';
+import type { QueryOptions } from '@/types/services/api';
 import type { MaybeRef } from 'vue';
 
 export const stackKeys = {
@@ -141,8 +142,8 @@ export function useStack(slug: MaybeRef<string>) {
     );
 }
 
-export function useFeaturedStacks(limit = 10) {
-    return createListQuery(stackKeys.featured(limit), () => stacksApi.getFeatured(limit));
+export function useFeaturedStacks(limit = 10, options?: QueryOptions<Stack[]>) {
+    return createListQuery(stackKeys.featured(limit), () => stacksApi.getFeatured(limit), options);
 }
 
 export function useStackCategories() {

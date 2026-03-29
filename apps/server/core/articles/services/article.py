@@ -12,6 +12,8 @@ from config.constants import (
     DEFAULT_POPULAR_ARTICLES,
     DEFAULT_RELATED_ARTICLES,
 )
+from utils.cache.decorators import cached_queryset
+from utils.cache.keys import CacheKeys
 from utils.exceptions.service import NotFoundError
 from utils.services import BaseService, apply_update, increment_view_count
 
@@ -231,6 +233,10 @@ class ArticleService(BaseService["Article"]):
         article.delete()
 
     @classmethod
+    @cached_queryset(
+        lambda slug, **_kw: CacheKeys.make_key("articles", "category", slug),
+        timeout=CacheKeys.TTL_MEDIUM,
+    )
     def get_by_category(cls, category_slug: str, *, published_only: bool = True) -> QuerySet[Article]:
         """Recupere les articles d'une categorie specifique."""
         if published_only:
@@ -238,6 +244,10 @@ class ArticleService(BaseService["Article"]):
         return cls._get_detail_queryset().filter(category__slug=category_slug)
 
     @classmethod
+    @cached_queryset(
+        lambda tag, **_kw: CacheKeys.make_key("articles", "tag", tag),
+        timeout=CacheKeys.TTL_MEDIUM,
+    )
     def get_by_tag(cls, tag_name: str, *, published_only: bool = True) -> QuerySet[Article]:
         """Recupere les articles avec un tag specifique."""
         if published_only:
@@ -245,11 +255,19 @@ class ArticleService(BaseService["Article"]):
         return cls._get_detail_queryset().filter(tags__name__iexact=tag_name)
 
     @classmethod
+    @cached_queryset(
+        lambda limit=DEFAULT_FEATURED_ARTICLES: CacheKeys.article_featured(limit),
+        timeout=CacheKeys.TTL_MEDIUM,
+    )
     def get_featured(cls, limit: int = DEFAULT_FEATURED_ARTICLES) -> ArticleQuerySet:
         """Recupere les articles mis en avant."""
         return Article.objects.featured()[:limit]
 
     @classmethod
+    @cached_queryset(
+        lambda limit=DEFAULT_POPULAR_ARTICLES: CacheKeys.article_popular(limit),
+        timeout=CacheKeys.TTL_MEDIUM,
+    )
     def get_popular(cls, limit: int = DEFAULT_POPULAR_ARTICLES) -> ArticleQuerySet:
         """Recupere les articles les plus populaires."""
         return Article.objects.popular(limit)

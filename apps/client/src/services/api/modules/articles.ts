@@ -26,6 +26,7 @@ import type {
     TagCreateData,
     TagUpdateData,
 } from '@/types/feature/blog';
+import type { QueryOptions } from '@/types/services/api';
 import type { MaybeRef } from 'vue';
 
 export const articleKeys = {
@@ -180,8 +181,8 @@ export function usePopularArticles(limit = 5) {
     return createStaticQuery(articleKeys.popular(limit), () => articlesApi.getPopular(limit));
 }
 
-export function useRecentArticles(limit = 5) {
-    return createListQuery(articleKeys.recent(limit), () => articlesApi.getRecent(limit));
+export function useRecentArticles(limit = 5, options?: QueryOptions<Article[]>) {
+    return createListQuery(articleKeys.recent(limit), () => articlesApi.getRecent(limit), options);
 }
 
 export function useArticleCategories() {

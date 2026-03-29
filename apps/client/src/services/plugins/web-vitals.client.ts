@@ -130,10 +130,15 @@ export default defineNuxtPlugin((nuxtApp) => {
         return;
     }
 
+    // Skip web vitals in dev — backend is often not running
+    if (import.meta.dev) {
+        return;
+    }
+
     const runtimeConfig = useRuntimeConfig();
     const sampleRate = clampSampleRate(
         runtimeConfig.public.webVitalsSampleRate as string | number | undefined,
-        import.meta.dev ? 1 : 0.2,
+        0.2,
     );
 
     if (Math.random() > sampleRate) {

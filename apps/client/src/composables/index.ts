@@ -33,6 +33,9 @@ export { generateSlug, useSlugGenerator } from './forms/useSlugGenerator';
 export { usePrefetch } from './performance/usePrefetch';
 
 // SEO
+export { useBreadcrumbSeo } from './seo/useBreadcrumbSeo';
+export { useItemListSeo } from './seo/useItemListSeo';
+export { usePaginationSeo } from './seo/usePaginationSeo';
 export { useSeo } from './seo/useSeo';
 
 // UI

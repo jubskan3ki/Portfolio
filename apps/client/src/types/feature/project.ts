@@ -14,6 +14,7 @@ export interface Project {
     status: string;
     technologies: string[];
     date: string;
+    updatedAt?: string;
     views: number;
 }
 
@@ -26,6 +27,8 @@ export interface ProjectDetail extends Project {
         github?: string;
         documentation?: string;
     };
+    seoTitle?: string;
+    metaDescription?: string;
 }
 
 // Type pour une categorie de projets

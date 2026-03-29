@@ -22,6 +22,7 @@ import type {
     ExperienceTypeCreateData,
     ExperienceTypeUpdateData,
 } from '@/types/feature/experience';
+import type { QueryOptions } from '@/types/services/api';
 import type { MaybeRef } from 'vue';
 
 export const experienceKeys = {
@@ -111,8 +112,8 @@ export function useExperiencesByType(typeName: MaybeRef<string>) {
     );
 }
 
-export function useProfessionalExperiences() {
-    return createStaticQuery(experienceKeys.professional(), () => experiencesApi.getByType('professional'));
+export function useProfessionalExperiences(options?: QueryOptions<Experience[]>) {
+    return createStaticQuery(experienceKeys.professional(), () => experiencesApi.getByType('professional'), options);
 }
 
 export function useExperienceTypes() {

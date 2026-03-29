@@ -97,6 +97,7 @@ export interface Article extends ArticleBase {
     category: string;
     tags: string[];
     date: string;
+    updatedAt?: string;
     readTime: number;
     views: number;
 }
@@ -104,6 +105,8 @@ export interface Article extends ArticleBase {
 export interface ArticleDetail extends Article {
     content: ContentBlock[];
     isPublished?: boolean;
+    seoTitle?: string;
+    metaDescription?: string;
 }
 
 export interface Category extends CategoryBase {

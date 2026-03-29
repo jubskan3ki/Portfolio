@@ -31,6 +31,13 @@
                 </template>
             </Hero>
 
+            <!-- Breadcrumb -->
+            <Breadcrumb
+                v-if="breadcrumbItems.length > 1"
+                :items="breadcrumbItems"
+                separator="chevron"
+            />
+
             <!-- Content -->
             <Main variant="default" size="large">
                 <DetailPageLayout sidebar-width="360px">
@@ -43,6 +50,8 @@
                                     :alt="currentProject.title"
                                     :lazy="false"
                                     object-fit="cover"
+                                    width="600"
+                                    height="400"
                                     class="project-identity__image"
                                 />
                             </div>
@@ -224,7 +233,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
@@ -234,16 +243,20 @@
     import Main from '@/components/layouts/Main.vue';
     import Section from '@/components/layouts/Section.vue';
     import LoadingState from '@/components/loaders/LoadingState.vue';
+    import Breadcrumb from '@/components/navigation/Breadcrumb.vue';
     import CTA from '@/components/ui/CTA.vue';
     import Hero from '@/components/ui/Hero.vue';
     import ShareCard from '@/components/ui/ShareCard.vue';
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
     import { useDetailSlug } from '@/composables/data/useDetailSlug';
     import { useViewRecording } from '@/composables/data/useViewRecording';
+    import { useBreadcrumbSeo } from '@/composables/seo/useBreadcrumbSeo';
     import { useProjectSeo } from '@/composables/seo/useSeo';
     import { ROUTES } from '@/config/routes';
     import { useProject, useFeaturedProjects, useRecordProjectView } from '@/services/api/modules/projects';
     import { useFeaturedStacks } from '@/services/api/modules/stacks';
+
+    import type { BreadcrumbSeoItem } from '@/types/composables/seo';
 
     const router = useRouter();
 
@@ -262,12 +275,19 @@
     // Accessibility
     const { announceNavigation } = useAnnounce();
 
+    // Breadcrumb
+    const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
+
     // SEO and accessibility
     watch(
         currentProject,
         (project) => {
             if (project) {
                 useProjectSeo(project);
+                const { items } = useBreadcrumbSeo({
+                    meta: { title: project.title },
+                });
+                breadcrumbItems.value = items.value;
                 announceNavigation(`Projet: ${project.title}`);
             }
         },

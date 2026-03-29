@@ -35,6 +35,7 @@
                         icon="layout"
                         color="#673c5c"
                         variant="light"
+                        to="/stacks?category=Frontend"
                     />
                     <ExpertiseCard
                         title="DevOps"
@@ -42,6 +43,7 @@
                         icon="cloud"
                         color="#ff2453"
                         variant="primary"
+                        to="/stacks?category=DevOps"
                     />
                     <ExpertiseCard
                         title="Back-end"
@@ -49,6 +51,7 @@
                         icon="server"
                         color="#43889d"
                         variant="dark"
+                        to="/stacks?category=Backend"
                     />
                     <ExpertiseCard
                         title="Mobile"
@@ -56,6 +59,7 @@
                         icon="smartphone"
                         color="#ac72a0"
                         variant="secondary"
+                        to="/stacks?category=Mobile"
                     />
                 </div>
             </div>
@@ -70,7 +74,7 @@
             :animated="!shouldDisableParallax"
             variant="glass"
         >
-            <div class="container">
+            <div ref="experiencesTargetRef" class="container">
                 <div class="project-timeline">
                     <LazyExperienceTimeline :experiences="professionalExperiences" :limit="3" compact />
 
@@ -94,7 +98,7 @@
             variant="light"
         >
             <div class="container">
-                <LazyProjectCarousel :projects="featuredProjects" :limit="5" autoplay />
+                <LazyProjectCarousel :limit="5" autoplay />
 
                 <div class="section-actions">
                     <BaseButton :to="ROUTES.PROJECTS" variant="primary">
@@ -115,7 +119,6 @@
         >
             <div class="container">
                 <LazyStackCarousel
-                    :stacks="stacks"
                     :limit="10"
                     autoplay
                     :slides-per-view="6"
@@ -140,7 +143,7 @@
             :animated="!shouldDisableParallax"
             variant="light"
         >
-            <div class="container">
+            <div ref="articlesTargetRef" class="container">
                 <LazyArticleCarousel
                     :articles="articles"
                     :limit="4"
@@ -195,15 +198,16 @@
     import HeroSection from '@/components/feature/home/HeroSection.vue';
     import Section from '@/components/layouts/Section.vue';
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
+    import { useViewportTrigger } from '@/composables/performance/useViewportTrigger';
     import { useHomeSeo } from '@/composables/seo/useSeo';
     import { useResponsive } from '@/composables/ui/useResponsive';
     import { ROUTES } from '@/config/routes';
     import { useRecentArticles } from '@/services/api/modules/articles';
-    import { contactApi, useContactInfo } from '@/services/api/modules/contact';
+    import { contactApi } from '@/services/api/modules/contact';
     import { useProfessionalExperiences } from '@/services/api/modules/experiences';
-    import { useFeaturedProjects } from '@/services/api/modules/projects';
-    import { useFeaturedStacks } from '@/services/api/modules/stacks';
+    import { stacksApi } from '@/services/api/modules/stacks';
 
+    import type { HeroStack } from '@/types/feature/home';
     import type { Stack } from '@/types/feature/stacks';
 
     // SEO
@@ -329,119 +333,102 @@
         document.removeEventListener('visibilitychange', handleVisibilityChange);
     });
 
-    // API Queries
-    const { data: projectsData } = useFeaturedProjects(5);
-    const { data: stacksData } = useFeaturedStacks(10);
-    const { data: experiencesData } = useProfessionalExperiences();
-    const { data: articlesData } = useRecentArticles(4);
-    const { data: contactInfo } = useContactInfo();
-
-    // Projets mis en avant
-    const featuredProjects = computed(() => projectsData.value ?? []);
-
-    // Technologies avec fallback (sans images locales - utiliser les icônes)
-    const defaultStacks: Stack[] = [
-        {
-            id: 1,
-            name: 'Vue.js',
-            slug: 'vue',
-            logo: '',
-            category: 'Frontend',
-            tags: ['JavaScript', 'Framework'],
-            experience: 4,
-            level: 90,
-        },
-        {
-            id: 2,
-            name: 'React',
-            slug: 'react',
-            logo: '',
-            category: 'Frontend',
-            tags: ['JavaScript', 'Library'],
-            experience: 4,
-            level: 85,
-        },
-        {
-            id: 3,
-            name: 'TypeScript',
-            slug: 'typescript',
-            logo: '',
-            category: 'Language',
-            tags: ['JavaScript', 'Typed'],
-            experience: 4,
-            level: 90,
-        },
-        {
-            id: 4,
-            name: 'Node.js',
-            slug: 'nodejs',
-            logo: '',
-            category: 'Backend',
-            tags: ['JavaScript', 'Runtime'],
-            experience: 4,
-            level: 80,
-        },
-        {
-            id: 5,
-            name: 'Go',
-            slug: 'go',
-            logo: '',
-            category: 'Backend',
-            tags: ['Systems', 'Fast'],
-            experience: 2,
-            level: 70,
-        },
+    // ── Above-fold: hero stacks — useAsyncData + transform for minimal payload ──
+    const defaultStacks: HeroStack[] = [
+        { id: 1, name: 'Vue.js', logo: '', level: 90 },
+        { id: 2, name: 'React', logo: '', level: 85 },
+        { id: 3, name: 'TypeScript', logo: '', level: 90 },
+        { id: 4, name: 'Node.js', logo: '', level: 80 },
+        { id: 5, name: 'Go', logo: '', level: 70 },
     ];
-    const stacks = computed(() => stacksData.value ?? []);
 
-    // Technologies mises en avant pour le hero (top 5 par niveau)
-    const featuredStacks = computed(() => {
-        const apiStacks = [...stacks.value];
-        const sorted = apiStacks.sort((a, b) => b.level - a.level).slice(0, 5);
-        return sorted.length > 0 ? sorted : defaultStacks;
-    });
+    const { data: heroStacks } = await useAsyncData(
+        'hero-stacks',
+        () => stacksApi.getFeatured(10),
+        {
+            default: () => [] as HeroStack[],
+            transform: (stacks: Stack[]) =>
+                stacks
+                    .sort((a, b) => b.level - a.level)
+                    .slice(0, 5)
+                    .map(({ id, name, logo, level }) => ({ id, name, logo, level })),
+        },
+    );
 
-    // Experiences
+    // ── Above-fold: contact — single request, transform to keep only needed fields ──
+    const { data: contactData } = await useAsyncData(
+        'contact-home',
+        () => contactApi.getInfo(),
+        {
+            default: () => null,
+            transform: (info) => {
+                if (!info) {
+                    return null;
+                }
+                return {
+                    bio: info.bio ?? '',
+                    email: info.email,
+                    phone: info.phone,
+                    city: info.address?.city ?? 'Paris, France',
+                    linkedin: info.socialMedia?.linkedin ?? '',
+                    github: info.socialMedia?.github ?? '',
+                };
+            },
+        },
+    );
+
+    // ── Below-fold: deferred until section nears viewport ──
+    const {
+        targetRef: experiencesTargetRef, // used as template ref
+        enabled: experiencesEnabled,
+    } = useViewportTrigger({ rootMargin: '300px' });
+    void experiencesTargetRef;
+    const { data: experiencesData } = useProfessionalExperiences({ enabled: experiencesEnabled });
+
+    const {
+        targetRef: articlesTargetRef, // used as template ref
+        enabled: articlesEnabled,
+    } = useViewportTrigger({ rootMargin: '300px' });
+    void articlesTargetRef;
+    const { data: articlesData } = useRecentArticles(4, { enabled: articlesEnabled });
+    // ProjectCarousel and StackCarousel fetch their own data internally
+
+    // Computed
+    const featuredStacks = computed(() =>
+        heroStacks.value?.length ? heroStacks.value : defaultStacks,
+    );
+
     const professionalExperiences = computed(() => {
         const data = experiencesData.value;
         return Array.isArray(data) ? data : [];
     });
 
-    // Articles
     const articles = computed(() => articlesData.value ?? []);
 
-    // Bio pour le hero — useAsyncData pour SSR + hydration stable
-    const { data: heroBio } = await useAsyncData(
-        'hero-bio',
-        async () => {
-            const info = await contactApi.getInfo();
-            return info?.bio ?? '';
-        },
-        { default: () => '' },
-    );
+    const heroBio = computed(() => contactData.value?.bio ?? '');
 
-    // Contact info with fallbacks
-    const contactAddress = computed(() => contactInfo.value?.address?.city ?? 'Paris, France');
-    const contactEmail = computed(() => contactInfo.value?.email ?? 'contact@aitaddajuba.fr');
-    const contactPhone = computed(() => contactInfo.value?.phone ?? '+33 6 95 21 71 97');
+    const contactAddress = computed(() => contactData.value?.city ?? 'Paris, France');
+    const contactEmail = computed(() => contactData.value?.email ?? 'contact@aitaddajuba.fr');
+    const contactPhone = computed(() => contactData.value?.phone ?? '+33 6 95 21 71 97');
 
-    // Configuration des liens sociaux
+    const defaultSocialLinks = [
+        { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
+        { name: 'GitHub', icon: 'github', url: 'https://github.com/jubskan3ki' },
+    ];
+
     const socialMediaLinks = computed(() => {
-        if (contactInfo.value?.socialMedia) {
-            const social = contactInfo.value.socialMedia;
-            const links = [];
-            if (social.linkedin) {
-                links.push({ name: 'LinkedIn', icon: 'linkedin', url: social.linkedin });
-            }
-            if (social.github) {
-                links.push({ name: 'GitHub', icon: 'github', url: social.github });
-            }
-            return links;
+        const d = contactData.value;
+        if (!d) {
+            return defaultSocialLinks;
         }
-        return [
-            { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
-            { name: 'GitHub', icon: 'github', url: 'https://github.com/jubskan3ki' },
-        ];
+        const links = [];
+        if (d.linkedin) {
+            links.push({ name: 'LinkedIn', icon: 'linkedin', url: d.linkedin });
+        }
+        if (d.github) {
+            links.push({ name: 'GitHub', icon: 'github', url: d.github });
+        }
+        return links.length ? links : defaultSocialLinks;
     });
 </script>
 

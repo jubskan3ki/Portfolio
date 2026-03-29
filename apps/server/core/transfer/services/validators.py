@@ -121,6 +121,8 @@ class DataValidator:
         "githubLabel": "github_label",
         "firstRelease": "first_release",
         "longDescription": "long_description",
+        "seoTitle": "seo_title",
+        "metaDescription": "meta_description",
     }
 
     # Mapping de champs specifique par module (applique apres le mapping global)

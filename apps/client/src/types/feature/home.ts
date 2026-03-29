@@ -4,9 +4,12 @@ import type { Stack } from './stacks';
 
 export type HomeVariant = 'light' | 'dark' | 'secondary' | 'primary';
 
+/** Minimal stack fields needed by the hero badges */
+export type HeroStack = Pick<Stack, 'id' | 'name' | 'logo' | 'level'>;
+
 // Props pour HeroSection
 export interface HeroSectionProps {
-    featuredStacks?: Stack[];
+    featuredStacks?: HeroStack[];
     bio?: string;
 }
 
@@ -18,4 +21,5 @@ export interface ExpertiseCardProps {
     color?: string;
     variant?: HomeVariant;
     animateOnScroll?: boolean;
+    to?: string;
 }

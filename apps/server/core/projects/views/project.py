@@ -3,6 +3,8 @@
 from typing import Any
 
 from django.db.models import QuerySet
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions
 from rest_framework.decorators import action
@@ -10,6 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from utils.api import BaseAPIViewSet, parse_limit
+from utils.cache.keys import CacheKeys
 from utils.pagination import APIResponsePagination
 
 from ..doc import (
@@ -58,6 +61,12 @@ class ProjectViewSet(BaseAPIViewSet):
         responses={200: RESPONSE_200_LIST},
         tags=TAGS_PROJECTS,
     )
+    @method_decorator(
+        cache_page(
+            CacheKeys.TTL_MEDIUM,
+            key_prefix="portfolio:v1:views:projects:list",
+        )
+    )
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Recupere la liste des projets."""
         return super().list(request, *args, **kwargs)
@@ -67,6 +76,12 @@ class ProjectViewSet(BaseAPIViewSet):
         description="Recupere les details d'un projet par son slug ou ID.",
         responses={200: ProjectDetailSerializer, 404: RESPONSE_404},
         tags=TAGS_PROJECTS,
+    )
+    @method_decorator(
+        cache_page(
+            CacheKeys.TTL_MEDIUM,
+            key_prefix="portfolio:v1:views:projects:detail",
+        )
     )
     def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Recupere les details d'un projet par son slug ou ID."""
