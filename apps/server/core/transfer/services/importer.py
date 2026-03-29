@@ -4,16 +4,13 @@ import csv
 import io
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import openpyxl
 from django.apps import apps
 from django.core.files.uploadedfile import UploadedFile
-from django.db import DatabaseError, IntegrityError, OperationalError, transaction
+from django.db import DatabaseError, IntegrityError, OperationalError, models, transaction
 from django.utils import timezone
-
-if TYPE_CHECKING:
-    from django.db import models
 
 from ..models import ImportJob
 from .strategies import CsvImportStrategy, ImportStrategy, JsonImportStrategy, XlsxImportStrategy
@@ -356,7 +353,7 @@ class ImporterService:
     @classmethod
     def _import_record(
         cls,
-        model_class: "type[models.Model]",
+        model_class: type[models.Model],
         data: dict[str, Any],
         module: str,
         *,
@@ -409,32 +406,35 @@ class ImporterService:
                     break
                 unique_lookup[field] = value
 
+            manager = model_class._default_manager
+
             if update_existing and all_values_present:
                 # Remove unique fields from defaults
                 defaults = {k: v for k, v in data.items() if k not in unique_fields}
                 # Clear select_related to avoid FOR UPDATE on nullable outer joins
-                qs = model_class.objects.all().select_related(None)
+                qs = manager.all().select_related(None)
                 instance, _ = qs.update_or_create(
                     **unique_lookup,
                     defaults=defaults,
                 )
             else:
-                instance = model_class.objects.create(**data)
+                instance = manager.create(**data)
         else:
             # Champ unique simple
             unique_value = data.get(unique_fields)
+            manager = model_class._default_manager
 
             if update_existing and unique_value:
                 # Remove unique field from defaults to avoid constraint issues
                 defaults = {k: v for k, v in data.items() if k != unique_fields}
                 # Clear select_related to avoid FOR UPDATE on nullable outer joins
-                qs = model_class.objects.all().select_related(None)
+                qs = manager.all().select_related(None)
                 instance, _ = qs.update_or_create(
                     **{unique_fields: unique_value},
                     defaults=defaults,
                 )
             else:
-                instance = model_class.objects.create(**data)
+                instance = manager.create(**data)
 
         # Handle M2M fields
         for field_name, values in m2m_fields.items():
@@ -480,7 +480,7 @@ class ImporterService:
         return resolved
 
     @classmethod
-    def _extract_m2m_fields(cls, data: dict[str, Any], model_class: "type[models.Model]") -> dict[str, list]:
+    def _extract_m2m_fields(cls, data: dict[str, Any], model_class: type[models.Model]) -> dict[str, list]:
         """Extrait et supprime les champs M2M de data."""
         m2m_fields = {}
         m2m_field_names = [f.name for f in model_class._meta.get_fields() if f.many_to_many and not f.auto_created]

@@ -2,14 +2,8 @@
 
 import os
 
-from config import settings as base_settings
-
-# Copy all uppercase settings from base settings module
-for _setting_name in dir(base_settings):
-    if _setting_name.isupper():
-        globals()[_setting_name] = getattr(base_settings, _setting_name)
-
-# Set environment variables for test BEFORE importing settings
+# Set environment variables BEFORE importing settings so that
+# django-environ reads them when the settings modules are loaded.
 os.environ.setdefault("JWT_SECRET_ACCESS_KEY", "test-secret-key-for-testing-only")
 os.environ.setdefault("DJANGO_DEBUG", "True")
 os.environ.setdefault("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
@@ -25,6 +19,13 @@ os.environ.setdefault("DB_USER", "test")
 os.environ.setdefault("DB_PASSWORD", "test")
 os.environ.setdefault("DB_HOST", "localhost")
 os.environ.setdefault("DB_PORT", "5432")
+
+from config import settings as base_settings
+
+# Copy all uppercase settings from base settings module
+for _setting_name in dir(base_settings):
+    if _setting_name.isupper():
+        globals()[_setting_name] = getattr(base_settings, _setting_name)
 
 
 # Explicitly set ALLOWED_HOSTS to include testserver
