@@ -49,13 +49,16 @@ export function resolveMediaUrl(path: string | null | undefined): string {
         return '';
     }
 
-    // Already a full URL — normalize Docker-internal hostname to public base
+    // Full URL — extract just the path to avoid Docker-internal hostnames
+    // (e.g. "http://backend:8000/media/..." → "/media/...")
     if (path.startsWith('http')) {
-        const runtimeConfig = useRuntimeConfig();
-        const publicBase = (runtimeConfig.public?.apiBase as string) || 'http://localhost:8000';
-        const serverBase = (runtimeConfig.apiBaseServer as string) || '';
-        if (serverBase && serverBase !== publicBase && path.startsWith(serverBase)) {
-            return path.replace(serverBase, publicBase);
+        try {
+            const url = new URL(path);
+            if (url.pathname.startsWith('/media/')) {
+                return url.pathname;
+            }
+        } catch {
+            // malformed URL — fall through
         }
         return path;
     }

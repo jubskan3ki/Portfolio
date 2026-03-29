@@ -126,6 +126,7 @@ known-third-party = ["django", "rest_framework", "celery"]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "tests/*" = ["S101", "S105", "S106"]  # assert, hardcoded passwords OK in tests
+"*/views/*.py" = ["ARG002"]  # DRF view overrides have unused framework params
 "*/migrations/*" = ["ALL"]
 "scripts/*" = ["E402"]  # scripts need django.setup() before imports
 "core/user/views/admin.py" = ["E402"]  # get_user_model before imports

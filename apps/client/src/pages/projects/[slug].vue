@@ -108,7 +108,11 @@
                                                 :show-placeholder="false"
                                                 class="tech-item__img"
                                             />
-                                            <span v-else class="tech-item__letter" :style="{ backgroundColor: tech.color }">
+                                            <span
+                                                v-else
+                                                class="tech-item__letter"
+                                                :style="{ backgroundColor: tech.color }"
+                                            >
                                                 {{ tech.name.charAt(0).toUpperCase() }}
                                             </span>
                                         </div>
@@ -126,7 +130,11 @@
                                                 :show-placeholder="false"
                                                 class="tech-item__img"
                                             />
-                                            <span v-else class="tech-item__letter" :style="{ backgroundColor: tech.color }">
+                                            <span
+                                                v-else
+                                                class="tech-item__letter"
+                                                :style="{ backgroundColor: tech.color }"
+                                            >
                                                 {{ tech.name.charAt(0).toUpperCase() }}
                                             </span>
                                         </div>

@@ -43,8 +43,8 @@
         <!-- Error state -->
         <div v-if="hasError" class="base-image__error">
             <slot name="error">
-                <BaseIcon name="image-off" :size="32" />
-                <span>Image non disponible</span>
+                <BaseIcon name="image-off" :size="errorIconSize" />
+                <span v-if="showErrorText" class="base-image__error-text">Image non disponible</span>
             </slot>
         </div>
 
@@ -90,6 +90,16 @@
         const src = resolvedSrc.value;
         return src.startsWith('/media/') || src.startsWith('http');
     });
+
+    // Adapt error state to image dimensions
+    const toNum = (v: string | number | undefined) =>
+        (typeof v === 'string' ? parseInt(v, 10) : v) || 0;
+    const isSmall = computed(
+        () => (toNum(props.width) > 0 && toNum(props.width) < 80)
+            || (toNum(props.height) > 0 && toNum(props.height) < 80),
+    );
+    const errorIconSize = computed(() => (isSmall.value ? 18 : 32));
+    const showErrorText = computed(() => !isSmall.value);
 
     const containerClasses = computed(() => [
         `base-image--ratio-${props.aspectRatio}`,

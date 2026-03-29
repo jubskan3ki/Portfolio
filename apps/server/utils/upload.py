@@ -1,7 +1,7 @@
 """Factory pour les chemins d'upload dynamiques."""
 
-import os
 import re
+from pathlib import Path
 
 from django.db import models
 from django.utils.deconstruct import deconstructible
@@ -29,15 +29,15 @@ class UploadTo:
         self.fallback = fallback
 
     def __call__(self, instance: models.Model, filename: str) -> str:
-        if isinstance(self.slug_source, (list, tuple)):
+        if isinstance(self.slug_source, list | tuple):
             parts = [getattr(instance, f, self.fallback) for f in self.slug_source]
             slug = slugify("-".join(parts))
         else:
             slug = slugify(getattr(instance, self.slug_source, self.fallback))
 
-        base, ext = os.path.splitext(filename)
-        safe_base = re.sub(r"[^\w.-]", "_", base)[:100]
-        safe_filename = f"{safe_base}{ext.lower()}"
+        p = Path(filename)
+        safe_base = re.sub(r"[^\w.-]", "_", p.stem)[:100]
+        safe_filename = f"{safe_base}{p.suffix.lower()}"
         return f"{self.prefix}/{slug}/{safe_filename}"
 
 

@@ -22,8 +22,7 @@ def generate_schema() -> dict[str, Any]:
     from drf_spectacular.generators import SchemaGenerator
 
     generator = SchemaGenerator(title="Portfolio API", version="1.0.0")
-    schema = generator.get_schema(request=None, public=True)
-    return schema  # type: ignore[return-value]
+    return generator.get_schema(request=None, public=True)  # type: ignore[return-value]
 
 
 def main() -> int:

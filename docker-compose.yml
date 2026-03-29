@@ -133,7 +133,7 @@ services:
             context: ./apps/server
             dockerfile: Dockerfile
             args:
-                PYTHON_VERSION: ${PYTHON_VERSION:-3.13}
+                PYTHON_VERSION: ${PYTHON_VERSION:-3.14}
         volumes:
             - ./apps/server:/app
             - backend_logs:/app/logs
@@ -176,7 +176,7 @@ services:
             context: ./apps/server
             dockerfile: Dockerfile
             args:
-                PYTHON_VERSION: ${PYTHON_VERSION:-3.13}
+                PYTHON_VERSION: ${PYTHON_VERSION:-3.14}
         command: >
             celery -A config worker
             --loglevel=${CELERY_LOG_LEVEL:-INFO}

@@ -1,6 +1,6 @@
 """Security settings - CORS, CSRF, headers."""
 
-from config.settings.base import ALLOWED_HOSTS, DEBUG
+from config.settings.base import _ALL_INTERFACES, ALLOWED_HOSTS, DEBUG
 
 # SECURITY SETTINGS
 
@@ -19,9 +19,7 @@ if not DEBUG:
 
 # CSRF trusted origins for reverse proxy setup
 CSRF_TRUSTED_ORIGINS = [
-    f"https://{host}"
-    for host in ALLOWED_HOSTS
-    if host not in ["localhost", "127.0.0.1", "backend", "*"]
+    f"https://{host}" for host in ALLOWED_HOSTS if host not in ["localhost", "127.0.0.1", "backend", "*"]
 ]
 
 # CORS — toujours explicite, même en dev, pour détecter les problèmes CORS tôt
@@ -36,7 +34,7 @@ _DEV_ORIGINS = [
     "http://swagger:8080",
 ]
 _DEV_PORTS = [3000, 8000, 8085]
-_DEV_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
+_DEV_HOSTS = ["localhost", _ALL_INTERFACES, "127.0.0.1"]
 
 if DEBUG:
     CORS_ALLOWED_ORIGINS = _DEV_ORIGINS + [f"http://{host}:{port}" for host in _DEV_HOSTS for port in _DEV_PORTS]
@@ -44,7 +42,7 @@ else:
     CORS_ALLOWED_ORIGINS = []
 
 for host in list(ALLOWED_HOSTS):
-    if host not in ["localhost", "127.0.0.1", "0.0.0.0", "*"] and "*" not in host:
+    if host not in ["localhost", "127.0.0.1", _ALL_INTERFACES, "*"] and "*" not in host:
         CORS_ALLOWED_ORIGINS.extend([f"https://{host}", f"http://{host}"])
 
 CORS_ALLOW_CREDENTIALS = True
@@ -69,4 +67,3 @@ CORS_EXPOSE_HEADERS = [
     "x-request-id",
     "etag",
 ]
-

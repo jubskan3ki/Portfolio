@@ -2,11 +2,14 @@
 Vues pour les tags d'articles avec CRUD complet.
 """
 
+from typing import Any
+
 from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import OpenApiResponse, extend_schema
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from utils.api import BaseAPIViewSet
@@ -71,7 +74,7 @@ class TagViewSet(BaseAPIViewSet):
         tags=["Articles - Tags"],
     )
     @method_decorator(cache_page(1800))
-    def retrieve(self, _request, *_args, **kwargs):
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Récupère les détails d'un tag par son nom."""
         name = str(kwargs.get("name", ""))
         instance = TagService.get_by_name(name)

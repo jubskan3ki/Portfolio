@@ -22,7 +22,13 @@ class WebhookManager(models.Manager["Webhook"]):
 
     def for_event(self, event_type: str) -> models.QuerySet[Webhook]:
         """Webhooks abonnes a un type d'evenement."""
-        return self.active().filter(models.Q(events__contains=[event_type]) | models.Q(events__contains=["*"]))
+        from django.conf import settings
+
+        engine = settings.DATABASES.get("default", {}).get("ENGINE", "")
+        if "postgresql" in engine:
+            return self.active().filter(models.Q(events__contains=[event_type]) | models.Q(events__contains=["*"]))
+        # Fallback for SQLite: filter in Python
+        return self.active().filter(models.Q(events__icontains=event_type) | models.Q(events__icontains='"*"'))
 
 
 class WebhookDeliveryManager(models.Manager["WebhookDelivery"]):

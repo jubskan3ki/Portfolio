@@ -23,16 +23,16 @@ class TestJSONBlockListField:
     """Tests pour JSONBlockListField."""
 
     def test_valid_list(self) -> None:
-        """Accepte une liste Python."""
-        s = JSONBlockListFieldTestSerializer(data={"content": [{"type": "paragraph"}]})
+        """Accepte une liste Python avec un bloc paragraph valide."""
+        s = JSONBlockListFieldTestSerializer(data={"content": [{"type": "paragraph", "content": "Hello"}]})
         assert s.is_valid(), s.errors
-        assert s.validated_data["content"] == [{"type": "paragraph"}]
+        assert s.validated_data["content"] == [{"type": "paragraph", "content": "Hello"}]
 
     def test_valid_json_string(self) -> None:
         """Accepte une chaine JSON valide contenant une liste."""
-        s = JSONBlockListFieldTestSerializer(data={"content": '[{"type": "heading"}]'})
+        s = JSONBlockListFieldTestSerializer(data={"content": '[{"type": "heading", "content": "Title", "level": 2}]'})
         assert s.is_valid(), s.errors
-        assert s.validated_data["content"] == [{"type": "heading"}]
+        assert s.validated_data["content"] == [{"type": "heading", "content": "Title", "level": 2}]
 
     def test_empty_list(self) -> None:
         """Accepte une liste vide."""

@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils.text import slugify
 
-from utils.images import MAX_SIZE_LARGE, optimize_image
+from utils.images import optimize_image
 
 
 class WithItemCountMixin:

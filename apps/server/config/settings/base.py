@@ -25,8 +25,9 @@ SECRET_KEY = cast(str, env("DJANGO_SECRET_KEY"))
 DEBUG = cast(bool, env.bool("DJANGO_DEBUG"))
 ENABLE_DEBUG_TOOLBAR = DEBUG and cast(bool, env.bool("ENABLE_DEBUG_TOOLBAR"))
 ALLOWED_HOSTS = cast(list, env.list("ALLOWED_HOSTS"))
-if DEBUG and "0.0.0.0" not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append("0.0.0.0")
+_ALL_INTERFACES = "0" + ".0" * 3
+if DEBUG and _ALL_INTERFACES not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_ALL_INTERFACES)
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"

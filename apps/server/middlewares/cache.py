@@ -217,7 +217,7 @@ class ConditionalCacheMiddleware(MiddlewareMixin):
             return response
 
         # Compute ETag from response content
-        etag = f'"{hashlib.md5(response.content).hexdigest()}"'
+        etag = f'"{hashlib.md5(response.content, usedforsecurity=False).hexdigest()}"'
 
         # Store rendered content with ETag
         cache_key = self._get_cache_key(request)

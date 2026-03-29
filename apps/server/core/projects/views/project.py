@@ -1,5 +1,7 @@
 """Vues pour les projets."""
 
+from typing import Any
+
 from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions
@@ -66,7 +68,7 @@ class ProjectViewSet(BaseAPIViewSet):
         responses={200: ProjectDetailSerializer, 404: RESPONSE_404},
         tags=TAGS_PROJECTS,
     )
-    def retrieve(self, _request: Request, *_args: object, **_kwargs: object) -> Response:
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Recupere les details d'un projet par son slug ou ID."""
         instance = self.get_object()
         serializer = self.get_serializer(instance)

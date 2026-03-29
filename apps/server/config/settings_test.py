@@ -67,8 +67,9 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
 # Use console email backend for tests
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
-# Disable CSRF for testing
-MIDDLEWARE = [m for m in base_settings.MIDDLEWARE if "csrf" not in m.lower()]
+# Disable CSRF and debug toolbar for testing
+MIDDLEWARE = [m for m in base_settings.MIDDLEWARE if "csrf" not in m.lower() and "debug_toolbar" not in m.lower()]
+INSTALLED_APPS = [app for app in base_settings.INSTALLED_APPS if app != "debug_toolbar"]
 
 # Use local memory cache for tests
 CACHES = {

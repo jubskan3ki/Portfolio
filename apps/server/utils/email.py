@@ -31,7 +31,7 @@ def _handle_retry(task: Task, exc: Exception, recipient_email: str) -> None:
     retry_count = task.request.retries
     retry_delay = 60 * (2**retry_count)
 
-    if retry_count >= task.max_retries:
+    if task.max_retries is not None and retry_count >= task.max_retries:
         logger.critical("Echec definitif d'envoi d'email a %s", recipient_email)
         raise exc
 

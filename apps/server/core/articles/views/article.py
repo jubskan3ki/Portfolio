@@ -1,7 +1,9 @@
 """Vues pour les articles avec CRUD complet et actions supplementaires."""
 
+from typing import Any
+
 from django.db.models import QuerySet
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -67,7 +69,7 @@ class ArticleViewSet(BaseAPIViewSet):
         responses={200: ArticleDetailSerializer, 404: RESPONSE_404},
         tags=TAGS_ARTICLES,
     )
-    def retrieve(self, _request: Request, *_args: object, **_kwargs: object) -> Response:
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Recupere les details d'un article par son slug ou ID."""
         instance = self.get_object()
         serializer = self.get_serializer(instance)

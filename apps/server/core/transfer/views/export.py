@@ -5,7 +5,6 @@ import logging
 from django.db import DatabaseError, OperationalError
 from django.http import FileResponse, HttpResponse
 from django.utils import timezone
-
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
@@ -164,10 +163,11 @@ class ExportDownloadView(APIView):
                     "csv": "text/csv",
                     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 }
+                file_name = job.file.name.split("/")[-1] if job.file.name else "export"
                 response = FileResponse(
                     job.file.open("rb"),
                     as_attachment=True,
-                    filename=job.file.name.split("/")[-1],
+                    filename=file_name,
                     content_type=content_types.get(export_format, "application/octet-stream"),
                 )
                 # Empecher la double compression pour les fichiers binaires (xlsx)

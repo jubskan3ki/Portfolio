@@ -14,6 +14,7 @@ def health_check(_request):
     """Health check endpoint."""
     return JsonResponse({"status": "ok"})
 
+
 urlpatterns = [
     path("", health_check, name="root"),
     path("", include("django_prometheus.urls")),

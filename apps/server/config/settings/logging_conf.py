@@ -1,5 +1,6 @@
 """Logging configuration."""
 
+import tempfile
 from pathlib import Path
 
 from config.settings.base import BASE_DIR, DEBUG
@@ -10,7 +11,7 @@ LOG_DIR = BASE_DIR / "logs"
 try:
     LOG_DIR.mkdir(mode=0o755, exist_ok=True)
 except (PermissionError, OSError):
-    LOG_DIR = Path("/tmp")
+    LOG_DIR = Path(tempfile.gettempdir())
 
 DJANGO_LOG_FILE: Path | None = None
 _log_file_path = LOG_DIR / "django_errors.log"

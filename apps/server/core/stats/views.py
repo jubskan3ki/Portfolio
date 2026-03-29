@@ -159,8 +159,10 @@ class WebVitalsIngestView(APIView):
 
         logger.info(
             "web_vital name=%s value=%.2f rating=%s page=%s",
-            data.get("name"), float(data.get("value", 0)),
-            data.get("rating"), data.get("page"),
+            data.get("name"),
+            float(data.get("value", 0)),
+            data.get("rating"),
+            data.get("page"),
         )
 
         return Response({"status": "accepted"}, status=status.HTTP_202_ACCEPTED)

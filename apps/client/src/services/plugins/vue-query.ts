@@ -84,14 +84,16 @@ export default defineNuxtPlugin((nuxtApp) => {
     // SSR: Dehydrate state after rendering
     if (import.meta.server) {
         nuxtApp.hooks.hook('app:rendered', () => {
-            nuxtApp.payload.vueQueryState = dehydrate(queryClient);
+            if (nuxtApp.payload) {
+                nuxtApp.payload.vueQueryState = dehydrate(queryClient);
+            }
         });
     }
 
     // Client: Hydrate state from server
     if (import.meta.client) {
         nuxtApp.hooks.hook('app:created', () => {
-            const state = nuxtApp.payload.vueQueryState as DehydratedState | undefined;
+            const state = nuxtApp.payload?.vueQueryState as DehydratedState | undefined;
             if (state) {
                 hydrate(queryClient, state);
             }

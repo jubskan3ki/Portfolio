@@ -73,9 +73,13 @@ class ArticleFilter(CategoryFilterMixin, SearchFilterMixin, django_filters.Filte
 
         Surcharge le mixin SearchFilterMixin pour utiliser SearchVector/SearchRank
         au lieu de icontains. Preserve le queryset filtre existant.
+        Fallback sur icontains si le backend n'est pas PostgreSQL (ex: SQLite en tests).
         """
         if not value or len(value.strip()) < 2:
             return queryset
+        engine = queryset.db
+        if "postgresql" not in self._get_db_engine(engine):
+            return super().filter_search(queryset, _name, value)
         search_vector = (
             SearchVector("title", weight="A", config="french")
             + SearchVector("excerpt", weight="B", config="french")
@@ -83,6 +87,12 @@ class ArticleFilter(CategoryFilterMixin, SearchFilterMixin, django_filters.Filte
         )
         search_query = SearchQuery(value, config="french")
         return queryset.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.01).order_by("-rank")
+
+    @staticmethod
+    def _get_db_engine(db_alias: str) -> str:
+        from django.conf import settings
+
+        return settings.DATABASES.get(db_alias, {}).get("ENGINE", "")
 
     def filter_by_tag(self, queryset: QuerySet, _name: str, value: str) -> QuerySet:
         """Filtre par nom de tag."""

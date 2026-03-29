@@ -47,7 +47,7 @@ class CategoryViewSet(BaseAPIViewSet):
         tags=TAGS_CATEGORIES,
     )
     @method_decorator(cache_page(1800))
-    def retrieve(self, _request: Request, *_args: Any, **kwargs: Any) -> Response:
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Details d'une categorie."""
         name = kwargs.get("name", "")
         instance = CategoryService.get_by_name(name)

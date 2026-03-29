@@ -1,117 +1,137 @@
-# 🚀 Portfolio - Monorepo (Nuxt + Django + Docker)
+# Portfolio — Nuxt 3 + Django REST + Docker
 
-Ce projet est un **Portfolio Fullstack** avec un backend Django, un frontend Nuxt 3 sous node 22 et une base PostgreSQL, le tout dockerisé.
+Portfolio fullstack personnel : **Nuxt 3** (SSR) pour le frontend, **Django REST Framework** pour l'API, **PostgreSQL** pour la base de donnees, le tout orchestre avec **Docker Compose**.
 
----
+## Architecture
 
-## 📦 Prérequis
+```text
+apps/client/     Nuxt 3 SSR (TypeScript, Pinia, SCSS)
+apps/server/     Django REST API (Python 3.13, Celery, Redis)
+nginx/           Reverse proxy
+monitoring/      Grafana, Prometheus, Loki, Promtail
+```
 
-- [Docker](https://www.docker.com/products/docker-desktop)
-- [Docker Compose](https://docs.docker.com/compose/)
+### Services Docker
 
----
+| Service     | Description                              |
+| ----------- | ---------------------------------------- |
+| `frontend`  | Nuxt 3 SSR (port 3000)                  |
+| `backend`   | Django API via Gunicorn (port 8000)      |
+| `nginx`     | Reverse proxy, point d'entree (port 80)  |
+| `db`        | PostgreSQL 17                            |
+| `pgbouncer` | Connection pooling                       |
+| `redis`     | Cache et sessions                        |
+| `rabbitmq`  | Message broker                           |
+| `celery`    | Worker asynchrone                        |
 
-## ⚙️ Lancer le projet en local
+### Routes
 
-1. **Clone le repo :**
+| Route                 | Destination          |
+| --------------------- | -------------------- |
+| `/api/*`              | Django backend       |
+| `/django-admin/`      | Django admin         |
+| `/admin/*`            | Dashboard admin Nuxt |
+| `/static/`, `/media/` | Fichiers Django      |
 
-    ```bash
-    git clone https://github.com/ton-profil/portfolio.git
-    cd portfolio
-    ```
+## Prerequis
 
-2. **Crée un fichier `.env` à la racine :**
+- [Docker](https://www.docker.com/products/docker-desktop) et [Docker Compose](https://docs.docker.com/compose/)
+- [pnpm](https://pnpm.io/) (dev local frontend uniquement)
 
-    Exemple rapide :
+## Installation
 
-    ```dotenv
-    DB_NAME=portfolio_db
-    DB_USER=postgres
-    DB_PASSWORD=postgres
-    DB_HOST=db
-    DB_PORT=5432
+```bash
+git clone https://github.com/ton-profil/portfolio.git
+cd portfolio
+cp .env.example .env
+# Remplir les variables dans .env
+docker-compose up --build
+```
 
-    SERVER_PORT=8000
-    FRONTEND_PORT=3000
+Le site est accessible sur `http://localhost`.
 
-    ADMIN_EMAIL=admin@example.com
-    ADMIN_PASSWORD=adminpass
+## Commandes
 
-    JWT_SECRET_ACCESS_KEY=secretjwtkey
+### Docker
 
-    SMTP_HOST=smtp.example.com
-    SMTP_PORT=587
-    SMTP_USER=smtpuser
-    SMTP_PASS=smtppass
-    EMAIL_FROM=no-reply@example.com
-    ```
+```bash
+# Demarrage
+docker-compose up --build
 
-3. **Lance tous les services :**
+# Avec outils dev (Swagger UI :8085, pgAdmin :5050)
+docker-compose --profile dev up --build
 
-    ```bash
-    docker-compose up --build
-    ```
+# Avec monitoring (Grafana :3001, Prometheus :9090)
+docker-compose --profile monitoring up --build
 
----
+# Arret
+docker-compose down
 
-## 🐳 Commandes utiles
+# Logs backend
+docker-compose logs -f backend
+```
 
-- Démarrer :
+### Frontend (`apps/client/`)
 
-    ```bash
-    docker-compose up --build
-    ```
+```bash
+pnpm install
+pnpm dev              # Serveur de dev
+pnpm build            # Build production
+pnpm check            # Lint + Stylelint + TypeCheck
+pnpm lint:fix         # Fix automatique ESLint
+pnpm lighthouse:ci    # Audit Lighthouse
+```
 
-- Arrêter :
+### Backend (`apps/server/`)
 
-    ```bash
-    docker-compose down
-    ```
+```bash
+python manage.py runserver
+python manage.py migrate
+pytest                 # Tests
+pytest --cov           # Tests + coverage
+black . && isort . && ruff check .   # Formatage + lint
+```
 
-- Voir les logs :
+## Variables d'environnement
 
-    ```bash
-    docker-compose logs -f backend
-    ```
+Copier `.env.example` vers `.env`. Variables essentielles :
 
----
+| Variable                         | Description                     |
+| -------------------------------- | ------------------------------- |
+| `DJANGO_SECRET_KEY`              | Cle secrete Django              |
+| `DB_PASSWORD`                    | Mot de passe PostgreSQL         |
+| `JWT_SECRET_ACCESS_KEY`          | Secret JWT                      |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Compte admin initial            |
+| `SMTP_*`                         | Configuration email             |
+| `NUXT_PUBLIC_API_BASE`           | URL publique de l'API           |
+| `NUXT_API_BASE_SERVER`           | URL interne Docker de l'API     |
 
-## 📊 Debug Toolbar + Web Vitals
+## Profils Docker
 
-### Django Debug Toolbar (dev)
+| Profil         | Services                      | Usage                     |
+| -------------- | ----------------------------- | ------------------------- |
+| _(defaut)_     | App + infra                   | Production / dev standard |
+| `dev`          | + Swagger UI, pgAdmin         | Developpement             |
+| `monitoring`   | + Grafana, Prometheus, Loki   | Observabilite             |
+| `backup`       | + pg_backup                   | Sauvegardes automatiques  |
 
-Variables `.env` côté backend:
+## Debug
 
-```dotenv
+```bash
+# Django Debug Toolbar
 DJANGO_DEBUG=true
 ENABLE_DEBUG_TOOLBAR=true
+# -> http://localhost:8000/__debug__/
+
+# Web Vitals (taux d'echantillonnage)
+NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE=1.0   # dev
+NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE=0.1   # prod
 ```
 
-URL de debug:
+## Stack technique
 
-- `http://localhost:8000/__debug__/`
+**Frontend** : Nuxt 3, Vue 3, TypeScript, Pinia, TanStack Query, SCSS, Vite
 
-Notes:
+**Backend** : Django 5, DRF, Celery, Redis, PostgreSQL, orjson, Gunicorn
 
-- La toolbar est activée uniquement en mode debug.
-- Elle accepte localhost et le réseau Docker local (`172.16.0.0/12`).
-- Tu peux la désactiver sans changer le code avec `ENABLE_DEBUG_TOOLBAR=false`.
-
-### Web Vitals (Nuxt -> Django)
-
-Variable `.env` côté frontend:
-
-```dotenv
-NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE=0.2
-```
-
-- En `development`: valeur recommandée `1.0`
-- En production: commencer à `0.1` ou `0.2`
-
-Endpoint d'ingestion public:
-
-- `POST /api/stats/web-vitals/`
-
-Endpoint de synthèse (admin):
-
-- `GET /api/stats/web-vitals/summary/?days=7`
+**Infra** : Docker, Nginx, PgBouncer, RabbitMQ, Grafana, Prometheus, Loki

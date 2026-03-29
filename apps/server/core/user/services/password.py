@@ -183,7 +183,8 @@ class PasswordService:
             logger.info("Notification password_changed envoyee pour %s", email)
         except (ConnectionError, ImportError, AttributeError, RuntimeError):
             logger.exception(
-                "Erreur envoi notification password_changed pour %s", email,
+                "Erreur envoi notification password_changed pour %s",
+                email,
             )
 
     @staticmethod

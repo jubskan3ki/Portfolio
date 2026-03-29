@@ -2,7 +2,6 @@ import { useQueryClient, useMutation } from '@tanstack/vue-query';
 import { computed, unref } from 'vue';
 
 import { API_ENDPOINTS } from '@/config/api';
-import { decodeHtmlEntities } from '@/services/utils/helpers';
 
 import {
     httpClient,
@@ -163,7 +162,6 @@ export function useArticles(filters?: MaybeRef<ArticleFilters>) {
         () => articlesApi.getAll(unref(filters)),
         {
             placeholderData: (prev: ArticlesResponse | undefined) => prev,
-            select: (data: ArticlesResponse) => decodeHtmlEntities(data),
         },
     );
 }
@@ -174,21 +172,16 @@ export function useArticle(slug: MaybeRef<string>) {
         () => articlesApi.getBySlug(unref(slug)),
         {
             enabled: computed(() => !!unref(slug)),
-            select: (data: ArticleDetail) => decodeHtmlEntities(data),
         },
     );
 }
 
 export function usePopularArticles(limit = 5) {
-    return createStaticQuery(articleKeys.popular(limit), () => articlesApi.getPopular(limit), {
-        select: (data: Article[]) => decodeHtmlEntities(data),
-    });
+    return createStaticQuery(articleKeys.popular(limit), () => articlesApi.getPopular(limit));
 }
 
 export function useRecentArticles(limit = 5) {
-    return createListQuery(articleKeys.recent(limit), () => articlesApi.getRecent(limit), {
-        select: (data: Article[]) => decodeHtmlEntities(data),
-    });
+    return createListQuery(articleKeys.recent(limit), () => articlesApi.getRecent(limit));
 }
 
 export function useArticleCategories() {
@@ -209,7 +202,6 @@ export function useRelatedArticles(slug: MaybeRef<string>) {
         () => articlesApi.getRelated(unref(slug)),
         {
             enabled: computed(() => !!unref(slug)),
-            select: (data: Article[]) => decodeHtmlEntities(data),
         },
     );
 }

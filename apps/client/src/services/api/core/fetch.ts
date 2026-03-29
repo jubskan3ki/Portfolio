@@ -1,6 +1,7 @@
 import { HTTP_CONFIG, defaultRequestInit, getBaseUrl } from '@/config/api';
 import { API_RETRY } from '@/config/constants';
 import { isApiError } from '@/services/utils/errors/guards';
+import { decodeHtmlEntities } from '@/services/utils/helpers';
 import { transformKeysToCamel, transformKeysToSnake } from '@/services/utils/responseNormalizer';
 
 import { createApiError } from './errors';
@@ -142,12 +143,12 @@ export async function handleResponse<T>(
 
     const jsonData = await processedResponse.json();
 
-    // Transform snake_case keys to camelCase
+    // Transform snake_case keys to camelCase, then decode HTML entities
     if (transformKeys) {
-        return transformKeysToCamel<T>(jsonData);
+        return decodeHtmlEntities(transformKeysToCamel<T>(jsonData));
     }
 
-    return jsonData;
+    return decodeHtmlEntities(jsonData as T);
 }
 
 export async function fetchApi<T>(

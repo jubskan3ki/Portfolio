@@ -41,6 +41,7 @@
 	},
 	"devDependencies": {
 		"@nuxt/eslint": "^1.15.2",
+		"eslint": "^9.39.2",
 		"@nuxt/icon": "^2.2.1",
 		"@nuxt/image": "^2.0.0",
 		"@nuxtjs/seo": "^3.4.0",
@@ -74,5 +75,18 @@
 		"src/**/*.{css,scss}": [
 			"stylelint --fix"
 		]
+	},
+	"pnpm": {
+		"overrides": {
+			"serialize-javascript": ">=7.0.3",
+			"svgo": ">=4.0.1",
+			"immutable": ">=5.1.5",
+			"tar": ">=7.5.11",
+			"flatted": ">=3.4.2",
+			"h3": ">=1.15.6",
+			"fast-xml-parser": ">=5.5.6",
+			"node-forge": ">=1.4.0",
+			"picomatch": ">=4.0.4"
+		}
 	}
 }

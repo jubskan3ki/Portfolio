@@ -1,7 +1,7 @@
 # ──────────────────────────────────────────────
 # Build arguments (overridable from docker-compose)
 # ──────────────────────────────────────────────
-ARG PYTHON_VERSION=3.13
+ARG PYTHON_VERSION=3.14
 
 # Étape 1: Image de construction
 FROM python:${PYTHON_VERSION}-alpine AS builder

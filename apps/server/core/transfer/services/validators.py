@@ -1,6 +1,5 @@
 """Validateurs pour l'import de donnees."""
 
-import html
 import logging
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
@@ -188,7 +187,7 @@ class DataValidator:
                                 "message": f"Le champ '{field}' doit etre un entier",
                             }
                         )
-                elif field_type == "decimal" and not isinstance(value, (int, float, Decimal)):
+                elif field_type == "decimal" and not isinstance(value, int | float | Decimal):
                     try:
                         Decimal(str(value))
                     except (ValueError, InvalidOperation):
@@ -266,10 +265,6 @@ class DataValidator:
                     cleaned_value = True
                 elif lower_value in ("false", "no", "0", "non"):
                     cleaned_value = False
-
-            # Escape HTML in string values to prevent stored XSS
-            if isinstance(cleaned_value, str):
-                cleaned_value = html.escape(cleaned_value)
 
             cleaned[field_name] = cleaned_value
 

@@ -198,7 +198,6 @@
         &__text {
             font-weight: vars.$font-weight-bold;
             color: vars.$primary-color;
-            min-width: 120px;
         }
 
         &__cursor {

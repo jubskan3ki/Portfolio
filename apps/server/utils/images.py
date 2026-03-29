@@ -56,17 +56,14 @@ def optimize_image(image_field, max_size=MAX_SIZE_LARGE, quality=WEBP_QUALITY):
         img = Image.open(image_field)
 
         # Preserve RGBA for PNG transparency, convert others to RGB
-        if img.mode in ("RGBA", "LA", "P"):
-            img = img.convert("RGBA")
-        else:
-            img = img.convert("RGB")
+        converted = img.convert("RGBA") if img.mode in ("RGBA", "LA", "P") else img.convert("RGB")
 
         # Resize if larger than max dimensions (preserve aspect ratio)
-        img.thumbnail(max_size, Image.LANCZOS)
+        converted.thumbnail(max_size, Image.Resampling.LANCZOS)
 
         # Save as WebP
         buffer = BytesIO()
-        img.save(buffer, format="WEBP", quality=quality, optimize=True)
+        converted.save(buffer, format="WEBP", quality=quality, optimize=True)
         buffer.seek(0)
 
         # Build new filename with .webp extension

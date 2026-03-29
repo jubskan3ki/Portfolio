@@ -14,6 +14,13 @@ class WebhookSerializer(serializers.ModelSerializer):
     )
     success_rate = serializers.SerializerMethodField()
 
+    def to_representation(self, instance: Webhook) -> dict:
+        """Convertit events (set) en list pour la serialisation JSON."""
+        data = super().to_representation(instance)
+        if "events" in data and isinstance(data["events"], set):
+            data["events"] = sorted(data["events"])
+        return data
+
     class Meta:
         model = Webhook
         fields = [

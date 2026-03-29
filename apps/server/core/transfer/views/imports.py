@@ -7,7 +7,6 @@ from typing import Any, cast
 from django.core.files.uploadedfile import UploadedFile
 from django.db import DatabaseError, OperationalError
 from django.utils.datastructures import MultiValueDict
-
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.parsers import FormParser, MultiPartParser

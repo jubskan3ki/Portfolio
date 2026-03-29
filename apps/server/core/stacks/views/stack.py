@@ -1,7 +1,8 @@
 """Views pour les stacks techniques."""
 
-from django.db.models import QuerySet
+from typing import Any
 
+from django.db.models import QuerySet
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions
 from rest_framework.decorators import action
@@ -64,7 +65,7 @@ class StackViewSet(BaseAPIViewSet):
         responses={200: StackDetailSerializer, 404: RESPONSE_404},
         tags=TAGS_STACKS,
     )
-    def retrieve(self, _request: Request, *_args: object, **_kwargs: object) -> Response:
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Details d'une stack."""
         instance = self.get_object()
         serializer = self.get_serializer(instance)

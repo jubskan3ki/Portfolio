@@ -1,7 +1,7 @@
 """Vues pour le module webhooks."""
 
 import uuid
-from typing import cast
+from typing import Any, cast
 
 from rest_framework import permissions, status
 from rest_framework.decorators import action
@@ -49,7 +49,7 @@ class WebhookViewSet(BaseAPIViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
-    def test(self, _request: Request, _pk: int | None = None) -> Response:
+    def test(self, _request: Request, **_kwargs: Any) -> Response:
         """Teste un webhook en envoyant un evenement de test."""
         webhook = cast(Webhook, self.get_object())
 
@@ -76,7 +76,7 @@ class WebhookViewSet(BaseAPIViewSet):
         )
 
     @action(detail=True, methods=["post"])
-    def toggle(self, _request: Request, _pk: int | None = None) -> Response:
+    def toggle(self, _request: Request, **_kwargs: Any) -> Response:
         """Active/desactive un webhook."""
         webhook = cast(Webhook, self.get_object())
         is_active = WebhookDispatcher.toggle(webhook)
@@ -87,7 +87,7 @@ class WebhookViewSet(BaseAPIViewSet):
         )
 
     @action(detail=True, methods=["get"])
-    def deliveries(self, _request: Request, _pk: int | None = None) -> Response:
+    def deliveries(self, _request: Request, **_kwargs: Any) -> Response:
         """Liste les livraisons d'un webhook avec pagination."""
         webhook = cast(Webhook, self.get_object())
         queryset = webhook.deliveries.all().order_by("-created_at")
@@ -111,7 +111,7 @@ class WebhookDeliveryViewSet(ReadOnlyAPIViewSet):
         return WebhookDelivery.objects.select_related("webhook").filter(webhook__created_by=self.request.user)
 
     @action(detail=True, methods=["post"])
-    def retry(self, _request: Request, _pk: int | None = None) -> Response:
+    def retry(self, _request: Request, **_kwargs: Any) -> Response:
         """Retente une livraison echouee."""
         delivery = cast(WebhookDelivery, self.get_object())
 
