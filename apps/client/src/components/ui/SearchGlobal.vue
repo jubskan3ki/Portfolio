@@ -7,56 +7,134 @@
             :compact="compact"
             :loading="isLoading"
             :is-expanded="isOpen"
-            @focus="open"
+            @focus="onFocus"
             @clear="clearSearch"
             @keydown="handleKeydown"
         />
 
+        <!-- Screen reader announcement (result count + empty state) -->
+        <span class="sr-only" role="status" aria-live="polite">{{ announcement }}</span>
+
         <Transition name="fade-slide">
-            <div v-if="isOpen && searchQuery.length >= 2" class="search-global__dropdown">
-                <SearchFilters
-                    v-if="hasResults"
-                    :groups="filterGroups"
-                    :active-filter="activeFilter"
-                    class="search-global__filters"
-                    @toggle="toggleFilter"
-                />
+            <div v-if="isOpen" class="search-global__dropdown">
+                <!-- Empty-query palette: recents + actions -->
+                <template v-if="isEmptyQuery">
+                    <section
+                        v-if="recentQueries.length || recentItems.length"
+                        class="search-global__section"
+                        aria-label="Récents"
+                    >
+                        <div class="search-global__section-head">
+                            <span class="search-global__section-title">Récents</span>
+                            <button
+                                type="button"
+                                class="search-global__section-action"
+                                @click="clearHistory"
+                            >
+                                Effacer
+                            </button>
+                        </div>
+                        <ul class="search-global__results" role="listbox">
+                            <li
+                                v-for="(q, idx) in recentQueries"
+                                :key="`recent-q-${idx}`"
+                                class="search-global__quickitem"
+                                tabindex="-1"
+                                role="option"
+                                @click="applyQuery(q)"
+                                @keydown.enter.prevent="applyQuery(q)"
+                            >
+                                <BaseIcon name="search" :size="16" />
+                                <span>{{ q }}</span>
+                            </li>
+                            <SearchResultItem
+                                v-for="item in recentItems"
+                                :key="`recent-item-${item.type}-${item.id}`"
+                                :link="item.link"
+                                :icon="item.icon"
+                                :title="item.title"
+                                :subtitle="item.subtitle"
+                                :type="item.type"
+                                badge-label="Récent"
+                                :is-selected="false"
+                                @select="() => recordItemFromHistory(item)"
+                            />
+                        </ul>
+                    </section>
 
-                <ul v-if="hasResults" class="search-global__results" role="listbox">
-                    <template v-for="group in filteredGroups" :key="group.type">
-                        <li v-if="activeFilter === null" class="search-global__group-label">
-                            <span class="search-global__group-icon" :class="`search-global__group-icon--${group.type}`">
-                                <BaseIcon :name="group.icon" :size="12" />
-                            </span>
-                            {{ group.label }}
-                        </li>
+                    <section class="search-global__section" aria-label="Actions rapides">
+                        <div class="search-global__section-head">
+                            <span class="search-global__section-title">Actions</span>
+                        </div>
+                        <ul class="search-global__results" role="listbox">
+                            <li
+                                v-for="action in actions"
+                                :key="action.id"
+                                class="search-global__quickitem"
+                                tabindex="-1"
+                                role="option"
+                                @click="runAction(action)"
+                                @keydown.enter.prevent="runAction(action)"
+                            >
+                                <BaseIcon :name="action.icon" :size="16" />
+                                <span class="search-global__quickitem-title">{{ action.title }}</span>
+                                <small v-if="action.subtitle" class="search-global__quickitem-sub">
+                                    {{ action.subtitle }}
+                                </small>
+                            </li>
+                        </ul>
+                    </section>
+                </template>
 
-                        <SearchResultItem
-                            v-for="item in group.results"
-                            :key="`${item.type}-${item.id}`"
-                            :link="item.link"
-                            :icon="item.icon"
-                            :title="item.title"
-                            :subtitle="item.subtitle"
-                            :type="group.type"
-                            :badge-label="group.label"
-                            :is-selected="isResultSelected(item)"
-                            @hover="setSelectedByResult(item)"
-                            @select="close"
-                        />
-                    </template>
-                </ul>
+                <!-- Active query: filtered results -->
+                <template v-else-if="searchQuery.length >= 2">
+                    <SearchFilters
+                        v-if="hasResults"
+                        :groups="filterGroups"
+                        :active-filter="activeFilter"
+                        class="search-global__filters"
+                        @toggle="toggleFilter"
+                    />
 
-                <SearchEmptyState v-else-if="!isLoading" :query="searchQuery" />
+                    <ul v-if="hasResults" class="search-global__results" role="listbox">
+                        <template v-for="group in filteredGroups" :key="group.type">
+                            <li v-if="activeFilter === null" class="search-global__group-label">
+                                <span
+                                    class="search-global__group-icon"
+                                    :class="`search-global__group-icon--${group.type}`"
+                                >
+                                    <BaseIcon :name="group.icon" :size="12" />
+                                </span>
+                                {{ group.label }}
+                            </li>
 
-                <SearchFooter v-if="hasResults" class="search-global__footer" />
+                            <SearchResultItem
+                                v-for="item in group.results"
+                                :key="`${item.type}-${item.id}`"
+                                :link="item.link"
+                                :icon="item.icon"
+                                :title="item.title"
+                                :subtitle="item.subtitle"
+                                :type="group.type"
+                                :badge-label="group.label"
+                                :is-selected="isResultSelected(item)"
+                                @hover="setSelectedByResult(item)"
+                                @select="onResultSelect(item)"
+                            />
+                        </template>
+                    </ul>
+
+                    <SearchEmptyState v-else-if="!isLoading" :query="searchQuery" />
+
+                    <SearchFooter v-if="hasResults" class="search-global__footer" />
+                </template>
             </div>
         </Transition>
     </div>
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, onMounted, onUnmounted } from 'vue';
+    import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
     import { useRouter } from 'vue-router';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
@@ -73,6 +151,8 @@
         type SearchResultType,
         type SearchMode,
     } from '@/composables/data/useGlobalSearch';
+    import { useSearchActions, type SearchAction } from '@/composables/data/useSearchActions';
+    import { useSearchHistory, type HistoryItem } from '@/composables/data/useSearchHistory';
     import { useClickOutside } from '@/composables/ui/useClickOutside';
 
     interface Props {
@@ -100,6 +180,7 @@
         groupedResults,
         flatResults,
         hasResults,
+        totalResults,
         clear,
         close,
         open,
@@ -107,6 +188,18 @@
         navigateDown,
         getSelectedResult,
     } = useGlobalSearch({ mode: props.mode });
+
+    const {
+        queries: recentQueries,
+        items: recentItems,
+        recordQuery,
+        recordItem,
+        clearHistory,
+    } = useSearchHistory();
+
+    const { actions, run: runActionImperative } = useSearchActions();
+
+    const isEmptyQuery = computed(() => searchQuery.value.trim().length < 2);
 
     // Computed
     const filterGroups = computed(() =>
@@ -207,6 +300,66 @@
             searchInputRef.value?.focus();
         }
     };
+
+    // Open whenever the input is focused — the palette shows recents + actions
+    // when empty, results when not.
+    const onFocus = () => {
+        isOpen.value = true;
+        open();
+    };
+
+    const applyQuery = (query: string) => {
+        searchQuery.value = query;
+        searchInputRef.value?.focus();
+    };
+
+    const onResultSelect = (result: SearchResult) => {
+        recordItem(result);
+        const query = searchQuery.value.trim();
+        if (query.length >= 2) {
+            recordQuery(query);
+        }
+        close();
+    };
+
+    const recordItemFromHistory = (item: HistoryItem) => {
+        // touching it bumps it to the top of the recents list
+        recordItem(item as unknown as SearchResult);
+        close();
+    };
+
+    const runAction = async (action: SearchAction) => {
+        await runActionImperative(action);
+        close();
+    };
+
+    // Live-region announcement: result count once results settle.
+    const announcement = ref('');
+    watch(
+        [isOpen, isLoading, hasResults, totalResults, isEmptyQuery],
+        () => {
+            if (!isOpen.value) {
+                announcement.value = '';
+                return;
+            }
+            if (isEmptyQuery.value) {
+                const parts: string[] = [];
+                if (recentQueries.value.length) {
+                    parts.push(`${recentQueries.value.length} recherche(s) récente(s)`);
+                }
+                parts.push(`${actions.value.length} actions disponibles`);
+                announcement.value = parts.join(', ');
+                return;
+            }
+            if (isLoading.value) {
+                announcement.value = 'Recherche en cours';
+                return;
+            }
+            announcement.value = hasResults.value
+                ? `${totalResults.value} résultat(s) trouvé(s)`
+                : 'Aucun résultat';
+        },
+    );
 
     useClickOutside(containerRef, close);
 
@@ -328,6 +481,79 @@
             flex-shrink: 0;
             border-top: 1px solid v.$border-color;
             background: v.$bg-secondary;
+        }
+
+        &__section {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid v.$border-color;
+
+            &:last-child {
+                border-bottom: none;
+            }
+        }
+
+        &__section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: v.$spacing-xs v.$spacing-sm;
+        }
+
+        &__section-title {
+            font-size: v.$font-size-xs;
+            font-weight: v.$font-weight-semibold;
+            text-transform: uppercase;
+            letter-spacing: v.$letter-spacing-wide;
+            color: v.$text-muted;
+        }
+
+        &__section-action {
+            background: none;
+            border: none;
+            color: v.$text-muted;
+            cursor: pointer;
+            font-size: v.$font-size-xs;
+            padding: 2px v.$spacing-xs;
+            border-radius: v.$border-radius-sm;
+            transition: color v.$transition-fast, background v.$transition-fast;
+
+            &:hover,
+            &:focus-visible {
+                color: v.$primary-color;
+                background: fn.color-alpha(v.$primary-color, 0.08);
+            }
+        }
+
+        &__quickitem {
+            display: flex;
+            align-items: center;
+            gap: v.$spacing-sm;
+            padding: v.$spacing-xs v.$spacing-sm;
+            border-radius: v.$border-radius-md;
+            cursor: pointer;
+            transition: background v.$transition-fast;
+
+            &:hover,
+            &:focus-visible {
+                background: fn.color-alpha(v.$primary-color, 0.06);
+                outline: none;
+            }
+        }
+
+        &__quickitem-title {
+            flex: 1;
+            font-weight: v.$font-weight-medium;
+            color: v.$text-primary;
+        }
+
+        &__quickitem-sub {
+            color: v.$text-muted;
+            font-size: v.$font-size-xs;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
         }
     }
 
