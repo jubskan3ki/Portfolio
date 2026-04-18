@@ -9,6 +9,7 @@
         :description="truncatedExcerpt"
         :tags="article.tags"
         :max-tags="maxTags"
+        :transition-key="article.slug"
         v-bind="prefetchHandlers"
         :class="customClass"
     >

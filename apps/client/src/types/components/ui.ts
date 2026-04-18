@@ -87,6 +87,9 @@ export interface HeroProps {
     showBottomFade?: boolean;
     animateDots?: boolean;
     parallaxIntensity?: number;
+    // When set, applies matching `view-transition-name` on title + logo so
+    // the card on the list page morphs into this hero during navigation.
+    transitionKey?: string;
 }
 
 // StatCard

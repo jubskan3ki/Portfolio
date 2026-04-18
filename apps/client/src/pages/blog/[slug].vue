@@ -26,7 +26,12 @@
 
         <template v-else-if="currentArticle">
             <!-- Hero -->
-            <Hero :title="currentArticle.title" variant="secondary" has-meta>
+            <Hero
+                :title="currentArticle.title"
+                :transition-key="currentArticle.slug"
+                variant="secondary"
+                has-meta
+            >
                 <template #meta>
                     <div class="hero__meta-item">
                         <BaseIcon name="folder" :size="16" />

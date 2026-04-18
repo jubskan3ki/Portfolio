@@ -238,3 +238,33 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+// ── View Transitions ──────────────────────────────────────────────────────
+// When the browser supports the View Transitions API, let paired
+// elements (hero-title-*, hero-media-*) morph smoothly between list and
+// detail pages. Everything else gets a quick cross-fade.
+
+@supports (view-transition-name: none) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 280ms;
+        animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    ::view-transition-group(root) {
+        animation-duration: 280ms;
+    }
+
+    ::view-transition-image-pair(*) {
+        isolation: auto;
+    }
+}
+
+// Respect OS-level reduced-motion preference: disable the morph entirely
+// so navigations feel instant without layout thrash.
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}

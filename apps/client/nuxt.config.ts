@@ -157,6 +157,8 @@ export default defineNuxtConfig({
         payloadExtraction: true,
         inlineRouteRules: true,
         renderJsonPayloads: true,
+        // true respects prefers-reduced-motion; 'always' would force it on.
+        viewTransition: true,
     },
 
     compatibilityDate: '2025-12-30',

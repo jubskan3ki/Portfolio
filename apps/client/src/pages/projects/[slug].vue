@@ -10,7 +10,12 @@
 
         <template v-else-if="currentProject">
             <!-- Hero -->
-            <Hero :title="currentProject.title" variant="primary" has-meta>
+            <Hero
+                :title="currentProject.title"
+                :transition-key="currentProject.slug"
+                variant="primary"
+                has-meta
+            >
                 <template #meta>
                     <div class="hero__meta-item">
                         <BaseIcon name="folder" :size="16" />

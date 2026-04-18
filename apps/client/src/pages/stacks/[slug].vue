@@ -10,7 +10,12 @@
 
         <template v-else-if="currentStack">
             <!-- Hero (sans logo) -->
-            <Hero :title="currentStack.name" variant="dark" has-meta>
+            <Hero
+                :title="currentStack.name"
+                :transition-key="currentStack.slug"
+                variant="dark"
+                has-meta
+            >
                 <template #meta>
                     <div class="hero__meta-item">
                         <BaseIcon name="folder" :size="16" />
@@ -64,7 +69,10 @@
                     <template #main>
                         <!-- Stack Identity Card (logo + description) -->
                         <div class="stack-identity">
-                            <div class="stack-identity__logo-wrapper">
+                            <div
+                                class="stack-identity__logo-wrapper"
+                                :style="{ viewTransitionName: `hero-media-${currentStack.slug}` }"
+                            >
                                 <BaseImage
                                     v-if="currentStack.logo"
                                     :src="currentStack.logo"

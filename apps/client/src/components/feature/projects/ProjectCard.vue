@@ -9,6 +9,7 @@
         :description="truncatedDescription"
         :tags="project.technologies"
         :max-tags="maxTechnologies"
+        :transition-key="project.slug"
         v-bind="projectLink ? prefetchHandlers : {}"
         :class="customClass"
     >

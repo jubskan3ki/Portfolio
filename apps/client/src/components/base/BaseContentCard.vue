@@ -1,7 +1,7 @@
 <template>
     <component :is="to ? NuxtLink : 'div'" :to="to || undefined" v-bind="$attrs" class="content-card">
         <!-- Visual -->
-        <div class="content-card__visual">
+        <div class="content-card__visual" :style="imageTransitionStyle">
             <BaseImage
                 v-if="image"
                 :src="image"
@@ -31,7 +31,7 @@
         <div class="content-card__content">
             <slot name="before-title"></slot>
 
-            <h3 class="content-card__title">{{ title }}</h3>
+            <h3 class="content-card__title" :style="titleTransitionStyle">{{ title }}</h3>
 
             <p v-if="description" class="content-card__description">
                 {{ description }}
@@ -73,6 +73,7 @@
         description: '',
         tags: () => [],
         maxTags: 3,
+        transitionKey: '',
     });
 
     const NuxtLink = resolveComponent('NuxtLink');
@@ -87,12 +88,22 @@
         description?: string;
         tags?: string[];
         maxTags?: number;
+        // When set, emits matching `view-transition-name` on the card's image
+        // and title so navigations to the detail page morph them into place.
+        transitionKey?: string;
     }
 
     defineOptions({ inheritAttrs: false });
 
     const displayedTags = computed(() => props.tags.slice(0, props.maxTags));
     const remainingTagsCount = computed(() => Math.max(0, props.tags.length - props.maxTags));
+
+    const imageTransitionStyle = computed(() =>
+        props.transitionKey ? { viewTransitionName: `hero-media-${props.transitionKey}` } : undefined,
+    );
+    const titleTransitionStyle = computed(() =>
+        props.transitionKey ? { viewTransitionName: `hero-title-${props.transitionKey}` } : undefined,
+    );
 </script>
 
 <style lang="scss" scoped>

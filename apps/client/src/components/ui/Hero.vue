@@ -17,7 +17,7 @@
                         <span v-if="badge" class="hero__badge">{{ badge }}</span>
 
                         <!-- Logo -->
-                        <div v-if="logo" class="hero__logo">
+                        <div v-if="logo" class="hero__logo" :style="logoTransitionStyle">
                             <BaseImage
                                 :src="resolvedLogo"
                                 :alt="logoAlt || title"
@@ -29,7 +29,7 @@
                         </div>
 
                         <!-- Title -->
-                        <h1 class="hero__title">
+                        <h1 class="hero__title" :style="titleTransitionStyle">
                             <slot name="title">{{ title }}</slot>
                         </h1>
 
@@ -95,6 +95,13 @@
     const slots = useSlots();
     const hasStats = computed(() => !!slots.stats);
     const resolvedLogo = computed(() => resolveMediaUrl(props.logo));
+
+    const titleTransitionStyle = computed(() =>
+        props.transitionKey ? { viewTransitionName: `hero-title-${props.transitionKey}` } : undefined,
+    );
+    const logoTransitionStyle = computed(() =>
+        props.transitionKey ? { viewTransitionName: `hero-media-${props.transitionKey}` } : undefined,
+    );
 
     const heroRef = ref<HTMLElement | null>(null);
     const scrollY = ref(0);

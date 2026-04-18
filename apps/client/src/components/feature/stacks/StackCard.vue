@@ -15,7 +15,7 @@
 
         <!-- Header: Logo + Name + Category + Level -->
         <header class="stack-card__header">
-            <div class="stack-card__logo">
+            <div class="stack-card__logo" :style="logoTransitionStyle">
                 <BaseImage
                     v-if="stack.logo"
                     :src="stack.logo"
@@ -30,7 +30,7 @@
             </div>
 
             <div class="stack-card__title-group">
-                <h3 class="stack-card__name">{{ stack.name }}</h3>
+                <h3 class="stack-card__name" :style="titleTransitionStyle">{{ stack.name }}</h3>
                 <span v-if="stack.category" class="stack-card__category">{{ stack.category }}</span>
             </div>
 
@@ -135,6 +135,13 @@
         () => props.stack.slug,
         (s) => queryKeys.stacks.detail(s),
         (s) => stacksApi.getBySlug(s),
+    );
+
+    const logoTransitionStyle = computed(() =>
+        props.stack.slug ? { viewTransitionName: `hero-media-${props.stack.slug}` } : undefined,
+    );
+    const titleTransitionStyle = computed(() =>
+        props.stack.slug ? { viewTransitionName: `hero-title-${props.stack.slug}` } : undefined,
     );
 </script>
 
