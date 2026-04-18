@@ -8,7 +8,7 @@
             justifyContent: 'space-between',
             padding: '60px',
             background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'Lato, sans-serif',
             color: '#ffffff',
         }"
     >

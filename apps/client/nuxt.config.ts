@@ -345,6 +345,10 @@ export default defineNuxtConfig({
             height: 630,
             component: 'OgImageDefault',
         },
+        fonts: [
+            { name: 'Lato', weight: 400 },
+            { name: 'Lato', weight: 700 },
+        ],
     },
 
     robots: {

@@ -39,6 +39,19 @@ export const AUTHOR_REF = {
     url: SITE_CONFIG.url,
 };
 
+// Retourne l'URL telle quelle si elle est absolue, undefined sinon.
+// Satori (via nuxt-og-image) doit pouvoir fetch l'image server-side — un chemin
+// relatif ne résoudrait pas correctement selon l'environnement.
+function absoluteImage(url?: string | null): string | undefined {
+    if (!url) {
+        return undefined;
+    }
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+    return undefined;
+}
+
 // Extrait le nombre de mots depuis les blocs de contenu JSON
 function extractWordCount(content: unknown): number {
     if (!content || !Array.isArray(content)) {
@@ -113,9 +126,10 @@ export function useArticleSeo(article: ArticleDetail) {
     });
 
     defineOgImage({
-        component: 'OgImageDefault',
+        component: 'OgImageArticle',
         title: article.title,
         description: article.excerpt,
+        image: absoluteImage(article.image),
         category: article.category,
         readTime: article.readTime,
     } as Record<string, unknown>);
@@ -168,10 +182,12 @@ export function useProjectSeo(project: ProjectDetail) {
     });
 
     defineOgImage({
-        component: 'OgImageDefault',
+        component: 'OgImageProject',
         title: project.title,
         description: project.description,
+        image: absoluteImage(project.image),
         category: project.category,
+        technologies: project.technologies,
     } as Record<string, unknown>);
 
     useSchemaOrg([
@@ -210,9 +226,11 @@ export function useStackSeo(stack: StackDetail) {
     });
 
     defineOgImage({
-        component: 'OgImageDefault',
-        title: stack.name,
+        component: 'OgImageStack',
+        name: stack.name,
         description: stack.description,
+        logo: absoluteImage(stack.logo),
+        level: stack.level,
     } as Record<string, unknown>);
 
     // Mapper le niveau numerique vers un libelle de competence
