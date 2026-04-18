@@ -9,6 +9,12 @@ export interface FAQ {
     order: number;
 }
 
+// Lightweight static FAQ item (front-only, emitted in FAQPage JSON-LD)
+export interface FaqItem {
+    question: string;
+    answer: string;
+}
+
 // Type pour le formulaire de contact
 export interface ContactForm {
     name: string;

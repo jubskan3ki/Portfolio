@@ -60,6 +60,8 @@ export default defineNuxtConfig({
                 { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
                 { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
                 { rel: 'preconnect', href: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000' },
+                { rel: 'alternate', type: 'application/atom+xml', title: 'Blog — Atom', href: '/feed.xml' },
+                { rel: 'alternate', type: 'application/feed+json', title: 'Blog — JSON Feed', href: '/feed.json' },
             ],
         },
         pageTransition: { name: 'page', mode: 'out-in' },

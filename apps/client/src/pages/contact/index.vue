@@ -65,6 +65,13 @@
             </div>
         </Section>
 
+        <!-- FAQ Section -->
+        <Section class="faq-section">
+            <div class="container">
+                <ContactFAQ :items="faqItems" />
+            </div>
+        </Section>
+
         <!-- Contact Section -->
         <Section class="contact-section" variant="light">
             <div class="container">
@@ -100,16 +107,20 @@
     import { computed } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
+    import ContactFAQ from '@/components/feature/contact/ContactFAQ.vue';
     import ContactForm from '@/components/feature/contact/ContactForm.vue';
     import ContactInfos from '@/components/feature/contact/ContactInfos.vue';
     import Section from '@/components/layouts/Section.vue';
     import Hero from '@/components/ui/Hero.vue';
+    import { useContactFaqSeo } from '@/composables/seo/useContactFaqSeo';
     import { useContactSeo, SITE_CONFIG } from '@/composables/seo/useSeo';
     import { useScrollToTop } from '@/composables/ui/useScrollToTop';
     import { useContactInfo } from '@/services/api/modules/contact';
 
     // SEO with Schema.org (ContactPage + AboutPage + Person)
     useContactSeo();
+    // FAQPage JSON-LD + static items rendered below
+    const { items: faqItems } = useContactFaqSeo();
     useScrollToTop();
 
     // About data
