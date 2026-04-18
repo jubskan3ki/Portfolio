@@ -28,37 +28,36 @@ function toIsoString(value: string | null | undefined, fallback: string): string
 
 export default defineCachedEventHandler(
     async (event) => {
-        const site = useSiteConfig(event);
+        const site = useSiteConfig();
         const siteUrl = (site.url ?? 'https://juba-aitadda.dev').replace(/\/$/, '');
         const siteName = site.name ?? 'Juba Ait-Adda';
         const siteDescription = site.description ?? 'Articles techniques de Juba Ait-Adda';
 
         let articles: Article[] = [];
         try {
-            const response = await httpClient.get<PaginatedResponse<Article>>(
-                API_ENDPOINTS.ARTICLES.BASE,
-                { limit: FEED_LIMIT, page: 1 },
-            );
+            const response = await httpClient.get<PaginatedResponse<Article>>(API_ENDPOINTS.ARTICLES.BASE, {
+                limit: FEED_LIMIT,
+                page: 1,
+            });
             articles = response.data ?? [];
         } catch (err) {
             console.warn('[feed.xml] Failed to fetch articles:', err);
         }
 
         const now = new Date().toISOString();
-        const feedUpdated = articles[0]
-            ? toIsoString(articles[0].updatedAt || articles[0].date, now)
-            : now;
+        const feedUpdated = articles[0] ? toIsoString(articles[0].updatedAt || articles[0].date, now) : now;
 
-        const entries = articles.map((article) => {
-            const articleUrl = `${siteUrl}/blog/${article.slug}`;
-            const published = toIsoString(article.date, now);
-            const updated = toIsoString(article.updatedAt || article.date, now);
-            const summary = article.excerpt ?? '';
-            const categories = (article.tags ?? [])
-                .map((tag) => `        <category term="${escapeXml(tag)}"/>`)
-                .join('\n');
+        const entries = articles
+            .map((article) => {
+                const articleUrl = `${siteUrl}/blog/${article.slug}`;
+                const published = toIsoString(article.date, now);
+                const updated = toIsoString(article.updatedAt || article.date, now);
+                const summary = article.excerpt ?? '';
+                const categories = (article.tags ?? [])
+                    .map((tag) => `        <category term="${escapeXml(tag)}"/>`)
+                    .join('\n');
 
-            return `    <entry>
+                return `    <entry>
         <id>${articleUrl}</id>
         <title>${escapeXml(article.title)}</title>
         <link rel="alternate" type="text/html" href="${articleUrl}"/>
@@ -71,7 +70,8 @@ export default defineCachedEventHandler(
         </author>
 ${categories}
     </entry>`;
-        }).join('\n');
+            })
+            .join('\n');
 
         const feed = `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">

@@ -4,7 +4,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineNuxtConfig({
-
     modules: [
         '@nuxt/eslint',
         '@pinia/nuxt',
@@ -13,6 +12,7 @@ export default defineNuxtConfig({
         '@nuxtjs/seo',
         'nuxt-delay-hydration',
         'nuxt-security',
+        '@vite-pwa/nuxt',
     ],
 
     plugins: [
@@ -88,7 +88,9 @@ export default defineNuxtConfig({
         apiBaseServer: process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
         public: {
             apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
-            webVitalsSampleRate: process.env.NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE || (process.env.NODE_ENV === 'development' ? '0' : '0.2'),
+            webVitalsSampleRate:
+                process.env.NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE ||
+                (process.env.NODE_ENV === 'development' ? '0' : '0.2'),
         },
     },
 
@@ -150,7 +152,7 @@ export default defineNuxtConfig({
     },
 
     features: {
-        inlineStyles: false,
+        inlineStyles: true,
     },
 
     experimental: {
@@ -177,6 +179,9 @@ export default defineNuxtConfig({
             '/_nuxt/**': {
                 headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
             },
+            '/_ipx/**': {
+                headers: { 'Cache-Control': 'public, max-age=2592000, immutable' },
+            },
             '/fonts/**': {
                 headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
             },
@@ -199,15 +204,18 @@ export default defineNuxtConfig({
     vite: {
         cacheDir: 'node_modules/.cache/vite',
 
-        plugins: process.env.ANALYZE === 'true'
-            ? [visualizer({
-                open: true,
-                filename: '.nuxt/bundle-stats.html',
-                gzipSize: true,
-                brotliSize: true,
-                template: 'treemap',
-            }) as any]
-            : [],
+        plugins:
+            process.env.ANALYZE === 'true'
+                ? [
+                      visualizer({
+                          open: true,
+                          filename: '.nuxt/bundle-stats.html',
+                          gzipSize: true,
+                          brotliSize: true,
+                          template: 'treemap',
+                      }) as any,
+                  ]
+                : [],
         css: {
             preprocessorOptions: {
                 scss: {
@@ -224,7 +232,7 @@ export default defineNuxtConfig({
         },
         build: {
             cssMinify: 'esbuild',
-            cssCodeSplit: false,
+            cssCodeSplit: true,
             minify: 'esbuild',
             reportCompressedSize: false,
             rollupOptions: {
@@ -234,10 +242,10 @@ export default defineNuxtConfig({
                         if (id.includes('node_modules')) {
                             if (id.includes('chart.js')) return 'chartjs';
                             if (
-                                id.includes('/vue/')
-                                || id.includes('/@vue/')
-                                || id.includes('/vue-router/')
-                                || id.includes('/pinia/')
+                                id.includes('/vue/') ||
+                                id.includes('/@vue/') ||
+                                id.includes('/vue-router/') ||
+                                id.includes('/pinia/')
                             ) {
                                 return 'vendor-core';
                             }
@@ -310,10 +318,7 @@ export default defineNuxtConfig({
         alias: {
             '/media': `${process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000'}/media`,
         },
-        domains: [
-            'localhost',
-            'backend',
-        ],
+        domains: ['localhost', 'backend'],
         screens: {
             xs: 320,
             sm: 640,
@@ -355,6 +360,55 @@ export default defineNuxtConfig({
         ],
     },
 
+    pwa: {
+        registerType: 'autoUpdate',
+        injectRegister: 'auto',
+        strategies: 'generateSW',
+        manifest: {
+            name: 'Juba Ait-Adda — Portfolio',
+            short_name: 'Juba A.',
+            description: 'Portfolio de Juba Ait-Adda, développeur full-stack et DevOps',
+            theme_color: '#1a1a2e',
+            background_color: '#ffffff',
+            display: 'standalone',
+            start_url: '/',
+            scope: '/',
+            lang: 'fr',
+            icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+        },
+        workbox: {
+            globPatterns: [],
+            navigateFallback: '/offline',
+            navigateFallbackDenylist: [/^\/admin/, /^\/api/, /^\/feed\./, /^\/_ipx/, /^\/_nuxt/],
+            runtimeCaching: [
+                {
+                    urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/api/articles/'),
+                    handler: 'StaleWhileRevalidate',
+                    options: {
+                        cacheName: 'articles-api',
+                        expiration: { maxEntries: 40, maxAgeSeconds: 24 * 3600 },
+                        cacheableResponse: { statuses: [0, 200] },
+                    },
+                },
+                {
+                    urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/media/'),
+                    handler: 'StaleWhileRevalidate',
+                    options: {
+                        cacheName: 'media-assets',
+                        expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 3600 },
+                        cacheableResponse: { statuses: [0, 200] },
+                    },
+                },
+            ],
+        },
+        devOptions: {
+            enabled: false,
+        },
+        client: {
+            installPrompt: false,
+        },
+    },
+
     robots: {
         enabled: true,
         groups: [
@@ -384,7 +438,7 @@ export default defineNuxtConfig({
     // ── Security headers (remplace les headers manuels dans routeRules) ───────
     security: {
         headers: {
-            contentSecurityPolicy: false, // à activer après audit CSP complet
+            contentSecurityPolicy: false,
             crossOriginEmbedderPolicy: false,
             crossOriginOpenerPolicy: process.env.NODE_ENV === 'development' ? false : 'same-origin',
             crossOriginResourcePolicy: 'same-origin',
@@ -406,8 +460,8 @@ export default defineNuxtConfig({
             maxRequestSizeInBytes: 5_000_000,
             maxUploadFileRequestInBytes: 5_000_000,
         },
-        rateLimiter: false, // géré côté Django
-        corsHandler: false, // géré côté Django/nginx
+        rateLimiter: false,
+        corsHandler: false,
         allowedMethodsRestricter: false,
         hidePoweredBy: true,
         basicAuth: false,
@@ -422,5 +476,4 @@ export default defineNuxtConfig({
         exclude: ['/admin/**', '/login'],
         cacheMaxAgeSeconds: 3600,
     },
-
 });

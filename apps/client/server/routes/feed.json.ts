@@ -19,17 +19,17 @@ function toIsoString(value: string | null | undefined, fallback: string): string
 
 export default defineCachedEventHandler(
     async (event) => {
-        const site = useSiteConfig(event);
+        const site = useSiteConfig();
         const siteUrl = (site.url ?? 'https://juba-aitadda.dev').replace(/\/$/, '');
         const siteName = site.name ?? 'Juba Ait-Adda';
         const siteDescription = site.description ?? 'Articles techniques de Juba Ait-Adda';
 
         let articles: Article[] = [];
         try {
-            const response = await httpClient.get<PaginatedResponse<Article>>(
-                API_ENDPOINTS.ARTICLES.BASE,
-                { limit: FEED_LIMIT, page: 1 },
-            );
+            const response = await httpClient.get<PaginatedResponse<Article>>(API_ENDPOINTS.ARTICLES.BASE, {
+                limit: FEED_LIMIT,
+                page: 1,
+            });
             articles = response.data ?? [];
         } catch (err) {
             console.warn('[feed.json] Failed to fetch articles:', err);

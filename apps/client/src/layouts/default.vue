@@ -33,6 +33,7 @@
             <LazyAlertList position="top-right" />
             <LazyModal />
             <LazyLoader />
+            <LazyOfflineBadge />
 
             <!-- Scroll to top -->
             <Transition name="scroll-btn">

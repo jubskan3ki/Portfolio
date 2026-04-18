@@ -6,8 +6,12 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
+        "skipLibCheck": true,
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
+            "#imports": ["./.nuxt/imports.d.ts"],
+            "#build": ["./.nuxt"],
+            "#build/*": ["./.nuxt/*"]
         },
         "types": ["node", "vite/client"]
     },
@@ -22,5 +26,5 @@
         "sentry.client.config.ts",
         "sentry.server.config.ts"
     ],
-    "exclude": ["node_modules", "dist"]
+    "exclude": ["node_modules", "dist", ".nuxt/pwa-icons-plugin.ts"]
 }
