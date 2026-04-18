@@ -179,6 +179,12 @@ test:backend:unit:
                 path: apps/server/coverage.xml
         expire_in: 1 week
 
+test:frontend:unit:
+    stage: test
+    extends: [.frontend_base, .rules:all]
+    script:
+        - cd apps/client && pnpm test
+
 # ══════════════════════════════════════════════════════════════════════════════
 # STAGE 3 — security
 # ══════════════════════════════════════════════════════════════════════════════
