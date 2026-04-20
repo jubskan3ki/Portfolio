@@ -279,6 +279,7 @@ services:
             - "--tracing.otlp.grpc.endpoint=otel-collector:4317"
             - "--tracing.otlp.grpc.insecure=true"
             - "--tracing.sampleRate=${TRAEFIK_TRACING_SAMPLE_RATE:-1.0}"
+            - "--certificatesResolvers.letsencrypt.acme.email=${EMAIL:?EMAIL required}"
         ports:
             - "${TRAEFIK_HTTP_PORT:-80}:80"
             - "${TRAEFIK_HTTPS_PORT:-443}:443"
