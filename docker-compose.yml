@@ -246,7 +246,11 @@ services:
             DJANGO_ENV: ${DJANGO_ENV:-dev}
             DEPLOYMENT_IMAGE_TAG: ${IMAGE_TAG:-dev}
         healthcheck:
-            test: ["CMD-SHELL", "curl -f http://localhost:80/health || exit 1"]
+            test:
+                - "CMD"
+                - "/nodejs/bin/node"
+                - "-e"
+                - "require('http').get('http://127.0.0.1:80/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
             interval: 30s
             retries: 3
             timeout: 5s
