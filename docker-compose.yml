@@ -143,7 +143,6 @@ services:
                 VCS_REF: ${IMAGE_TAG:-dev}
                 BUILD_DATE: ${BUILD_DATE:-unknown}
         volumes:
-            - ./apps/server:/app
             - backend_logs:/app/logs
             - backend_static:/app/staticfiles
             - backend_media:/app/media
@@ -193,7 +192,6 @@ services:
             --max-tasks-per-child=${CELERY_MAX_TASKS_PER_CHILD:-1000}
             --hostname=celery@%h
         volumes:
-            - ./apps/server:/app
             - backend_logs:/app/logs
         depends_on:
             backend:

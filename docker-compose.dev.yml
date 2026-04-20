@@ -3,6 +3,8 @@ services:
         command: python manage.py runserver 0.0.0.0:8000
         ports:
             - "${SERVER_PORT:-8000}:8000"
+        volumes:
+            - ./apps/server:/app
         environment:
             DJANGO_DEBUG: "true"
             ENABLE_DEBUG_TOOLBAR: "true"
@@ -22,6 +24,8 @@ services:
             --concurrency=${CELERY_CONCURRENCY:-2}
             --max-tasks-per-child=${CELERY_MAX_TASKS_PER_CHILD:-1000}
             --hostname=celery@%h
+        volumes:
+            - ./apps/server:/app
         environment:
             OTEL_SDK_DISABLED: "true"
 
