@@ -19,10 +19,12 @@ SERVER_DIR      := apps/server
 
 ifeq ($(ENV),prod)
     COMPOSE_OVERLAY := -f docker-compose.yml -f docker-compose.prod.yml
+    COMPOSE_ENV_FLAG := --env-file $(SECRETS_RUNTIME_DIR)/prod.env
 else
     COMPOSE_OVERLAY := -f docker-compose.yml -f docker-compose.dev.yml
+    COMPOSE_ENV_FLAG :=
 endif
-COMPOSE      := $(COMPOSE_BIN) $(COMPOSE_OVERLAY)
+COMPOSE      := $(COMPOSE_BIN) $(COMPOSE_ENV_FLAG) $(COMPOSE_OVERLAY)
 COMPOSE_DEV  := $(COMPOSE_BIN) -f docker-compose.yml -f docker-compose.dev.yml --profile dev
 COMPOSE_EXEC := $(COMPOSE) exec
 
@@ -348,6 +350,26 @@ bench-staging: ## k6 contre le VPS staging (perf réelle incluant DNS/TLS/RTT)
 .PHONY: status-check
 status-check: ## Teste /api/public/status/ (agrégation Prometheus + Alertmanager)
 	@curl -fsS "http://localhost:$${NGINX_PORT:-80}/api/public/status/" | python3 -m json.tool
+
+##@ SEO - audit meta · JSON-LD · Lighthouse
+
+.PHONY: seo-build
+seo-build: ## Type-check + build client (vérifie que les changements SEO compilent)
+	cd $(CLIENT_DIR) && $(PNPM) type-check && $(PNPM) build
+
+.PHONY: seo-ssr-check
+seo-ssr-check: ## Curl les pages publiques + grep meta/JSON-LD (dev server requis sur :3000)
+	@for p in / /contact /blog /projects /stacks /experience; do \
+	    printf "\n\033[1;33m--- %s ---\033[0m\n" "$$p"; \
+	    curl -fsS "http://localhost:3000$$p" \
+	        | grep -iE 'og:title|og:description|canonical|JobPosting|FAQPage|"@type"' \
+	        | head -20 || echo "(page injoignable)"; \
+	done
+
+.PHONY: seo-lighthouse
+seo-lighthouse: ## Audit Lighthouse SEO. URL=https://juba-aitadda.dev/contact make seo-lighthouse
+	@test -n "$(URL)" || { echo "Usage: URL=<page> make seo-lighthouse"; exit 1; }
+	npx --yes lighthouse "$(URL)" --only-categories=seo --quiet --chrome-flags="--headless"
 
 ##@ Maintenance - clean + reset
 

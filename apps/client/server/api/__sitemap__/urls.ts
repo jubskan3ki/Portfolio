@@ -1,10 +1,10 @@
-import { httpClient } from '@/services/api/core/httpClient';
 import { API_ENDPOINTS } from '@/config/api';
+import { httpClient } from '@/services/api/core/httpClient';
 
+import type { PaginatedResponse } from '@/types/api/common';
 import type { Article } from '@/types/feature/blog';
 import type { Project } from '@/types/feature/project';
 import type { Stack } from '@/types/feature/stacks';
-import type { PaginatedResponse } from '@/types/api/common';
 
 interface SitemapImage {
     loc: string;
@@ -45,55 +45,60 @@ const STATIC_PAGES: SitemapEntry[] = [
     { loc: '/projects', changefreq: 'weekly', priority: 0.8 },
     { loc: '/stacks', changefreq: 'weekly', priority: 0.7 },
     { loc: '/experience', changefreq: 'monthly', priority: 0.6 },
-    { loc: '/contact', changefreq: 'monthly', priority: 0.7 },
+    { loc: '/contact', changefreq: 'weekly', priority: 0.9 },
     { loc: '/legal', changefreq: 'yearly', priority: 0.1 },
     { loc: '/privacy', changefreq: 'yearly', priority: 0.1 },
     { loc: '/terms', changefreq: 'yearly', priority: 0.1 },
 ];
 
-export default defineCachedEventHandler(async () => {
-    const [articlesResult, projectsResult, stacksResult] = await Promise.allSettled([
-        fetchAllPages<Article>(API_ENDPOINTS.ARTICLES.BASE),
-        fetchAllPages<Project>(API_ENDPOINTS.PROJECTS.BASE),
-        fetchAllPages<Stack>(API_ENDPOINTS.STACKS.BASE),
-    ]);
+export default defineCachedEventHandler(
+    async () => {
+        const [articlesResult, projectsResult, stacksResult] = await Promise.allSettled([
+            fetchAllPages<Article>(API_ENDPOINTS.ARTICLES.BASE),
+            fetchAllPages<Project>(API_ENDPOINTS.PROJECTS.BASE),
+            fetchAllPages<Stack>(API_ENDPOINTS.STACKS.BASE),
+        ]);
 
-    const articles = articlesResult.status === 'fulfilled' ? articlesResult.value : [];
-    const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : [];
-    const stacks = stacksResult.status === 'fulfilled' ? stacksResult.value : [];
+        const articles = articlesResult.status === 'fulfilled' ? articlesResult.value : [];
+        const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : [];
+        const stacks = stacksResult.status === 'fulfilled' ? stacksResult.value : [];
 
-    if (articlesResult.status === 'rejected') console.warn('[sitemap] Failed to fetch articles:', articlesResult.reason);
-    if (projectsResult.status === 'rejected') console.warn('[sitemap] Failed to fetch projects:', projectsResult.reason);
-    if (stacksResult.status === 'rejected') console.warn('[sitemap] Failed to fetch stacks:', stacksResult.reason);
+        if (articlesResult.status === 'rejected')
+            console.warn('[sitemap] Failed to fetch articles:', articlesResult.reason);
+        if (projectsResult.status === 'rejected')
+            console.warn('[sitemap] Failed to fetch projects:', projectsResult.reason);
+        if (stacksResult.status === 'rejected') console.warn('[sitemap] Failed to fetch stacks:', stacksResult.reason);
 
-    const articleUrls: SitemapEntry[] = articles.map((a) => ({
-        loc: `/blog/${a.slug}`,
-        lastmod: toDateString(a.updatedAt || a.date),
-        changefreq: 'monthly',
-        priority: 0.7,
-        ...(a.image && { images: [{ loc: a.image, title: a.title }] }),
-    }));
+        const articleUrls: SitemapEntry[] = articles.map((a) => ({
+            loc: `/blog/${a.slug}`,
+            lastmod: toDateString(a.updatedAt || a.date),
+            changefreq: 'monthly',
+            priority: 0.7,
+            ...(a.image && { images: [{ loc: a.image, title: a.title }] }),
+        }));
 
-    const projectUrls: SitemapEntry[] = projects.map((p) => ({
-        loc: `/projects/${p.slug}`,
-        lastmod: toDateString(p.updatedAt || p.date),
-        changefreq: 'monthly',
-        priority: 0.6,
-        ...(p.image && { images: [{ loc: p.image, title: p.title }] }),
-    }));
+        const projectUrls: SitemapEntry[] = projects.map((p) => ({
+            loc: `/projects/${p.slug}`,
+            lastmod: toDateString(p.updatedAt || p.date),
+            changefreq: 'monthly',
+            priority: 0.6,
+            ...(p.image && { images: [{ loc: p.image, title: p.title }] }),
+        }));
 
-    const stackUrls: SitemapEntry[] = stacks.map((s) => ({
-        loc: `/stacks/${s.slug}`,
-        lastmod: toDateString(s.startedDate),
-        changefreq: 'monthly',
-        priority: 0.5,
-        ...(s.logo && { images: [{ loc: s.logo, title: s.name }] }),
-    }));
+        const stackUrls: SitemapEntry[] = stacks.map((s) => ({
+            loc: `/stacks/${s.slug}`,
+            lastmod: toDateString(s.startedDate),
+            changefreq: 'monthly',
+            priority: 0.5,
+            ...(s.logo && { images: [{ loc: s.logo, title: s.name }] }),
+        }));
 
-    return [...STATIC_PAGES, ...articleUrls, ...projectUrls, ...stackUrls];
-}, {
-    maxAge: 3600,
-    swr: true,
-    name: 'sitemap-urls',
-    getKey: () => 'sitemap-urls',
-});
+        return [...STATIC_PAGES, ...articleUrls, ...projectUrls, ...stackUrls];
+    },
+    {
+        maxAge: 3600,
+        swr: true,
+        name: 'sitemap-urls',
+        getKey: () => 'sitemap-urls',
+    },
+);

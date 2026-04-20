@@ -9,7 +9,6 @@ const ROUTE_LABELS: Record<string, string> = {
     '/stacks': 'Stacks',
     '/contact': 'À propos & Contact',
     '/experience': 'Mon Parcours',
-    '/about': 'À propos',
 };
 
 const SITE_URL = 'https://juba-aitadda.dev';
@@ -38,8 +37,7 @@ export function useBreadcrumbSeo(options?: BreadcrumbSeoOptions): BreadcrumbSeoR
 
         if (segments.length >= 2 && meta) {
             if (meta.category) {
-                const categoryTo
-                    = meta.categoryPath || `${sectionPath}?category=${encodeURIComponent(meta.category)}`;
+                const categoryTo = meta.categoryPath || `${sectionPath}?category=${encodeURIComponent(meta.category)}`;
                 crumbs.push({ label: meta.category, to: categoryTo });
             }
 

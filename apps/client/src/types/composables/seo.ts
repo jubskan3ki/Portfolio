@@ -8,12 +8,15 @@ export interface SeoOptions {
     title: string;
     description: string;
     image?: string;
+    imageAlt?: string;
     url?: string;
     type?: SeoType;
     publishedTime?: string;
     modifiedTime?: string;
     author?: string;
     keywords?: string[];
+    section?: string;
+    tags?: string[];
     noindex?: boolean;
 }
 

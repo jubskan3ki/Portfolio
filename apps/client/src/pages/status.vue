@@ -108,12 +108,10 @@
         return 'unknown';
     });
 
-    useHead({
+    useSeoMeta({
         title: 'Status — Portfolio',
-        meta: [
-            { name: 'description', content: 'Disponibilité et performance en temps réel.' },
-            { name: 'robots', content: 'index, follow' },
-        ],
+        description: 'Disponibilité et performance en temps réel.',
+        robots: 'noindex, nofollow',
     });
 
     // Auto-refresh every 60s on client side.

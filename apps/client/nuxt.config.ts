@@ -47,23 +47,50 @@ export default defineNuxtConfig({
 
     app: {
         head: {
-            title: 'Juba Ait-Adda | Développeur Full-Stack',
+            title: 'Juba Ait-Adda — Dev Fullstack | CDI & Freelance',
             htmlAttrs: {
                 lang: 'fr',
             },
             meta: [
-                { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+                { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
                 { charset: 'utf-8' },
-                { name: 'description', content: 'Portfolio de Juba Ait-Adda, développeur full-stack et DevOps' },
+                {
+                    name: 'description',
+                    content: 'Portfolio de Juba Ait-Adda, développeur fullstack & DevOps ouvert CDI et freelance.',
+                },
+                { name: 'author', content: 'Juba Ait-Adda' },
+                { name: 'publisher', content: 'Juba Ait-Adda' },
                 { name: 'theme-color', content: '#1a1a2e' },
+                { name: 'color-scheme', content: 'light dark' },
+                { name: 'format-detection', content: 'telephone=no' },
+                { name: 'referrer', content: 'strict-origin-when-cross-origin' },
+                { name: 'geo.region', content: 'FR-IDF' },
+                { name: 'geo.placename', content: 'Paris' },
+                { name: 'geo.position', content: '48.8566;2.3522' },
+                { name: 'ICBM', content: '48.8566, 2.3522' },
+                // PWA / Apple / Microsoft tiles
+                { name: 'application-name', content: 'Juba Ait-Adda' },
+                { name: 'apple-mobile-web-app-title', content: 'Juba A.' },
+                { name: 'apple-mobile-web-app-capable', content: 'yes' },
+                { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+                { name: 'mobile-web-app-capable', content: 'yes' },
+                { name: 'msapplication-TileColor', content: '#1a1a2e' },
+                { name: 'msapplication-config', content: 'none' },
             ],
             link: [
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+                { rel: 'mask-icon', href: '/favicon.svg', color: '#1a1a2e' },
+                { rel: 'apple-touch-icon', href: '/logo.png' },
                 { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
                 { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+                { rel: 'dns-prefetch', href: 'https://fonts.googleapis.com' },
+                { rel: 'dns-prefetch', href: 'https://fonts.gstatic.com' },
                 { rel: 'preconnect', href: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000' },
                 { rel: 'alternate', type: 'application/atom+xml', title: 'Blog — Atom', href: '/feed.xml' },
                 { rel: 'alternate', type: 'application/feed+json', title: 'Blog — JSON Feed', href: '/feed.json' },
+                { rel: 'me', href: 'https://github.com/jubskan3ki' },
+                { rel: 'me', href: 'https://www.linkedin.com/in/juba-aitadda/' },
+                { rel: 'author', href: '/humans.txt', type: 'text/plain' },
             ],
         },
         pageTransition: { name: 'page', mode: 'out-in' },
@@ -120,9 +147,9 @@ export default defineNuxtConfig({
         '/projects/**': { swr: 600 },
         '/stacks': { swr: 300 },
         '/stacks/**': { swr: 600 },
-        '/about': { redirect: { to: '/contact', statusCode: 301 } },
         '/experience': { swr: 600 },
         '/contact': { swr: 3600 },
+        '/status': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
         '/legal': { swr: 86400 },
         '/privacy': { swr: 86400 },
         '/terms': { swr: 86400 },
@@ -476,7 +503,7 @@ export default defineNuxtConfig({
 
     sitemap: {
         sources: ['/api/__sitemap__/urls'],
-        exclude: ['/admin/**', '/login'],
+        exclude: ['/admin/**', '/login', '/status', '/offline'],
         cacheMaxAgeSeconds: 3600,
     },
 });

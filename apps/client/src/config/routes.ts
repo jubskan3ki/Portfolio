@@ -33,10 +33,6 @@ export const ROUTES: AppRoutes = {
         }),
     },
 
-    ABOUT: {
-        path: '/about',
-        name: 'About',
-    },
     CONTACT: {
         path: '/contact',
         name: 'Contact',

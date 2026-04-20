@@ -1,0 +1,17 @@
+/* TEAM */
+Développeur : Juba Ait-Adda
+Site       : https://juba-aitadda.dev
+Contact    : contact [at] aitaddajuba.fr
+Lieu       : Paris, Île-de-France, France
+GitHub     : @jubskan3ki
+LinkedIn   : juba-aitadda
+
+/* STATUS */
+Ouvert aux opportunités CDI et aux missions freelance.
+
+/* SITE */
+Dernière mise à jour : 2026-04-20
+Langue               : Français
+Stack                : Nuxt 3, Vue 3, TypeScript, Django, Python, Docker, PostgreSQL
+Standards            : HTML5, SCSS, JSON-LD, OpenGraph, Twitter Cards, Atom, JSON Feed
+Hébergement          : VPS auto-hébergé, Traefik, Grafana / Prometheus / Loki
