@@ -23,7 +23,6 @@ export function useTransferJobs() {
                 | Array<ExportJob | ImportJob>;
             const raw = Array.isArray(response) ? response : (response.results ?? []);
 
-            // Normalize to TransferJob with explicit type discriminant (single place for duck-typing)
             return raw.slice(0, 10).map((job): TransferJob => {
                 const type = inferJobType(job);
                 return {
@@ -37,7 +36,7 @@ export function useTransferJobs() {
                 };
             });
         },
-        staleTime: 1000 * 30, // 30 seconds
+        staleTime: 1000 * 30,
     });
 
     const recentJobs = computed<TransferJob[]>(() => jobsData.value ?? []);

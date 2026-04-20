@@ -1,6 +1,5 @@
 <template>
     <main :id="id" :class="mainClasses" :aria-labelledby="titleId">
-        <!-- Glass Background -->
         <GlassBackground
             v-if="withGlassBackground"
             :variant="glassVariant"
@@ -10,7 +9,6 @@
         />
 
         <div :class="{ container: withContainer }">
-            <!-- Header -->
             <header v-if="hasHeader" class="main__header">
                 <slot name="header">
                     <h1 v-if="title" :id="titleId" class="main__title">{{ title }}</h1>
@@ -18,12 +16,10 @@
                 </slot>
             </header>
 
-            <!-- Content -->
             <div class="main__content">
                 <slot></slot>
             </div>
 
-            <!-- Footer -->
             <footer v-if="$slots.footer" class="main__footer">
                 <slot name="footer"></slot>
             </footer>
@@ -36,9 +32,9 @@
 
     import GlassBackground from '@/components/ui/GlassBackground.vue';
 
-    import type { SectionSize, SectionVariant } from '@/types/components/layouts';
+    import type { MainLayoutProps } from '@/types/components/layouts';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<MainLayoutProps>(), {
         id: undefined,
         title: '',
         subtitle: '',
@@ -64,21 +60,6 @@
             .replace(/(^-|-$)/g, '');
         return `main-title-${slug}`;
     });
-
-    interface Props {
-        id?: string;
-        title?: string;
-        subtitle?: string;
-        size?: SectionSize;
-        variant?: SectionVariant;
-        withContainer?: boolean;
-        withGlassBackground?: boolean;
-        glassVariant?: 'primary' | 'secondary' | 'light' | 'dark';
-        showDots?: boolean;
-        glassAnimated?: boolean;
-        bubbleCount?: number;
-        customClass?: string;
-    }
 
     const slots = useSlots();
 

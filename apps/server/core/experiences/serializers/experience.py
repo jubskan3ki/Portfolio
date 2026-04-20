@@ -12,7 +12,7 @@ class ExperienceWriteSerializer(serializers.ModelSerializer):
     """Serializer pour la creation et mise a jour des experiences."""
 
     type = serializers.PrimaryKeyRelatedField(queryset=ExperienceType.objects.all())
-    # Accept camelCase from frontend, map to model snake_case fields
+    # camelCase cote client -> snake_case DB (frontend Nuxt).
     startDate = serializers.DateField(source="start_date", required=True)
     endDate = serializers.DateField(source="end_date", required=False, allow_null=True)
 

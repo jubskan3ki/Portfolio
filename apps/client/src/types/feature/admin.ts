@@ -77,6 +77,8 @@ export interface AdminProject extends ProjectBase {
     };
     isFeatured?: boolean;
     order?: number;
+    seoTitle?: string;
+    metaDescription?: string;
     createdAt: string;
     updatedAt?: string;
 }
@@ -117,7 +119,6 @@ export interface AdminMessage {
     repliedAt?: string;
 }
 
-// Re-export for backward compatibility
 export type { DjangoPaginatedResponse as PaginatedResponse } from '@/types/api/common';
 
 export type AdminEntity = AdminArticle | AdminProject | AdminStack | AdminExperience | AdminMessage;
@@ -137,4 +138,11 @@ export interface Session {
     createdAt?: string;
     lastActivity?: string;
     isCurrent?: boolean;
+}
+
+export interface SessionsResponse {
+    sessions: Session[];
+    count: number;
+    currentSessionId?: string;
+    fingerprintLockEnabled?: boolean;
 }

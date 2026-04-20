@@ -146,7 +146,6 @@ class PasswordService:
                 PasswordService._ensure_min_response_time(start_time)
                 raise PermissionDenied("Code de reinitialisation incorrect.")
 
-            # Validation du mot de passe
             PasswordService.validate_new_password(new_password, user)
 
             user.set_password(new_password)

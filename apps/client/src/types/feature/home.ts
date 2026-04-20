@@ -1,19 +1,15 @@
-// Home Types
-
 import type { Stack } from './stacks';
+import type { StatCardVariant } from '@/types/components/ui';
 
 export type HomeVariant = 'light' | 'dark' | 'secondary' | 'primary';
 
-/** Minimal stack fields needed by the hero badges */
 export type HeroStack = Pick<Stack, 'id' | 'name' | 'logo' | 'level'>;
 
-// Props pour HeroSection
 export interface HeroSectionProps {
     featuredStacks?: HeroStack[];
     bio?: string;
 }
 
-// Props pour ExpertiseCard
 export interface ExpertiseCardProps {
     title: string;
     description: string;
@@ -22,4 +18,13 @@ export interface ExpertiseCardProps {
     variant?: HomeVariant;
     animateOnScroll?: boolean;
     to?: string;
+}
+
+export interface StatCardProps {
+    value: number | string;
+    label: string;
+    icon: string;
+    variant?: StatCardVariant;
+    suffix?: string;
+    duration?: number;
 }

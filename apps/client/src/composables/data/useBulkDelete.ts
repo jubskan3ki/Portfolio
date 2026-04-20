@@ -2,32 +2,19 @@ import { useMutation } from '@tanstack/vue-query';
 import { ref, computed } from 'vue';
 
 import type {
-    UseDeleteConfirmationReturn,
-    UseBulkDeleteConfirmationReturn,
     BulkDeleteResult,
+    UseBulkDeleteConfirmationReturn,
+    UseBulkDeleteOptions,
+    UseBulkDeleteReturn,
+    UseDeleteConfirmationReturn,
 } from '@/types/composables';
 import type { Ref } from 'vue';
-
-interface UseBulkDeleteOptions<T extends { id: number | string }> {
-    deleteFn: (item: T) => Promise<void>;
-    onRefresh: () => void;
-    onDeleteSuccess?: () => void;
-    onDeleteError?: (error: Error) => void;
-    onBulkDeleteSuccess?: (result: BulkDeleteResult) => void;
-    onBulkDeleteError?: (error: Error) => void;
-}
-
-interface UseBulkDeleteReturn<T extends { id: number | string }> {
-    deletion: UseDeleteConfirmationReturn<T>;
-    bulkDeletion: UseBulkDeleteConfirmationReturn<T>;
-}
 
 export function useBulkDelete<T extends { id: number | string }>(
     options: UseBulkDeleteOptions<T>,
 ): UseBulkDeleteReturn<T> {
     const { deleteFn, onRefresh, onDeleteSuccess, onDeleteError, onBulkDeleteSuccess, onBulkDeleteError } = options;
 
-    // Single delete
     const showDeleteModal = ref(false);
     const itemToDelete = ref<T | null>(null) as Ref<T | null>;
 
@@ -63,7 +50,6 @@ export function useBulkDelete<T extends { id: number | string }>(
         },
     };
 
-    // Bulk delete
     const showBulkDeleteModal = ref(false);
     const itemsToDelete = ref<T[]>([]) as Ref<T[]>;
     const isBulkDeleting = ref(false);

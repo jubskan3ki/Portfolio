@@ -6,6 +6,7 @@ import {
     ArrowRight,
     ArrowUp,
     ArrowUpDown,
+    Award,
     BarChart2,
     Book,
     BookOpen,
@@ -26,6 +27,7 @@ import {
     Clock,
     Cloud,
     Code,
+    Cpu,
     Database,
     Download,
     Edit,
@@ -79,6 +81,7 @@ import {
     Server,
     ServerOff,
     Settings,
+    Shield,
     ShieldAlert,
     ShieldOff,
     Smartphone,
@@ -112,6 +115,7 @@ export const ICON_REGISTRY: Record<string, Component> = {
     ArrowRight,
     ArrowUp,
     ArrowUpDown,
+    Award,
     BarChart2,
     Book,
     BookOpen,
@@ -132,6 +136,7 @@ export const ICON_REGISTRY: Record<string, Component> = {
     Clock,
     Cloud,
     Code,
+    Cpu,
     Database,
     Download,
     Edit,
@@ -185,6 +190,7 @@ export const ICON_REGISTRY: Record<string, Component> = {
     Server,
     ServerOff,
     Settings,
+    Shield,
     ShieldAlert,
     ShieldOff,
     Smartphone,
@@ -208,7 +214,7 @@ export const ICON_REGISTRY: Record<string, Component> = {
     Zap,
 };
 
-/** Semantic aliases: short name → PascalCase registry key */
+// Aliases sémantiques: short name -> clé registry PascalCase
 export const ICON_ALIASES: Record<string, string> = {
     close: 'X',
     error: 'XCircle',

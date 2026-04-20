@@ -1,9 +1,5 @@
-// Project Types
 import type { PaginatedResponse } from '@/types/api/common';
 
-// Note: Import PaginatedResponse directly from @/types/api/common
-
-// Type pour un projet (liste)
 export interface Project {
     id: number;
     title: string;
@@ -18,7 +14,6 @@ export interface Project {
     views: number;
 }
 
-// Type pour un projet (detail)
 export interface ProjectDetail extends Project {
     longDescription: string;
     features: string[];
@@ -31,7 +26,6 @@ export interface ProjectDetail extends Project {
     metaDescription?: string;
 }
 
-// Type pour une categorie de projets
 export interface ProjectCategory {
     id: number;
     name: string;
@@ -40,14 +34,12 @@ export interface ProjectCategory {
     count: number;
 }
 
-// Type pour un statut de projet
 export interface ProjectStatus {
     id: number;
     name: string;
     description: string;
 }
 
-// API Response Types
 export type ProjectsResponse = PaginatedResponse<Project>;
 export type ProjectCategoriesResponse = PaginatedResponse<ProjectCategory>;
 export type ProjectStatusesResponse = PaginatedResponse<ProjectStatus>;
@@ -62,8 +54,6 @@ export interface ProjectStats {
     projectsByYear: Array<{ year: number; count: number }>;
     projectsByMonth: Array<{ month: string; count: number }>;
 }
-
-// API Request Types (Create/Update)
 
 export interface ProjectCreateData {
     title: string;
@@ -98,7 +88,6 @@ export interface ProjectStatusCreateData {
 
 export type ProjectStatusUpdateData = Partial<ProjectStatusCreateData>;
 
-// Props pour ProjectCard
 export interface ProjectCardProps {
     project: Project;
     featured?: boolean;
@@ -109,13 +98,11 @@ export interface ProjectCardProps {
     customClass?: string;
 }
 
-// Filter option pour ProjectList
 interface ProjectFilterOption {
     label: string;
     value: string;
 }
 
-// Props pour ProjectList
 export interface ProjectListProps {
     projects?: Project[];
     layout?: 'grid' | 'list' | 'compact';
@@ -142,7 +129,6 @@ export interface ProjectListProps {
     customClass?: string;
 }
 
-// Props pour ProjectCarousel
 export interface ProjectCarouselProps {
     limit?: number;
     autoplay?: boolean;

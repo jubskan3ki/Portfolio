@@ -14,7 +14,6 @@ class AuditLogFilter(django_filters.FilterSet):
     object_id = django_filters.CharFilter()
     user = django_filters.NumberFilter(field_name="user__id")
 
-    # Filtres par date
     date_after = django_filters.DateTimeFilter(
         field_name="timestamp",
         lookup_expr="gte",
@@ -24,10 +23,8 @@ class AuditLogFilter(django_filters.FilterSet):
         lookup_expr="lte",
     )
 
-    # Recherche
     search = django_filters.CharFilter(method="filter_search")
 
-    # Tri
     ordering = django_filters.OrderingFilter(
         fields=(
             ("timestamp", "date"),

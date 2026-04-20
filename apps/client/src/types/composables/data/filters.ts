@@ -4,6 +4,7 @@ export interface FilterFieldConfig<T = unknown> {
     default: T;
     urlKey?: string;
     resetOnChange?: boolean;
+    debounced?: boolean;
 }
 
 export interface FilterPaginationConfig {

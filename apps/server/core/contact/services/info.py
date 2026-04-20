@@ -17,7 +17,7 @@ logger = logging.getLogger("core.contact")
 User = get_user_model()
 
 ADMIN_BIO_CACHE_KEY = "contact:admin_bio"
-ADMIN_BIO_CACHE_TTL = 60 * 30  # 30 minutes
+ADMIN_BIO_CACHE_TTL = 60 * 30
 
 
 class ContactInfoService(BaseService["ContactInfo"]):

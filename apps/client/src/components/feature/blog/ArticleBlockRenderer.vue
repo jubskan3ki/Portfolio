@@ -1,10 +1,13 @@
 <template>
     <div class="article-blocks">
         <template v-for="(block, index) in blocks" :key="`block-${index}`">
-            <!-- Paragraph -->
-            <p v-if="block.type === 'paragraph'" class="article-blocks__paragraph" v-html="inline(block.content)"></p>
+            <SafeHtml
+                v-if="block.type === 'paragraph'"
+                tag="p"
+                class="article-blocks__paragraph"
+                :html="inline(block.content)"
+            />
 
-            <!-- Heading -->
             <component
                 :is="'h' + block.level"
                 v-else-if="block.type === 'heading'"
@@ -12,16 +15,14 @@
                 class="article-blocks__heading"
                 :class="`article-blocks__heading--h${block.level}`"
             >
-                <span v-html="inline(block.content)"></span>
+                <SafeHtml :html="inline(block.content)" />
             </component>
 
-            <!-- Blockquote -->
             <blockquote v-else-if="block.type === 'blockquote'" class="article-blocks__quote">
-                <p v-html="inline(block.content)"></p>
+                <SafeHtml tag="p" :html="inline(block.content)" />
                 <cite v-if="block.cite" class="article-blocks__quote-cite"> — {{ block.cite }} </cite>
             </blockquote>
 
-            <!-- Image -->
             <figure v-else-if="block.type === 'image'" class="article-blocks__figure">
                 <BaseImage
                     :src="block.src"
@@ -34,33 +35,37 @@
                 </figcaption>
             </figure>
 
-            <!-- Code -->
             <pre v-else-if="block.type === 'code'" class="article-blocks__code"><code>{{ block.content }}</code></pre>
 
-            <!-- List -->
             <component :is="block.ordered ? 'ol' : 'ul'" v-else-if="block.type === 'list'" class="article-blocks__list">
-                <li v-for="(item, liIndex) in block.items" :key="`li-${index}-${liIndex}`" v-html="inline(item)"></li>
+                <SafeHtml
+                    v-for="(item, liIndex) in block.items"
+                    :key="`li-${index}-${liIndex}`"
+                    tag="li"
+                    :html="inline(item)"
+                />
             </component>
 
-            <!-- Table -->
             <div v-else-if="block.type === 'table'" class="article-blocks__table-wrapper">
                 <table class="article-blocks__table">
                     <thead>
                         <tr>
-                            <th
+                            <SafeHtml
                                 v-for="(header, hIdx) in block.headers"
                                 :key="`th-${index}-${hIdx}`"
-                                v-html="inline(header)"
-                            ></th>
+                                tag="th"
+                                :html="inline(header)"
+                            />
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(row, rIdx) in block.rows" :key="`tr-${index}-${rIdx}`">
-                            <td
+                            <SafeHtml
                                 v-for="(cell, cIdx) in row"
                                 :key="`td-${index}-${rIdx}-${cIdx}`"
-                                v-html="inline(cell)"
-                            ></td>
+                                tag="td"
+                                :html="inline(cell)"
+                            />
                         </tr>
                     </tbody>
                 </table>
@@ -70,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+    import SafeHtml from '@/components/base/SafeHtml.vue';
     import { renderInlineMarkdown } from '@/services/utils/contentParser';
     import { slugify } from '@/services/utils/string';
 

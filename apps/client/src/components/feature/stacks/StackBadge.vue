@@ -39,26 +39,9 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    interface Stack {
-        id: string | number;
-        name: string;
-        logo?: string;
-        icon?: string;
-        color?: string;
-        level?: number;
-        category?: string;
-    }
+    import type { StackBadgeProps } from '@/types/feature/stacks';
 
-    interface Props {
-        stack: Stack;
-        size?: 'small' | 'medium' | 'large';
-        showName?: boolean;
-        showLevel?: boolean;
-        clickable?: boolean;
-        customClass?: string;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<StackBadgeProps>(), {
         size: 'medium',
         showName: true,
         showLevel: false,

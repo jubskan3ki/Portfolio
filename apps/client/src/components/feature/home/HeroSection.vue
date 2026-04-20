@@ -50,7 +50,6 @@
                         </div>
                         <div class="hero-background-shape"></div>
 
-                        <!-- Stack badges positioned around the image -->
                         <div class="hero-tech-badges">
                             <StackBadge
                                 v-for="(stack, index) in featuredStacks"
@@ -255,14 +254,15 @@
         position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
         width: 280px;
         height: 280px;
         border-radius: 30% 70% 70% 30%;
         overflow: hidden;
         z-index: 2;
-        animation: morphing 15s ease-in-out infinite;
-        will-change: border-radius;
+        will-change: transform;
+        animation:
+            hero-float 7s ease-in-out infinite alternate,
+            morphing 15s ease-in-out infinite;
 
         box-shadow:
             0 20px 40px fn.color-alpha(vars.$primary-color, 0.15),
@@ -272,10 +272,14 @@
         @include mix.responsive(mobile) {
             width: 220px;
             height: 220px;
+            animation:
+                hero-float-mobile 8s ease-in-out infinite alternate,
+                morphing 15s ease-in-out infinite;
         }
 
         @media (prefers-reduced-motion: reduce) {
             animation: none;
+            transform: translate(-50%, -50%);
             border-radius: 50%;
         }
     }
@@ -290,23 +294,25 @@
         position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate(-45%, -55%);
         width: 300px;
         height: 300px;
-        border-radius: 30% 70% 50% 50%;
+        border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
         background: linear-gradient(135deg, vars.$primary-color 0%, vars.$primary-dark 100%);
         opacity: 0.8;
         z-index: 1;
-        animation: rotate 30s linear infinite;
-        animation-delay: 1s;
+        will-change: transform;
+        animation: hero-shape-morph 14s ease-in-out infinite;
 
         @include mix.responsive(mobile) {
             width: 240px;
             height: 240px;
+            animation: hero-shape-morph 16s ease-in-out infinite;
         }
 
         @media (prefers-reduced-motion: reduce) {
             animation: none;
+            transform: translate(-45%, -55%);
+            border-radius: 30% 70% 50% 50%;
         }
     }
 
@@ -381,13 +387,58 @@
         }
     }
 
-    @keyframes rotate {
-        from {
-            transform: translate(-45%, -55%) rotate(0deg);
+    @keyframes hero-float {
+        0% {
+            transform: translate(-50%, -50%) rotate(0deg);
         }
 
-        to {
-            transform: translate(-45%, -55%) rotate(360deg);
+        50% {
+            transform: translate(calc(-50% + 6px), calc(-50% - 14px)) rotate(1.2deg);
+        }
+
+        100% {
+            transform: translate(calc(-50% - 7px), calc(-50% - 10px)) rotate(-1.2deg);
+        }
+    }
+
+    @keyframes hero-float-mobile {
+        0% {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        50% {
+            transform: translate(calc(-50% + 3px), calc(-50% - 7px)) rotate(0.6deg);
+        }
+
+        100% {
+            transform: translate(calc(-50% - 4px), calc(-50% - 5px)) rotate(-0.6deg);
+        }
+    }
+
+    @keyframes hero-shape-morph {
+        0% {
+            transform: translate(-45%, -55%) scale(1) rotate(0deg);
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        }
+
+        25% {
+            transform: translate(-48%, -52%) scale(1.05) rotate(6deg);
+            border-radius: 40% 60% 70% 30% / 50% 60% 30% 50%;
+        }
+
+        50% {
+            transform: translate(-42%, -58%) scale(0.97) rotate(-4deg);
+            border-radius: 50% 50% 40% 60% / 30% 60% 40% 70%;
+        }
+
+        75% {
+            transform: translate(-47%, -53%) scale(1.03) rotate(5deg);
+            border-radius: 30% 70% 50% 50% / 60% 40% 55% 45%;
+        }
+
+        100% {
+            transform: translate(-45%, -55%) scale(1) rotate(0deg);
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
         }
     }
 

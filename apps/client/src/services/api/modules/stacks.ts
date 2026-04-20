@@ -115,7 +115,6 @@ export const stacksApi = {
         return response.data ?? [];
     },
 
-    // Admin methods
     getAdminList: <T = unknown>(params: Record<string, unknown>): Promise<T> =>
         httpClient.get(API_ENDPOINTS.STACKS.BASE, params),
 

@@ -22,17 +22,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
 
-    interface Resource {
-        title: string;
-        description: string;
-        url: string;
-    }
+    import type { StackResourcesProps } from '@/types/feature/stacks';
 
-    interface Props {
-        resources?: Resource[];
-    }
-
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<StackResourcesProps>(), {
         resources: () => [],
     });
 </script>

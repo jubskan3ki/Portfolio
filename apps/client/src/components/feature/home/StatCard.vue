@@ -1,4 +1,3 @@
-<!-- components/feature/home/StatCard.vue -->
 <template>
     <div ref="cardRef" class="stat-card" :class="[`stat-card--${variant}`]" @mouseenter="startCount">
         <div class="stat-card__icon">
@@ -19,18 +18,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
 
-    import type { StatCardVariant } from '@/types/components/ui';
+    import type { StatCardProps } from '@/types/feature/home';
 
-    interface Props {
-        value: number | string;
-        label: string;
-        icon: string;
-        variant?: StatCardVariant;
-        suffix?: string;
-        duration?: number;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<StatCardProps>(), {
         variant: 'light',
         suffix: '',
         duration: 2000,

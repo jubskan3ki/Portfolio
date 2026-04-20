@@ -16,7 +16,6 @@
                 <slot name="empty-action"></slot>
             </template>
 
-            <!-- Projects Grid -->
             <div class="project-list__grid">
                 <template v-for="(project, index) in sortedProjects" :key="project.id ?? index">
                     <slot name="project" :project="project" :index="index">
@@ -34,7 +33,6 @@
             </div>
         </QueryStateHandler>
 
-        <!-- Pagination -->
         <div v-if="showPagination && totalPages > 1" class="project-list__pagination">
             <Pagination
                 :current-page="currentPage"
@@ -44,7 +42,6 @@
             />
         </div>
 
-        <!-- Footer Slot -->
         <div v-if="$slots.footer" class="project-list__footer">
             <slot name="footer"></slot>
         </div>

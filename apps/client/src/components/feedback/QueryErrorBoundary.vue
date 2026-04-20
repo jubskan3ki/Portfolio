@@ -2,17 +2,14 @@
     <slot v-if="!isError"></slot>
     <div v-else class="query-error" :class="errorClasses">
         <div class="query-error__content">
-            <!-- Icon -->
             <div class="query-error__icon-wrapper">
                 <div class="query-error__icon-bg"></div>
                 <BaseIcon :name="errorConfig.icon" :size="40" class="query-error__icon" />
             </div>
 
-            <!-- Text -->
             <h4 class="query-error__title">{{ errorConfig.title }}</h4>
             <p class="query-error__message">{{ errorConfig.message }}</p>
 
-            <!-- Actions -->
             <div v-if="showRetry" class="query-error__actions">
                 <BaseButton variant="outline" size="sm" @click="handleRetry">
                     <template #icon-left>
@@ -31,15 +28,11 @@
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    import type { QueryErrorBoundaryProps } from '@/types/components/feedback';
-
-    type ErrorType = 'not-found' | 'forbidden' | 'unauthorized' | 'server' | 'client' | 'network';
-
-    interface ErrorConfig {
-        icon: string;
-        title: string;
-        message: string;
-    }
+    import type {
+        QueryErrorBoundaryErrorConfig,
+        QueryErrorBoundaryErrorType,
+        QueryErrorBoundaryProps,
+    } from '@/types/components/feedback';
 
     type Props = QueryErrorBoundaryProps;
 
@@ -53,7 +46,7 @@
     }>();
 
     // Configuration par type d'erreur
-    const ERROR_CONFIG: Record<ErrorType, Omit<ErrorConfig, 'message'> & { message: string }> = {
+    const ERROR_CONFIG: Record<QueryErrorBoundaryErrorType, Omit<QueryErrorBoundaryErrorConfig, 'message'> & { message: string }> = {
         'not-found': {
             icon: 'search-x',
             title: 'Contenu introuvable',
@@ -93,7 +86,7 @@
     });
 
     // Type d'erreur basé sur le status HTTP
-    const errorType = computed<ErrorType>(() => {
+    const errorType = computed<QueryErrorBoundaryErrorType>(() => {
         const status = httpStatus.value;
         if (status === 404) {
             return 'not-found';
@@ -114,7 +107,7 @@
     });
 
     // Configuration de l'erreur actuelle
-    const errorConfig = computed<ErrorConfig>(() => {
+    const errorConfig = computed<QueryErrorBoundaryErrorConfig>(() => {
         const config = ERROR_CONFIG[errorType.value];
         return {
             ...config,

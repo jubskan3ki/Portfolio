@@ -17,12 +17,10 @@
 <script setup lang="ts">
     import { computed, onMounted, ref } from 'vue';
 
-    type SectionBackgroundVariant = 'light' | 'dark' | 'primary' | 'secondary';
+    import type { SectionBackgroundProps } from '@/types/components/ui';
 
     const props = withDefaults(
-        defineProps<{
-            variant?: SectionBackgroundVariant;
-        }>(),
+        defineProps<SectionBackgroundProps>(),
         { variant: 'primary' },
     );
 
@@ -60,7 +58,6 @@
         &__dots {
             position: absolute;
             inset: 0;
-            opacity: 0.4;
         }
 
         // Gradient
@@ -136,10 +133,9 @@
             }
         }
 
-        // ─── Light variant ───
         &--light {
             .section-bg__dots {
-                @include mix.dots-pattern(fn.color-alpha(vars.$gray, 0.4), 1.5px, 28px);
+                @include mix.dots-pattern(vars.$dots-color-light, vars.$dots-size, vars.$dots-spacing);
             }
 
             .section-bg__gradient {
@@ -151,10 +147,9 @@
             }
         }
 
-        // ─── Dark variant ───
         &--dark {
             .section-bg__dots {
-                @include mix.dots-pattern(fn.color-alpha(vars.$primary-color, 0.65), 1.5px, 28px);
+                @include mix.dots-pattern(vars.$dots-color-dark, vars.$dots-size, vars.$dots-spacing);
             }
 
             .section-bg__gradient {
@@ -166,7 +161,6 @@
             }
         }
 
-        // ─── Primary variant ───
         &--primary {
             .section-bg__dots {
                 display: none;
@@ -206,7 +200,6 @@
             }
         }
 
-        // ─── Secondary variant ───
         &--secondary {
             .section-bg__dots {
                 display: none;

@@ -3,6 +3,7 @@ import { authKeys } from './auth';
 import { contactKeys } from './contact';
 import { experienceKeys } from './experiences';
 import { projectKeys } from './projects';
+import { searchKeys } from './search';
 import { stackKeys } from './stacks';
 import { statsKeys } from './stats';
 import { transferKeys } from './transfer';
@@ -16,4 +17,5 @@ export const queryKeys = {
     auth: authKeys,
     stats: statsKeys,
     transfer: transferKeys,
+    search: searchKeys,
 } as const;

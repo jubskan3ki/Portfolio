@@ -11,6 +11,9 @@ from kombu.exceptions import OperationalError
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
+# OTel trace-context: opentelemetry-instrumentation-celery injects W3C traceparent
+# via before_task_publish/task_prerun signals (activated in celery-entrypoint.sh).
+
 app = Celery("portfolio")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
@@ -20,7 +23,6 @@ logger = logging.getLogger("celery")
 
 @setup_logging.connect
 def config_loggers(*_args, **_kwargs):
-    """Configure logging using Django settings."""
     import logging.config as logging_config
 
     try:
@@ -41,7 +43,6 @@ def config_loggers(*_args, **_kwargs):
 
 @worker_ready.connect
 def worker_ready_handler(sender, **_kwargs):
-    """Log when worker is ready."""
     try:
         with app.connection() as conn:
             conn.ensure_connection(max_retries=3)
@@ -52,20 +53,17 @@ def worker_ready_handler(sender, **_kwargs):
 
 @task_failure.connect
 def handle_task_failure(task_id=None, exception=None, **_kwargs):
-    """Log task failures."""
     logger.exception("Task %s failed: %s", task_id, exception)
 
 
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
-    """Debug task for testing Celery."""
     logger.info("Debug task: %r", self.request)
     return f"Debug completed: {self.request.id}"
 
 
 @app.task(bind=True)
 def health_check(self):
-    """Health check task."""
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")

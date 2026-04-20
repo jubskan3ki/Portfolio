@@ -6,13 +6,9 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 
 class MetricsView(View):
-    """Endpoint pour exposer les metriques Prometheus.
-
-    GET /metrics/ - Retourne les metriques au format Prometheus.
-    """
+    """GET /metrics/ — format Prometheus."""
 
     def get(self, _request: HttpRequest) -> HttpResponse:
-        """Genere et retourne les metriques."""
         metrics = generate_latest()
         return HttpResponse(
             metrics,

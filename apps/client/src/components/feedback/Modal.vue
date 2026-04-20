@@ -10,12 +10,9 @@
                 :aria-labelledby="options.title ? titleId : undefined"
                 :aria-describedby="options.subtitle ? descriptionId : undefined"
             >
-                <!-- Overlay -->
                 <div class="modal__overlay" aria-hidden="true" @click="handleOverlayClick"></div>
 
-                <!-- Container -->
                 <div :class="containerClasses">
-                    <!-- Header -->
                     <div v-if="options.title || !options.hideCloseButton" class="modal__header">
                         <div class="modal__header-content">
                             <h4 v-if="options.title" :id="titleId" class="modal__title">
@@ -37,7 +34,6 @@
                         </button>
                     </div>
 
-                    <!-- Body -->
                     <div class="modal__body">
                         <p v-if="options.content">{{ options.content }}</p>
                         <component
@@ -49,7 +45,6 @@
                         <slot v-else></slot>
                     </div>
 
-                    <!-- Footer -->
                     <div v-if="$slots.footer || options.showFooter" class="modal__footer">
                         <slot name="footer"></slot>
                     </div>
@@ -95,7 +90,6 @@
     const titleId = useId();
     const descriptionId = useId();
 
-    // Determine if using store or v-model
     const isUsingStore = computed(() => props.modelValue === undefined);
 
     const visible = computed(() => {
@@ -146,10 +140,8 @@
         }
     };
 
-    // Focus trap — reuse existing composable (consistent with ConfirmDialog.vue)
     const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(modalRef);
 
-    // Escape key — reuse existing composable (consistent with ConfirmDialog.vue)
     useEscapeKey(
         () => {
             if (!options.value.persistent) {
@@ -159,10 +151,9 @@
         { enabled: computed(() => !!visible.value) },
     );
 
-    // Manage focus trap and body overflow on visibility change
     watch(visible, (isVisible) => {
         if (isVisible) {
-            // Store mode: overflow already locked by modalStore.open()
+            // Store mode locks overflow in modalStore.open()
             if (!isUsingStore.value) {
                 lockBodyOverflow();
             }
@@ -176,11 +167,9 @@
     });
 
     onUnmounted(() => {
-        // Release overflow lock for v-model mode if still visible
         if (!isUsingStore.value && visible.value) {
             unlockBodyOverflow();
         }
-        // Clean up store timeouts and state
         if (isUsingStore.value) {
             modalStore.cleanup();
         }
@@ -224,7 +213,6 @@
             flex-direction: column;
             overflow: hidden;
 
-            // Sizes
             &--sm {
                 max-width: 400px;
             }
@@ -314,7 +302,6 @@
         }
     }
 
-    // Animations
     .modal-enter-active {
         transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 

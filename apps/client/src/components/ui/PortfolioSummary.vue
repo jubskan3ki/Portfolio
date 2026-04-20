@@ -1,6 +1,5 @@
 <template>
     <div class="portfolio-summary">
-        <!-- Background decoration -->
         <div class="portfolio-summary__bg" aria-hidden="true">
             <div class="portfolio-summary__dots"></div>
             <div class="portfolio-summary__glow portfolio-summary__glow--1"></div>

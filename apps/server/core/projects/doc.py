@@ -2,14 +2,10 @@
 
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
 
-# TAGS
-
 TAGS_PROJECTS = ["Projets"]
 TAGS_CATEGORIES = ["Projets - Categories"]
 TAGS_STATUSES = ["Projets - Statuts"]
 TAGS_STATS = ["Projets - Stats"]
-
-# PARAMETRES COMMUNS
 
 PARAM_PAGE = OpenApiParameter(
     "page",
@@ -90,7 +86,6 @@ PARAM_FEATURED_LIMIT = OpenApiParameter(
     required=False,
 )
 
-# Liste des parametres pour la liste des projets
 PROJECT_LIST_PARAMS = [
     PARAM_CATEGORY,
     PARAM_STATUS,
@@ -103,8 +98,6 @@ PROJECT_LIST_PARAMS = [
 ]
 
 PAGINATION_PARAMS = [PARAM_PAGE, PARAM_LIMIT]
-
-# RESPONSES
 
 RESPONSE_200_LIST = OpenApiResponse(description="Liste paginee des projets")
 

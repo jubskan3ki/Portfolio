@@ -6,8 +6,10 @@ providers:
       folder: ""
       folderUid: ""
       type: file
-      disableDeletion: false
-      editable: true
+      # Dashboards are code: no UI edits, prevents drift with on-disk JSON.
+      disableDeletion: true
+      editable: false
+      allowUiUpdates: false
       updateIntervalSeconds: 30
       options:
           path: /var/lib/grafana/dashboards

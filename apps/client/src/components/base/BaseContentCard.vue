@@ -1,6 +1,5 @@
 <template>
     <component :is="to ? NuxtLink : 'div'" :to="to || undefined" v-bind="$attrs" class="content-card">
-        <!-- Visual -->
         <div class="content-card__visual" :style="imageTransitionStyle">
             <BaseImage
                 v-if="image"
@@ -27,7 +26,6 @@
             <slot name="visual-overlay"></slot>
         </div>
 
-        <!-- Content -->
         <div class="content-card__content">
             <slot name="before-title"></slot>
 
@@ -37,7 +35,6 @@
                 {{ description }}
             </p>
 
-            <!-- Tags -->
             <div v-if="tags.length > 0" class="content-card__tags">
                 <span v-for="tag in displayedTags" :key="tag" class="content-card__tag">
                     {{ tag }}
@@ -47,7 +44,6 @@
                 </span>
             </div>
 
-            <!-- Footer -->
             <div class="content-card__footer">
                 <slot name="footer-left"></slot>
                 <slot name="footer-right">
@@ -64,7 +60,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseImage from '@/components/base/BaseImage.vue';
 
-    const props = withDefaults(defineProps<Props>(), {
+    import type { BaseContentCardProps } from '@/types/components/base';
+
+    const props = withDefaults(defineProps<BaseContentCardProps>(), {
         to: '',
         image: '',
         imageAlt: '',
@@ -77,21 +75,6 @@
     });
 
     const NuxtLink = resolveComponent('NuxtLink');
-
-    interface Props {
-        to?: string;
-        image?: string;
-        imageAlt?: string;
-        placeholderIcon?: string;
-        badge?: string;
-        title: string;
-        description?: string;
-        tags?: string[];
-        maxTags?: number;
-        // When set, emits matching `view-transition-name` on the card's image
-        // and title so navigations to the detail page morph them into place.
-        transitionKey?: string;
-    }
 
     defineOptions({ inheritAttrs: false });
 

@@ -33,7 +33,6 @@ class StackViewSet(BaseAPIViewSet):
     filterset_class = StackFilter
     lookup_field = "slug"
 
-    # Configuration pour SerializerByActionMixin
     serializer_classes = {
         "list": StackListSerializer,
         "by_category": StackListSerializer,

@@ -7,7 +7,7 @@ import type {
     DataItem,
 } from '@/types/feature/admin';
 
-/** Type assertion — not a runtime guard. Use only when the DataItem origin is known. */
+// Cast type only (pas un runtime guard)
 export function asAdminArticle(item: DataItem): AdminArticle {
     return item as AdminArticle;
 }

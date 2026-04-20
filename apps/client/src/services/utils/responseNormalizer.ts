@@ -1,7 +1,7 @@
-// src/services/utils/responseNormalizer.ts
-// Unified response normalization for API responses
-
+import type { NormalizedPaginatedData } from '@/types/api/common';
 import type { PaginationMeta } from '@/types/composables/data';
+
+export type { NormalizedPaginatedData };
 
 function snakeToCamel(str: string): string {
     return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -11,7 +11,6 @@ function camelToSnake(str: string): string {
     return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
-// Convert snake_case keys to camelCase recursively
 export function transformKeysToCamel<T>(obj: unknown): T {
     if (obj === null || obj === undefined) {
         return obj as T;
@@ -33,7 +32,6 @@ export function transformKeysToCamel<T>(obj: unknown): T {
     return obj as T;
 }
 
-// Convert camelCase keys to snake_case recursively
 export function transformKeysToSnake<T>(obj: unknown): T {
     if (obj === null || obj === undefined) {
         return obj as T;
@@ -57,42 +55,32 @@ export function transformKeysToSnake<T>(obj: unknown): T {
 
 export type { PaginationMeta };
 
-export interface NormalizedPaginatedData<T> {
-    data: T[];
-    pagination: PaginationMeta;
-}
-
-// Normalize array responses from various formats
 function normalizeArrayResponse<T>(response: unknown): T[] {
     if (!response) {
         return [];
     }
 
-    // Direct array
     if (Array.isArray(response)) {
         return response;
     }
 
-    // Object response
     if (typeof response === 'object' && response !== null) {
         const obj = response as Record<string, unknown>;
 
-        // { data: T[] }
         if ('data' in obj && Array.isArray(obj.data)) {
             return obj.data;
         }
 
-        // { results: T[] } (Django REST Framework)
+        // DRF
         if ('results' in obj && Array.isArray(obj.results)) {
             return obj.results;
         }
 
-        // { items: T[] }
         if ('items' in obj && Array.isArray(obj.items)) {
             return obj.items;
         }
 
-        // Single object (wrap in array)
+        // Single entity -> wrap
         if ('id' in obj || 'slug' in obj) {
             return [obj as T];
         }
@@ -101,7 +89,6 @@ function normalizeArrayResponse<T>(response: unknown): T[] {
     return [];
 }
 
-// Normalize paginated responses from various formats
 export function normalizePaginatedResponse<T>(response: unknown, defaultPageSize = 10): NormalizedPaginatedData<T> {
     const emptyResult: NormalizedPaginatedData<T> = {
         data: [],
@@ -119,7 +106,6 @@ export function normalizePaginatedResponse<T>(response: unknown, defaultPageSize
         return emptyResult;
     }
 
-    // Direct array (no pagination)
     if (Array.isArray(response)) {
         return {
             data: response,
@@ -140,16 +126,15 @@ export function normalizePaginatedResponse<T>(response: unknown, defaultPageSize
 
     const obj = response as Record<string, unknown>;
 
-    // Extract data array
     const data = normalizeArrayResponse<T>(response);
 
-    // Django REST Framework format: { count, next, previous, results }
+    // DRF: { count, next, previous, results }
     if ('count' in obj && 'results' in obj) {
         const count = Number(obj.count) || 0;
         const pageSize = data.length || defaultPageSize;
         const totalPages = Math.ceil(count / pageSize);
 
-        // Try to extract current page from next/previous URLs
+        // Déduit la page courante depuis l'URL next/previous
         let page = 1;
         const next = obj.next as string | null;
         const previous = obj.previous as string | null;
@@ -179,7 +164,6 @@ export function normalizePaginatedResponse<T>(response: unknown, defaultPageSize
         };
     }
 
-    // Custom format with pagination object
     if ('pagination' in obj && typeof obj.pagination === 'object') {
         const pag = obj.pagination as Record<string, unknown>;
 
@@ -196,7 +180,6 @@ export function normalizePaginatedResponse<T>(response: unknown, defaultPageSize
         };
     }
 
-    // Simple format with top-level pagination fields
     if ('total' in obj || 'total_count' in obj) {
         const total = Number(obj.total ?? obj.total_count ?? obj.count ?? 0);
         const page = Number(obj.page ?? obj.current_page ?? 1);
@@ -216,7 +199,6 @@ export function normalizePaginatedResponse<T>(response: unknown, defaultPageSize
         };
     }
 
-    // No pagination info - return data as single page
     return {
         data,
         pagination: {

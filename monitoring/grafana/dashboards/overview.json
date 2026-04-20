@@ -1,0 +1,132 @@
+{
+    "annotations": { "list": [] },
+    "description": "RED metrics (Rate / Errors / Duration) on the Django API + container infra overview.",
+    "editable": false,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "liveNow": false,
+    "panels": [
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+                    "unit": "reqps"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+            "id": 1,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "sum by (status) (rate(django_http_responses_total_by_status_total[5m]))",
+                    "legendFormat": "{{status}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Request Rate by Status (5m)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+                    "unit": "s"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+            "id": 2,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.50, sum by (le) (rate(django_http_requests_latency_including_middlewares_seconds_bucket[5m])))",
+                    "legendFormat": "p50",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum by (le) (rate(django_http_requests_latency_including_middlewares_seconds_bucket[5m])))",
+                    "legendFormat": "p95",
+                    "refId": "B"
+                },
+                {
+                    "expr": "histogram_quantile(0.99, sum by (le) (rate(django_http_requests_latency_including_middlewares_seconds_bucket[5m])))",
+                    "legendFormat": "p99",
+                    "refId": "C"
+                }
+            ],
+            "title": "Request Latency — percentiles",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "stacking": { "mode": "normal" } },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+            "id": 3,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "rate(container_cpu_usage_seconds_total{name=~\"django-api.*|nuxt-app.*|celery.*|nginx.*|traefik.*\"}[5m]) * 100",
+                    "legendFormat": "{{name}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Container CPU % (5m)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+                    "unit": "bytes"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+            "id": 4,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "container_memory_working_set_bytes{name=~\"django-api.*|nuxt-app.*|celery.*|nginx.*|traefik.*|postgres.*|redis.*|rabbitmq.*\"}",
+                    "legendFormat": "{{name}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Container Memory (working set)",
+            "type": "timeseries"
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 39,
+    "tags": ["red", "overview", "portfolio"],
+    "templating": { "list": [] },
+    "time": { "from": "now-1h", "to": "now" },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Overview — API RED + Containers",
+    "uid": "overview-red",
+    "version": 1,
+    "weekStart": ""
+}

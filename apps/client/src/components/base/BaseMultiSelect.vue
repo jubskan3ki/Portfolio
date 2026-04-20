@@ -1,6 +1,6 @@
 <template>
     <div ref="containerRef" :class="multiSelectClasses">
-        <label v-if="label" :for="inputId" class="multi-select__label">
+        <label v-if="label" :id="`${inputId}-label`" :for="inputId" class="multi-select__label">
             {{ label }}
             <span v-if="required" class="multi-select__required">*</span>
         </label>
@@ -42,6 +42,17 @@
                     v-model="searchQuery"
                     type="text"
                     class="multi-select__input"
+                    role="combobox"
+                    :aria-expanded="isOpen"
+                    aria-haspopup="listbox"
+                    aria-autocomplete="list"
+                    :aria-controls="isOpen ? `${inputId}-listbox` : undefined"
+                    :aria-activedescendant="activeDescendant"
+                    :aria-labelledby="comboLabelledBy"
+                    :aria-label="comboAriaLabel"
+                    :aria-invalid="!!error || undefined"
+                    :aria-required="required || undefined"
+                    :aria-disabled="disabled || undefined"
                     :placeholder="selectedItems.length ? '' : placeholder"
                     :disabled="disabled"
                     autocomplete="off"
@@ -52,6 +63,8 @@
                     @keydown.escape="close"
                     @keydown.down.prevent="handleKeyDown"
                     @keydown.up.prevent="handleKeyUp"
+                    @keydown.home.prevent="handleHome"
+                    @keydown.end.prevent="handleEnd"
                 />
             </div>
 
@@ -90,9 +103,19 @@
 
         <Transition name="dropdown">
             <div v-if="isOpen" class="multi-select__dropdown">
-                <div v-if="filteredOptions.length > 0" class="multi-select__options" role="listbox">
+                <div
+                    v-if="filteredOptions.length > 0"
+                    :id="`${inputId}-listbox`"
+                    ref="optionsRef"
+                    class="multi-select__options"
+                    role="listbox"
+                    aria-multiselectable="true"
+                    :aria-labelledby="comboLabelledBy"
+                    :aria-label="comboLabelledBy ? undefined : comboAriaLabel"
+                >
                     <button
                         v-for="(option, index) in filteredOptions"
+                        :id="`${inputId}-option-${index}`"
                         :key="getItemValue(option)"
                         type="button"
                         class="multi-select__option"
@@ -181,7 +204,7 @@
 
     import { useDropdown } from '@/composables/ui/useDropdown';
 
-    import type { MultiSelectOption, MultiSelectProps } from '@/types/components/base';
+    import type { MultiSelectInitialItem, MultiSelectOption, MultiSelectProps } from '@/types/components/base';
 
     type Props = MultiSelectProps;
 
@@ -212,21 +235,42 @@
 
     const containerRef = ref<HTMLElement | null>(null);
     const contentRef = ref<HTMLElement | null>(null);
+    const optionsRef = ref<HTMLElement | null>(null);
     const inputRef = ref<HTMLInputElement | null>(null);
     const searchQuery = ref('');
     const createValue = ref('');
     const isFocused = ref(false);
     const generatedId = useId();
 
-    const { isOpen, highlightedIndex, open, close, navigate } = useDropdown(containerRef, {
-        disabled: toRef(props, 'disabled'),
-        closeOnSelect: false,
-        onClose: () => {
-            isFocused.value = false;
-        },
-    });
+    const { isOpen, highlightedIndex, open, close, navigate, scrollToHighlighted, getActiveDescendant }
+        = useDropdown(containerRef, {
+            disabled: toRef(props, 'disabled'),
+            closeOnSelect: false,
+            onClose: () => {
+                isFocused.value = false;
+            },
+        });
 
     const inputId = computed(() => props.id || generatedId);
+
+    const comboLabelledBy = computed<string | undefined>(() => {
+        if (props.ariaLabelledby) {
+            return props.ariaLabelledby;
+        }
+        if (props.label) {
+            return `${inputId.value}-label`;
+        }
+        return undefined;
+    });
+
+    const comboAriaLabel = computed<string | undefined>(() => {
+        if (comboLabelledBy.value) {
+            return undefined;
+        }
+        return props.ariaLabel || props.placeholder || undefined;
+    });
+
+    const activeDescendant = computed(() => getActiveDescendant(inputId.value));
 
     const selectedItems = computed(() => {
         return props.options.filter((opt) => model.value.includes(getItemValue(opt)));
@@ -277,7 +321,6 @@
             model.value = [...model.value, value];
         }
         searchQuery.value = '';
-        // Keep dropdown open for multiple selections
         open();
         isFocused.value = true;
 
@@ -327,13 +370,31 @@
             open();
         } else {
             navigate(1, filteredOptions.value.length);
+            scrollToHighlighted(optionsRef, 'multi-select__option');
         }
     };
 
     const handleKeyUp = () => {
         if (isOpen.value) {
             navigate(-1, filteredOptions.value.length);
+            scrollToHighlighted(optionsRef, 'multi-select__option');
         }
+    };
+
+    const handleHome = () => {
+        if (!isOpen.value || filteredOptions.value.length === 0) {
+            return;
+        }
+        highlightedIndex.value = 0;
+        scrollToHighlighted(optionsRef, 'multi-select__option');
+    };
+
+    const handleEnd = () => {
+        if (!isOpen.value || filteredOptions.value.length === 0) {
+            return;
+        }
+        highlightedIndex.value = filteredOptions.value.length - 1;
+        scrollToHighlighted(optionsRef, 'multi-select__option');
     };
 
     const focusInput = () => {
@@ -348,7 +409,6 @@
     };
 
     const handleBlur = (event: FocusEvent) => {
-        // Ne ferme pas si le focus reste dans le container
         const relatedTarget = event.relatedTarget as Node | null;
         if (containerRef.value?.contains(relatedTarget)) {
             return;
@@ -359,6 +419,47 @@
     watch(searchQuery, () => {
         highlightedIndex.value = 0;
     });
+
+    const resolveInitialItem = (
+        raw: MultiSelectInitialItem,
+        opts: MultiSelectOption[],
+    ): string | number | null => {
+        if (raw === undefined || raw === null) {
+            return null;
+        }
+        if (typeof raw === 'object') {
+            const candidate = raw.id ?? raw.slug ?? raw.name;
+            return candidate === undefined ? null : resolveInitialItem(candidate, opts);
+        }
+        const direct = opts.find((opt) => getItemValue(opt) === raw);
+        if (direct) {
+            return getItemValue(direct);
+        }
+        if (typeof raw === 'string') {
+            const byLabel = opts.find((opt) => getItemLabel(opt) === raw || String(getItemValue(opt)) === raw);
+            return byLabel ? getItemValue(byLabel) : null;
+        }
+        return null;
+    };
+
+    watch(
+        [() => props.initialValue, () => props.options],
+        ([raw, opts]) => {
+            if (model.value.length > 0) {
+                return;
+            }
+            if (!raw || raw.length === 0 || !opts || opts.length === 0) {
+                return;
+            }
+            const resolved = raw
+                .map((item) => resolveInitialItem(item, opts))
+                .filter((value): value is string | number => value !== null);
+            if (resolved.length > 0) {
+                model.value = resolved;
+            }
+        },
+        { immediate: true },
+    );
 </script>
 
 <style lang="scss" scoped>
@@ -523,7 +624,6 @@
             @include sel.create-button;
         }
 
-        // States
         &--focused {
             .multi-select__container {
                 border-color: vars.$primary-color;
@@ -565,7 +665,6 @@
         }
     }
 
-    // Tag transitions (specifique au multi-select)
     .tag-enter-active,
     .tag-leave-active {
         transition: all 0.2s ease;

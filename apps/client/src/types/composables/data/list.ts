@@ -91,3 +91,30 @@ export interface DataListHandlers {
     queryChange: (payload: { search?: string; filters?: Record<string, string> }) => void;
     paginationChange: (payload: { page?: number; perPage?: number }) => void;
 }
+
+// useInfiniteScroll
+
+export interface UseInfiniteScrollOptions {
+    threshold?: number;
+    rootMargin?: string;
+    enabled?: Ref<boolean>;
+}
+
+// useDeferredMatch — resolves raw values against async-loaded items
+
+export interface UseDeferredMatchOptions<TItem, TRaw = unknown> {
+    /** Reactive source of loaded items (e.g. categories, tags from API) */
+    source: Ref<TItem[]> | ComputedRef<TItem[]>;
+
+    /** Getter for the raw value stored before items were loaded */
+    getRawValue: () => TRaw | undefined;
+
+    /** Returns true when the form field has not been matched yet */
+    isUnmatched: () => boolean;
+
+    /** Match raw value against loaded items, return the resolved value or undefined if no match */
+    match: (items: TItem[], rawValue: TRaw) => unknown;
+
+    /** Set the matched value on the form field */
+    setFieldValue: (value: unknown) => void;
+}

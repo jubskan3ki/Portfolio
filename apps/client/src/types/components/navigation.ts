@@ -1,6 +1,3 @@
-// Types for Navigation components
-
-// Tabs
 type TabsVariant = 'default' | 'outline' | 'pills' | 'underlined' | 'segmented';
 
 type TabsAlign = 'left' | 'center' | 'right';
@@ -33,8 +30,7 @@ export interface TabsProps {
     customClass?: string;
 }
 
-// Breadcrumb
-type BreadcrumbVariant = 'default' | 'pills' | 'minimal';
+type BreadcrumbVariant = 'default' | 'pills' | 'minimal' | 'hero';
 
 export type BreadcrumbSeparator = 'chevron' | 'slash' | 'dot' | 'arrow';
 
@@ -51,7 +47,6 @@ export interface BreadcrumbProps {
     customClass?: string;
 }
 
-// Pagination
 export type PaginationSize = 'sm' | 'md' | 'lg';
 
 export type PaginationVariant = 'default' | 'rounded' | 'minimal';
@@ -68,7 +63,6 @@ export interface PaginationProps {
     customClass?: string;
 }
 
-// SideBar
 type SidebarVariant = 'light' | 'dark' | 'glass';
 
 interface SidebarBadge {
@@ -97,7 +91,6 @@ export interface SideBarProps {
     customClass?: string;
 }
 
-// NavBar
 interface NavChildItem {
     label: string;
     path: string;
@@ -117,8 +110,78 @@ export interface NavbarItemProps {
     isActive: boolean;
 }
 
-// MobileMenu
 export interface MobileMenuProps {
     isOpen?: boolean;
     customClass?: string;
+}
+
+export interface MobileMenuToggleProps {
+    isActive?: boolean;
+}
+
+export interface MobileMenuItemProps {
+    item: NavItem;
+    index: number;
+}
+
+export type SideBarItemBadgeType = 'info' | 'success' | 'warning' | 'danger';
+
+export interface SideBarItemBadge {
+    type?: SideBarItemBadgeType;
+    value?: string | number;
+}
+
+export interface SideBarItemProps {
+    text: string;
+    to: string;
+    icon?: string;
+    badge?: SideBarItemBadge;
+    isCollapsed?: boolean;
+}
+
+export type NavigationTabsVariant = 'default' | 'glass' | 'minimal';
+
+export interface NavigationTab {
+    key: string;
+    label: string;
+    icon?: string;
+}
+
+export interface NavigationTabsProps {
+    tabs: NavigationTab[];
+    modelValue: string;
+    variant?: NavigationTabsVariant;
+    iconSize?: number;
+    customClass?: string;
+}
+
+export interface PaginationItemProps {
+    page: number;
+    isActive?: boolean;
+    isEllipsis?: boolean;
+}
+
+export interface NavBarProps {
+    sticky?: boolean;
+    transparent?: boolean;
+    elevated?: boolean;
+    ariaLabel?: string;
+    customClass?: string;
+}
+
+export interface TabItemBadge {
+    text: string | number;
+    type?: string;
+    variant?: string;
+}
+
+export interface TabsItemProps {
+    id: string;
+    tabsId: string;
+    isActive?: boolean;
+    isTab?: boolean;
+    label?: string;
+    icon?: string;
+    disabled?: boolean;
+    badge?: TabItemBadge | null;
 }

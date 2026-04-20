@@ -1,24 +1,18 @@
-// Fonctions utilitaires
-
 @use 'sass:color';
 @use 'sass:math';
 
-// Transparence
 @function color-alpha($color, $alpha) {
     @return rgba($color, $alpha);
 }
 
-// Eclaircir
 @function lighten-color($color, $amount) {
     @return color.adjust($color, $lightness: $amount);
 }
 
-// Assombrir
 @function darken-color($color, $amount) {
     @return color.adjust($color, $lightness: -1 * $amount);
 }
 
-// Ajuster la luminosite
 @function adjust-color-brightness($color, $amount) {
     @return color.adjust($color, $lightness: $amount);
 }

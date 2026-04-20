@@ -1,4 +1,3 @@
-// main.scss
 @use 'abstracts/functions' as func;
 @use 'abstracts/mixins' as mix;
 @use 'abstracts/variables' as vars;
@@ -6,9 +5,6 @@
 @use 'base/typography';
 @use 'base/reset';
 
-// Visual effects
-
-// Scrollbar styles
 %scrollbar-base {
     scrollbar-width: thin;
     scrollbar-color: func.color-alpha(vars.$primary-color, 0.3) transparent;
@@ -83,7 +79,6 @@ body::-webkit-scrollbar-thumb {
     }
 }
 
-// Base styles
 body {
     line-height: vars.$line-height-base;
     letter-spacing: vars.$letter-spacing-base;
@@ -93,7 +88,6 @@ body {
     overflow-x: hidden;
 }
 
-// Container — widely used
 .container {
     width: 100%;
     max-width: vars.$container-max-width;
@@ -103,7 +97,6 @@ body {
     margin-right: auto;
 }
 
-// Only spacing utilities actually used in the codebase
 .mr-xs {
     margin-right: vars.$spacing-xs;
 }
@@ -112,7 +105,6 @@ body {
     margin-top: vars.$spacing-md;
 }
 
-// Page transitions
 .page-enter-active,
 .page-leave-active {
     transition: all 300ms ease-out;
@@ -128,7 +120,6 @@ body {
     transform: translateY(-20px);
 }
 
-// Layout transition
 .layout-enter-active,
 .layout-leave-active {
     transition: all 300ms ease-out;
@@ -139,7 +130,6 @@ body {
     opacity: 0;
 }
 
-// Fade transition
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 200ms ease-in-out;
@@ -150,7 +140,6 @@ body {
     opacity: 0;
 }
 
-// Slide up transition
 .slide-up-enter-active,
 .slide-up-leave-active {
     transition: all 300ms ease-out;
@@ -166,7 +155,6 @@ body {
     transform: translateY(-20px);
 }
 
-// Scale transition
 .scale-enter-active,
 .scale-leave-active {
     transition: all 200ms ease-out;
@@ -178,7 +166,6 @@ body {
     transform: scale(0.95);
 }
 
-// Skeleton loading
 %skeleton-base {
     background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
     background-size: 200% 100%;
@@ -200,12 +187,10 @@ body {
     }
 }
 
-// Focus styles
 :focus:not(:focus-visible) {
     outline: none;
 }
 
-// Screen reader only
 .sr-only {
     position: absolute;
     width: 1px;
@@ -218,7 +203,6 @@ body {
     border: 0;
 }
 
-// Text truncation
 .truncate {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -239,11 +223,7 @@ body {
     overflow: hidden;
 }
 
-// ── View Transitions ──────────────────────────────────────────────────────
-// When the browser supports the View Transitions API, let paired
-// elements (hero-title-*, hero-media-*) morph smoothly between list and
-// detail pages. Everything else gets a quick cross-fade.
-
+// Pair hero-title-*/hero-media-* morph between list and detail; else cross-fade.
 @supports (view-transition-name: none) {
     ::view-transition-old(root),
     ::view-transition-new(root) {
@@ -260,8 +240,6 @@ body {
     }
 }
 
-// Respect OS-level reduced-motion preference: disable the morph entirely
-// so navigations feel instant without layout thrash.
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-old(*),
     ::view-transition-new(*) {

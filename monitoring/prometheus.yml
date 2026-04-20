@@ -1,34 +1,46 @@
 global:
     scrape_interval: 15s
     evaluation_interval: 15s
+    external_labels:
+        cluster: portfolio
+        environment: ${DJANGO_ENV}
 
 alerting:
-    alertmanagers: []
+    alertmanagers:
+        - static_configs:
+              - targets: ['alertmanager:9093']
 
-rule_files: []
+rule_files:
+    - /etc/prometheus/rules/*.yml
 
 scrape_configs:
-    # Prometheus self-monitoring
     - job_name: 'prometheus'
       static_configs:
           - targets: ['localhost:9090']
       metrics_path: /metrics
 
-    # cAdvisor - Container metrics
     - job_name: 'cadvisor'
       static_configs:
           - targets: ['cadvisor:8080']
       metrics_path: /metrics
 
-    # Django backend health check
     - job_name: 'django'
       static_configs:
           - targets: ['backend:8000']
       metrics_path: /metrics
       scrape_timeout: 10s
 
-    # RabbitMQ metrics
     - job_name: 'rabbitmq'
       static_configs:
           - targets: ['rabbitmq:15692']
+      metrics_path: /metrics
+
+    - job_name: 'traefik'
+      static_configs:
+          - targets: ['traefik:8082']
+      metrics_path: /metrics
+
+    - job_name: 'otel-collector'
+      static_configs:
+          - targets: ['otel-collector:8888', 'otel-collector:8889']
       metrics_path: /metrics

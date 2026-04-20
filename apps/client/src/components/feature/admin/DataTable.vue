@@ -1,6 +1,5 @@
 <template>
     <div class="data-table-wrapper">
-        <!-- Toolbar -->
         <DataTableToolbar
             v-if="showToolbar"
             :search-placeholder="searchPlaceholder"
@@ -16,12 +15,10 @@
             </template>
         </DataTableToolbar>
 
-        <!-- Table -->
         <div class="data-table-container">
             <table class="data-table" :class="{ 'data-table--loading': loading }">
                 <thead>
                     <tr>
-                        <!-- Select all -->
                         <th v-if="selectable" class="data-table__th data-table__th--checkbox">
                             <BaseCheckbox
                                 :model-value="isAllSelected"
@@ -30,7 +27,6 @@
                                 @update:model-value="toggleSelectAll"
                             />
                         </th>
-                        <!-- Columns -->
                         <th
                             v-for="column in columns"
                             :key="column.key"
@@ -57,14 +53,12 @@
                                 />
                             </div>
                         </th>
-                        <!-- Actions column -->
                         <th v-if="$slots.actions" class="data-table__th data-table__th--actions">
                             <small>Actions</small>
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Loading skeleton -->
                     <template v-if="loading">
                         <tr v-for="i in skeletonRows" :key="i" class="data-table__row data-table__row--skeleton">
                             <td v-if="selectable" class="data-table__td">
@@ -79,7 +73,6 @@
                         </tr>
                     </template>
 
-                    <!-- Empty state -->
                     <tr v-else-if="!data.length">
                         <td :colspan="totalColumns" class="data-table__empty">
                             <slot name="empty">
@@ -88,7 +81,6 @@
                         </td>
                     </tr>
 
-                    <!-- Data rows -->
                     <template v-else>
                         <tr
                             v-for="(item, index) in data"
@@ -97,7 +89,6 @@
                             :class="{ 'data-table__row--selected': isSelected(item) }"
                             @click="$emit('rowClick', item)"
                         >
-                            <!-- Checkbox -->
                             <td v-if="selectable" class="data-table__td data-table__td--checkbox">
                                 <BaseCheckbox
                                     :model-value="isSelected(item)"
@@ -106,7 +97,6 @@
                                     @update:model-value="toggleSelect(item)"
                                 />
                             </td>
-                            <!-- Cells -->
                             <td
                                 v-for="column in columns"
                                 :key="column.key"
@@ -121,7 +111,6 @@
                                     {{ formatValue(getNestedValue(item, column.key), column) }}
                                 </slot>
                             </td>
-                            <!-- Actions -->
                             <td v-if="$slots.actions" class="data-table__td data-table__td--actions">
                                 <slot name="actions" :item="item"></slot>
                             </td>
@@ -131,7 +120,6 @@
             </table>
         </div>
 
-        <!-- Pagination -->
         <DataTablePagination
             v-if="showPagination && totalItems > 0"
             :current-page="currentPage"
@@ -189,14 +177,12 @@
         bulkDelete: [items: DataItem[]];
     }>();
 
-    // State
     const slots = useSlots();
     const selectedItems = ref<DataItem[]>([]);
     const activeFilters = ref<Record<string, string>>({});
     const internalSortBy = ref(props.sortBy || '');
     const internalSortOrder = ref<'asc' | 'desc'>(props.sortOrder);
 
-    // Computed
     const sortBy = computed(() => props.sortBy ?? internalSortBy.value);
 
     const totalColumns = computed(() => {
@@ -222,7 +208,6 @@
         return selectedItems.value.length > 0 && selectedItems.value.length < props.data.length;
     });
 
-    // Methods
     const getItemKey = (item: DataItem, index: number): string | number => {
         return ((item as Record<string, unknown>)[props.itemKey] as string | number) ?? index;
     };

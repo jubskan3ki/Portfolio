@@ -1,13 +1,10 @@
-<!-- ContactForm.vue -->
 <template>
     <div class="contact-form-wrapper">
-        <!-- Decorative dots -->
         <div class="contact-form-wrapper__dots contact-form-wrapper__dots--top"></div>
         <div class="contact-form-wrapper__dots contact-form-wrapper__dots--bottom"></div>
 
         <BaseForm :form-id="fixedFormId" :form-custom-class="`contact-form ${customClass}`" @submit="submitForm">
             <template #fields>
-                <!-- Header -->
                 <div v-if="title || $slots.header" class="contact-form__header">
                     <slot name="header">
                         <h2 class="contact-form__title">{{ title }}</h2>
@@ -16,7 +13,6 @@
                 </div>
 
                 <div class="contact-form__body">
-                    <!-- Name -->
                     <BaseFormField id="name" label="Nom" :error="errors.name" required>
                         <BaseInput
                             id="name"
@@ -34,7 +30,6 @@
                         </BaseInput>
                     </BaseFormField>
 
-                    <!-- Email -->
                     <BaseFormField id="email" label="Email" :error="errors.email" required>
                         <BaseInput
                             id="email"
@@ -53,12 +48,12 @@
                         </BaseInput>
                     </BaseFormField>
 
-                    <!-- Subject -->
                     <BaseFormField id="subject" label="Sujet" :error="errors.subject">
                         <BaseSelect
                             id="subject"
                             v-model="form.subject"
                             placeholder="Sélectionnez un sujet"
+                            aria-label="Sujet du message"
                             :disabled="isSubmitting"
                             :error="errors.subject"
                             :options="subjectOptions"
@@ -66,7 +61,6 @@
                         />
                     </BaseFormField>
 
-                    <!-- Message -->
                     <BaseFormField id="message" label="Message" :error="errors.message" required>
                         <BaseTextarea
                             id="message"
@@ -82,7 +76,6 @@
                         />
                     </BaseFormField>
 
-                    <!-- Privacy Policy -->
                     <div class="contact-form__privacy">
                         <BaseCheckbox
                             id="privacy"
@@ -103,7 +96,6 @@
                         </BaseCheckbox>
                     </div>
 
-                    <!-- Status message -->
                     <Transition name="fade">
                         <div
                             v-if="formStatus.message"
@@ -168,10 +160,8 @@
 
     const fixedFormId = computed(() => props.formId || 'contact-form-fixed');
 
-    // API mutation
     const submitContactMutation = useSubmitContact();
 
-    // Form state
     const form = reactive({
         name: '',
         email: '',
@@ -180,7 +170,6 @@
         privacyPolicy: false,
     });
 
-    // Inline validation (replaces deleted useFormValidation composable)
     const errors = reactive<Record<string, string | undefined>>({
         name: undefined,
         email: undefined,
@@ -248,7 +237,6 @@
         message: '',
     });
 
-    // Subject options
     const subjectOptions = [
         { value: 'general', label: 'Information générale' },
         { value: 'project', label: 'Demande de projet' },
@@ -257,7 +245,6 @@
         { value: 'other', label: 'Autre' },
     ];
 
-    // Status icon
     const statusIcon = computed(() => {
         switch (formStatus.type) {
             case 'success':

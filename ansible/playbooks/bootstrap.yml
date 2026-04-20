@@ -1,0 +1,22 @@
+- hosts: portfolio
+  name: Bootstrap portfolio VPS
+  roles:
+      - common
+      - docker
+      - app
+
+  post_tasks:
+      - name: Enable + start portfolio service
+        systemd:
+            name: "{{ app_systemd_service }}"
+            enabled: yes
+            state: started
+
+      - name: Show service status
+        command: "systemctl status {{ app_systemd_service }} --no-pager"
+        register: status_out
+        changed_when: false
+
+      - name: Print service status
+        debug:
+            msg: "{{ status_out.stdout_lines }}"

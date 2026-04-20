@@ -2,21 +2,7 @@ import { computed } from 'vue';
 
 import { STACK_CATEGORY_ICONS, STACK_CATEGORY_LABELS } from '@/config/stacks';
 
-import type { Stack, StackCategory } from '@/types/feature/stacks';
-import type { Ref } from 'vue';
-
-interface UseStacksPageOptions {
-    stacksData: Ref<{ data: Stack[] } | undefined>;
-    categoriesData: Ref<unknown>;
-    statsData: Ref<{ totalStacks?: number; averageProficiency?: number } | undefined>;
-    stacksLoading: Ref<boolean>;
-    categoriesLoading: Ref<boolean>;
-    stacksError: Ref<boolean>;
-    categoriesError: Ref<boolean>;
-    activeCategory: Ref<string>;
-    searchQuery: Ref<string>;
-    isSearchMode: Ref<boolean>;
-}
+import type { Stack, StackCategory, UseStacksPageOptions } from '@/types/feature/stacks';
 
 function extractCategories(data: unknown): StackCategory[] {
     if (!data) {
@@ -50,17 +36,14 @@ export function useStacksPage(options: UseStacksPageOptions) {
         isSearchMode,
     } = options;
 
-    // Loading & Error states
     const isLoading = computed(() => stacksLoading.value || categoriesLoading.value);
     const hasError = computed(() => stacksError.value || categoriesError.value);
 
-    // All stacks sorted by level
     const allStacks = computed<Stack[]>(() => {
         const stacks = stacksData.value?.data ?? [];
         return [...stacks].sort((a, b) => (Number(b.level) || 0) - (Number(a.level) || 0));
     });
 
-    // Get count for a specific category
     const getCategoryCount = (categoryKey: string): number => {
         if (categoryKey === 'all') {
             return allStacks.value.length;
@@ -73,7 +56,6 @@ export function useStacksPage(options: UseStacksPageOptions) {
         return allStacks.value.filter((s) => s.category === cat.name || s.category === String(cat.id)).length;
     };
 
-    // Build tabs dynamically based on categories with data
     const availableTabs = computed(() => {
         if (allStacks.value.length === 0 && !stacksLoading.value) {
             return [];
@@ -113,7 +95,6 @@ export function useStacksPage(options: UseStacksPageOptions) {
         return tabs;
     });
 
-    // Filter stacks by active category or search
     const filteredStacks = computed(() => {
         let stacks = allStacks.value;
 
@@ -137,10 +118,8 @@ export function useStacksPage(options: UseStacksPageOptions) {
         return stacks;
     });
 
-    // Show sections when "All" is selected and not in search mode
     const showSections = computed(() => activeCategory.value === 'all' && !isSearchMode.value && !searchQuery.value);
 
-    // Active category label and icon
     const activeCategoryLabel = computed(() => {
         const tab = availableTabs.value.find((t) => t.key === activeCategory.value);
         if (!tab) {
@@ -153,7 +132,6 @@ export function useStacksPage(options: UseStacksPageOptions) {
         return STACK_CATEGORY_ICONS[activeCategory.value] || 'code';
     });
 
-    // Generate sections by category
     const stackSections = computed(() => {
         if (!showSections.value) {
             return [];
@@ -183,7 +161,6 @@ export function useStacksPage(options: UseStacksPageOptions) {
 
     const hasAnyData = computed(() => filteredStacks.value.length > 0 || stackSections.value.length > 0);
 
-    // Empty state content
     const emptyStateTitle = computed(() => (isSearchMode.value ? 'Aucun résultat' : 'Aucun stack disponible'));
 
     const emptyStateDescription = computed(() =>
@@ -192,10 +169,8 @@ export function useStacksPage(options: UseStacksPageOptions) {
             : 'Les stacks seront ajoutés prochainement.',
     );
 
-    // Content key for transitions
     const contentKey = computed(() => (isSearchMode.value ? `search-${searchQuery.value}` : activeCategory.value));
 
-    // Hero stats
     const heroStats = computed(() => {
         const data = statsData.value;
         return [

@@ -1,0 +1,20 @@
+- hosts: portfolio
+  name: Redeploy portfolio
+  vars:
+      image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
+  tasks:
+      - name: Fetch latest code
+        git:
+            repo: "{{ git_repo }}"
+            dest: "{{ deploy_path }}"
+            version: "{{ git_branch }}"
+            force: yes
+        become_user: "{{ app_system_user }}"
+
+      - name: Zero-downtime rolling deploy
+        command:
+            cmd: "make deploy-zd ENV={{ deployment_env }} IMAGE_TAG={{ image_tag }}"
+            chdir: "{{ deploy_path }}"
+        become_user: "{{ app_system_user }}"
+        environment:
+            IMAGE_TAG: "{{ image_tag }}"

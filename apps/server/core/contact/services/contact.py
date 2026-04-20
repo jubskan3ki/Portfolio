@@ -27,8 +27,7 @@ class ContactService(BaseService["Contact"]):
             "id", "name", "email", "subject", "status", "reference_id", "created_at", "updated_at"
         ).order_by("-created_at")
 
-    # Fields accepted by Contact.objects.create() — excludes serializer-only
-    # fields like recaptchaToken that are not model columns.
+    # Filtre les champs non-modele (ex: recaptchaToken) avant create().
     _MODEL_FIELDS = {"name", "email", "subject", "message", "phone", "company"}
 
     @classmethod
@@ -50,7 +49,6 @@ class ContactService(BaseService["Contact"]):
         email = data["email"]
         message = data["message"]
 
-        # Only pass actual model fields to create()
         model_data = {k: v for k, v in data.items() if k in cls._MODEL_FIELDS}
 
         try:
@@ -60,7 +58,7 @@ class ContactService(BaseService["Contact"]):
                     ip_address=ip_address,
                     **model_data,
                 )
-                # Emails queued independently after successful commit
+                # on_commit: n'envoie les emails qu'apres COMMIT DB (evite les emails "fantomes").
                 transaction.on_commit(lambda: send_admin_notification.delay(name, email, message))
                 transaction.on_commit(lambda: send_user_confirmation.delay(name, email))
         except (IntegrityError, DatabaseError) as exc:

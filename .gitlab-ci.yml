@@ -3,6 +3,7 @@ stages:
     - test
     - security
     - build
+    - sbom
     - perf
     - deploy
 
@@ -13,6 +14,7 @@ workflow:
         - if: $CI_PIPELINE_SOURCE == "merge_request_event"
         - if: $CI_PIPELINE_SOURCE == "push" && $CI_OPEN_MERGE_REQUESTS
           when: never
+        - if: $CI_PIPELINE_SOURCE == "schedule"
         - if: $CI_COMMIT_BRANCH == "main"
         - if: $CI_COMMIT_BRANCH == "develop"
 
@@ -25,8 +27,9 @@ variables:
     PYTHON_VERSION: "3.14"
     NODE_VERSION: "24"
     PNPM_VERSION: "10.28.0"
-
-# ── Règles réutilisables ──────────────────────────────────────────────────────
+    IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+    BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend
+    FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend
 
 .rules:all:
     rules:
@@ -39,7 +42,9 @@ variables:
         - if: $CI_COMMIT_BRANCH == "main"
         - if: $CI_COMMIT_BRANCH == "develop"
 
-# ── Templates de cache ────────────────────────────────────────────────────────
+.rules:main:
+    rules:
+        - if: $CI_COMMIT_BRANCH == "main"
 
 .python_cache:
     cache:
@@ -56,8 +61,6 @@ variables:
             - apps/client/node_modules
         policy: pull-push
 
-# ── Templates de base ─────────────────────────────────────────────────────────
-
 .backend_base:
     image: python:${PYTHON_VERSION}-slim
     extends: .python_cache
@@ -72,9 +75,14 @@ variables:
         - corepack enable pnpm
         - pnpm --dir apps/client install --frozen-lockfile --store-dir $PNPM_STORE_PATH
 
-# ══════════════════════════════════════════════════════════════════════════════
-# STAGE 1 — validate (jobs parallèles, rapides)
-# ══════════════════════════════════════════════════════════════════════════════
+.docker_base:
+    image: docker:latest
+    services:
+        - docker:dind
+    variables:
+        DOCKER_BUILDKIT: "1"
+    before_script:
+        - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
 validate:backend:format:
     stage: validate
@@ -110,7 +118,7 @@ validate:backend:types:
         ADMIN_PASSWORD: ci
     script:
         - cd apps/server && python -m mypy .
-    allow_failure: true  # advisory : les erreurs remontent sans bloquer le pipeline
+    allow_failure: true # advisory : les erreurs remontent sans bloquer le pipeline
 
 validate:frontend:types:
     stage: validate
@@ -129,10 +137,6 @@ validate:frontend:css:
     extends: [.frontend_base, .rules:all]
     script:
         - cd apps/client && pnpm lint:css
-
-# ══════════════════════════════════════════════════════════════════════════════
-# STAGE 2 — test
-# ══════════════════════════════════════════════════════════════════════════════
 
 test:backend:unit:
     stage: test
@@ -185,10 +189,6 @@ test:frontend:unit:
     script:
         - cd apps/client && pnpm test
 
-# ══════════════════════════════════════════════════════════════════════════════
-# STAGE 3 — security
-# ══════════════════════════════════════════════════════════════════════════════
-
 security:backend:bandit:
     stage: security
     image: python:${PYTHON_VERSION}-slim
@@ -201,7 +201,7 @@ security:backend:bandit:
           --severity-level medium
           --confidence-level medium
           -q
-    allow_failure: true
+    allow_failure: true # advisory: bandit has many false positives in Django code
 
 security:backend:pip-audit:
     stage: security
@@ -210,48 +210,76 @@ security:backend:pip-audit:
     before_script:
         - pip install --cache-dir $PIP_CACHE_DIR --quiet pip-audit
     script:
-        - pip-audit --requirement apps/server/requirements.txt --skip-editable --ignore-vuln CVE-2026-4539  # pygments: no fix available yet
-    allow_failure: true
+        - pip-audit --requirement apps/server/requirements.txt --skip-editable
+    allow_failure: false # blocking: CVE in a pinned dep means bump or accept in .trivyignore
 
 security:frontend:audit:
     stage: security
     extends: [.frontend_base, .rules:all]
     script:
         - cd apps/client && pnpm audit --audit-level=high
-    allow_failure: true
+    allow_failure: false # blocking: high-severity npm CVE blocks merge
 
-security:trivy:
+security:gitleaks:
+    stage: security
+    image: zricethezav/gitleaks:latest
+    extends: .rules:all
+    script:
+        - gitleaks detect --source . --verbose --no-git --redact
+    allow_failure: false # blocking: any leaked secret fails the pipeline
+
+security:trivy:fs:
     stage: security
     image:
         name: ghcr.io/aquasecurity/trivy:latest
         entrypoint: [""]
     extends: .rules:all
+    variables:
+        TRIVY_NO_PROGRESS: "true"
+        TRIVY_CACHE_DIR: ".trivycache/"
+    cache:
+        key: trivy
+        paths:
+            - .trivycache/
     script:
-        - trivy fs --scanners vuln
+        - trivy fs
+          --scanners vuln,misconfig,secret
           --exit-code 1
           --severity HIGH,CRITICAL
-          --no-progress
           --ignore-unfixed
+          --ignorefile .trivyignore
           .
-        - trivy config
-          --exit-code 0
-          --severity HIGH,CRITICAL
-          apps/server/Dockerfile apps/client/Dockerfile
-    allow_failure: true
+    allow_failure: false
 
-# ══════════════════════════════════════════════════════════════════════════════
-# STAGE 4 — build (BuildKit activé — uniquement main/develop ou changements Docker)
-# ══════════════════════════════════════════════════════════════════════════════
+# Build tags: $SHORT_SHA (canonical), $REF_SLUG (branch-friendly), latest (main only).
+.build_image:
+    stage: build
+    extends: .docker_base
+    variables:
+        IMAGE: ""
+        CONTEXT: ""
+    script:
+        - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        - docker buildx create --use --name portfolio-builder || docker buildx use portfolio-builder
+        - |
+            TAGS="-t $IMAGE:$IMAGE_TAG -t $IMAGE:$CI_COMMIT_REF_SLUG"
+            if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+                TAGS="$TAGS -t $IMAGE:latest"
+            fi
+        - docker buildx build
+          --push
+          --cache-from type=registry,ref=$IMAGE:buildcache
+          --cache-to type=registry,ref=$IMAGE:buildcache,mode=max
+          --build-arg VCS_REF=$CI_COMMIT_SHA
+          --build-arg BUILD_DATE=$BUILD_DATE
+          $TAGS
+          $CONTEXT
 
 build:backend:
-    stage: build
-    image: docker:latest
-    services:
-        - docker:dind
+    extends: .build_image
     variables:
-        DOCKER_BUILDKIT: "1"
-    script:
-        - docker build -t portfolio-backend ./apps/server
+        IMAGE: $BACKEND_IMAGE
+        CONTEXT: ./apps/server
     rules:
         - if: $CI_COMMIT_BRANCH == "main"
         - if: $CI_COMMIT_BRANCH == "develop"
@@ -261,14 +289,10 @@ build:backend:
               - docker-compose.yml
 
 build:frontend:
-    stage: build
-    image: docker:latest
-    services:
-        - docker:dind
+    extends: .build_image
     variables:
-        DOCKER_BUILDKIT: "1"
-    script:
-        - docker build -t portfolio-frontend ./apps/client
+        IMAGE: $FRONTEND_IMAGE
+        CONTEXT: ./apps/client
     rules:
         - if: $CI_COMMIT_BRANCH == "main"
         - if: $CI_COMMIT_BRANCH == "develop"
@@ -277,9 +301,104 @@ build:frontend:
               - apps/client/**/*
               - docker-compose.yml
 
-# ══════════════════════════════════════════════════════════════════════════════
-# STAGE 5 — perf (Lighthouse CI — main/develop uniquement)
-# ══════════════════════════════════════════════════════════════════════════════
+security:trivy:image:backend:
+    stage: build
+    image:
+        name: ghcr.io/aquasecurity/trivy:latest
+        entrypoint: [""]
+    needs:
+        - job: build:backend
+    extends: .rules:all
+    variables:
+        TRIVY_NO_PROGRESS: "true"
+    before_script:
+        - trivy --version
+    script:
+        - trivy image
+          --exit-code 1
+          --severity HIGH,CRITICAL
+          --ignore-unfixed
+          --ignorefile .trivyignore
+          $BACKEND_IMAGE:$IMAGE_TAG
+    rules:
+        - if: $CI_COMMIT_BRANCH == "main"
+        - if: $CI_COMMIT_BRANCH == "develop"
+
+security:trivy:image:frontend:
+    stage: build
+    image:
+        name: ghcr.io/aquasecurity/trivy:latest
+        entrypoint: [""]
+    needs:
+        - job: build:frontend
+    extends: .rules:all
+    variables:
+        TRIVY_NO_PROGRESS: "true"
+    before_script:
+        - trivy --version
+    script:
+        - trivy image
+          --exit-code 1
+          --severity HIGH,CRITICAL
+          --ignore-unfixed
+          --ignorefile .trivyignore
+          $FRONTEND_IMAGE:$IMAGE_TAG
+    rules:
+        - if: $CI_COMMIT_BRANCH == "main"
+        - if: $CI_COMMIT_BRANCH == "develop"
+
+# SBOM (SPDX JSON) via syft, retained 1 year for downstream CVE scanning.
+.sbom_base:
+    stage: sbom
+    image:
+        name: anchore/syft:latest
+        entrypoint: [""]
+    extends: .rules:main_or_develop
+
+sbom:backend:
+    extends: .sbom_base
+    needs:
+        - job: build:backend
+    script:
+        - echo "$CI_REGISTRY_PASSWORD" | syft login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY" || true
+        - syft "$BACKEND_IMAGE:$IMAGE_TAG" -o spdx-json=sbom-backend.spdx.json
+    artifacts:
+        paths:
+            - sbom-backend.spdx.json
+        expire_in: 1 year
+
+sbom:frontend:
+    extends: .sbom_base
+    needs:
+        - job: build:frontend
+    script:
+        - echo "$CI_REGISTRY_PASSWORD" | syft login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY" || true
+        - syft "$FRONTEND_IMAGE:$IMAGE_TAG" -o spdx-json=sbom-frontend.spdx.json
+    artifacts:
+        paths:
+            - sbom-frontend.spdx.json
+        expire_in: 1 year
+
+perf:k6:nightly:
+    stage: perf
+    image:
+        name: grafana/k6:latest
+        entrypoint: [""]
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "schedule"
+    variables:
+        BASE_URL: $K6_BASE_URL  # defined as CI schedule variable (e.g. https://aitaddajuba.fr)
+    script:
+        - echo ">> k6 browse scenario against $BASE_URL"
+        - k6 run --env BASE_URL=$BASE_URL bench/scenarios/browse.js --summary-export=k6-browse-summary.json
+        - echo ">> k6 sustained (shorter in CI — 5 min)"
+        - k6 run --env BASE_URL=$BASE_URL --duration 5m bench/scenarios/sustained.js --summary-export=k6-sustained-summary.json
+    artifacts:
+        when: always
+        paths:
+            - k6-*-summary.json
+        expire_in: 30 days
+    allow_failure: false
 
 perf:lighthouse:
     stage: perf
@@ -302,16 +421,22 @@ perf:lighthouse:
         expire_in: 2 weeks
     allow_failure: true
 
-# ══════════════════════════════════════════════════════════════════════════════
-# STAGE 6 — deploy (main uniquement)
-# ══════════════════════════════════════════════════════════════════════════════
+# Deploy pulls the pinned image and runs a rolling (zero-downtime) rollout; rollback is manual.
+.ssh_base:
+    image: alpine:latest
+    before_script:
+        - apk add --no-cache openssh-client curl
+        - mkdir -p ~/.ssh
+        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        - chmod 600 ~/.ssh/id_rsa
+        - ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
 
 deploy:production:
     stage: deploy
-    image: alpine:latest
+    extends: .ssh_base
     environment:
         name: production
-        url: https://$SSH_HOST
+        url: https://$DEPLOY_DOMAIN
     rules:
         - if: $CI_COMMIT_BRANCH == "main"
     needs:
@@ -320,20 +445,90 @@ deploy:production:
         - job: validate:backend:lint
         - job: validate:frontend:types
         - job: validate:frontend:eslint
+        - job: security:gitleaks
+        - job: security:trivy:fs
+        - job: security:trivy:image:backend
+        - job: security:trivy:image:frontend
         - job: build:backend
         - job: build:frontend
-    before_script:
-        - apk add --no-cache openssh-client
-        - mkdir -p ~/.ssh
-        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-        - chmod 600 ~/.ssh/id_rsa
-        - ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
     script:
-        - scp -P "$SSH_PORT" "$ENV_FILE" "$SSH_USER@$SSH_HOST:/home/$SSH_USER/projects/Portfolio/.env"
-        - ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
-          cd /home/$SSH_USER/projects/Portfolio &&
-          git pull origin main &&
-          docker compose pull 2>/dev/null || true &&
-          docker compose up -d --build &&
-          docker compose ps
-          "
+        # Record previous IMAGE_TAG so deploy:rollback can restore it.
+        - |
+            ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+                cd $DEPLOY_PATH
+                if [ -f .current-image-tag ]; then
+                    cp .current-image-tag .previous-image-tag
+                fi
+                echo '$IMAGE_TAG' > .current-image-tag
+            "
+        # Decrypt prod secrets locally with sops, scp to VPS tmpfs.
+        - apk add --no-cache gnupg
+        - wget -q https://github.com/getsops/sops/releases/download/v3.9.1/sops-v3.9.1.linux.amd64 -O /usr/local/bin/sops
+        - chmod +x /usr/local/bin/sops
+        - mkdir -p ~/.config/sops/age
+        - echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+        - chmod 600 ~/.config/sops/age/keys.txt
+        - sops --decrypt --input-type yaml --output-type dotenv secrets/prod.env.sops.yaml > /tmp/prod.env
+        - scp -P "$SSH_PORT" /tmp/prod.env "$SSH_USER@$SSH_HOST:/run/secrets/prod.env"
+        - rm -f /tmp/prod.env
+        - |
+            ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+                set -e
+                cd $DEPLOY_PATH
+                git fetch origin main
+                git reset --hard $CI_COMMIT_SHA
+                export IMAGE_TAG=$IMAGE_TAG
+                make deploy-zd ENV=prod IMAGE_TAG=$IMAGE_TAG
+                docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+            "
+
+deploy:smoke-test:
+    stage: deploy
+    extends: .ssh_base
+    environment:
+        name: production
+    rules:
+        - if: $CI_COMMIT_BRANCH == "main"
+    needs:
+        - job: deploy:production
+    script:
+        - |
+            echo ">> Smoke test: wait for services to be healthy..."
+            ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+                cd $DEPLOY_PATH
+                for i in \$(seq 1 30); do
+                    make healthcheck ENV=prod 2>&1 | tee /tmp/hc.log
+                    grep -qE 'HTTPS.*: 200' /tmp/hc.log && break
+                    sleep 3
+                done
+            "
+        - |
+            echo ">> Smoke test: external HTTPS..."
+            curl -fsSL --max-time 10 -o /dev/null -w "https /: %{http_code}\n" \
+                "https://$DEPLOY_DOMAIN/"
+            curl -fsSL --max-time 10 -o /dev/null -w "https /health: %{http_code}\n" \
+                "https://$DEPLOY_DOMAIN/health"
+
+deploy:rollback:
+    stage: deploy
+    extends: .ssh_base
+    environment:
+        name: production
+    rules:
+        - if: $CI_COMMIT_BRANCH == "main"
+          when: manual
+    needs:
+        - job: deploy:production
+          optional: true
+    allow_failure: false
+    script:
+        - |
+            ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+                set -e
+                cd $DEPLOY_PATH
+                test -s .previous-image-tag || { echo 'no .previous-image-tag — nothing to roll back to'; exit 1; }
+                prev=\$(cat .previous-image-tag)
+                echo 'Rollback to' \$prev
+                make rollback ENV=prod TAG=\$prev
+                make healthcheck ENV=prod
+            "

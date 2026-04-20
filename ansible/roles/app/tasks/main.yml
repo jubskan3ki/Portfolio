@@ -1,0 +1,54 @@
+- name: Ensure app system user
+  user:
+      name: "{{ app_system_user }}"
+      system: yes
+      shell: /bin/bash
+      home: "/home/{{ app_system_user }}"
+      create_home: yes
+
+- name: Ensure deploy path exists
+  file:
+      path: "{{ deploy_path }}"
+      state: directory
+      owner: "{{ app_system_user }}"
+      group: "{{ app_system_user }}"
+      mode: "0750"
+
+- name: Clone/update repo
+  git:
+      repo: "{{ git_repo }}"
+      dest: "{{ deploy_path }}"
+      version: "{{ git_branch }}"
+      force: yes
+  become_user: "{{ app_system_user }}"
+
+- name: Provision sops age key
+  copy:
+      content: "{{ sops_age_key }}"
+      dest: "{{ sops_age_key_path }}"
+      mode: "0600"
+      owner: "{{ app_system_user }}"
+      group: "{{ app_system_user }}"
+
+- name: Ensure secrets runtime dir (tmpfs-like)
+  file:
+      path: "{{ secrets_runtime_dir }}"
+      state: directory
+      owner: "{{ app_system_user }}"
+      group: "{{ app_system_user }}"
+      mode: "0700"
+
+- name: Install systemd unit
+  template:
+      src: portfolio.service.j2
+      dest: "/etc/systemd/system/{{ app_systemd_service }}.service"
+      mode: "0644"
+  notify:
+      - reload systemd
+      - restart portfolio
+
+- name: Enable portfolio service
+  systemd:
+      name: "{{ app_systemd_service }}"
+      enabled: yes
+      daemon_reload: yes

@@ -1,18 +1,6 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
-import type { Ref } from 'vue';
-
-interface UseTypingEffectOptions {
-    typeSpeed?: number;
-    deleteSpeed?: number;
-    pauseMs?: number;
-    startDelay?: number;
-}
-
-interface UseTypingEffectReturn {
-    currentText: Ref<string>;
-    isPaused: Ref<boolean>;
-}
+import type { UseTypingEffectOptions, UseTypingEffectReturn } from '@/types/composables/ui';
 
 export function useTypingEffect(texts: string[], options: UseTypingEffectOptions = {}): UseTypingEffectReturn {
     const { typeSpeed = 150, deleteSpeed = 50, pauseMs = 2000, startDelay = 300 } = options;

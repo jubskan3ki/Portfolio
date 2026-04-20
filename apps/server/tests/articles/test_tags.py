@@ -31,8 +31,7 @@ class TestListTags:
         response = cast(Response, api_client.get(self.URL))
 
         if response.status_code == status.HTTP_200_OK and hasattr(response, "data"):
-            resp_data = cast(dict[str, Any], response.data)
-            data = resp_data.get("data", response.data)
+            data = response.data.get("data", response.data) if isinstance(response.data, dict) else response.data
             if isinstance(data, list) and len(data) > 0:
                 assert "name" in data[0]
         assert sample_tag is not None

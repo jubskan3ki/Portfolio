@@ -42,9 +42,7 @@ export const articleKeys = {
 };
 
 export const articlesApi = {
-    // Manual filter transformation: backend articles expects sortBy/sortDirection (not ordering)
-    // and tag (singular, comma-separated) instead of tags[]. Other modules (projects, stacks)
-    // use django-filter which accepts filters directly — this difference is intentional.
+    // Backend articles: sortBy/sortDirection + tags CSV (pas django-filter standard)
     getAll: (filters?: ArticleFilters): Promise<ArticlesResponse> => {
         if (!filters) {
             return httpClient.get(API_ENDPOINTS.ARTICLES.BASE);
@@ -65,7 +63,7 @@ export const articlesApi = {
             params.limit = filters.limit;
         }
 
-        // Transform ordering (-date) to sortBy/sortDirection for backend
+        // `-date` -> sortBy + sortDirection
         const ordering = (filters as Record<string, unknown>).ordering as string | undefined;
         if (ordering) {
             const desc = ordering.startsWith('-');
@@ -76,9 +74,9 @@ export const articlesApi = {
             params.sortDirection = filters.sortDirection || 'desc';
         }
 
-        // Transform tags array to single comma-separated tag param
+        // `tags` (pluriel CSV) -> tags__name__in ; `tag` (sing) ne gère qu'un exact
         if (filters.tags?.length) {
-            params.tag = filters.tags.join(',');
+            params.tags = filters.tags.join(',');
         }
 
         return httpClient.get(API_ENDPOINTS.ARTICLES.BASE, params);
@@ -143,7 +141,6 @@ export const articlesApi = {
 
     deleteTag: (name: string): Promise<void> => httpClient.delete(API_ENDPOINTS.ARTICLES.TAG_DETAIL(name)),
 
-    // Admin methods
     getAdminList: <T = unknown>(params: Record<string, unknown>): Promise<T> =>
         httpClient.get(API_ENDPOINTS.ARTICLES.BASE, params),
 
@@ -227,10 +224,9 @@ export function useToggleArticlePublish() {
         mutationFn: ({ slug, isPublished }: { slug: string; isPublished: boolean }) =>
             articlesApi.togglePublish(slug, isPublished),
         onMutate: async ({ slug, isPublished }) => {
-            // Cancel active article queries to prevent overwrites
+            // Cancel + snapshot pour rollback optimiste
             await queryClient.cancelQueries({ queryKey: articleKeys.all });
 
-            // Snapshot detail cache for rollback
             const previousDetail = queryClient.getQueryData(articleKeys.detail(slug));
             if (previousDetail) {
                 queryClient.setQueryData(articleKeys.detail(slug), (old: ArticleDetail | undefined) =>
@@ -241,13 +237,11 @@ export function useToggleArticlePublish() {
             return { previousDetail, slug };
         },
         onError: (_err, { slug }, context) => {
-            // Rollback detail cache
             if (context?.previousDetail) {
                 queryClient.setQueryData(articleKeys.detail(slug), context.previousDetail);
             }
         },
         onSettled: () => {
-            // Always refetch to ensure consistency
             queryClient.invalidateQueries({ queryKey: articleKeys.all, refetchType: 'active' });
         },
     });

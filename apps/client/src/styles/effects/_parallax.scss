@@ -1,13 +1,10 @@
-// Parallax Effects (Flat Style - Solid Colors)
 @use '../abstracts/variables' as vars;
 @use '../abstracts/mixins' as mix;
 
-// Parallax container
 .parallax-container {
     @include mix.parallax-container;
 }
 
-// Parallax layers
 .parallax-layer {
     @include mix.parallax-layer;
 
@@ -28,7 +25,6 @@
     }
 }
 
-// Parallax hero section
 .parallax-hero {
     position: relative;
     min-height: 100vh;
@@ -68,13 +64,12 @@
     }
 }
 
-// Mouse-responsive parallax (requires JS)
+// Requires JS to drive transforms.
 .parallax-mouse {
     transition: transform 0.1s ease-out;
     will-change: transform;
 }
 
-// Scroll parallax effect
 .parallax-scroll {
     position: relative;
 
@@ -89,7 +84,6 @@
     }
 }
 
-// Floating elements
 .float {
     @include mix.float-animation;
 
@@ -106,7 +100,6 @@
     }
 }
 
-// Floating decorative shapes (Flat - Solid Colors)
 .floating-shapes {
     position: absolute;
     inset: 0;
@@ -171,7 +164,6 @@
     }
 }
 
-// Gradient orbs (Flat - Solid Colors with blur)
 .gradient-orb {
     position: absolute;
     border-radius: 50%;

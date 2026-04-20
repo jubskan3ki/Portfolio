@@ -85,9 +85,31 @@ export interface QueryErrorBoundaryProps {
     refetch?: () => void;
 }
 
+export type QueryErrorBoundaryErrorType
+    = | 'not-found'
+        | 'forbidden'
+        | 'unauthorized'
+        | 'server'
+        | 'client'
+        | 'network';
+
+export interface QueryErrorBoundaryErrorConfig {
+    icon: string;
+    title: string;
+    message: string;
+}
+
 // ErrorBoundary
 export type ErrorBoundaryVariant = 'default' | 'compact' | 'inline';
 export type ErrorBoundarySize = 'sm' | 'md' | 'lg';
+
+export type ErrorBoundaryErrorType
+    = | 'type'
+        | 'reference'
+        | 'syntax'
+        | 'network'
+        | 'timeout'
+        | 'unknown';
 
 export interface ErrorBoundaryProps {
     title?: string;
@@ -98,6 +120,33 @@ export interface ErrorBoundaryProps {
     variant?: ErrorBoundaryVariant;
     size?: ErrorBoundarySize;
     onError?: (error: Error) => void;
+}
+
+// ErrorMessage
+export interface ErrorMessageProps {
+    message?: string;
+    showIcon?: boolean;
+    customClass?: string;
+}
+
+// QueryStateHandler
+export interface QueryStateHandlerProps {
+    loading?: boolean;
+    error?: string | Error | null;
+    empty?: boolean;
+    loadingMessage?: string;
+    loadingSize?: 'sm' | 'md' | 'lg';
+    emptyTitle?: string;
+    emptyDescription?: string;
+    emptyIcon?: string;
+    retryable?: boolean;
+    retryText?: string;
+}
+
+// AlertList
+export interface AlertListProps {
+    position?: FeedbackPosition;
+    maxAlerts?: number;
 }
 
 // EmptyState

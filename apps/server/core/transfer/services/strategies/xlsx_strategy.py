@@ -37,13 +37,11 @@ class XlsxImportStrategy(ImportStrategy):
             workbook.close()
             return records
 
-        # Build headers from first row
         headers = self._build_headers(rows[0])
 
-        # Parse data rows
         for row in rows[1:]:
             record = self._parse_row(row, headers)
-            if record:  # Only add non-empty records
+            if record:
                 records.append(record)
 
         workbook.close()
@@ -68,7 +66,6 @@ class XlsxImportStrategy(ImportStrategy):
 
             header = headers[i]
 
-            # Try to parse JSON strings
             if isinstance(value, str) and value.startswith(("[", "{")):
                 try:
                     record[header] = json.loads(value)
@@ -77,7 +74,6 @@ class XlsxImportStrategy(ImportStrategy):
             else:
                 record[header] = value
 
-        # Return None for empty records
         if not any(v is not None and v != "" for v in record.values()):
             return None
 
@@ -113,35 +109,31 @@ class XlsxExportStrategy(ExportStrategy):
             workbook.save(output)
             return output.getvalue()
 
-        # Collect all unique keys
         all_keys: set[str] = set()
         for record in data:
             all_keys.update(record.keys())
 
         headers = sorted(all_keys)
 
-        # Write headers
         for col, header in enumerate(headers, start=1):
             cell = sheet.cell(row=1, column=col, value=header)
             cell.font = openpyxl.styles.Font(bold=True)
 
-        # Write data
         for row_idx, record in enumerate(data, start=2):
             for col_idx, header in enumerate(headers, start=1):
                 value = record.get(header, "")
 
-                # Convert complex objects to JSON strings
-                if isinstance(value, (list, dict)):
+                if isinstance(value, list | dict):
                     value = json.dumps(value, ensure_ascii=False)
 
                 sheet.cell(row=row_idx, column=col_idx, value=value)
 
-        # Auto-adjust column widths
         for col_idx, header in enumerate(headers, start=1):
             column_letter = get_column_letter(col_idx)
             max_length = len(str(header))
 
-            for row in range(2, min(len(data) + 2, 100)):  # Limit to first 100 rows for performance
+            # Echantillonne les 100 premieres lignes pour auto-width (perf).
+            for row in range(2, min(len(data) + 2, 100)):
                 cell_value = sheet.cell(row=row, column=col_idx).value
                 if cell_value:
                     max_length = max(max_length, min(len(str(cell_value)), 50))

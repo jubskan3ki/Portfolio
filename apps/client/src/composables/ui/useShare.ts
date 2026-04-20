@@ -1,13 +1,7 @@
 import { computed, ref, toValue } from 'vue';
 
-import type { ComputedRef, MaybeRef, Ref } from 'vue';
-
-interface UseShareReturn {
-    shareUrl: ComputedRef<string>;
-    linkCopied: Ref<boolean>;
-    shareOn: (platform: 'twitter' | 'linkedin') => void;
-    copyLink: () => Promise<void>;
-}
+import type { UseShareReturn } from '@/types/composables/ui';
+import type { MaybeRef } from 'vue';
 
 export function useShare(title: MaybeRef<string>): UseShareReturn {
     const linkCopied = ref(false);
@@ -39,7 +33,7 @@ export function useShare(title: MaybeRef<string>): UseShareReturn {
                 linkCopied.value = false;
             }, 2000);
         } catch {
-            // Fallback silencieux
+            /* noop */
         }
     };
 

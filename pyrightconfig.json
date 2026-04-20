@@ -1,0 +1,24 @@
+{
+    "venvPath": "apps/server",
+    "venv": ".venv",
+    "pythonVersion": "3.12",
+    "extraPaths": [
+        "apps/server"
+    ],
+    "include": [
+        "apps/server"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        "**/.venv",
+        "apps/server/.venv",
+        "apps/server/migrations",
+        "apps/server/staticfiles",
+        "apps/server/media",
+        "apps/client"
+    ],
+    "reportMissingImports": "warning",
+    "reportMissingModuleSource": "none",
+    "typeCheckingMode": "basic"
+}

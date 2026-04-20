@@ -1,8 +1,5 @@
-// Effets visuels
-
 @use 'colors' as c;
 
-// Ombres
 $box-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 $box-shadow-small:
     0 1px 3px 0 rgba(0, 0, 0, 0.1),
@@ -19,16 +16,13 @@ $box-shadow-large:
 $box-shadow-primary: 0 4px 14px 0 rgba(c.$primary-color, 0.25);
 $box-shadow-header: 0 1px 3px rgba(0, 0, 0, 0.05);
 
-// Transitions
 $transition-fast: 150ms ease-out;
 $transition-base: 300ms ease-out;
 $transition-slow: 500ms ease-out;
 
-// Hover
 $hover-brightness-light: 1.05;
 $hover-brightness-dark: 0.92;
 
-// Glassmorphism
 $glass-blur: 16px;
 $glass-blur-sm: 8px;
 $glass-blur-lg: 24px;
@@ -42,7 +36,7 @@ $glass-border-subtle: rgba(255, 255, 255, 0.1);
 $glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 $glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.15);
 
-// Dots decoratifs
+// -light/-dark = dot color per BACKGROUND tone (>=3:1 contrast).
 $dots-color: rgba(c.$primary-color, 0.08);
 $dots-color-light: rgba(c.$primary-color, 0.05);
 $dots-color-dark: rgba(c.$primary-color, 0.12);
@@ -53,7 +47,6 @@ $dots-spacing: 20px;
 $dots-spacing-sm: 15px;
 $dots-spacing-lg: 30px;
 
-// Tilt / Parallax
 $tilt-perspective: 1000px;
 $tilt-perspective-sm: 800px;
 $tilt-perspective-lg: 1200px;
@@ -64,7 +57,6 @@ $tilt-scale-hover: 1.02;
 $tilt-transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 $tilt-transition-fast: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 
-// Parallax
 $parallax-depth-1: 20px;
 $parallax-depth-2: 40px;
 $parallax-depth-3: 60px;

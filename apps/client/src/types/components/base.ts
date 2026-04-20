@@ -74,7 +74,39 @@ export interface InputProps {
 export interface SelectOption {
     value: string | number;
     label: string;
+    image?: string;
     disabled?: boolean;
+}
+
+export type SelectInitialValue
+    = | string
+        | number
+        | { id?: string | number; name?: string; slug?: string }
+        | null
+        | undefined;
+
+export interface SelectProps {
+    options?: SelectOption[];
+    id?: string;
+    label?: string;
+    ariaLabel?: string;
+    ariaLabelledby?: string;
+    placeholder?: string;
+    required?: boolean;
+    disabled?: boolean;
+    error?: string;
+    success?: string;
+    hint?: string;
+    showImage?: boolean;
+    allowCreate?: boolean;
+    createLabel?: string;
+    createPlaceholder?: string;
+    /**
+     * Raw value coming from the server (id, name, slug or related object).
+     * When options arrive after the form has hydrated, the matching option
+     * value is patched into v-model. Ignored once v-model holds a value.
+     */
+    initialValue?: SelectInitialValue;
 }
 
 // BaseMultiSelect
@@ -85,10 +117,17 @@ export interface MultiSelectOption {
     [key: string]: unknown;
 }
 
+export type MultiSelectInitialItem
+    = | string
+        | number
+        | { id?: string | number; name?: string; slug?: string };
+
 export interface MultiSelectProps {
     options?: MultiSelectOption[];
     id?: string;
     label?: string;
+    ariaLabel?: string;
+    ariaLabelledby?: string;
     placeholder?: string;
     required?: boolean;
     disabled?: boolean;
@@ -102,6 +141,12 @@ export interface MultiSelectProps {
     createLabel?: string;
     createPlaceholder?: string;
     maxItems?: number;
+    /**
+     * Raw values coming from the server (ids, names, slugs or related objects).
+     * Resolved against `options` once they arrive and patched into v-model.
+     * Ignored when v-model already holds at least one value.
+     */
+    initialValue?: MultiSelectInitialItem[] | null;
 }
 
 // BaseCheckbox
@@ -173,6 +218,7 @@ export interface ImageProps {
     quality?: number;
     format?: ImageFormat;
     sizes?: string;
+    densities?: string;
     preload?: boolean;
     showPlaceholder?: boolean;
     aspectRatio?: AspectRatio;
@@ -261,4 +307,70 @@ export interface DividerProps {
     spacing?: 'none' | 'sm' | 'md' | 'lg';
     label?: string;
     customClass?: string;
+}
+
+// BaseContentCard
+export interface BaseContentCardProps {
+    to?: string;
+    image?: string;
+    imageAlt?: string;
+    placeholderIcon?: string;
+    badge?: string;
+    title: string;
+    description?: string;
+    tags?: string[];
+    maxTags?: number;
+    /**
+     * When set, emits matching `view-transition-name` on the card's image
+     * and title so navigations to the detail page morph them into place.
+     */
+    transitionKey?: string;
+}
+
+// BaseTextarea
+export interface TextareaProps {
+    id?: string;
+    name?: string;
+    label?: string;
+    placeholder?: string;
+    required?: boolean;
+    disabled?: boolean;
+    readonly?: boolean;
+    rows?: number;
+    maxlength?: string | number;
+    autocomplete?: string;
+    resizable?: boolean;
+    showCount?: boolean;
+    error?: string;
+    success?: string;
+    hint?: string;
+    customClass?: string;
+}
+
+// BaseFileUpload
+export interface FileUploadProps {
+    modelValue?: File | null;
+    preview?: string;
+    id?: string;
+    label?: string;
+    accept?: string;
+    maxSize?: number; // in MB
+    required?: boolean;
+    disabled?: boolean;
+    error?: string;
+    placeholderIcon?: string;
+    placeholderText?: string;
+    hint?: string;
+    previewAlt?: string;
+    removeLabel?: string;
+}
+
+// BaseSwitch
+export interface SwitchProps {
+    id?: string;
+    name?: string;
+    label?: string;
+    disabled?: boolean;
+    customClass?: string;
+    error?: string;
 }

@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { useContactFaqSeo } from '@/composables/seo/useContactFaqSeo';
+
 // Stub the auto-imported Nuxt helpers so the composable runs outside Nuxt.
 const schemaCapture = { calls: [] as unknown[] };
 
@@ -7,8 +9,6 @@ vi.stubGlobal('useSchemaOrg', (input: unknown) => {
     schemaCapture.calls.push(input);
 });
 vi.stubGlobal('defineWebPage', (input: unknown) => input);
-
-import { useContactFaqSeo } from '@/composables/seo/useContactFaqSeo';
 
 describe('useContactFaqSeo', () => {
     it('returns a non-empty FAQ list', () => {
@@ -30,7 +30,11 @@ describe('useContactFaqSeo', () => {
         expect(page['@type']).toBe('FAQPage');
         expect(Array.isArray(page.mainEntity)).toBe(true);
         expect(page.mainEntity).toHaveLength(items.length);
-        const first = page.mainEntity[0] as { '@type': string; name: string; acceptedAnswer: { '@type': string; text: string } };
+        const first = page.mainEntity[0] as {
+            '@type': string;
+            name: string;
+            acceptedAnswer: { '@type': string; text: string };
+        };
         expect(first['@type']).toBe('Question');
         expect(first.acceptedAnswer['@type']).toBe('Answer');
         expect(first.name).toBe(items[0]?.question);

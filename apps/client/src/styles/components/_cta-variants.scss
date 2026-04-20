@@ -3,7 +3,6 @@
 @use '@/styles/abstracts/mixins' as mix;
 @use '@/styles/abstracts/functions' as fn;
 
-/// CTA variant mixin — generates themed styles for a CTA variant
 /// @param {Map} $config - variant configuration map
 @mixin cta-variant($config) {
     background: map.get($config, bg);

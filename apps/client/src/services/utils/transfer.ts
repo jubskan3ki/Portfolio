@@ -1,12 +1,7 @@
-// Helpers pour les opérations de transfert (import/export)
-
 import { dayjs } from '@/services/utils/date';
 
 import type { JobStatus } from '@/types/composables/data';
 
-/**
- * Formate une taille de fichier en unité lisible
- */
 export function formatFileSize(bytes: number): string {
     if (bytes < 1024) {
         return `${bytes} B`;
@@ -17,16 +12,10 @@ export function formatFileSize(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/**
- * Formate une date pour l'affichage des jobs de transfert
- */
 export function formatTransferDate(date: string): string {
     return dayjs(date).format('D MMM HH:mm');
 }
 
-/**
- * Obtient le libellé d'un statut de job
- */
 export function getTransferStatusLabel(status: JobStatus): string {
     const labels: Record<JobStatus, string> = {
         pending: 'En attente',
@@ -39,9 +28,6 @@ export function getTransferStatusLabel(status: JobStatus): string {
     return labels[status] || status;
 }
 
-/**
- * Extrait le count d'un objet stats
- */
 export function extractStatsCount(val: number | { count?: number } | undefined): number {
     if (typeof val === 'number') {
         return val;

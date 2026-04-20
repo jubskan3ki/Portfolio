@@ -44,7 +44,7 @@ export const httpClient = {
 
         const response = await fetchWithTimeout(url, requestInit);
 
-        // skipRefresh=true on retry prevents further recursion (max 1 retry for auth refresh)
+        // skipRefresh=true sur retry: max 1 refresh auth, empêche récursion
         if (!skipRefresh && (await handleAuthRefresh(response, endpoint))) {
             return httpClient.uploadForm<T>(endpoint, formData, method, true);
         }
@@ -65,7 +65,7 @@ export const httpClient = {
 
         const response = await fetchWithTimeout(url, requestInit);
 
-        // skipRefresh=true on retry prevents further recursion (max 1 retry for auth refresh)
+        // skipRefresh=true sur retry: max 1 refresh auth, empêche récursion
         if (!skipRefresh && (await handleAuthRefresh(response, endpoint))) {
             return httpClient.downloadBlob(endpoint, params, true);
         }
@@ -78,7 +78,7 @@ export const httpClient = {
                     errorMessage = errorData.error;
                 }
             } catch {
-                // No JSON body
+                // no JSON body
             }
             throw createApiError(response.status, errorMessage);
         }

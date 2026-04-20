@@ -1,13 +1,9 @@
-"""
-Vues pour les catégories d'articles avec CRUD complet.
-"""
+"""Vues pour les catégories d'articles."""
 
 from typing import Any
 
 from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -34,6 +30,8 @@ class CategoryViewSet(BaseAPIViewSet):
     serializer_class = CategorySerializer
     throttle_classes = [ArticlesThrottle]
     lookup_field = "slug"
+    # Liste complete renvoyee sans pagination (consommee en sidebar/admin-select).
+    pagination_class = None
 
     serializer_classes = {
         "list": CategorySerializer,
@@ -42,7 +40,12 @@ class CategoryViewSet(BaseAPIViewSet):
     }
 
     def get_queryset(self) -> QuerySet[Category]:
-        """Filtre les catégories pour n'afficher que celles ayant des articles publiés (public)."""
+        """Filtre + ordonne les catégories selon l'action.
+
+        - list/retrieve: annote published_count.
+        - Public: exclut les catégories sans article publié (published_count > 0).
+        - list: tri par published_count DESC, puis name.
+        """
         qs = super().get_queryset()
         if self.action in ("list", "retrieve"):
             now = timezone.now()
@@ -54,6 +57,8 @@ class CategoryViewSet(BaseAPIViewSet):
             )
             if not self.request.user.is_staff:
                 qs = qs.filter(published_count__gt=0)
+            if self.action == "list":
+                qs = qs.order_by("-published_count", "name")
         return qs
 
     @extend_schema(
@@ -62,9 +67,10 @@ class CategoryViewSet(BaseAPIViewSet):
         responses={200: CategorySerializer(many=True)},
         tags=["Articles - Catégories"],
     )
-    @method_decorator(cache_page(1800))
     def list(self, request, *args, **kwargs):
         """Récupère la liste des catégories d'articles."""
+        # Pas de cache_page: la reponse varie par is_staff (admin voit les vides)
+        # et doit refleter immediatement chaque publication d'article.
         return super().list(request, *args, **kwargs)
 
     @extend_schema(
@@ -73,7 +79,6 @@ class CategoryViewSet(BaseAPIViewSet):
         responses={200: CategorySerializer, 404: OpenApiResponse(description="Categorie non trouvee")},
         tags=["Articles - Catégories"],
     )
-    @method_decorator(cache_page(1800))
     def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Récupère les détails d'une catégorie par son slug."""
         slug = str(kwargs.get("slug", ""))

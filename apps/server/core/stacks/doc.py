@@ -2,14 +2,10 @@
 
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
 
-# TAGS
-
 TAGS_STACKS = ["Stacks"]
 TAGS_CATEGORIES = ["Stacks - Categories"]
 TAGS_RESOURCES = ["Stacks - Ressources"]
 TAGS_STATS = ["Stacks - Stats"]
-
-# PARAMETERS COMMUNS
 
 PARAM_CATEGORY = OpenApiParameter(
     "category",
@@ -96,14 +92,10 @@ PARAM_RESOURCE_TYPE = OpenApiParameter(
     required=False,
 )
 
-# RESPONSES COMMUNES
-
 RESPONSE_200_STATS = OpenApiResponse(description="Statistiques des stacks")
 RESPONSE_400 = OpenApiResponse(description="Erreur de validation")
 RESPONSE_404 = OpenApiResponse(description="Ressource non trouvee")
 RESPONSE_204 = OpenApiResponse(description="Suppression reussie")
-
-# LISTE DES PARAMETRES PAR ENDPOINT
 
 STACK_LIST_PARAMS = [
     PARAM_CATEGORY,

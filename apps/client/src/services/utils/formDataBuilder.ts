@@ -1,4 +1,3 @@
-// Builder fluide pour FormData
 class FormDataBuilder {
     private formData: FormData;
 

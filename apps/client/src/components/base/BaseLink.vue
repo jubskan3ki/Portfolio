@@ -25,7 +25,6 @@
 
     import type { LinkProps, LinkVariant, LinkTarget } from '@/types/components/base';
 
-    // Extended Props to allow empty strings
     type Props = Omit<LinkProps, 'variant' | 'target'> & {
         variant?: LinkVariant | '';
         target?: LinkTarget | '';

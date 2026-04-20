@@ -1,9 +1,6 @@
 import { computed, type ComputedRef, type Ref } from 'vue';
 
-/**
- * Extrait un tableau de données depuis une réponse API paginée ou brute.
- * Essaie dans l'ordre : `data`, `results`, `fallbackKeys`, puis le tableau brut.
- */
+// Ordre de résolution: data -> results -> fallbackKeys -> tableau brut
 export function extractPaginatedData<T>(response: unknown, fallbackKeys?: string[]): T[] {
     if (!response) {
         return [];

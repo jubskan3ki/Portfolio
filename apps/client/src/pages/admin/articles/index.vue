@@ -55,7 +55,6 @@
             {{ formatDateShort(value as string) }}
         </template>
 
-        <!-- Custom actions with publish button -->
         <template #actions="{ item }">
             <DataTableActions @view="viewArticle(item)" @edit="editArticle(item)" @delete="confirmDelete(item)">
                 <BaseButton

@@ -1,17 +1,14 @@
 <template>
     <div :class="alertClasses" role="alert" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
-        <!-- Icon -->
         <div class="alert-item__icon">
             <BaseIcon :name="iconName" :size="20" />
         </div>
 
-        <!-- Content -->
         <div class="alert-item__content">
             <h6 v-if="alert.title" class="alert-item__title">{{ alert.title }}</h6>
             <p class="alert-item__message">{{ alert.message }}</p>
         </div>
 
-        <!-- Close button -->
         <button
             v-if="alert.dismissible !== false"
             type="button"
@@ -103,7 +100,6 @@
             animation: alert-leave 0.3s ease-out forwards;
         }
 
-        // Icon
         &__icon {
             flex-shrink: 0;
             width: 36px;
@@ -114,7 +110,6 @@
             justify-content: center;
         }
 
-        // Content
         &__content {
             flex: 1;
             min-width: 0;
@@ -133,7 +128,6 @@
             line-height: vars.$line-height-relaxed;
         }
 
-        // Close button
         &__close {
             flex-shrink: 0;
             width: 28px;
@@ -154,7 +148,6 @@
             }
         }
 
-        // Variants
         &--success {
             .alert-item__icon {
                 background-color: func.color-alpha(vars.$success-color, 0.1);

@@ -5,24 +5,12 @@ import { ref, computed, watch } from 'vue';
 import {
     SEARCH_TYPE_CONFIG,
     SEARCH_DEFAULTS,
-    SEARCH_SOURCES,
     generateSearchLink,
     groupSearchResults,
 } from '@/config/search';
-import { articlesApi } from '@/services/api/modules/articles';
-import { experiencesApi } from '@/services/api/modules/experiences';
-import { projectsApi } from '@/services/api/modules/projects';
-import { stacksApi } from '@/services/api/modules/stacks';
-import { extractPaginatedData } from '@/services/utils/pagination';
+import { searchApi, searchKeys, type UnifiedSearchItem } from '@/services/api/modules/search';
 
-import type { SearchResult, SearchResultGroup, UseGlobalSearchOptions } from '@/types/config/search';
-
-const searchFetchers: Record<string, (params: Record<string, unknown>) => Promise<unknown>> = {
-    articles: (params) => articlesApi.getAdminList(params),
-    projects: (params) => projectsApi.getAdminList(params),
-    stacks: (params) => stacksApi.getAdminList(params),
-    experiences: (params) => experiencesApi.getAdminList(params),
-};
+import type { SearchResult, SearchResultGroup, SearchResultType, UseGlobalSearchOptions } from '@/types/config/search';
 
 export type { SearchResult, SearchMode, SearchResultType } from '@/types/config/search';
 
@@ -45,76 +33,32 @@ export function useGlobalSearch(options: UseGlobalSearchOptions = {}) {
         }
     });
 
-    interface SearchQueryResult {
-        results: SearchResult[];
-        failedSources: string[];
-    }
+    const queryParams = computed(() => ({
+        q: debouncedQuery.value.trim(),
+        limit: SEARCH_DEFAULTS.PAGE_SIZE * 4,
+    }));
 
     const {
         data: searchData,
         isLoading,
         error: queryError,
     } = useQuery({
-        queryKey: computed(() => ['global-search', debouncedQuery.value]),
-        queryFn: async (): Promise<SearchQueryResult> => {
-            const query = debouncedQuery.value.trim();
-            if (query.length < SEARCH_DEFAULTS.MIN_QUERY_LENGTH) {
-                return { results: [], failedSources: [] };
+        queryKey: computed(() => searchKeys.unified(queryParams.value)),
+        queryFn: async (): Promise<SearchResult[]> => {
+            const params = queryParams.value;
+            if (params.q.length < SEARCH_DEFAULTS.MIN_QUERY_LENGTH) {
+                return [];
             }
-
-            const searchParams = { search: query, page_size: SEARCH_DEFAULTS.PAGE_SIZE };
-
-            const settled = await Promise.allSettled(
-                SEARCH_SOURCES.map((source) => {
-                    const fetcher = searchFetchers[source.key];
-                    return fetcher ? fetcher(searchParams) : Promise.reject(new Error(`No fetcher for ${source.key}`));
-                }),
-            );
-
-            const failedSources: string[] = [];
-            const results: SearchResult[] = [];
-
-            settled.forEach((result, index) => {
-                const source = SEARCH_SOURCES[index];
-                if (!source) {
-                    return;
-                }
-                if (result.status === 'rejected') {
-                    failedSources.push(source.key);
-                    return;
-                }
-
-                const items = extractPaginatedData<Record<string, unknown>>(result.value);
-                for (const item of items) {
-                    const mapped = source.mapItem(item);
-                    results.push({
-                        id: item.id as number,
-                        type: source.type,
-                        icon: SEARCH_TYPE_CONFIG[source.type].icon,
-                        link: generateSearchLink(source.type, item.id as number, mapped.slug, mode),
-                        ...mapped,
-                    });
-                }
-            });
-
-            return { results, failedSources };
+            const response = await searchApi.query(params);
+            return (response.data ?? []).map(mapToUiResult(mode));
         },
-        enabled: computed(() => debouncedQuery.value.length >= SEARCH_DEFAULTS.MIN_QUERY_LENGTH),
+        enabled: computed(() => queryParams.value.q.length >= SEARCH_DEFAULTS.MIN_QUERY_LENGTH),
         staleTime: SEARCH_DEFAULTS.STALE_TIME_MS,
     });
 
-    const searchError = computed<string | null>(() => {
-        const failed = searchData.value?.failedSources ?? [];
-        if (failed.length === 0) {
-            return null;
-        }
-        if (failed.length === 4) {
-            return 'Erreur lors de la recherche';
-        }
-        return `Recherche partielle (${failed.join(', ')} indisponible)`;
-    });
+    const searchError = computed<string | null>(() => (queryError.value ? 'Erreur lors de la recherche' : null));
 
-    const searchResults = computed(() => searchData.value?.results ?? []);
+    const searchResults = computed(() => searchData.value ?? []);
     const groupedResults = computed<SearchResultGroup[]>(() => groupSearchResults(searchResults.value));
 
     const flatResults = computed(() => groupedResults.value.flatMap((g) => g.results));
@@ -182,4 +126,27 @@ export function useGlobalSearch(options: UseGlobalSearchOptions = {}) {
         getSelectedResult,
         TYPE_CONFIG: SEARCH_TYPE_CONFIG,
     };
+}
+
+function mapToUiResult(mode: 'public' | 'admin') {
+    return (item: UnifiedSearchItem): SearchResult => {
+        const type = item.type as SearchResultType;
+        return {
+            id: item.id,
+            type,
+            title: item.title,
+            subtitle: extractSubtitle(type, item),
+            slug: item.slug,
+            icon: SEARCH_TYPE_CONFIG[type].icon,
+            link: generateSearchLink(type, item.id, item.slug, mode),
+        };
+    };
+}
+
+function extractSubtitle(type: SearchResultType, item: UnifiedSearchItem): string | undefined {
+    const meta = item.metadata ?? {};
+    if (type === 'experience') {
+        return (meta.company as string | undefined) ?? undefined;
+    }
+    return (meta.category as string | undefined) ?? undefined;
 }

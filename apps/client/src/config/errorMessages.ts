@@ -1,26 +1,20 @@
-// Messages d'erreur centralisés pour l'application
-
 export const ERROR_MESSAGES = {
-    // Opérations génériques
     LOAD_FAILED: (entity: string) => `Impossible de charger ${entity}`,
     CREATE_FAILED: (entity: string) => `Erreur lors de la création de ${entity}`,
     UPDATE_FAILED: (entity: string) => `Erreur lors de la mise à jour de ${entity}`,
     DELETE_FAILED: (entity: string) => `Erreur lors de la suppression de ${entity}`,
 
-    // Erreurs spécifiques
     NOT_FOUND: (entity: string) => `${entity} introuvable`,
     AUTH_EXPIRED: 'Votre session a expiré. Veuillez vous reconnecter.',
     FORBIDDEN: 'Vous n\'avez pas les permissions nécessaires.',
     NETWORK_ERROR: 'Impossible de contacter le serveur. Vérifiez votre connexion.',
     SERVER_ERROR: 'Une erreur inattendue s\'est produite. Veuillez réessayer.',
 
-    // Validation
     FIELD_REQUIRED: 'Ce champ est requis',
     FIELD_INVALID: 'Format invalide',
     FILE_TOO_LARGE: (maxSize: number) => `Le fichier dépasse la taille maximale de ${maxSize}MB`,
     FILE_TYPE_INVALID: 'Type de fichier non accepté',
 
-    // Entités spécifiques
     ARTICLE: {
         NOT_FOUND: 'Article introuvable',
         LOAD_FAILED: 'Impossible de charger l\'article',
@@ -61,12 +55,10 @@ export const ERROR_MESSAGES = {
 } as const;
 
 export const SUCCESS_MESSAGES = {
-    // Opérations génériques
     CREATED: (entity: string) => `${entity} créé(e) avec succès`,
     UPDATED: (entity: string) => `${entity} mis(e) à jour avec succès`,
     DELETED: (entity: string) => `${entity} supprimé(e) avec succès`,
 
-    // Entités spécifiques
     ARTICLE: {
         CREATED: 'Article créé avec succès',
         UPDATED: 'Article mis à jour avec succès',

@@ -89,7 +89,6 @@
         transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
         overflow: hidden;
 
-        // Reset button styles when clickable
         &--clickable {
             border: none;
             text-align: left;
@@ -99,7 +98,6 @@
             cursor: pointer;
         }
 
-        // Variants
         &--default {
             border: 1px solid func.color-alpha(vars.$gray-light, 0.6);
         }
@@ -120,7 +118,6 @@
             border: 1px solid func.color-alpha(vars.$white, 0.3);
         }
 
-        // Padding
         &--padding-none {
             .card__header,
             .card__body,
@@ -153,7 +150,6 @@
             }
         }
 
-        // States
         &--hoverable,
         &--clickable {
             &:hover {
@@ -176,7 +172,6 @@
             height: 100%;
         }
 
-        // Accent
         &__accent {
             position: absolute;
             top: 0;
@@ -190,7 +185,6 @@
             padding-top: 3px;
         }
 
-        // Image
         &__image {
             width: 100%;
             margin: 0;
@@ -213,7 +207,6 @@
             }
         }
 
-        // Header
         &__header {
             display: flex;
             align-items: flex-start;
@@ -249,12 +242,10 @@
             flex-shrink: 0;
         }
 
-        // Body
         &__body {
             flex: 1;
         }
 
-        // Footer
         &__footer {
             margin-top: auto;
 

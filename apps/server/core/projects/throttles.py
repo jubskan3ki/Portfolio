@@ -34,7 +34,6 @@ class ProjectsThrottle(BaseModuleThrottle):
         view_name = view.__class__.__name__
         action = getattr(view, "action", None)
 
-        # Special handling for view action
         if action == "view":
             return f"throttle_{self.scope}_{rate_type}_{view_name}_{action}_{ident}"
 

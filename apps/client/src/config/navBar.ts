@@ -1,11 +1,7 @@
-// src/config/navBar.ts
 import { ROUTES } from '@/config/routes';
 
 import type { ActiveRouteChecker, NavigationItems } from '@/types/config/navBar';
 
-// Public Navigation Items
-
-// Main navigation items for public site header
 export const navigationItems: NavigationItems = [
     {
         label: 'Accueil',
@@ -34,11 +30,7 @@ export const navigationItems: NavigationItems = [
     },
 ];
 
-// Helper Functions
-
-// Check if a route is currently active
 export const isActiveRoute: ActiveRouteChecker = (path: string, currentPath: string): boolean => {
-    // Special case for home page
     if (path === '/' && currentPath === '/') {
         return true;
     }

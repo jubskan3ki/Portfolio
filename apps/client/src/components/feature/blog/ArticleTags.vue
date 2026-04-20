@@ -7,7 +7,7 @@
 
         <!-- Simple mode (links) -->
         <div v-if="display === 'simple'" class="article-tags__list">
-            <BaseLink v-for="tag in stringTags" :key="tag" :to="`/blog?tag=${tag}`" class="article-tags__link">
+            <BaseLink v-for="tag in visibleStringTags" :key="tag" :to="`/blog?tag=${tag}`" class="article-tags__link">
                 {{ tag }}
             </BaseLink>
         </div>
@@ -15,7 +15,7 @@
         <!-- Cloud mode (toggleable buttons) -->
         <div v-else class="article-tags__list">
             <button
-                v-for="tag in objectTags"
+                v-for="tag in visibleObjectTags"
                 :key="tag.name || tag.id"
                 class="article-tags__btn"
                 :class="{ 'article-tags__btn--active': isTagActive(tag.name) }"
@@ -26,11 +26,20 @@
                 <span v-if="hasCount(tag)" class="article-tags__count">{{ getCount(tag) }}</span>
             </button>
         </div>
+
+        <button
+            v-if="canToggle"
+            class="article-tags__toggle"
+            type="button"
+            @click="showAll = !showAll"
+        >
+            {{ showAll ? 'Voir moins' : `Voir plus (${hiddenCount})` }}
+        </button>
     </div>
 </template>
 
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
@@ -44,6 +53,7 @@
         display: 'cloud',
         multiSelect: true,
         showTitle: false,
+        maxVisible: 0,
     });
 
     const emit = defineEmits<{
@@ -52,8 +62,6 @@
         tagSelect: [value: Array<string | number>];
     }>();
 
-    const hasTags = computed(() => props.tags && props.tags.length > 0);
-
     const isTagsObjects = computed(() => {
         if (props.tags.length === 0) {
             return false;
@@ -61,27 +69,66 @@
         return typeof props.tags[0] !== 'string';
     });
 
-    const stringTags = computed(() => {
+    // Masque les tags a count=0 (defense-in-depth si le backend en renvoie).
+    const filteredTags = computed(() => {
         if (!isTagsObjects.value) {
             return props.tags as string[] | readonly string[];
+        }
+        return (props.tags as Tag[]).filter((t) => t.count === undefined || t.count > 0);
+    });
+
+    const hasTags = computed(() => filteredTags.value.length > 0);
+
+    const stringTags = computed(() => {
+        if (!isTagsObjects.value) {
+            return filteredTags.value as string[] | readonly string[];
         }
 
         const hasName = (obj: unknown): obj is { name: string } => {
             return obj !== null && typeof obj === 'object' && 'name' in obj;
         };
 
-        return (props.tags as unknown[]).map((tag) => (hasName(tag) ? tag.name : String(tag)));
+        return (filteredTags.value as unknown[]).map((tag) => (hasName(tag) ? tag.name : String(tag)));
     });
 
+    // Tri: count DESC, puis view_count DESC (tags sans count laisses en place).
     const objectTags = computed(() => {
         if (isTagsObjects.value) {
-            return props.tags as Tag[] | readonly Tag[];
+            return [...(filteredTags.value as Tag[])].sort((a, b) => {
+                const countDiff = (b.count ?? 0) - (a.count ?? 0);
+                if (countDiff !== 0) {
+                    return countDiff;
+                }
+                return (b.view_count ?? 0) - (a.view_count ?? 0);
+            });
         }
 
-        return (props.tags as string[] | readonly string[]).map((tag) => ({
+        return (filteredTags.value as string[] | readonly string[]).map((tag) => ({
             id: tag,
             name: tag,
         }));
+    });
+
+    const showAll = ref(false);
+
+    const canToggle = computed(
+        () => props.maxVisible > 0 && filteredTags.value.length > props.maxVisible,
+    );
+
+    const hiddenCount = computed(() => Math.max(0, filteredTags.value.length - props.maxVisible));
+
+    const visibleStringTags = computed(() => {
+        if (!canToggle.value || showAll.value) {
+            return stringTags.value;
+        }
+        return stringTags.value.slice(0, props.maxVisible);
+    });
+
+    const visibleObjectTags = computed(() => {
+        if (!canToggle.value || showAll.value) {
+            return objectTags.value;
+        }
+        return objectTags.value.slice(0, props.maxVisible);
     });
 
     const hasCount = (tag: unknown): tag is { count: number } => {
@@ -206,6 +253,23 @@
             background: fn.color-alpha(vars.$black, 0.06);
             border-radius: vars.$border-radius-full;
             transition: all 0.2s ease;
+        }
+
+        &__toggle {
+            margin-top: vars.$spacing-sm;
+            padding: vars.$spacing-xs vars.$spacing-sm;
+            font-size: vars.$font-size-xs;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$primary-color;
+            background: transparent;
+            border: none;
+            border-radius: vars.$border-radius-full;
+            cursor: pointer;
+            transition: background 0.2s ease;
+
+            &:hover {
+                background: fn.color-alpha(vars.$primary-color, 0.08);
+            }
         }
     }
 </style>

@@ -50,3 +50,19 @@ export interface UseBulkDeleteConfirmationReturn<T> {
     cancel: () => void;
     execute: () => Promise<BulkDeleteResult>;
 }
+
+// useBulkDelete (composable-level — wraps both deletion flows)
+
+export interface UseBulkDeleteOptions<T extends { id: number | string }> {
+    deleteFn: (item: T) => Promise<void>;
+    onRefresh: () => void;
+    onDeleteSuccess?: () => void;
+    onDeleteError?: (error: Error) => void;
+    onBulkDeleteSuccess?: (result: BulkDeleteResult) => void;
+    onBulkDeleteError?: (error: Error) => void;
+}
+
+export interface UseBulkDeleteReturn<T extends { id: number | string }> {
+    deletion: UseDeleteConfirmationReturn<T>;
+    bulkDeletion: UseBulkDeleteConfirmationReturn<T>;
+}

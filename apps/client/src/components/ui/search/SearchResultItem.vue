@@ -24,17 +24,9 @@
 <script setup lang="ts">
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    interface Props {
-        link: string;
-        icon: string;
-        title: string;
-        subtitle?: string;
-        type: string;
-        badgeLabel: string;
-        isSelected?: boolean;
-    }
+    import type { SearchResultItemProps } from '@/types/components/ui';
 
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<SearchResultItemProps>(), {
         subtitle: '',
         isSelected: false,
     });

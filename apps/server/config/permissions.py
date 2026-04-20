@@ -35,28 +35,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 
 class AllowAnonymousCreate(permissions.BasePermission):
-    """
-    Allow anonymous POST requests, require admin for other methods.
-
-    WARNING: This permission allows unauthenticated users to create resources.
-    Use ONLY with aggressive throttling and validation.
-
-    Intended use cases:
-        - Contact forms
-        - Newsletter signups
-        - Public feedback forms
-
-    Security recommendations:
-        - Always combine with ContactsThrottle or similar
-        - Validate all input data thoroughly
-        - Consider adding CAPTCHA for high-volume endpoints
-        - Monitor for abuse patterns
-
-    Example usage:
-        class ContactViewSet(viewsets.ModelViewSet):
-            permission_classes = [AllowAnonymousCreate]
-            throttle_classes = [ContactsThrottle]
-    """
+    """Anonymous POST, admin for other methods. Combine with aggressive throttling."""
 
     def has_permission(self, request: Request, _view: APIView) -> bool:
         if request.method == "POST":
@@ -65,16 +44,10 @@ class AllowAnonymousCreate(permissions.BasePermission):
 
 
 class ThrottledAnonymousCreate(AllowAnonymousCreate):
-    """
-    AllowAnonymousCreate with built-in IP abuse detection.
+    """AllowAnonymousCreate with IP abuse detection — blocks after threshold."""
 
-    Tracks POST attempts per IP and denies access after threshold.
-    """
-
-    # Number of failed attempts before blocking
     ABUSE_THRESHOLD = 20
-    # Block duration in seconds (24 hours)
-    BLOCK_DURATION = 86400
+    BLOCK_DURATION = 86400  # 24h
 
     def has_permission(self, request: Request, view: APIView) -> bool:
         if request.method == "POST":
@@ -103,23 +76,15 @@ class ThrottledAnonymousCreate(AllowAnonymousCreate):
 
     @classmethod
     def record_abuse(cls, request: Request) -> None:
-        """
-        Record an abuse attempt from the request IP.
-        Call this from views when suspicious activity is detected.
-
-        Uses atomic cache.incr() to prevent race conditions.
-        """
+        """Record abuse from IP; atomic incr() prevents race conditions."""
         ip_header = request.META.get("HTTP_X_FORWARDED_FOR")
         ip = ip_header.split(",")[0].strip() if ip_header else request.META.get("REMOTE_ADDR", "unknown")
 
         abuse_key = f"abuse_count:{ip}"
 
-        # Utiliser incr() atomique au lieu de get()+set()
-        # Si la cle n'existe pas, on la cree d'abord
         try:
             count = cache.incr(abuse_key)
         except ValueError:
-            # La cle n'existe pas, on la cree avec valeur 1
             cache.set(abuse_key, 1, cls.BLOCK_DURATION)
             count = 1
 
@@ -146,5 +111,4 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         return False
 
 
-# Backward compatibility alias
 AllowCreateAdminForRest = AllowAnonymousCreate

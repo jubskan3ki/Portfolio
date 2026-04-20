@@ -19,8 +19,6 @@ from .helpers import parse_bool, parse_limit, parse_page, parse_sort_direction
 
 
 class BaseFilters(TypedDict, total=False):
-    """Structure de base pour les filtres communs."""
-
     search: str | None
     category: str | None
     sort_by: str | None
@@ -30,24 +28,18 @@ class BaseFilters(TypedDict, total=False):
 
 
 class ArticleFilters(BaseFilters, total=False):
-    """Filtres specifiques aux articles."""
-
     tag: str | None
     is_featured: bool | None
     is_published: bool | None
 
 
 class ProjectFilters(BaseFilters, total=False):
-    """Filtres specifiques aux projets."""
-
     status: str | None
     is_featured: bool | None
     technologies: list[str]
 
 
 class StackFilters(BaseFilters, total=False):
-    """Filtres specifiques aux stacks."""
-
     level_min: int | None
     level_max: int | None
     min_level: float | None
@@ -57,8 +49,6 @@ class StackFilters(BaseFilters, total=False):
 
 
 class ExperienceFilters(BaseFilters, total=False):
-    """Filtres specifiques aux experiences."""
-
     type: str | None
     start_year: int | None
     end_year: int | None
@@ -66,14 +56,6 @@ class ExperienceFilters(BaseFilters, total=False):
 
 
 def extract_base_filters(request: Request) -> BaseFilters:
-    """Extrait les filtres communs depuis la requete.
-
-    Args:
-        request: Requete DRF
-
-    Returns:
-        Dictionnaire des filtres de base
-    """
     params = request.query_params
 
     return BaseFilters(
@@ -87,14 +69,6 @@ def extract_base_filters(request: Request) -> BaseFilters:
 
 
 def extract_article_filters(request: Request) -> ArticleFilters:
-    """Extrait les filtres pour les articles.
-
-    Args:
-        request: Requete DRF
-
-    Returns:
-        Dictionnaire des filtres articles
-    """
     base = extract_base_filters(request)
     params = request.query_params
 
@@ -107,14 +81,6 @@ def extract_article_filters(request: Request) -> ArticleFilters:
 
 
 def extract_project_filters(request: Request) -> ProjectFilters:
-    """Extrait les filtres pour les projets.
-
-    Args:
-        request: Requete DRF
-
-    Returns:
-        Dictionnaire des filtres projets
-    """
     base = extract_base_filters(request)
     params = request.query_params
 
@@ -126,14 +92,6 @@ def extract_project_filters(request: Request) -> ProjectFilters:
 
 
 def extract_stack_filters(request: Request) -> StackFilters:
-    """Extrait les filtres pour les stacks.
-
-    Args:
-        request: Requete DRF
-
-    Returns:
-        Dictionnaire des filtres stacks
-    """
     base = extract_base_filters(request)
     params = request.query_params
 
@@ -149,14 +107,6 @@ def extract_stack_filters(request: Request) -> StackFilters:
 
 
 def extract_experience_filters(request: Request) -> ExperienceFilters:
-    """Extrait les filtres pour les experiences.
-
-    Args:
-        request: Requete DRF
-
-    Returns:
-        Dictionnaire des filtres experiences
-    """
     base = extract_base_filters(request)
     params = request.query_params
 
@@ -178,18 +128,7 @@ def apply_sorting[M: Model](
     field_mapping: dict[str, str],
     default_field: str = "-created_at",
 ) -> QuerySet[M]:
-    """Applique le tri sur un queryset.
-
-    Args:
-        queryset: QuerySet Django
-        sort_by: Champ de tri demande (cle du mapping)
-        sort_direction: 'asc' ou 'desc'
-        field_mapping: Mapping nom API -> nom champ DB
-        default_field: Champ de tri par defaut
-
-    Returns:
-        QuerySet trie
-    """
+    """field_mapping: API name -> DB field."""
     if not sort_by or sort_by not in field_mapping:
         return queryset.order_by(default_field)
 

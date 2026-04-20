@@ -34,7 +34,7 @@ def _send_reset_password_email_task(self: Any, email: str, context: dict[str, An
         raise
 
 
-# Reference a la tache pour appeler .delay() - cast pour Pylance
+# Alias type Any pour que Pylance voie .delay() (expose par @shared_task).
 _celery_task: Any = _send_reset_password_email_task
 
 
@@ -98,9 +98,6 @@ def send_reset_password_email_sync(email: str, context: dict[str, Any]) -> bool:
 
     logger.warning("send_mail a retourne %s pour %s", result, email)
     raise OSError(f"Echec envoi email, send_mail a retourne: {result}")
-
-
-# ── Password Changed Confirmation ──────────────────────────────────────
 
 
 @shared_task(

@@ -12,13 +12,9 @@
 <script setup lang="ts">
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    interface Props {
-        message?: string;
-        showIcon?: boolean;
-        customClass?: string;
-    }
+    import type { ErrorMessageProps } from '@/types/components/feedback';
 
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<ErrorMessageProps>(), {
         message: '',
         showIcon: true,
         customClass: '',

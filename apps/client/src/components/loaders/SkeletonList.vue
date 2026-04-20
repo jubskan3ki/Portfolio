@@ -18,21 +18,9 @@
 
     import SkeletonCard from './SkeletonCard.vue';
 
-    import type { SkeletonCardVariant, SkeletonListLayout } from '@/types/components/loaders';
+    import type { SkeletonListProps } from '@/types/components/loaders';
 
-    interface Props {
-        count?: number;
-        layout?: SkeletonListLayout;
-        columns?: number;
-        variant?: SkeletonCardVariant;
-        showImage?: boolean;
-        showAvatar?: boolean;
-        showDescription?: boolean;
-        showTags?: boolean;
-        showFooter?: boolean;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SkeletonListProps>(), {
         count: 6,
         layout: 'grid',
         columns: 3,

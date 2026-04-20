@@ -77,7 +77,6 @@ export const experiencesApi = {
 
     getStats: (): Promise<ExperienceStats> => httpClient.get(API_ENDPOINTS.EXPERIENCES.STATS),
 
-    // Admin methods
     getAdminList: <T = unknown>(params: Record<string, unknown>): Promise<T> =>
         httpClient.get(API_ENDPOINTS.EXPERIENCES.BASE, params),
 

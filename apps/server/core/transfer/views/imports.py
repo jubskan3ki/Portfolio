@@ -171,14 +171,12 @@ class ImportViewSet(viewsets.ViewSet):
         images = extract_images_from_files(files)
 
         try:
-            # Create job
             job = ImporterService.create_import_job(
                 user=request.user,
                 module=module,
                 file=file,
             )
 
-            # Execute import
             job = ImporterService.execute_import(
                 job=job,
                 file=file,
@@ -208,6 +206,43 @@ class ImportViewSet(viewsets.ViewSet):
                 {"error": "Erreur lors de l'import"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @extend_schema(
+        description=(
+            "Dry-run : simule l'import dans une transaction rollbackee et retourne "
+            "un diff (cree / mis a jour avec diff des champs / skippe / erreurs). "
+            "Aucune donnee n'est persistee."
+        ),
+        parameters=[
+            OpenApiParameter("module", location=OpenApiParameter.PATH, type=str, required=True),
+        ],
+        responses={
+            200: OpenApiResponse(description="Diff complet de l'import simule"),
+            400: OpenApiResponse(description="Requete invalide"),
+        },
+    )
+    def dry_run(self, request: Request, module: str) -> Response:
+        """Simule l'import sans persister + retourne diff."""
+        from ..services.dry_run import dry_run_import
+
+        files = cast(MultiValueDict, request.FILES)
+        file = files.get("file")
+        if not file:
+            return Response({"error": "Fichier requis"}, status=status.HTTP_400_BAD_REQUEST)
+        validation_error = validate_import_file(file)
+        if validation_error:
+            return Response({"error": validation_error}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            result = dry_run_import(file, module)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except (DatabaseError, OperationalError):
+            logger.exception("Erreur lors du dry-run")
+            return Response(
+                {"error": "Erreur lors de la simulation"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        return Response(result, status=status.HTTP_200_OK)
 
     @extend_schema(
         description="Import bulk depuis plusieurs fichiers",

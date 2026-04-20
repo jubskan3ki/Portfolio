@@ -1,22 +1,18 @@
 <template>
     <div class="login-page" @mousemove="handleMouseMove">
-        <!-- Background -->
         <div class="login-page__bg" aria-hidden="true">
             <div class="login-page__gradient"></div>
             <div class="login-page__dots"></div>
 
-            <!-- Subtle decorative shapes (no hover animations) -->
             <div class="login-page__shapes">
                 <div class="deco-shape deco-shape--1"></div>
                 <div class="deco-shape deco-shape--2"></div>
                 <div class="deco-shape deco-shape--3"></div>
             </div>
 
-            <!-- Soft glow -->
             <div class="login-page__glow"></div>
         </div>
 
-        <!-- Login card with parallax tilt -->
         <main
             ref="cardRef"
             class="login-card"
@@ -28,19 +24,15 @@
         >
             <div class="login-card__shine" :style="shineStyle" aria-hidden="true"></div>
 
-            <!-- Header -->
             <header class="login-card__header">
                 <AppLogo size="lg" class="login-card__logo" />
                 <h1 id="login-title" class="login-card__title">Administration</h1>
                 <p class="login-card__subtitle">Connectez-vous pour accéder au panel</p>
             </header>
 
-            <!-- Divider -->
             <div class="login-card__divider"></div>
 
-            <!-- Form -->
             <form class="login-card__form" @submit.prevent="handleSubmit">
-                <!-- Email -->
                 <BaseInput
                     id="email"
                     v-model="form.email"
@@ -57,7 +49,6 @@
                     </template>
                 </BaseInput>
 
-                <!-- Password -->
                 <BaseInput
                     id="password"
                     v-model="form.password"
@@ -85,12 +76,10 @@
                     </template>
                 </BaseInput>
 
-                <!-- Remember me -->
                 <div class="login-card__options">
                     <BaseCheckbox v-model="form.rememberMe" label="Se souvenir de moi" />
                 </div>
 
-                <!-- Error -->
                 <Transition name="fade-slide">
                     <div v-if="loginError" class="login-card__alert" role="alert" aria-live="polite">
                         <BaseIcon name="alert-circle" :size="18" aria-hidden="true" />
@@ -98,7 +87,6 @@
                     </div>
                 </Transition>
 
-                <!-- Submit -->
                 <BaseButton
                     type="submit"
                     variant="primary"
@@ -115,7 +103,6 @@
                 </BaseButton>
             </form>
 
-            <!-- Footer -->
             <footer class="login-card__footer">
                 <BaseLink to="/" variant="subtle" custom-class="login-card__back" aria-label="Retour au site principal">
                     <template #icon-left>
@@ -126,7 +113,6 @@
             </footer>
         </main>
 
-        <!-- Version -->
         <small class="login-page__version" aria-hidden="true">v1.0.0</small>
     </div>
 </template>

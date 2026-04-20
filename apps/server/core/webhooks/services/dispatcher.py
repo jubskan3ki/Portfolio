@@ -2,6 +2,7 @@
 
 import json
 import logging
+import random
 import time
 import uuid
 from datetime import timedelta
@@ -14,6 +15,27 @@ from django.utils import timezone
 from ..models import Webhook, WebhookDelivery
 
 logger = logging.getLogger(__name__)
+
+BACKOFF_BASE_SECONDS = 30
+BACKOFF_MAX_SECONDS = 3600
+BACKOFF_JITTER_RATIO = 0.2
+
+
+def compute_backoff_delay(attempt: int) -> int:
+    """Calcule le delai avant retry en secondes.
+
+    Formule : `min(MAX, BASE * 2 ** (attempt-1))` avec jitter aleatoire
+    +/- BACKOFF_JITTER_RATIO pour eviter les thundering herds.
+
+    attempt = 1 -> ~30s, 2 -> ~60s, 3 -> ~120s, ... 8 -> plafonne a 3600s.
+    """
+    if attempt <= 0:
+        return BACKOFF_BASE_SECONDS
+    raw = BACKOFF_BASE_SECONDS * (2 ** (attempt - 1))
+    capped = min(raw, BACKOFF_MAX_SECONDS)
+    jitter = capped * BACKOFF_JITTER_RATIO
+    # Jitter for retry scheduling, not security — stdlib random is fine.
+    return int(capped + random.uniform(-jitter, jitter))  # noqa: S311
 
 
 class WebhookDispatcher:
@@ -139,8 +161,7 @@ class WebhookDispatcher:
 
         if delivery.should_retry():
             delivery.status = WebhookDelivery.Status.RETRYING
-            delays = [60, 300, 900]
-            delay = delays[min(delivery.attempts - 1, len(delays) - 1)]
+            delay = compute_backoff_delay(delivery.attempts)
             delivery.next_retry_at = timezone.now() + timedelta(seconds=delay)
         else:
             delivery.status = WebhookDelivery.Status.FAILED
@@ -179,23 +200,27 @@ class WebhookDispatcher:
             True si succes, False sinon
         """
         webhook = delivery.webhook
+        now = timezone.now()
         payload_json = json.dumps(
             {
                 "event": delivery.event_type,
-                "timestamp": timezone.now().isoformat(),
+                "timestamp": now.isoformat(),
                 "data": delivery.payload,
             },
             default=str,
         )
 
-        signature = webhook.generate_signature(payload_json)
+        timestamp_epoch = str(int(now.timestamp()))
+        signature = webhook.generate_signature(payload_json, timestamp=timestamp_epoch)
 
         headers = {
             **cls.HEADERS,
             "X-Webhook-Signature": f"sha256={signature}",
+            "X-Webhook-Timestamp": timestamp_epoch,
             "X-Webhook-Event": delivery.event_type,
             "X-Webhook-Event-Id": str(delivery.event_id),
             "X-Webhook-Delivery-Id": str(delivery.pk),
+            "X-Webhook-Attempt": str(delivery.attempts + 1),
         }
 
         start_time = time.perf_counter()

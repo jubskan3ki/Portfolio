@@ -13,10 +13,8 @@ class ContactFilter(django_filters.FilterSet):
     email = django_filters.CharFilter(lookup_expr="icontains")
     name = django_filters.CharFilter(lookup_expr="icontains")
 
-    # Recherche
     search = django_filters.CharFilter(method="filter_search")
 
-    # Filtres par date
     created_after = django_filters.DateTimeFilter(
         field_name="created_at",
         lookup_expr="gte",
@@ -26,7 +24,6 @@ class ContactFilter(django_filters.FilterSet):
         lookup_expr="lte",
     )
 
-    # Tri
     ordering = django_filters.OrderingFilter(
         fields=(
             ("created_at", "date"),

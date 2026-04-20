@@ -39,6 +39,15 @@ orjson>=3.10                 # JSON serialisation 2-10x plus rapide (DRF rendere
 
 # MONITORING
 
+opentelemetry-distro>=0.50b0
+opentelemetry-exporter-otlp-proto-grpc>=1.29.0
+opentelemetry-instrumentation-django>=0.50b0
+opentelemetry-instrumentation-celery>=0.50b0
+opentelemetry-instrumentation-psycopg>=0.50b0
+opentelemetry-instrumentation-redis>=0.50b0
+opentelemetry-instrumentation-requests>=0.50b0
+opentelemetry-instrumentation-logging>=0.50b0
+
 
 # UTILITIES
 

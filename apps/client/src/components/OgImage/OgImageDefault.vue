@@ -12,7 +12,6 @@
             color: '#ffffff',
         }"
     >
-        <!-- Category badge -->
         <div
             v-if="category"
             :style="{
@@ -37,7 +36,6 @@
             </span>
         </div>
 
-        <!-- Title -->
         <div
             :style="{
                 display: 'flex',
@@ -78,7 +76,6 @@
             </p>
         </div>
 
-        <!-- Footer -->
         <div
             :style="{
                 display: 'flex',

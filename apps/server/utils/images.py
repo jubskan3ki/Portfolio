@@ -1,8 +1,4 @@
-"""Optimisation des images a l'upload via Pillow.
-
-Compresse et convertit les images raster en WebP.
-Les SVG, GIF et fichiers deja en WebP sont ignores.
-"""
+"""Compresse et convertit les images raster en WebP. SVG/GIF/WebP ignores."""
 
 import logging
 from io import BytesIO
@@ -14,32 +10,18 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-# Dimensions max selon le type d'image
-MAX_SIZE_LARGE = (1920, 1080)  # Articles, projets (images principales)
-MAX_SIZE_SMALL = (512, 512)  # Logos, avatars
+MAX_SIZE_LARGE = (1920, 1080)  # articles, projets
+MAX_SIZE_SMALL = (512, 512)  # logos, avatars
 
 WEBP_QUALITY = 85
 SKIP_EXTENSIONS = {".svg", ".gif", ".webp"}
 
 
 def optimize_image(image_field, max_size=MAX_SIZE_LARGE, quality=WEBP_QUALITY):
-    """Optimise une image : redimensionne et convertit en WebP.
-
-    Ne traite que les nouveaux uploads (UploadedFile).
-    Les images deja sauvegardees sur disque (FieldFile) sont ignorees.
-
-    Args:
-        image_field: Django ImageField/FileField contenant l'image.
-        max_size: Tuple (width, height) max.
-        quality: Qualite WebP (1-100).
-
-    Returns:
-        True si l'image a ete modifiee, False sinon.
-    """
+    """Redimensionne + convertit en WebP. Traite uniquement les UploadedFile (pas les FieldFile disque)."""
     if not image_field:
         return False
 
-    # Ne traiter que les nouveaux uploads, pas les fichiers deja sauvegardes
     try:
         file_obj = image_field.file
     except FileNotFoundError:
@@ -55,18 +37,15 @@ def optimize_image(image_field, max_size=MAX_SIZE_LARGE, quality=WEBP_QUALITY):
         image_field.seek(0)
         img = Image.open(image_field)
 
-        # Preserve RGBA for PNG transparency, convert others to RGB
+        # RGBA preserve la transparence PNG, RGB sinon.
         converted = img.convert("RGBA") if img.mode in ("RGBA", "LA", "P") else img.convert("RGB")
 
-        # Resize if larger than max dimensions (preserve aspect ratio)
         converted.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-        # Save as WebP
         buffer = BytesIO()
         converted.save(buffer, format="WEBP", quality=quality, optimize=True)
         buffer.seek(0)
 
-        # Build new filename with .webp extension
         stem = Path(image_field.name).stem
         new_name = f"{stem}.webp"
 

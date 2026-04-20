@@ -1,6 +1,5 @@
 <template>
     <div class="contact-infos">
-        <!-- Decorative elements -->
         <div class="contact-infos__decoration">
             <div class="contact-infos__orb contact-infos__orb--1"></div>
             <div class="contact-infos__orb contact-infos__orb--2"></div>
@@ -76,26 +75,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
 
-    interface SocialLink {
-        name: string;
-        icon: string;
-        url: string;
-    }
+    import type { ContactInfosProps } from '@/types/feature/contact';
 
-    interface Props {
-        title?: string;
-        subtitle?: string;
-        addressTitle?: string;
-        emailTitle?: string;
-        phoneTitle?: string;
-        socialTitle?: string;
-        address?: string;
-        email?: string;
-        phone?: string;
-        socialLinks?: SocialLink[];
-    }
-
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<ContactInfosProps>(), {
         title: 'Contactez-moi',
         subtitle: '',
         addressTitle: 'Localisation',

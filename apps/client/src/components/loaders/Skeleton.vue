@@ -5,18 +5,9 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    import type { SkeletonType, SkeletonAnimation } from '@/types/components/loaders';
+    import type { SkeletonProps, SkeletonType } from '@/types/components/loaders';
 
-    interface Props {
-        type?: SkeletonType;
-        width?: string | number;
-        height?: string | number;
-        radius?: string | number;
-        animate?: boolean;
-        animation?: SkeletonAnimation;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SkeletonProps>(), {
         type: 'block',
         width: undefined,
         height: undefined,
@@ -25,7 +16,6 @@
         animation: 'wave',
     });
 
-    // Convert number to px
     const toPx = (size: string | number | undefined) => {
         if (size === undefined) {
             return undefined;
@@ -33,7 +23,6 @@
         return typeof size === 'number' ? `${size}px` : size;
     };
 
-    // Default dimensions by type
     const DEFAULTS: Record<SkeletonType, { width: string; height: string; radius: string }> = {
         block: { width: '100%', height: '20px', radius: '4px' },
         circle: { width: '48px', height: '48px', radius: '50%' },
@@ -66,7 +55,6 @@
         position: relative;
         overflow: hidden;
 
-        // Wave animation (shimmer)
         &--wave::after {
             content: '';
             position: absolute;
@@ -76,12 +64,10 @@
             animation: wave 1.5s ease-in-out infinite;
         }
 
-        // Pulse animation
         &--pulse {
             animation: pulse 1.5s ease-in-out infinite;
         }
 
-        // Type-specific
         &--text {
             & + & {
                 margin-top: v.$spacing-xxs;
@@ -97,7 +83,6 @@
         }
     }
 
-    // Animations
     @keyframes wave {
         to {
             transform: translateX(100%);

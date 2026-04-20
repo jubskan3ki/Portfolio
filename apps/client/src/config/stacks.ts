@@ -1,6 +1,3 @@
-// src/config/stacks.ts
-// Configuration des catégories de stacks (icônes et labels)
-
 export const STACK_CATEGORY_ICONS: Record<string, string> = {
     all: 'layers',
     frontend: 'layout',

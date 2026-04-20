@@ -149,19 +149,14 @@
         useGlobalSearch,
         type SearchResult,
         type SearchResultType,
-        type SearchMode,
     } from '@/composables/data/useGlobalSearch';
     import { useSearchActions, type SearchAction } from '@/composables/data/useSearchActions';
     import { useSearchHistory, type HistoryItem } from '@/composables/data/useSearchHistory';
     import { useClickOutside } from '@/composables/ui/useClickOutside';
 
-    interface Props {
-        placeholder?: string;
-        mode?: SearchMode;
-        compact?: boolean;
-    }
+    import type { SearchGlobalProps } from '@/types/components/ui';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SearchGlobalProps>(), {
         placeholder: 'Rechercher...',
         mode: 'public',
         compact: false,
@@ -201,7 +196,6 @@
 
     const isEmptyQuery = computed(() => searchQuery.value.trim().length < 2);
 
-    // Computed
     const filterGroups = computed(() =>
         groupedResults.value.map((g) => ({
             type: g.type,
@@ -220,7 +214,6 @@
 
     const filteredFlatResults = computed(() => filteredGroups.value.flatMap((g) => g.results));
 
-    // Methods
     const toggleFilter = (type: string) => {
         activeFilter.value = activeFilter.value === type ? null : (type as SearchResultType);
     };
@@ -324,7 +317,7 @@
 
     const recordItemFromHistory = (item: HistoryItem) => {
         // touching it bumps it to the top of the recents list
-        recordItem(item as unknown as SearchResult);
+        recordItem(item);
         close();
     };
 

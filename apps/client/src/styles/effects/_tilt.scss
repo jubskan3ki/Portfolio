@@ -1,13 +1,11 @@
-// 3D Tilt / Hover Effects (Flat Style - No Gradient Glows)
 @use '../abstracts/variables' as vars;
 @use '../abstracts/mixins' as mix;
 
-// Base tilt card (for use with vanilla-tilt.js)
+// Paired with vanilla-tilt.js.
 .tilt-card {
     @include mix.tilt-card;
 }
 
-// Tilt card with box-shadow glow (replaces gradient glow)
 .tilt-card-glow {
     @include mix.tilt-card;
 
@@ -19,7 +17,6 @@
     }
 }
 
-// Tilt content that pops out
 .tilt-content {
     @include mix.tilt-content;
 }
@@ -32,7 +29,6 @@
     @include mix.tilt-content(vars.$parallax-depth-1 * 0.5);
 }
 
-// Subtle tilt (less rotation)
 .tilt-subtle {
     transform-style: preserve-3d;
     perspective: vars.$tilt-perspective-lg;
@@ -43,7 +39,6 @@
     }
 }
 
-// Strong tilt (more rotation)
 .tilt-strong {
     transform-style: preserve-3d;
     perspective: vars.$tilt-perspective-sm;
@@ -54,7 +49,6 @@
     }
 }
 
-// Hover lift with shadow
 .hover-lift {
     transition:
         transform 0.3s ease-out,
@@ -71,7 +65,6 @@
     }
 }
 
-// Hover scale
 .hover-scale {
     transition: transform 0.3s ease-out;
 
@@ -88,7 +81,6 @@
     }
 }
 
-// Hover glow (box-shadow based, no gradient)
 .hover-glow {
     transition: box-shadow 0.3s ease-out;
 
@@ -97,7 +89,6 @@
     }
 }
 
-// Hover border accent (replaces gradient border glow)
 .hover-border-accent {
     position: relative;
     transition: border-color 0.3s ease-out;

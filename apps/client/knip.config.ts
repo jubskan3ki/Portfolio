@@ -2,6 +2,12 @@ import type { KnipConfig } from 'knip';
 
 const config: KnipConfig = {
     entry: [
+        'nuxt.config.ts',
+        'eslint.config.mjs',
+        'playwright.config.ts',
+        'vitest.config.ts',
+        'app/**/*.ts',
+        'server/**/*.{ts,js}',
         'src/pages/**/*.vue',
         'src/layouts/**/*.vue',
         'src/components/**/*.vue',
@@ -10,10 +16,9 @@ const config: KnipConfig = {
         'src/config/**/*.ts',
         'src/services/plugins/*.ts',
         'src/middleware/*.ts',
+        'tests/**/*.{ts,js}',
     ],
-    project: ['src/**/*.{ts,vue}'],
-    ignoreDependencies: ['sass', 'eslint-plugin-vuejs-accessibility'],
-    ignoreBinaries: ['eslint'],
+    project: ['src/**/*.{ts,vue}', 'server/**/*.ts', 'tests/**/*.ts'],
 };
 
 export default config;

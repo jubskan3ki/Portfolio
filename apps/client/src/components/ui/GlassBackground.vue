@@ -1,19 +1,14 @@
 <template>
     <div class="glass-bg" :class="[`glass-bg--${variant}`, { 'glass-bg--animated': animated }]" aria-hidden="true">
-        <!-- Dots pattern -->
         <span v-if="showDots" class="glass-bg__dots"></span>
 
-        <!-- Gradient overlay -->
         <span class="glass-bg__gradient"></span>
 
-        <!-- Floating bubbles -->
-        <ClientOnly>
-            <div v-if="showBubbles" class="glass-bg__bubbles">
-                <span v-for="i in bubbleCount" :key="i" :class="`glass-bg__bubble glass-bg__bubble--${i}`"></span>
-            </div>
-        </ClientOnly>
+        <!-- Floating bubbles (SSR rendered to prevent CLS) -->
+        <div v-if="showBubbles" class="glass-bg__bubbles">
+            <span v-for="i in bubbleCount" :key="i" :class="`glass-bg__bubble glass-bg__bubble--${i}`"></span>
+        </div>
 
-        <!-- Optional glow effect -->
         <span v-if="showGlow" class="glass-bg__glow"></span>
     </div>
 </template>
@@ -21,18 +16,9 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    type Variant = 'primary' | 'secondary' | 'light' | 'dark';
+    import type { GlassBackgroundProps } from '@/types/components/ui';
 
-    interface Props {
-        variant?: Variant;
-        showDots?: boolean;
-        showBubbles?: boolean;
-        showGlow?: boolean;
-        animated?: boolean;
-        bubbleCount?: number;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<GlassBackgroundProps>(), {
         variant: 'primary',
         showDots: true,
         showBubbles: true,
@@ -48,6 +34,7 @@
 
 <style lang="scss" scoped>
     @use '@/styles/abstracts/functions' as fn;
+    @use '@/styles/abstracts/mixins' as mix;
     @use '@/styles/abstracts/variables' as vars;
 
     .glass-bg {
@@ -55,14 +42,14 @@
         inset: 0;
         pointer-events: none;
         overflow: hidden;
+        contain: layout size paint;
 
-        // Dots pattern
+        // Dots pattern (defaut : fond clair, teinte primaire)
         &__dots {
             position: absolute;
             inset: 0;
-            background-image: radial-gradient(fn.color-alpha(vars.$black, 0.07) 1px, transparent 1px);
-            background-size: 20px 20px;
-            opacity: 0.5;
+
+            @include mix.dots-pattern(vars.$dots-color-light, vars.$dots-size, vars.$dots-spacing);
         }
 
         // Gradient overlay
@@ -137,6 +124,11 @@
 
         // Variant: Primary
         &--primary {
+            // Hide dots: SectionBackground (Hero) already handles them, prevents double pattern
+            .glass-bg__dots {
+                display: none;
+            }
+
             .glass-bg__gradient {
                 background: linear-gradient(
                     135deg,
@@ -162,6 +154,10 @@
 
         // Variant: Secondary
         &--secondary {
+            .glass-bg__dots {
+                display: none;
+            }
+
             .glass-bg__gradient {
                 background: linear-gradient(
                     135deg,
@@ -176,18 +172,18 @@
             }
         }
 
-        // Variant: Light
+        // Variant: Light (fond clair)
         &--light {
             .glass-bg__gradient {
                 background: linear-gradient(135deg, fn.color-alpha(vars.$white, 0.8) 0%, transparent 100%);
             }
 
             .glass-bg__dots {
-                background-image: radial-gradient(fn.color-alpha(vars.$black, 0.04) 1px, transparent 1px);
+                @include mix.dots-pattern(vars.$dots-color-light, vars.$dots-size, vars.$dots-spacing);
             }
         }
 
-        // Variant: Dark
+        // Variant: Dark (fond sombre - points clairs)
         &--dark {
             .glass-bg__gradient {
                 background: linear-gradient(
@@ -198,7 +194,7 @@
             }
 
             .glass-bg__dots {
-                background-image: radial-gradient(fn.color-alpha(vars.$white, 0.05) 1px, transparent 1px);
+                @include mix.dots-pattern(vars.$dots-color-dark, vars.$dots-size, vars.$dots-spacing);
             }
         }
 

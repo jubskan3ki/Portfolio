@@ -1,0 +1,73 @@
+http:
+    middlewares:
+        api-ratelimit:
+            rateLimit:
+                average: 100
+                period: 1s
+                burst: 20
+
+        contact-ratelimit:
+            rateLimit:
+                average: 3
+                period: 1m
+                burst: 3
+
+        admin-ratelimit:
+            rateLimit:
+                average: 30
+                period: 1s
+                burst: 5
+
+        # Replaces the nginx add_header stack.
+        security-headers:
+            headers:
+                stsSeconds: 31536000
+                stsIncludeSubdomains: true
+                stsPreload: true
+                forceSTSHeader: true
+                contentTypeNosniff: true
+                browserXssFilter: false
+                customFrameOptionsValue: DENY
+                referrerPolicy: strict-origin-when-cross-origin
+                permissionsPolicy: "camera=(), microphone=(), geolocation=()"
+                customResponseHeaders:
+                    X-XSS-Protection: "0"
+                    Server: ""
+
+        cache-longterm:
+            headers:
+                customResponseHeaders:
+                    Cache-Control: "public, max-age=31536000, immutable"
+
+        cache-daily:
+            headers:
+                customResponseHeaders:
+                    Cache-Control: "public, max-age=86400"
+
+        cache-none:
+            headers:
+                customResponseHeaders:
+                    Cache-Control: "private, no-cache, no-store, must-revalidate"
+
+        admin-noindex:
+            headers:
+                customResponseHeaders:
+                    X-Robots-Tag: "noindex, nofollow"
+
+        compress:
+            compress:
+                excludedContentTypes:
+                    - text/event-stream
+                minResponseBodyBytes: 256
+
+        # usersFile généré au boot par traefik-auth-init depuis $DASHBOARD_BASIC_AUTH.
+        dashboard-auth:
+            basicAuth:
+                usersFile: /etc/traefik/auth/htpasswd
+
+        # Body-size cap lives upstream; this just throttles concurrency.
+        inflight-limit:
+            inFlightReq:
+                amount: 200
+
+    # Dashboard router is declared via Docker labels on the traefik service (file provider can't interpolate ${DOMAIN}).

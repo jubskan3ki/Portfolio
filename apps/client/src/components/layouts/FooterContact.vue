@@ -20,9 +20,18 @@
             <FooterContactItem v-if="address" icon="map-pin" :text="address" />
         </address>
 
-        <div class="footer-contact__availability" role="status" :aria-label="availabilityText">
-            <span class="footer-contact__indicator footer-contact__indicator--available" aria-hidden="true"></span>
-            <small>{{ availabilityText }}</small>
+        <div
+            v-if="availabilityLabel"
+            class="footer-contact__availability"
+            role="status"
+            :aria-label="availabilityLabel"
+        >
+            <span
+                class="footer-contact__indicator"
+                :class="{ 'footer-contact__indicator--available': isAvailable }"
+                aria-hidden="true"
+            ></span>
+            <small>{{ availabilityLabel }}</small>
         </div>
     </section>
 </template>
@@ -38,11 +47,11 @@
         email: '',
         phone: '',
         address: '',
+        isAvailable: false,
+        availabilityLabel: '',
     });
 
     const headingId = 'footer-contact-heading';
-
-    const availabilityText = 'Disponible pour de nouveaux projets';
 </script>
 
 <style lang="scss" scoped>

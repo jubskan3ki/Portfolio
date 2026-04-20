@@ -1,6 +1,5 @@
 <template>
     <section class="stack-slider">
-        <!-- Header -->
         <header class="stack-slider__header">
             <div class="stack-slider__title-wrapper">
                 <div class="stack-slider__icon">
@@ -10,7 +9,6 @@
                 <span class="stack-slider__count">{{ stacks.length }}</span>
             </div>
 
-            <!-- Navigation Arrows -->
             <div v-if="canScroll" class="stack-slider__nav">
                 <button
                     class="stack-slider__arrow stack-slider__arrow--prev"
@@ -33,7 +31,6 @@
             </div>
         </header>
 
-        <!-- Slider Track -->
         <div ref="sliderRef" class="stack-slider__track" @scroll="updateScrollState">
             <div class="stack-slider__cards">
                 <StackCard
@@ -47,7 +44,6 @@
             </div>
         </div>
 
-        <!-- Progress Indicator -->
         <div v-if="canScroll" class="stack-slider__progress">
             <div class="stack-slider__progress-fill" :style="{ width: `${scrollProgress}%` }"></div>
         </div>
@@ -59,18 +55,13 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
+    import { useDragScroll } from '@/composables/ui/useDragScroll';
 
     import StackCard from './StackCard.vue';
 
-    import type { Stack } from '@/types/feature/stacks';
+    import type { StackCategorySliderProps } from '@/types/feature/stacks';
 
-    interface Props {
-        label: string;
-        icon: string;
-        stacks: Stack[];
-    }
-
-    defineProps<Props>();
+    defineProps<StackCategorySliderProps>();
 
     defineEmits<{
         navigate: [slug: string];
@@ -90,6 +81,8 @@
     const SCROLL_AMOUNT = (CARD_WIDTH + GAP) * 2; // Scroll 2 cards at a time
 
     const canScroll = computed(() => canScrollLeft.value || canScrollRight.value);
+
+    useDragScroll(sliderRef);
 
     const updateScrollState = () => {
         const el = sliderRef.value;
@@ -256,6 +249,14 @@
         -ms-overflow-style: none;
         margin: 0 calc(-1 * vars.$spacing-md);
         padding: vars.$spacing-sm vars.$spacing-md;
+        cursor: grab;
+        touch-action: pan-y;
+        user-select: none;
+
+        &.is-dragging {
+            cursor: grabbing;
+            scroll-snap-type: none;
+        }
 
         &::-webkit-scrollbar {
             display: none;

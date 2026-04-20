@@ -43,7 +43,6 @@ def parse_date(value: Any) -> date | None:
     if not value:
         return None
 
-    # Essayer chaque format
     for fmt in DATE_FORMATS:
         try:
             parsed = datetime.strptime(value, fmt).replace(tzinfo=UTC)
@@ -58,9 +57,6 @@ def parse_date(value: Any) -> date | None:
 class DataValidator:
     """Validateur de donnees pour l'import."""
 
-    # Champs requis par module (issus du registre centralise)
-
-    # Champs a ignorer lors de l'import (auto-generes, systeme)
     IGNORED_FIELDS: list[str] = [
         "id",
         "pk",
@@ -78,12 +74,10 @@ class DataValidator:
         "skills",  # n'existe pas dans le modele Experience
     ]
 
-    # Champs ignores par module specifique
     MODULE_IGNORED_FIELDS: dict[str, list[str]] = {
         "stacks": ["experience"],  # experience (mois) n'existe pas dans le modele
     }
 
-    # Types de champs pour conversion
     FIELD_TYPES: dict[str, dict[str, str]] = {
         "stacks": {
             "level": "decimal",
@@ -106,7 +100,6 @@ class DataValidator:
         },
     }
 
-    # Mapping des champs camelCase vers snake_case
     FIELD_NAME_MAPPING: dict[str, str] = {
         "startDate": "start_date",
         "endDate": "end_date",
@@ -125,7 +118,7 @@ class DataValidator:
         "metaDescription": "meta_description",
     }
 
-    # Mapping de champs specifique par module (applique apres le mapping global)
+    # Mapping par module applique apres FIELD_NAME_MAPPING (ordre important).
     MODULE_FIELD_NAME_MAPPING: dict[str, dict[str, str]] = {
         "articles": {"date": "published_date"},
     }
@@ -156,11 +149,9 @@ class DataValidator:
         Returns:
             Tuple (is_valid, errors)
         """
-        # Convertir les noms de champs camelCase en snake_case pour la validation
         module_mapping = cls.MODULE_FIELD_NAME_MAPPING.get(module, {})
         normalized_data = {module_mapping.get(k, cls.FIELD_NAME_MAPPING.get(k, k)): v for k, v in data.items()}
 
-        # Verification des champs requis
         config = MODULE_REGISTRY.get(module, {})
         required = config.get("required_fields", [])
         errors: list[dict[str, Any]] = [
@@ -173,7 +164,6 @@ class DataValidator:
             if field not in normalized_data or normalized_data[field] is None or normalized_data[field] == ""
         ]
 
-        # Validation des types de champs
         field_types = cls.FIELD_TYPES.get(module, {})
         for field, field_type in field_types.items():
             if field in normalized_data and normalized_data[field] is not None:
@@ -206,7 +196,7 @@ class DataValidator:
     @classmethod
     def clean_data(cls, data: dict[str, Any], module: str | None = None) -> dict[str, Any]:
         """Nettoie les donnees avant import."""
-        # Pre-traitement : isCurrent=true => end_date=null
+        # isCurrent=true => end_date=null (regle metier experiences).
         if module == "experiences":
             is_current = data.get("isCurrent", data.get("is_current"))
             if isinstance(is_current, bool) and is_current:
@@ -218,28 +208,23 @@ class DataValidator:
         module_ignored = cls.MODULE_IGNORED_FIELDS.get(module, []) if module else []
 
         for key, value in data.items():
-            # Ignorer les champs systeme globaux
             if key in cls.IGNORED_FIELDS:
                 continue
 
-            # Ignorer les champs specifiques au module
             if key in module_ignored:
                 continue
 
-            # Convertir les noms de champs camelCase en snake_case
             module_mapping = cls.MODULE_FIELD_NAME_MAPPING.get(module, {}) if module else {}
             field_name = module_mapping.get(key, cls.FIELD_NAME_MAPPING.get(key, key))
 
-            # Si le champ converti est dans IGNORED_FIELDS, l'ignorer
+            # Re-check apres mapping: camelCase peut retomber sur un champ ignore.
             if field_name in cls.IGNORED_FIELDS or field_name in module_ignored:
                 continue
 
             cleaned_value = value
 
-            # Convertir les valeurs vides en None
             if value == "" or value == "null" or value == "NULL":
                 cleaned_value = None
-            # Convertir selon le type de champ
             elif field_name in field_types:
                 field_type = field_types[field_name]
                 if field_type == "date":
@@ -260,7 +245,6 @@ class DataValidator:
                         cleaned_value = lower_value in ("true", "yes", "1", "oui")
                     else:
                         cleaned_value = bool(value)
-            # Convertir les booleens par defaut (si pas dans field_types)
             elif isinstance(value, str):
                 lower_value = value.lower()
                 if lower_value in ("true", "yes", "1", "oui"):

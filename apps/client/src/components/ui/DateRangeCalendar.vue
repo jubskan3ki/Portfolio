@@ -1,6 +1,5 @@
 <template>
     <div class="date-range-calendar">
-        <!-- Calendar Header -->
         <div class="calendar-header">
             <button type="button" class="calendar-header__nav" @click="$emit('previousMonth')">
                 <BaseIcon name="chevron-left" :size="16" />
@@ -11,12 +10,10 @@
             </button>
         </div>
 
-        <!-- Weekday labels -->
         <div class="calendar-weekdays">
             <div v-for="day in weekDays" :key="day" class="calendar-weekdays__item">{{ day }}</div>
         </div>
 
-        <!-- Calendar grid -->
         <div class="calendar-grid">
             <button
                 v-for="day in calendarDays"
@@ -40,7 +37,6 @@
             </button>
         </div>
 
-        <!-- Action buttons -->
         <div class="calendar-actions">
             <button
                 type="button"

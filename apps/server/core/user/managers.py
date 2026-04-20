@@ -27,7 +27,7 @@ class UserManager(BaseUserManager["User"]):
 
         email = self.normalize_email(email)
 
-        # Use get_queryset for type safety instead of self.model.objects
+        # get_queryset() preferable a self.model.objects pour la correction des types.
         if self.get_queryset().filter(email=email).exists():
             logger.warning("Creation utilisateur avec email existant: %s", email)
             raise ValueError(_("Un utilisateur avec cet email existe deja"))
@@ -62,7 +62,7 @@ class UserManager(BaseUserManager["User"]):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError(_("Le superutilisateur doit avoir is_superuser=True."))
 
-        # Use get_queryset for type safety instead of self.model.objects
+        # get_queryset() preferable a self.model.objects pour la correction des types.
         if self.get_queryset().filter(is_superuser=True).exists():
             logger.warning("Tentative de creation d'un second superuser")
             raise ValueError(_("Un superutilisateur existe deja."))

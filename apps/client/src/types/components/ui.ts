@@ -1,9 +1,7 @@
-// Types for UI components
-
 import type { ColorVariant, RouteObject } from './base';
 import type { StatItem } from '../config/footer';
+import type { SearchMode } from '../config/search';
 
-// Tooltip
 type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 
 type TooltipTrigger = 'hover' | 'click' | 'focus';
@@ -20,7 +18,6 @@ export interface TooltipProps {
     customClass?: string;
 }
 
-// ProgressBar
 export type ProgressSize = 'sm' | 'md' | 'lg';
 
 export interface ProgressBarProps {
@@ -37,7 +34,6 @@ export interface ProgressBarProps {
     customClass?: string;
 }
 
-// SectionHeading
 export type HeadingSize = 'sm' | 'md' | 'lg';
 
 export type TitleTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -103,6 +99,96 @@ export interface CTAButtonConfig {
     label?: string;
     to?: string;
     icon?: string;
+}
+
+export interface CTAProps {
+    title?: string;
+    description?: string;
+    variant?: CTAVariant;
+    primaryButton?: CTAButtonConfig;
+    secondaryButton?: CTAButtonConfig;
+}
+
+// GlassBackground
+export type GlassBackgroundVariant = 'primary' | 'secondary' | 'light' | 'dark';
+
+export interface GlassBackgroundProps {
+    variant?: GlassBackgroundVariant;
+    showDots?: boolean;
+    showBubbles?: boolean;
+    showGlow?: boolean;
+    animated?: boolean;
+    bubbleCount?: number;
+}
+
+// SectionBackground
+export type SectionBackgroundVariant = 'light' | 'dark' | 'primary' | 'secondary';
+
+export interface SectionBackgroundProps {
+    variant?: SectionBackgroundVariant;
+}
+
+// SegmentedTabs
+export interface SegmentedTab {
+    key: string;
+    label: string;
+    icon?: string;
+}
+
+export interface SegmentedTabsProps {
+    tabs: SegmentedTab[];
+    modelValue: string;
+}
+
+// SearchGlobal
+export interface SearchGlobalProps {
+    placeholder?: string;
+    mode?: SearchMode;
+    compact?: boolean;
+}
+
+// Search sub-components
+export interface SearchResultItemProps {
+    link: string;
+    icon: string;
+    title: string;
+    subtitle?: string;
+    type: string;
+    badgeLabel: string;
+    isSelected?: boolean;
+}
+
+export interface SearchFilterGroup {
+    type: string;
+    label: string;
+    icon: string;
+    count: number;
+}
+
+export interface SearchFiltersProps {
+    groups: SearchFilterGroup[];
+    activeFilter: string | null;
+}
+
+export interface GlobalSearchInputProps {
+    modelValue: string;
+    placeholder?: string;
+    compact?: boolean;
+    loading?: boolean;
+    isExpanded?: boolean;
+}
+
+export interface SearchEmptyStateProps {
+    query: string;
+}
+
+export interface SearchInputProps {
+    modelValue: string;
+    placeholder?: string;
+    compact?: boolean;
+    loading?: boolean;
+    isExpanded?: boolean;
+    shortcut?: string;
 }
 
 // AppLogo

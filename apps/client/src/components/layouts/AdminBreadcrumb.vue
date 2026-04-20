@@ -39,7 +39,6 @@
 
     const route = useRoute();
 
-    // Computed
     const separatorIcon = computed(() => props.separator || 'chevron-right');
 
     const breadcrumbs = computed<AdminBreadcrumb[]>(() => {
@@ -81,7 +80,6 @@
         return crumbs;
     });
 
-    // Helpers
     const isDynamicSegment = (segment: string): boolean => {
         return /^\d+$/.test(segment) || segment === '[id]' || segment === '[slug]' || /^[a-f0-9-]{36}$/i.test(segment);
     };

@@ -2,7 +2,7 @@ export const HTTP_CONFIG = {
     DEFAULT_API_URL: 'http://localhost:8000',
     REFRESH_ENDPOINT: '/api/users/auth/refresh/',
     DEFAULT_TIMEOUT: 5000,
-    // Shorter timeout for SSR to avoid blocking page rendering
+    // SSR: timeout court pour ne pas bloquer le render
     SSR_TIMEOUT: 1500,
 } as const;
 
@@ -31,28 +31,19 @@ export function getBaseUrl(): string {
             || HTTP_CONFIG.DEFAULT_API_URL
         );
     }
-    if (_resolvedClientBase) {
+    if (_resolvedClientBase !== null) {
         return _resolvedClientBase;
     }
 
-    const base = _configuredBase || HTTP_CONFIG.DEFAULT_API_URL;
-
-    // Align API hostname with page hostname to keep cookies same-site
-    // (SameSite=Lax blocks cookies on cross-site fetch requests)
-    if (typeof window !== 'undefined') {
-        try {
-            const url = new URL(base);
-            if (url.hostname !== window.location.hostname) {
-                url.hostname = window.location.hostname;
-                _resolvedClientBase = url.origin;
-                return _resolvedClientBase;
-            }
-        } catch {
-            // Invalid URL — use base as-is
-        }
+    // Côté browser: utilise l'origin courante pour garantir same-origin (évite les
+    // IP internes Docker ou les hostnames désynchro). Traefik route /api/* vers le
+    // backend même origine en prod comme en dev local.
+    if (typeof window !== 'undefined' && window.location?.origin) {
+        _resolvedClientBase = window.location.origin;
+        return _resolvedClientBase;
     }
 
-    _resolvedClientBase = base;
+    _resolvedClientBase = _configuredBase || HTTP_CONFIG.DEFAULT_API_URL;
     return _resolvedClientBase;
 }
 
@@ -131,6 +122,10 @@ export const API_ENDPOINTS = {
         VERIFY_RESET_CODE: '/api/users/verify-reset-code/',
         CONFIRM_RESET_PASSWORD: '/api/users/confirm-reset-password/',
         SESSIONS: '/api/users/sessions/',
+    },
+
+    SEARCH: {
+        BASE: '/api/search/',
     },
 
     STATS: {

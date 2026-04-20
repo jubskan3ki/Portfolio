@@ -1,7 +1,8 @@
+import { mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
-import { mount } from '@vue/test-utils';
+import { useSearchActions } from '@/composables/data/useSearchActions';
 
 vi.mock('vue-router', () => ({
     useRouter: () => ({
@@ -9,19 +10,16 @@ vi.mock('vue-router', () => ({
     }),
 }));
 
-import { useSearchActions } from '@/composables/data/useSearchActions';
-
 function mountActions() {
+    let api!: ReturnType<typeof useSearchActions>;
     const Host = defineComponent({
         setup() {
-            return useSearchActions();
-        },
-        render() {
-            return h('div');
+            api = useSearchActions();
+            return () => h('div');
         },
     });
-    const wrapper = mount(Host);
-    return wrapper.vm as ReturnType<typeof useSearchActions>;
+    mount(Host);
+    return api;
 }
 
 describe('useSearchActions', () => {
@@ -31,7 +29,7 @@ describe('useSearchActions', () => {
 
     it('exposes the expected action ids', () => {
         const { actions } = mountActions();
-        const ids = actions.map((a) => a.id);
+        const ids = actions.value.map((a) => a.id);
         expect(ids).toContain('nav-blog');
         expect(ids).toContain('nav-projects');
         expect(ids).toContain('nav-stacks');
@@ -49,10 +47,13 @@ describe('useSearchActions', () => {
         });
 
         const { actions, run } = mountActions();
-        const copyEmail = actions.find((a) => a.id === 'copy-email');
+        const copyEmail = actions.value.find((a) => a.id === 'copy-email');
         expect(copyEmail).toBeDefined();
+        if (!copyEmail) {
+            return;
+        }
 
-        await run(copyEmail!);
+        await run(copyEmail);
         expect(writeText).toHaveBeenCalledOnce();
         expect(writeText.mock.calls[0]?.[0]).toMatch(/@/);
     });
@@ -65,9 +66,13 @@ describe('useSearchActions', () => {
         });
 
         const { actions, run } = mountActions();
-        const github = actions.find((a) => a.id === 'ext-github');
-        await run(github!);
+        const github = actions.value.find((a) => a.id === 'ext-github');
+        expect(github).toBeDefined();
+        if (!github) {
+            return;
+        }
 
+        await run(github);
         expect(openSpy).toHaveBeenCalledOnce();
         expect(openSpy.mock.calls[0]?.[0]).toContain('github.com');
         expect(openSpy.mock.calls[0]?.[1]).toBe('_blank');

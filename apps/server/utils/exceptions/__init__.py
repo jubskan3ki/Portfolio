@@ -34,8 +34,6 @@ from .service import ValidationError as ServiceValidationError
 
 
 class APIError(Exception):
-    """Exception de base pour les erreurs d'API."""
-
     default_status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
     default_detail: str = "Une erreur interne s'est produite."
 
@@ -47,50 +45,36 @@ class APIError(Exception):
 
 
 class ValidationError(APIError):
-    """Erreur de validation des donnees."""
-
     default_status_code: int = status.HTTP_400_BAD_REQUEST
     default_detail: str = "Les donnees fournies sont invalides."
 
 
 class AuthenticationError(APIError):
-    """Erreur d'authentification."""
-
     default_status_code: int = status.HTTP_401_UNAUTHORIZED
     default_detail: str = "Authentification requise."
 
 
 class AccessDeniedError(APIError):
-    """Erreur de permission."""
-
     default_status_code: int = status.HTTP_403_FORBIDDEN
     default_detail: str = "Vous n'avez pas les permissions necessaires."
 
 
 class NotFoundError(APIError):
-    """Ressource introuvable."""
-
     default_status_code: int = status.HTTP_404_NOT_FOUND
     default_detail: str = "La ressource demandee n'existe pas."
 
 
 class ConflictError(APIError):
-    """Conflit avec une ressource existante."""
-
     default_status_code: int = status.HTTP_409_CONFLICT
     default_detail: str = "Un conflit est survenu avec la ressource existante."
 
 
 class ThirdPartyServiceError(APIError):
-    """Erreur de service externe."""
-
     default_status_code: int = status.HTTP_502_BAD_GATEWAY
     default_detail: str = "Erreur lors de la communication avec un service externe."
 
 
 class RateLimitError(APIError):
-    """Limite de requetes atteinte."""
-
     default_status_code: int = status.HTTP_429_TOO_MANY_REQUESTS
     default_detail: str = "Trop de requetes. Veuillez reessayer plus tard."
 

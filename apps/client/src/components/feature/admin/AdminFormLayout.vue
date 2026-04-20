@@ -1,6 +1,5 @@
 <template>
     <div class="admin-page">
-        <!-- Header -->
         <div class="admin-page__header">
             <div>
                 <h1 class="admin-page__title">{{ title }}</h1>
@@ -9,13 +8,11 @@
             <slot name="header-actions"></slot>
         </div>
 
-        <!-- Loading State -->
         <div v-if="loading" class="admin-loading">
             <Spinner />
             <p>{{ loadingText }}</p>
         </div>
 
-        <!-- Error State -->
         <div v-else-if="error" class="admin-error">
             <div class="admin-error__icon">
                 <BaseIcon :name="errorIcon" :size="48" />
@@ -30,7 +27,6 @@
             </div>
         </div>
 
-        <!-- Form -->
         <div v-else class="admin-form">
             <form @submit.prevent="$emit('submit')">
                 <div class="admin-form__body">
@@ -58,25 +54,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import Spinner from '@/components/loaders/Spinner.vue';
 
-    interface Props {
-        title: string;
-        subtitle?: string;
-        loading?: boolean;
-        loadingText?: string;
-        error?: string;
-        errorTitle?: string;
-        errorIcon?: string;
-        showRetry?: boolean;
-        backUrl: string;
-        backText?: string;
-        cancelText?: string;
-        submitText?: string;
-        submittingText?: string;
-        submitting?: boolean;
-        submitDisabled?: boolean;
-    }
+    import type { AdminFormLayoutProps } from '@/types/components/admin';
 
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<AdminFormLayoutProps>(), {
         subtitle: '',
         loading: false,
         loadingText: 'Chargement...',

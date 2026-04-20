@@ -23,10 +23,8 @@ class AuditContext(TypedDict):
     correlation_id: str
 
 
-# Thread-local storage for request context
 _thread_locals = threading.local()
 
-# Models to audit (add model names here)
 AUDITED_MODELS = {
     "Article",
     "Project",
@@ -36,9 +34,14 @@ AUDITED_MODELS = {
     "ContactInfo",
     "FAQ",
     "StackResource",
+    "Category",
+    "Tag",
+    "ProjectCategory",
+    "ProjectStatus",
+    "StackCategory",
+    "ExperienceType",
 }
 
-# Fields to ignore in change tracking
 IGNORED_FIELDS = {
     "updated_at",
     "modified_at",
@@ -105,13 +108,11 @@ def _get_model_changes(instance: Model) -> dict[str, dict[str, str | int | float
     if not instance.pk:
         return changes
 
-    # Get the old instance from database
     try:
         old_instance = _get_manager(instance.__class__).get(pk=instance.pk)
     except ObjectDoesNotExist:
         return changes
 
-    # Compare field values
     for field in instance._meta.fields:
         field_name = field.name
 
@@ -121,12 +122,10 @@ def _get_model_changes(instance: Model) -> dict[str, dict[str, str | int | float
         old_value = getattr(old_instance, field_name, None)
         new_value = getattr(instance, field_name, None)
 
-        # Handle foreign keys
         if hasattr(field, "remote_field") and field.remote_field:
             old_value = getattr(old_value, "pk", None) if old_value else None
             new_value = getattr(new_value, "pk", None) if new_value else None
 
-        # Only log if values differ
         if old_value != new_value:
             changes[field_name] = {
                 "old": _serialize_value(old_value),
@@ -140,7 +139,7 @@ def _serialize_value(value: object) -> str | int | float | bool | None:
     """Serialize a value for JSON storage."""
     if value is None:
         return None
-    if isinstance(value, (str, int, float, bool)):
+    if isinstance(value, str | int | float | bool):
         return value
     if hasattr(value, "isoformat"):
         return value.isoformat()
@@ -152,7 +151,7 @@ def _store_old_values(sender: type[Model], instance: Model, **kwargs: object) ->
     if not _should_audit(instance):
         return
 
-    # Use variable for attribute name to satisfy both mypy and ruff
+    # Variable pour attribute name (requis par mypy + ruff simultanement).
     audit_attr = "_audit_old_values"
 
     if instance.pk:
@@ -176,7 +175,6 @@ def _log_save(sender: type[Model], instance: Model, created: bool, **kwargs: obj
     context = get_audit_context()
 
     if created:
-        # Log creation
         AuditLog.log(
             action=str(AuditLog.Action.CREATE),
             model_name=model_name,
@@ -190,7 +188,6 @@ def _log_save(sender: type[Model], instance: Model, created: bool, **kwargs: obj
         )
         logger.debug("Audit: Created %s:%s", model_name, instance.pk)
     else:
-        # Get changes from stored old values
         old_values = getattr(instance, "_audit_old_values", {})
         changes = {}
 
@@ -202,7 +199,6 @@ def _log_save(sender: type[Model], instance: Model, created: bool, **kwargs: obj
             old_value = old_values.get(field_name)
             new_value = getattr(instance, field_name, None)
 
-            # Handle foreign keys
             if hasattr(field, "remote_field") and field.remote_field:
                 old_value = getattr(old_value, "pk", None) if old_value else None
                 new_value = getattr(new_value, "pk", None) if new_value else None
@@ -255,7 +251,7 @@ def _log_delete(sender: type[Model], instance: Model, **kwargs: object) -> None:
     logger.debug("Audit: Deleted %s:%s", model_name, instance.pk)
 
 
-# Connect signals - using weak=False to prevent garbage collection
+# dispatch_uid evite les doubles enregistrements sur reload/apps.ready().
 pre_save.connect(_store_old_values, dispatch_uid="audit_pre_save")
 post_save.connect(_log_save, dispatch_uid="audit_post_save")
 post_delete.connect(_log_delete, dispatch_uid="audit_post_delete")

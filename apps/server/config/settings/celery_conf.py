@@ -4,8 +4,6 @@ from typing import cast
 
 from config.settings.base import TIME_ZONE, env
 
-# CELERY
-
 CELERY_BROKER_URL = cast(str, env("CELERY_BROKER_URL"))
 CELERY_RESULT_BACKEND = cast(str, env("REDIS_URL")).replace("/1", "/0")
 CELERY_ACCEPT_CONTENT = ["json"]
@@ -46,19 +44,21 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     "interval_max": 10,
 }
 
-# CELERY BEAT SCHEDULE
-
 CELERY_BEAT_SCHEDULE = {
     "retry-failed-webhook-deliveries": {
         "task": "core.webhooks.tasks.retry_failed_webhook_deliveries",
-        "schedule": 300.0,  # Every 5 minutes
+        "schedule": 300.0,
     },
     "cleanup-old-webhook-deliveries": {
         "task": "core.webhooks.tasks.cleanup_old_webhook_deliveries",
-        "schedule": 86400.0,  # Every 24 hours
+        "schedule": 86400.0,
     },
     "cleanup-old-transfer-jobs": {
         "task": "data_transfer.cleanup_old_jobs",
-        "schedule": 86400.0,  # Every 24 hours
+        "schedule": 86400.0,
+    },
+    "cleanup-old-audit-logs": {
+        "task": "audit.cleanup_old_logs",
+        "schedule": 86400.0,
     },
 }

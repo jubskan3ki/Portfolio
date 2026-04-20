@@ -2,18 +2,10 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 
 import { slugify } from '@/services/utils/string';
 
+import type { TocItem } from '@/types/composables/ui';
 import type { ContentBlock } from '@/types/feature/blog';
 import type { Ref } from 'vue';
 
-export interface TocItem {
-    id: string;
-    text: string;
-    level: number;
-}
-
-/**
- * Extracts headings from content blocks and tracks the active section via IntersectionObserver.
- */
 export function useTableOfContents(blocks: Ref<ContentBlock[] | undefined>) {
     const activeId = ref('');
 

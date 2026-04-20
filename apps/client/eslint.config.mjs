@@ -3,15 +3,12 @@ import pluginA11y from 'eslint-plugin-vuejs-accessibility';
 import withNuxt from './.nuxt/eslint.config.mjs';
 
 export default withNuxt()
-// Ignores
     .prepend({
         ignores: ['dist/', '.output/', '.nuxt/', 'node_modules/', 'public/', '*.min.js', 'coverage/'],
     })
 
-// Override Vue rules
     .override('nuxt/vue/rules', {
         rules: {
-            // Structure
             'vue/multi-word-component-names': 'off',
             'vue/require-default-prop': 'off',
             'vue/html-self-closing': ['error', { html: { void: 'always', normal: 'never', component: 'always' } }],
@@ -23,13 +20,11 @@ export default withNuxt()
             ],
             'vue/component-api-style': ['error', ['script-setup', 'composition']],
 
-            // Naming
             'vue/component-name-in-template-casing': ['error', 'PascalCase'],
             'vue/custom-event-name-casing': ['error', 'camelCase'],
             'vue/attribute-hyphenation': ['error', 'always'],
             'vue/prop-name-casing': ['error', 'camelCase'],
 
-            // Formatting
             'vue/html-indent': ['error', 4],
             'vue/script-indent': ['error', 4, { baseIndent: 1, switchCase: 1 }],
             'vue/max-attributes-per-line': ['warn', { singleline: 4, multiline: 1 }],
@@ -37,7 +32,6 @@ export default withNuxt()
             'vue/html-closing-bracket-newline': ['error', { singleline: 'never', multiline: 'always' }],
             'vue/singleline-html-element-content-newline': 'off',
 
-            // Quality
             'vue/no-unused-components': 'error',
             'vue/no-unused-vars': 'error',
             'vue/no-useless-v-bind': 'error',
@@ -45,7 +39,6 @@ export default withNuxt()
             'vue/v-for-delimiter-style': ['error', 'in'],
             'vue/attributes-order': 'warn',
 
-            // Strict Vue rules
             'vue/no-undef-components': ['error', { ignorePatterns: ['Nuxt*', 'Client*', 'Lazy*', 'Icon', 'Base*'] }],
             'vue/no-undef-properties': 'error',
             'vue/require-explicit-emits': 'error',
@@ -56,11 +49,13 @@ export default withNuxt()
             'vue/prefer-separate-static-class': 'warn',
             'vue/no-static-inline-styles': ['warn', { allowBinding: true }],
             'vue/prefer-define-options': 'error',
-            'vue/require-macro-variable-name': ['error', { defineProps: 'props', defineEmits: 'emit', defineSlots: 'slots' }],
+            'vue/require-macro-variable-name': [
+                'error',
+                { defineProps: 'props', defineEmits: 'emit', defineSlots: 'slots' },
+            ],
         },
     })
 
-// Override import rules
     .override('nuxt/import/rules', {
         rules: {
             'import/order': [
@@ -83,7 +78,6 @@ export default withNuxt()
         },
     })
 
-// Override stylistic rules
     .override('nuxt/stylistic', {
         rules: {
             '@stylistic/max-len': [
@@ -109,7 +103,7 @@ export default withNuxt()
         },
     })
 
-// Disable @stylistic/indent rules for Vue files (use vue/script-indent instead)
+    // Vue files use vue/script-indent instead of @stylistic/indent.
     .append({
         files: ['**/*.vue'],
         rules: {
@@ -118,15 +112,24 @@ export default withNuxt()
         },
     })
 
-// Content renderers: v-html is legitimate (content is sanitized via escapeHtml)
+    // Config files: Prettier disagrees with these stylistic rules and would loop on save.
     .append({
-        files: ['src/components/feature/blog/ArticleBlockRenderer.vue'],
+        files: ['*.config.{ts,mjs,js}', 'nuxt.config.ts', 'eslint.config.mjs'],
+        rules: {
+            '@stylistic/indent': 'off',
+            '@stylistic/indent-binary-ops': 'off',
+            '@stylistic/operator-linebreak': 'off',
+        },
+    })
+
+    // SafeHtml is the single trust boundary for v-html; callers sanitize via renderInlineMarkdown.
+    .append({
+        files: ['src/components/base/SafeHtml.vue'],
         rules: {
             'vue/no-v-html': 'off',
         },
     })
 
-// Accessibility plugin
     .append({
         files: ['src/**/*.vue'],
         plugins: {
@@ -150,20 +153,17 @@ export default withNuxt()
         },
     })
 
-// TypeScript rules (strict mode)
     .override('nuxt/typescript/rules', {
         rules: {
-            // Allow ternary expressions for conditional execution
-            '@typescript-eslint/no-unused-expressions': [
-                'error',
-                { allowTernary: true, allowShortCircuit: true },
-            ],
+            '@typescript-eslint/no-unused-expressions': ['error', { allowTernary: true, allowShortCircuit: true }],
 
-            // Strict TypeScript rules (sans type-aware linting)
             '@typescript-eslint/no-explicit-any': 'warn',
             '@typescript-eslint/no-non-null-assertion': 'warn',
             '@typescript-eslint/no-inferrable-types': 'error',
-            '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }],
+            '@typescript-eslint/consistent-type-imports': [
+                'error',
+                { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+            ],
             '@typescript-eslint/no-import-type-side-effects': 'error',
             '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
             '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
@@ -172,7 +172,6 @@ export default withNuxt()
         },
     })
 
-// General rules
     .append({
         files: ['src/**/*.{ts,vue,js}'],
         rules: {
@@ -183,7 +182,6 @@ export default withNuxt()
             'object-shorthand': 'error',
             'prefer-arrow-callback': 'error',
 
-            // Additional quality rules
             'no-nested-ternary': 'warn',
             'no-unneeded-ternary': 'error',
             'prefer-template': 'error',

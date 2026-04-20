@@ -2,9 +2,7 @@
 
 from config.settings.base import DEBUG, env
 
-# DATABASE
-# When using PgBouncer (transaction pooling), CONN_MAX_AGE must be 0
-# so Django doesn't hold persistent connections that conflict with pooling.
+# PgBouncer transaction pooling is incompatible with persistent Django connections.
 _USE_PGBOUNCER = env.bool("USE_PGBOUNCER", default=False)
 
 DATABASES = {

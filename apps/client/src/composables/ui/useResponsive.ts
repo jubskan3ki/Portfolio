@@ -1,23 +1,9 @@
-import { ref, computed, onMounted, onUnmounted, readonly, type Ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted, readonly } from 'vue';
 
 import { BREAKPOINTS, type Breakpoint } from '@/config/constants';
 
-// Local types that use Breakpoint from config
-interface UseResponsiveOptions {
-    initialBreakpoint?: Breakpoint;
-}
+import type { UseResponsiveOptions, UseResponsiveReturn } from '@/types/composables/ui';
 
-interface UseResponsiveReturn {
-    windowWidth: Readonly<Ref<number>>;
-    isMobile: Readonly<Ref<boolean>>;
-    isTablet: Readonly<Ref<boolean>>;
-    isDesktop: Readonly<Ref<boolean>>;
-    currentBreakpoint: Readonly<Ref<Breakpoint>>;
-    isBelow: (breakpoint: Breakpoint) => boolean;
-    isAbove: (breakpoint: Breakpoint) => boolean;
-}
-
-// Re-export types for external use
 export function useResponsive(options: UseResponsiveOptions = {}): UseResponsiveReturn {
     const { initialBreakpoint = 'DESKTOP' } = options;
 

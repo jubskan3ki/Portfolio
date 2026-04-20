@@ -1,4 +1,3 @@
-// Store Pinia pour les alertes - utiliser useAlert composable
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
@@ -8,12 +7,10 @@ import { TimeoutManager } from '@/services/utils/timeoutManager';
 import type { Alert, AlertOptions } from '@/types/stores/alert';
 
 export const useAlertStore = defineStore('alert', () => {
-    // State
     const alerts = ref<Alert[]>([]);
     const counter = ref(0);
     const alertTimeouts = new TimeoutManager();
 
-    // Actions
     function add(alert: AlertOptions): string {
         const id = String(++counter.value);
 
@@ -22,7 +19,6 @@ export const useAlertStore = defineStore('alert', () => {
             id,
         });
 
-        // Auto-suppression avec timeout trackable
         if (alert.autoClose !== false) {
             const timeout = alert.timeout || TIMEOUTS.ALERT_DEFAULT;
             alertTimeouts.set(

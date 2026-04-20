@@ -10,7 +10,6 @@
             position: 'relative',
         }"
     >
-        <!-- Cover image side (if any) -->
         <div
             v-if="image"
             :style="{
@@ -37,7 +36,6 @@
             ></div>
         </div>
 
-        <!-- Text content -->
         <div
             :style="{
                 display: 'flex',
@@ -47,7 +45,6 @@
                 flex: 1,
             }"
         >
-            <!-- Top: category + read time -->
             <div :style="{ display: 'flex', alignItems: 'center', gap: '16px' }">
                 <span
                     v-if="category"
@@ -78,7 +75,6 @@
                 </span>
             </div>
 
-            <!-- Title + excerpt -->
             <div
                 :style="{
                     display: 'flex',
@@ -114,7 +110,6 @@
                 </p>
             </div>
 
-            <!-- Footer identity -->
             <div :style="{ display: 'flex', alignItems: 'center', gap: '14px' }">
                 <div
                     :style="{

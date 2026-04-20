@@ -1,13 +1,9 @@
-// Authentication API Types
-
-// Login
 export interface LoginCredentials {
     email: string;
     password: string;
     rememberMe?: boolean;
 }
 
-// User Profile - complete type matching backend response
 export interface UserProfile {
     id: number;
     email: string;
@@ -44,7 +40,6 @@ export interface UpdateProfileData {
     twitter?: string;
 }
 
-// Password
 export interface ChangePasswordData {
     old_password: string;
     new_password: string;
@@ -65,7 +60,6 @@ export interface ConfirmResetPasswordData {
     newPassword: string;
 }
 
-// Responses
 export interface AuthMessageResponse {
     detail: string;
 }

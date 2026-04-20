@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
+from django.contrib.postgres.search import SearchVectorField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
@@ -88,6 +89,7 @@ class Experience(OptimizeImageMixin, models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    search_vector = SearchVectorField(null=True, editable=False)
 
     objects: ExperienceManager = ExperienceManager()
 

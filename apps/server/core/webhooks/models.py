@@ -17,26 +17,21 @@ from .managers import WebhookDeliveryManager, WebhookManager
 class WebhookEventType(models.TextChoices):
     """Types d'evenements supportes."""
 
-    # Articles
     ARTICLE_CREATED = "article.created", "Article cree"
     ARTICLE_UPDATED = "article.updated", "Article mis a jour"
     ARTICLE_DELETED = "article.deleted", "Article supprime"
     ARTICLE_PUBLISHED = "article.published", "Article publie"
 
-    # Projects
     PROJECT_CREATED = "project.created", "Projet cree"
     PROJECT_UPDATED = "project.updated", "Projet mis a jour"
     PROJECT_DELETED = "project.deleted", "Projet supprime"
 
-    # Experiences
     EXPERIENCE_CREATED = "experience.created", "Experience creee"
     EXPERIENCE_UPDATED = "experience.updated", "Experience mise a jour"
     EXPERIENCE_DELETED = "experience.deleted", "Experience supprimee"
 
-    # Contact
     CONTACT_RECEIVED = "contact.received", "Message de contact recu"
 
-    # Stacks
     STACK_CREATED = "stack.created", "Stack cree"
     STACK_UPDATED = "stack.updated", "Stack mis a jour"
 
@@ -86,7 +81,6 @@ class Webhook(models.Model):
         verbose_name="Date de modification",
     )
 
-    # Stats
     total_deliveries = models.PositiveIntegerField(
         default=0,
         verbose_name="Total livraisons",
@@ -121,13 +115,32 @@ class Webhook(models.Model):
             self.secret = secrets.token_hex(32)
         super().save(*args, **kwargs)
 
-    def generate_signature(self, payload: str) -> str:
-        """Genere la signature HMAC-SHA256 pour le payload."""
+    def generate_signature(self, payload: str, timestamp: str | None = None) -> str:
+        """Genere la signature HMAC-SHA256 du payload.
+
+        Si `timestamp` (unix epoch en string) est fourni, signe `timestamp.payload`
+        pour permettre la protection contre les replays (spec inspiree de Stripe).
+        """
+        signed_body = f"{timestamp}.{payload}" if timestamp else payload
         return hmac.new(
             self.secret.encode(),
-            payload.encode(),
+            signed_body.encode(),
             hashlib.sha256,
         ).hexdigest()
+
+    def verify_signature(
+        self,
+        payload: str,
+        signature: str,
+        timestamp: str | None = None,
+    ) -> bool:
+        """Verifie la signature HMAC en temps constant.
+
+        Les consommateurs de webhook peuvent utiliser cette methode pour valider
+        les requetes entrantes (`X-Webhook-Signature` header).
+        """
+        expected = self.generate_signature(payload, timestamp=timestamp)
+        return hmac.compare_digest(expected, signature)
 
     def is_subscribed_to(self, event_type: str) -> bool:
         """Verifie si le webhook est abonne a un type d'evenement."""
@@ -140,8 +153,6 @@ class WebhookDelivery(models.Model):
     """Historique des livraisons de webhooks."""
 
     class Status(models.TextChoices):
-        """Status de livraison."""
-
         PENDING = "pending", "En attente"
         SUCCESS = "success", "Succes"
         FAILED = "failed", "Echec"

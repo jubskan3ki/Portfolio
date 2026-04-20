@@ -2,8 +2,6 @@ import { SITE_CONFIG } from '@/composables/seo/useSeo';
 
 import type { FaqItem } from '@/types/feature/contact';
 
-// Static FAQ for the /contact page. Each item is reflected in the FAQPage
-// JSON-LD so search engines can surface them as Rich Results.
 const FAQ_ITEMS: FaqItem[] = [
     {
         question: 'Quels types de missions acceptez-vous ?',
@@ -48,7 +46,7 @@ const FAQ_ITEMS: FaqItem[] = [
 export function useContactFaqSeo() {
     const contactUrl = `${SITE_CONFIG.url}/contact`;
 
-    // @nuxtjs/seo auto-import: defineQuestion exists in the Nuxt Schema.org module.
+    // Nuxt auto-import: defineWebPage provided by @nuxtjs/seo Schema.org module.
     useSchemaOrg([
         defineWebPage({
             '@type': 'FAQPage',

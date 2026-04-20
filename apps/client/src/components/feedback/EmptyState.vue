@@ -1,12 +1,10 @@
 <template>
     <div :class="emptyStateClasses" role="status">
-        <!-- Icon -->
         <div class="empty-state__icon-wrapper">
             <div class="empty-state__icon-bg"></div>
             <BaseIcon :name="icon" :size="iconSize" class="empty-state__icon" />
         </div>
 
-        <!-- Content -->
         <div class="empty-state__content">
             <component :is="titleTag" class="empty-state__title">{{ title }}</component>
             <p v-if="description" class="empty-state__description">
@@ -14,7 +12,6 @@
             </p>
         </div>
 
-        <!-- Action -->
         <div v-if="actionText || $slots.action" class="empty-state__action">
             <slot name="action">
                 <BaseButton v-if="actionText" :variant="actionVariant" :text="actionText" @click="emit('action')">
@@ -25,7 +22,6 @@
             </slot>
         </div>
 
-        <!-- Extra slot -->
         <small v-if="$slots.extra" class="empty-state__extra">
             <slot name="extra"></slot>
         </small>
@@ -97,7 +93,6 @@
             text-align: center;
         }
 
-        /* Icon wrapper */
         &__icon-wrapper {
             position: relative;
             display: flex;
@@ -117,7 +112,6 @@
             z-index: 1;
         }
 
-        /* Sizes */
         &--sm {
             padding: vars.$spacing-lg;
             gap: vars.$spacing-xs;
@@ -145,7 +139,6 @@
             }
         }
 
-        /* Content */
         &__content {
             display: flex;
             flex-direction: column;
@@ -166,12 +159,10 @@
             max-width: 400px;
         }
 
-        /* Action */
         &__action {
             margin-top: vars.$spacing-xs;
         }
 
-        /* Extra */
         &__extra {
             display: block;
             margin-top: vars.$spacing-md;

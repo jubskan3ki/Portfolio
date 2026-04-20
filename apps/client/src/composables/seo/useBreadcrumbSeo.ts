@@ -22,14 +22,12 @@ export function useBreadcrumbSeo(options?: BreadcrumbSeoOptions): BreadcrumbSeoR
         const crumbs: BreadcrumbSeoItem[] = [];
         const meta = options?.meta;
 
-        // Toujours commencer par l'accueil
         crumbs.push({ label: ROUTE_LABELS['/'] ?? 'Accueil', to: '/' });
 
         if (path === '/') {
             return crumbs;
         }
 
-        // Segment section (blog, projects, stacks, etc.)
         const segments = path.split('/').filter(Boolean);
         const sectionPath = `/${segments[0]}`;
         const sectionLabel = ROUTE_LABELS[sectionPath];
@@ -38,7 +36,6 @@ export function useBreadcrumbSeo(options?: BreadcrumbSeoOptions): BreadcrumbSeoR
             crumbs.push({ label: sectionLabel, to: sectionPath });
         }
 
-        // Page detail : ajouter categorie optionnelle + titre depuis les metadonnees API
         if (segments.length >= 2 && meta) {
             if (meta.category) {
                 const categoryTo
@@ -54,7 +51,6 @@ export function useBreadcrumbSeo(options?: BreadcrumbSeoOptions): BreadcrumbSeoR
         return crumbs;
     });
 
-    // Schema.org BreadcrumbList JSON-LD via @nuxtjs/seo
     useSchemaOrg([
         defineBreadcrumb({
             itemListElement: items.value.map((item, index) => ({

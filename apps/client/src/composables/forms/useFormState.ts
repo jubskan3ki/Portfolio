@@ -139,7 +139,6 @@ export function useFormState<TForm extends Record<string, unknown>, TData = unkn
 
     const handleApiErrors = (error: unknown): void => {
         if (isApiError(error)) {
-            // Handle validation errors with field-level details
             if (error.code === 'VALIDATION_ERROR' && 'fields' in error) {
                 const fieldErrors: Partial<Record<keyof TForm, string>> = {};
                 let hasFieldErrors = false;
@@ -157,7 +156,6 @@ export function useFormState<TForm extends Record<string, unknown>, TData = unkn
                 }
             }
 
-            // Use the error message from the API
             pageError.value = error.message;
             showError(error.message);
             return;

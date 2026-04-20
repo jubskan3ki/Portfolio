@@ -21,6 +21,9 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
+        "e2e": "playwright test",
+        "e2e:ui": "playwright test --ui",
+        "e2e:install": "playwright install chromium",
         "check": "pnpm lint && pnpm lint:css && pnpm type-check && pnpm test",
         "fix": "pnpm lint:fix && pnpm format:css",
         "api:generate-types": "openapi-typescript http://localhost:8000/api/schema/ -o src/types/api.generated.ts",
@@ -49,16 +52,14 @@
     },
     "devDependencies": {
         "@nuxt/eslint": "^1.15.2",
-        "@nuxt/icon": "^2.2.1",
         "@nuxt/image": "^2.0.0",
         "@nuxtjs/seo": "^3.4.0",
-        "@tanstack/eslint-plugin-query": "^5.74.7",
+        "@playwright/test": "^1.59.1",
         "@types/node": "^24.11.0",
         "@vite-pwa/nuxt": "^1.1.1",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vitest/coverage-v8": "^4.1.4",
         "@vue/test-utils": "^2.4.6",
-        "@vueuse/nuxt": "^14.2.1",
         "eslint": "^9.39.2",
         "eslint-plugin-vuejs-accessibility": "^2.5.0",
         "happy-dom": "^20.9.0",
@@ -79,6 +80,7 @@
         "typescript": "^5.9.3",
         "vite": "^8.0.3",
         "vitest": "^4.1.4",
+        "vitest-axe": "^0.1.0",
         "vue-tsc": "^3.2.5"
     },
     "lint-staged": {
@@ -99,7 +101,11 @@
             "h3": ">=1.15.6",
             "fast-xml-parser": ">=5.5.6",
             "node-forge": ">=1.4.0",
-            "picomatch": ">=4.0.4"
+            "picomatch": ">=4.0.4",
+            "vite": ">=8.0.8",
+            "defu": ">=6.1.7",
+            "lodash": ">=4.18.1",
+            "lodash-es": ">=4.18.1"
         }
     }
 }

@@ -1,13 +1,11 @@
 <template>
     <div class="admin-layout" :class="layoutClasses">
-        <!-- Background effects -->
         <div class="admin-layout__bg" aria-hidden="true">
             <div class="admin-layout__dots"></div>
             <div class="admin-layout__glow admin-layout__glow--1"></div>
             <div class="admin-layout__glow admin-layout__glow--2"></div>
         </div>
 
-        <!-- Mobile overlay (behind sidebar, above content) -->
         <Transition name="fade">
             <div
                 v-if="showMobileOverlay"
@@ -21,19 +19,15 @@
             ></div>
         </Transition>
 
-        <!-- Sidebar -->
         <AdminSidebar id="admin-navigation" :collapsed="sidebarCollapsed" :mobile-open="mobileMenuOpen" />
 
-        <!-- Main content area -->
         <div class="admin-layout__content">
-            <!-- Header -->
             <AdminHeader
                 :collapsed="sidebarCollapsed"
                 @toggle-sidebar="toggleMobileSidebar"
                 @toggle-collapse="toggleSidebarCollapse"
             />
 
-            <!-- Main -->
             <main id="main-content" class="admin-layout__main">
                 <div class="admin-layout__container">
                     <AdminBreadcrumb v-if="showBreadcrumb" />
@@ -50,7 +44,6 @@
             </main>
         </div>
 
-        <!-- Alerts & Modals -->
         <AlertList position="top-right" />
         <Modal />
     </div>
@@ -70,7 +63,6 @@
 
     const route = useRoute();
 
-    // Sidebar management (handles mobile, collapse, localStorage, route change)
     const {
         isCollapsed: sidebarCollapsed,
         isMobileOpen: mobileMenuOpen,
@@ -84,14 +76,12 @@
         classPrefix: 'admin-layout',
     });
 
-    // Computed
     const showBreadcrumb = computed(() => {
         return route.path !== ADMIN_ROUTES.BASE.path && route.path !== ADMIN_ROUTES.DASHBOARD.path;
     });
 
-    // Methods
     const handleErrorRetry = async () => {
-        // Use navigateTo instead of window.location.reload() for bfcache compatibility
+        // navigateTo pour compatibilité bfcache (vs window.location.reload)
         await navigateTo(route.fullPath, { replace: true, external: false });
     };
 </script>
@@ -111,7 +101,6 @@
         width: 100%;
         max-width: 100vw;
 
-        /* Background layer */
         &__bg {
             position: fixed;
             inset: 0;
@@ -120,7 +109,6 @@
             overflow: hidden;
         }
 
-        /* Dots pattern */
         &__dots {
             position: absolute;
             inset: -20%;
@@ -130,7 +118,6 @@
             animation: dots-drift 120s linear infinite;
         }
 
-        /* Glow effects */
         &__glow {
             position: absolute;
             border-radius: 50%;
@@ -156,7 +143,7 @@
             }
         }
 
-        /* Overlay - z-index between content and sidebar */
+        /* Overlay: z-index entre content et sidebar (ordre critique) */
         &__overlay {
             position: fixed;
             inset: 0;
@@ -166,7 +153,6 @@
             cursor: pointer;
         }
 
-        /* Content area */
         &__content {
             flex: 1;
             margin-left: vars.$admin-sidebar-width;
@@ -182,7 +168,6 @@
             margin-left: vars.$admin-sidebar-collapsed;
         }
 
-        /* Main content */
         &__main {
             flex: 1;
             margin-top: vars.$admin-header-height;
@@ -204,7 +189,6 @@
             }
         }
 
-        /* Mobile/Tablet adjustments */
         @include mix.responsive(tablet) {
             &__content {
                 margin-left: 0;
@@ -217,7 +201,6 @@
         }
     }
 
-    /* Animations */
     @include bg.glow-float-keyframes(20px, -20px, 1.1);
 
     @keyframes page-enter {
@@ -232,7 +215,6 @@
         }
     }
 
-    /* Transitions */
     .fade-enter-active,
     .fade-leave-active {
         transition: opacity 0.3s ease;

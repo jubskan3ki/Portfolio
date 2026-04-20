@@ -19,8 +19,6 @@ env = environ.Env(
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
-# CORE SETTINGS
-
 SECRET_KEY = cast(str, env("DJANGO_SECRET_KEY"))
 DEBUG = cast(bool, env.bool("DJANGO_DEBUG"))
 ENABLE_DEBUG_TOOLBAR = DEBUG and cast(bool, env.bool("ENABLE_DEBUG_TOOLBAR"))
@@ -41,8 +39,6 @@ TIME_ZONE = "Europe/Paris"
 USE_I18N = True
 USE_TZ = True
 
-# APPLICATIONS
-
 INSTALLED_APPS = [
     "django_prometheus",
     "django.contrib.admin",
@@ -51,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "rest_framework",
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
@@ -70,9 +67,14 @@ INSTALLED_APPS = [
     "core.stats.apps.StatsConfig",
     "core.audit.apps.AuditConfig",
     "core.webhooks.apps.WebhooksConfig",
+    "core.search.apps.SearchConfig",
+    "core.versioning.apps.VersioningConfig",
+    "core.status.apps.StatusConfig",
 ]
 
-# MIDDLEWARE
+# Public status page queries Prometheus + Alertmanager (C7).
+PROMETHEUS_INTERNAL_URL = env("PROMETHEUS_INTERNAL_URL", default="http://prometheus:9090")
+ALERTMANAGER_URL = env("ALERTMANAGER_URL", default="http://alertmanager:9093")
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
@@ -90,6 +92,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "middlewares.cache.ConditionalCacheMiddleware",
     *(["debug_toolbar.middleware.DebugToolbarMiddleware"] if ENABLE_DEBUG_TOOLBAR else []),
+    *(["middlewares.query_stats.QueryStatsMiddleware"] if DEBUG else []),
     *(
         [
             "middlewares.security.SecurityHeadersMiddleware",
@@ -100,8 +103,6 @@ MIDDLEWARE = [
     ),
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
-
-# TEMPLATES
 
 TEMPLATES = [
     {
@@ -118,8 +119,6 @@ TEMPLATES = [
         },
     },
 ]
-
-# STATIC & MEDIA FILES
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -139,27 +138,20 @@ STORAGES = {
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# CUSTOM SETTINGS
-
 HTML_COMPRESSION_EXCLUDE_PATHS = ["/admin/", "/__debug__/"]
 
-# Session & Device Management
 MAX_SESSIONS_PER_USER = 5
-SESSION_TIMEOUT = 24 * 60 * 60  # 24 heures en secondes
+SESSION_TIMEOUT = 24 * 60 * 60
 DEVICE_TRACKING_ENABLED = True
 
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 
-# Upload limits
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5_242_880  # 5 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5_242_880  # 5 MB
 
-# DEBUG TOOLBAR (Development only)
-
 
 def show_toolbar(request) -> bool:
-    """Affiche la toolbar uniquement pour localhost et reseau Docker local."""
-
+    """Only enable debug toolbar on localhost + Docker local networks."""
     if not ENABLE_DEBUG_TOOLBAR:
         return False
 
@@ -201,8 +193,6 @@ if ENABLE_DEBUG_TOOLBAR:
     DEBUG_TOOLBAR_CONFIG = {
         "SHOW_TOOLBAR_CALLBACK": "config.settings.base.show_toolbar",
     }
-
-# UPLOAD CONSTRAINTS
 
 ALLOWED_AVATAR_EXTENSIONS = ("jpg", "jpeg", "png", "webp")
 MAX_AVATAR_SIZE = 5 * 1024 * 1024  # 5MB

@@ -2,14 +2,10 @@
 
 from drf_spectacular.utils import OpenApiResponse
 
-# TAGS
-
 TAGS_CONTACT = ["Contact"]
 TAGS_FAQ = ["Contact - FAQs"]
 TAGS_INFO = ["Contact - Info"]
 TAGS_STATS = ["Contact - Stats"]
-
-# RESPONSES
 
 RESPONSE_200_STATS = OpenApiResponse(description="Statistiques de contact")
 

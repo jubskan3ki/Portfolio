@@ -6,7 +6,7 @@
         </h3>
 
         <ul class="article-categories__list">
-            <li v-for="category in categories" :key="category.id || category.slug">
+            <li v-for="category in visibleCategories" :key="category.id || category.slug">
                 <button
                     class="article-categories__btn"
                     :class="{ 'article-categories__btn--active': isActive(category) }"
@@ -20,10 +20,21 @@
                 </button>
             </li>
         </ul>
+
+        <button
+            v-if="canToggle"
+            class="article-categories__toggle"
+            type="button"
+            @click="showAll = !showAll"
+        >
+            {{ showAll ? 'Voir moins' : `Voir plus (${hiddenCount})` }}
+        </button>
     </div>
 </template>
 
 <script setup lang="ts">
+    import { computed, ref } from 'vue';
+
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
     import type { ArticleCategoriesProps, ArticleCategoryItem } from '@/types/feature/blog';
@@ -32,12 +43,35 @@
         title: 'Catégories',
         categories: () => [],
         modelValue: null,
+        maxVisible: 0,
     });
 
     const emit = defineEmits<{
         'update:modelValue': [value: string | number | null];
         select: [value: string | number | null];
     }>();
+
+    const showAll = ref(false);
+
+    // Masque les items a count=0 ("Tous" passe si totalArticles>0 ou count=undefined).
+    const filteredCategories = computed(() =>
+        props.categories.filter((c) => c.count === undefined || c.count > 0),
+    );
+
+    const canToggle = computed(
+        () => props.maxVisible > 0 && filteredCategories.value.length > props.maxVisible,
+    );
+
+    const visibleCategories = computed(() => {
+        if (!canToggle.value || showAll.value) {
+            return filteredCategories.value;
+        }
+        return filteredCategories.value.slice(0, props.maxVisible);
+    });
+
+    const hiddenCount = computed(() =>
+        Math.max(0, filteredCategories.value.length - props.maxVisible),
+    );
 
     const isActive = (category: ArticleCategoryItem) => {
         if (!props.modelValue) {
@@ -137,6 +171,23 @@
             background: vars.$bg-secondary;
             border-radius: vars.$border-radius-full;
             transition: all 0.2s ease;
+        }
+
+        &__toggle {
+            margin-top: vars.$spacing-sm;
+            padding: vars.$spacing-xs vars.$spacing-sm;
+            font-size: vars.$font-size-xs;
+            font-weight: vars.$font-weight-semibold;
+            color: vars.$primary-color;
+            background: transparent;
+            border: none;
+            border-radius: vars.$border-radius-md;
+            cursor: pointer;
+            transition: background 0.2s ease;
+
+            &:hover {
+                background: fn.color-alpha(vars.$primary-color, 0.08);
+            }
         }
     }
 </style>

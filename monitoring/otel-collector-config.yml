@@ -1,0 +1,72 @@
+# OTLP (gRPC+HTTP) in; fans out to Tempo (traces), Loki (logs), Prometheus remote_write (metrics).
+receivers:
+    otlp:
+        protocols:
+            grpc:
+                endpoint: 0.0.0.0:4317
+            http:
+                endpoint: 0.0.0.0:4318
+
+processors:
+    # Soft ~80%, spike 25% of container limit; guards against OOM.
+    memory_limiter:
+        check_interval: 2s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+
+    # Flush on 512 spans or 1s idle; cap batch at 1024.
+    batch:
+        send_batch_size: 512
+        timeout: 1s
+        send_batch_max_size: 1024
+
+    # Tag signals with deployment.environment + service.version (DEPLOYMENT_IMAGE_TAG from compose).
+    resource:
+        attributes:
+            - key: deployment.environment
+              value: ${env:DJANGO_ENV}
+              action: upsert
+            - key: service.version
+              from_attribute: DEPLOYMENT_IMAGE_TAG
+              action: upsert
+
+exporters:
+    otlphttp/tempo:
+        endpoint: http://tempo:4318
+        tls:
+            insecure: true
+
+    prometheusremotewrite:
+        endpoint: http://prometheus:9090/api/v1/write
+        tls:
+            insecure: true
+
+    # Self-health scrape endpoint.
+    prometheus:
+        endpoint: 0.0.0.0:8889
+
+    otlphttp/loki:
+        endpoint: http://loki:3100/otlp
+
+service:
+    telemetry:
+        metrics:
+            address: 0.0.0.0:8888
+        logs:
+            level: info
+
+    pipelines:
+        traces:
+            receivers: [otlp]
+            processors: [memory_limiter, resource, batch]
+            exporters: [otlphttp/tempo]
+
+        metrics:
+            receivers: [otlp]
+            processors: [memory_limiter, resource, batch]
+            exporters: [prometheusremotewrite, prometheus]
+
+        logs:
+            receivers: [otlp]
+            processors: [memory_limiter, resource, batch]
+            exporters: [otlphttp/loki]

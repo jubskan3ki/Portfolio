@@ -1,0 +1,58 @@
+services:
+    backend:
+        command: python manage.py runserver 0.0.0.0:8000
+        ports:
+            - "${SERVER_PORT:-8000}:8000"
+        environment:
+            DJANGO_DEBUG: "true"
+            ENABLE_DEBUG_TOOLBAR: "true"
+            OTEL_SDK_DISABLED: "true"
+        healthcheck:
+            test: ["CMD-SHELL", "python manage.py healthcheck || exit 1"]
+            interval: 15s
+            retries: 5
+            timeout: 10s
+            start_period: 90s
+
+    celery:
+        # Drop otel wrapper in dev: otel-collector is monitoring-profile only, SDK spams UNAVAILABLE otherwise.
+        command: >
+            celery -A config worker
+            --loglevel=${CELERY_LOG_LEVEL:-INFO}
+            --concurrency=${CELERY_CONCURRENCY:-2}
+            --max-tasks-per-child=${CELERY_MAX_TASKS_PER_CHILD:-1000}
+            --hostname=celery@%h
+        environment:
+            OTEL_SDK_DISABLED: "true"
+
+    frontend:
+        build:
+            target: dev
+        command:
+            - sh
+            - -c
+            - "unset PORT; pnpm install --prefer-offline && exec pnpm dev --host 0.0.0.0 --port 80"
+        ports:
+            - "${FRONTEND_PORT:-3000}:80"
+        volumes:
+            - ./apps/client:/app
+            - frontend_node_modules:/app/node_modules
+            - frontend_nuxt_cache:/app/.nuxt
+        environment:
+            NODE_ENV: development
+            CI: "true"
+            HOST: 0.0.0.0
+            NUXT_TELEMETRY_DISABLED: "1"
+            NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8000}
+            NUXT_API_BASE_SERVER: ${NUXT_API_BASE_SERVER:-http://backend:8000}
+            NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        healthcheck:
+            test: ["CMD-SHELL", "curl -fsS http://localhost:80/ >/dev/null 2>&1 || exit 1"]
+            interval: 10s
+            retries: 30
+            timeout: 5s
+            start_period: 180s
+
+volumes:
+    frontend_node_modules:
+    frontend_nuxt_cache:

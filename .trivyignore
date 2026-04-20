@@ -1,0 +1,12 @@
+# Trivy CVE whitelist.
+#
+# Format: one CVE ID per line (e.g. CVE-2024-12345).
+# MANDATORY: add a trailing `# exp=YYYY-MM-DD` comment so stale entries are
+# caught by a manual audit. Entries without an expiration date should be
+# rejected in code review.
+#
+# Rationale: whitelisting a CVE is an acceptance of risk. It must be temporary
+# (fix upstream, bump dep, re-evaluate) and bounded in time.
+
+# Example (remove when no longer needed):
+# CVE-2026-4539  # pygments syntax-highlighting — no fix available yet.  exp=2026-07-01

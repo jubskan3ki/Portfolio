@@ -1,12 +1,10 @@
 <template>
     <div class="timeline" :class="[customClass]">
-        <!-- Header -->
         <header v-if="showHeader && (title || subtitle)" class="timeline__header">
             <h2 v-if="title" class="timeline__title">{{ title }}</h2>
             <p v-if="subtitle" class="timeline__subtitle">{{ subtitle }}</p>
         </header>
 
-        <!-- Filters -->
         <nav v-if="showFilters && filters.length" class="timeline__filters" role="tablist">
             <button
                 class="timeline__filter"
@@ -26,7 +24,6 @@
             </button>
         </nav>
 
-        <!-- List -->
         <TransitionGroup v-if="sortedExperiences.length" name="timeline-item" tag="div" class="timeline__list">
             <div
                 v-for="(exp, idx) in sortedExperiences"
@@ -60,15 +57,12 @@
             </div>
         </TransitionGroup>
 
-        <!-- Empty -->
         <EmptyState v-else-if="!loading" :title="emptyTitle" :description="emptyDescription" icon="inbox" />
 
-        <!-- Loading -->
         <div v-if="loading" class="timeline__loading">
             <Spinner size="lg" :label="loadingText" />
         </div>
 
-        <!-- Footer -->
         <footer v-if="$slots.footer" class="timeline__footer">
             <slot name="footer"></slot>
         </footer>

@@ -1,19 +1,15 @@
 <template>
     <div class="layout">
-        <!-- Skip to content — accessibility -->
         <a href="#main-content" class="skip-link">Aller au contenu principal</a>
 
-        <!-- Background effects -->
         <div class="layout__bg" :class="{ 'layout__bg--active': bgReady }" aria-hidden="true">
             <div class="layout__dots"></div>
             <div class="layout__glow layout__glow--primary"></div>
             <div class="layout__glow layout__glow--secondary"></div>
         </div>
 
-        <!-- Header -->
         <Header id="navigation" />
 
-        <!-- Main content -->
         <main id="main-content" class="layout__main">
             <ErrorBoundary
                 title="Une erreur est survenue"
@@ -25,17 +21,15 @@
             </ErrorBoundary>
         </main>
 
-        <!-- Footer (lazy — below the fold) -->
         <LazyFooter />
 
-        <!-- Global components (lazy + client-only to avoid render-blocking CSS) -->
+        <!-- ClientOnly: évite render-blocking CSS des composants globaux -->
         <ClientOnly>
             <LazyAlertList position="top-right" />
             <LazyModal />
             <LazyLoader />
             <LazyOfflineBadge />
 
-            <!-- Scroll to top -->
             <Transition name="scroll-btn">
                 <button
                     v-if="showScrollTop"
@@ -59,7 +53,6 @@
     import { usePrefetch } from '@/composables/performance/usePrefetch';
     import { useUiStore } from '@/stores/ui';
 
-    // Prefetch intelligent des routes critiques
     usePrefetch({ strategy: 'idle' });
 
     const uiStore = useUiStore();
@@ -85,7 +78,7 @@
     onMounted(() => {
         window.addEventListener('scroll', handleScroll, { passive: true });
 
-        // Defer background animations until after first paint
+        // Anime le background après le first paint
         if ('requestIdleCallback' in window) {
             requestIdleCallback(() => {
                 bgReady.value = true;
@@ -133,7 +126,7 @@
         overflow-x: hidden;
         background-color: vars.$bg-primary;
 
-        /* Background layer — deferred for FCP */
+        /* Background différé pour améliorer le FCP */
         &__bg {
             position: fixed;
             inset: 0;
@@ -143,7 +136,6 @@
             content-visibility: auto;
         }
 
-        /* Dots pattern - subtle and animated */
         &__dots {
             position: absolute;
             inset: -10%;
@@ -163,7 +155,6 @@
             }
         }
 
-        /* Glow effects - soft ambient lighting */
         &__glow {
             position: absolute;
             border-radius: 50%;
@@ -195,7 +186,6 @@
             }
         }
 
-        /* Main content */
         &__main {
             flex: 1;
             position: relative;
@@ -204,7 +194,6 @@
             width: 100%;
         }
 
-        /* Scroll to top button - Glass + Glow effect */
         &__scroll-top {
             position: fixed;
             bottom: vars.$spacing-xl;
@@ -218,7 +207,6 @@
 
             @include mix.flex-center;
 
-            /* Glass effect */
             background: func.color-alpha(vars.$white, 0.75);
             backdrop-filter: blur(16px) saturate(1.2);
             color: vars.$primary-color;
@@ -229,7 +217,6 @@
                 transform: translateY(-4px);
                 background: func.color-alpha(vars.$white, 0.9);
                 color: vars.$primary-dark;
-                /* Glow effect */
                 box-shadow:
                     0 8px 32px func.color-alpha(vars.$primary-color, 0.25),
                     0 0 0 1px func.color-alpha(vars.$primary-color, 0.1),
@@ -254,7 +241,6 @@
         }
     }
 
-    /* Animations */
     @keyframes dots-drift {
         0% {
             transform: translate(0, 0);
@@ -276,7 +262,6 @@
         }
     }
 
-    /* Scroll button transition */
     .scroll-btn-enter-active {
         transition:
             opacity 0.3s ease,

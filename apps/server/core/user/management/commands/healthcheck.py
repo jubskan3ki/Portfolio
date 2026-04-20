@@ -3,15 +3,18 @@
 import json
 from collections.abc import Callable
 
+from django.conf import settings
 from django.core.cache import cache
 from django.core.management.base import BaseCommand
 from django.db import DatabaseError, connection
+from kombu import Connection
+from kombu.exceptions import KombuError
 
 
 class Command(BaseCommand):
     """Health check command for monitoring."""
 
-    help = "Check application health: database, cache, etc."
+    help = "Check application health: database, cache, broker."
 
     def _get_style(self, name: str) -> Callable[[str], str]:
         """Get style function by name with fallback."""
@@ -26,6 +29,7 @@ class Command(BaseCommand):
         results = {
             "database": self.check_database(),
             "cache": self.check_cache(),
+            "broker": self.check_broker(),
         }
 
         if options["json"]:
@@ -60,3 +64,16 @@ class Command(BaseCommand):
             if value == "ok":
                 return {"ok": True, "message": "Connected"}
             return {"ok": False, "message": "Cache read failed"}
+
+    def check_broker(self):
+        """Check Celery broker connectivity."""
+        broker_url = getattr(settings, "CELERY_BROKER_URL", "")
+        if not broker_url:
+            return {"ok": True, "message": "No broker configured (skipped)"}
+        try:
+            with Connection(broker_url, connect_timeout=2) as conn:
+                conn.ensure_connection(max_retries=1, interval_start=0, interval_step=0)
+        except (KombuError, OSError) as err:
+            return {"ok": False, "message": str(err)}
+        else:
+            return {"ok": True, "message": "Connected"}

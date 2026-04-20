@@ -1,7 +1,6 @@
 <template>
     <article ref="cardRef" class="exp-card" :class="{ 'exp-card--current': isCurrent }">
         <header class="exp-card__header">
-            <!-- Logo -->
             <figure class="exp-card__logo">
                 <BaseImage
                     v-if="logo"
@@ -16,7 +15,6 @@
                 <BaseIcon v-else name="building-2" :size="22" />
             </figure>
 
-            <!-- Info -->
             <div class="exp-card__info">
                 <h4 class="exp-card__title">{{ title }}</h4>
                 <p class="exp-card__company">
@@ -28,17 +26,16 @@
                 </p>
             </div>
 
-            <!-- Date Badge -->
             <time class="exp-card__date" :class="{ 'exp-card__date--current': isCurrent }" :datetime="startDate">
                 <span v-if="isCurrent" class="exp-card__pulse"></span>
                 <span class="exp-card__date-text">{{ formattedPeriod }}</span>
             </time>
         </header>
 
-        <!-- Description -->
-        <p v-if="description" class="exp-card__desc">{{ truncatedDescription }}</p>
+        <div v-if="descriptionParagraphs.length" class="exp-card__desc">
+            <SafeHtml v-for="(para, i) in descriptionParagraphs" :key="i" tag="p" :html="para" />
+        </div>
 
-        <!-- Skills -->
         <ul v-if="displayedSkills.length" class="exp-card__skills">
             <li v-for="skill in displayedSkills" :key="skill" class="exp-card__skill">
                 {{ skill }}
@@ -46,7 +43,6 @@
             <li v-if="hiddenSkillsCount > 0" class="exp-card__skill exp-card__skill--more">+{{ hiddenSkillsCount }}</li>
         </ul>
 
-        <!-- Achievements -->
         <ul v-if="displayedAchievements.length" class="exp-card__achievements">
             <li v-for="(item, i) in displayedAchievements" :key="i">
                 <BaseIcon name="check-circle" :size="14" />
@@ -54,7 +50,6 @@
             </li>
         </ul>
 
-        <!-- Footer slot -->
         <footer v-if="$slots.footer" class="exp-card__footer">
             <slot name="footer"></slot>
         </footer>
@@ -65,7 +60,9 @@
     import { computed, ref } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
+    import SafeHtml from '@/components/base/SafeHtml.vue';
     import { useTiltCSS } from '@/composables/ui/useTilt';
+    import { renderInlineMarkdown } from '@/services/utils/contentParser';
     import { resolveMediaUrl } from '@/services/utils/helpers';
 
     import type { ExperienceCardProps } from '@/types/feature/experience';
@@ -82,15 +79,11 @@
         currentText: 'Présent',
     });
 
-    // Constants
     const MAX_SKILLS = 5;
     const MAX_ACHIEVEMENTS = 3;
-    const MAX_DESC_LENGTH = 150;
 
-    // Refs
     const cardRef = ref<HTMLElement | null>(null);
 
-    // Tilt effect - subtle et fluide
     useTiltCSS(cardRef, {
         maxRotation: 3,
         scale: 1,
@@ -99,10 +92,8 @@
 
     const resolvedLogo = computed(() => resolveMediaUrl(props.logo));
 
-    // Is current position
     const isCurrent = computed(() => !props.endDate);
 
-    // Format date
     const formatDate = (date: string): string => {
         if (!date) {
             return '';
@@ -111,7 +102,6 @@
         return d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
     };
 
-    // Formatted period
     const formattedPeriod = computed(() => {
         if (props.period) {
             return props.period;
@@ -121,18 +111,18 @@
         return `${start} — ${end}`;
     });
 
-    // Truncated description
-    const truncatedDescription = computed(() => {
+    // Blank lines split paragraphs; single newlines become <br>. Inline markdown rendered per paragraph.
+    const descriptionParagraphs = computed(() => {
         if (!props.description) {
-            return '';
+            return [];
         }
-        if (props.description.length <= MAX_DESC_LENGTH) {
-            return props.description;
-        }
-        return `${props.description.slice(0, MAX_DESC_LENGTH).trim()}...`;
+        return props.description
+            .split(/\n\s*\n/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+            .map((p) => renderInlineMarkdown(p).replace(/\n/g, '<br>'));
     });
 
-    // Skills list
     const skillsList = computed((): string[] => {
         if (Array.isArray(props.skills)) {
             return props.skills.map(String);
@@ -143,13 +133,10 @@
         return [];
     });
 
-    // Displayed skills
     const displayedSkills = computed(() => skillsList.value.slice(0, MAX_SKILLS));
 
-    // Hidden skills count
     const hiddenSkillsCount = computed(() => Math.max(0, skillsList.value.length - MAX_SKILLS));
 
-    // Achievements list
     const achievementsList = computed((): string[] => {
         if (Array.isArray(props.achievements)) {
             return props.achievements.map(String);
@@ -163,7 +150,6 @@
         return [];
     });
 
-    // Displayed achievements
     const displayedAchievements = computed(() => achievementsList.value.slice(0, MAX_ACHIEVEMENTS));
 </script>
 
@@ -174,6 +160,10 @@
 
     .exp-card {
         position: relative;
+        display: flex;
+        flex-direction: column;
+        align-self: flex-start;
+        height: auto;
         padding: vars.$spacing-lg;
         background: vars.$white;
         border: 1px solid fn.color-alpha(vars.$border-color, 0.5);
@@ -194,7 +184,6 @@
             }
         }
 
-        // Header
         &__header {
             display: grid;
             grid-template-columns: auto 1fr auto;
@@ -208,7 +197,6 @@
             }
         }
 
-        // Logo
         &__logo {
             @include mix.flex-center;
             width: 48px;
@@ -229,7 +217,6 @@
             padding: vars.$spacing-xxs;
         }
 
-        // Info
         &__info {
             min-width: 0;
         }
@@ -257,7 +244,6 @@
             }
         }
 
-        // Date
         &__date {
             @include mix.flex(row, center, center, vars.$spacing-xxs);
             padding: vars.$spacing-xxs vars.$spacing-sm;
@@ -286,14 +272,49 @@
             line-height: 1;
         }
 
-        // Description
         &__desc {
+            display: flex;
+            flex-direction: column;
+            gap: vars.$spacing-xs;
             margin: 0 0 vars.$spacing-md;
             color: vars.$text-secondary;
             line-height: 1.6;
+            overflow-wrap: break-word;
+
+            p {
+                margin: 0;
+            }
+
+            :deep(strong) {
+                font-weight: vars.$font-weight-semibold;
+                color: vars.$text-primary;
+            }
+
+            :deep(em) {
+                font-style: italic;
+            }
+
+            :deep(code) {
+                padding: 2px 6px;
+                font-size: 0.88em;
+                font-family: vars.$font-family-mono;
+                color: vars.$primary-color;
+                background: fn.color-alpha(vars.$primary-color, 0.08);
+                border-radius: vars.$border-radius-sm;
+            }
+
+            :deep(a) {
+                color: vars.$primary-color;
+                text-decoration: underline;
+                text-underline-offset: 2px;
+                transition: color 0.2s ease;
+
+                &:hover {
+                    color: vars.$primary-dark;
+                }
+            }
         }
 
-        // Skills
         &__skills {
             display: flex;
             flex-wrap: wrap;
@@ -316,7 +337,6 @@
             }
         }
 
-        // Achievements
         &__achievements {
             margin: 0;
             padding: 0;
@@ -339,7 +359,6 @@
             }
         }
 
-        // Footer
         &__footer {
             margin-top: vars.$spacing-md;
             padding-top: vars.$spacing-md;
@@ -347,7 +366,6 @@
         }
     }
 
-    // Pulse animation
     @keyframes pulse {
         0%,
         100% {
@@ -361,7 +379,6 @@
         }
     }
 
-    // Reduced motion
     @media (prefers-reduced-motion: reduce) {
         .exp-card {
             transition: none;

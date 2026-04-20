@@ -1,0 +1,21 @@
+---
+# Rename this file to vault.yml and encrypt with:
+#   ansible-vault encrypt vault.yml
+# Then edit via:
+#   ansible-vault edit vault.yml
+#
+# Never commit the decrypted form.
+
+vault_ssh_port: 2200
+vault_ansible_user: portfolio
+
+# -- prod --
+vault_prod_ansible_host: "203.0.113.10"
+vault_deploy_domain: "example.com"
+vault_sops_age_key: |
+    # -*- age-key-prod -*-
+    AGE-SECRET-KEY-1XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# -- shared --
+vault_git_repo: "git@gitlab.com:user/portfolio.git"
+vault_discord_webhook_url: "https://discord.com/api/webhooks/XXXX/YYYY"

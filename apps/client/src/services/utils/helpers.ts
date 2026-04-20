@@ -1,3 +1,5 @@
+import type { BadgeVariant } from '@/types/components/base';
+
 const ENTITY_RE = /&(?:#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/;
 
 function decodeStr(s: string): string {
@@ -15,10 +17,7 @@ function decodeStr(s: string): string {
         .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
-/**
- * Recursively decode HTML entities in all string values of an object/array.
- * Useful to clean API responses that contain double-encoded entities.
- */
+// Décode récursivement les entités HTML (nettoie les réponses API double-encodées)
 export function decodeHtmlEntities<T>(obj: T): T {
     if (obj == null) {
         return obj;
@@ -49,8 +48,7 @@ export function resolveMediaUrl(path: string | null | undefined): string {
         return '';
     }
 
-    // Full URL — extract just the path to avoid Docker-internal hostnames
-    // (e.g. "http://backend:8000/media/..." → "/media/...")
+    // URL absolue -> extrait le pathname pour éviter les hostnames Docker internes (backend:8000)
     if (path.startsWith('http')) {
         try {
             const url = new URL(path);
@@ -58,17 +56,15 @@ export function resolveMediaUrl(path: string | null | undefined): string {
                 return url.pathname;
             }
         } catch {
-            // malformed URL — fall through
+            // URL malformée
         }
         return path;
     }
 
-    // Already starts with /media/ — good
     if (path.startsWith('/media/')) {
         return path;
     }
 
-    // Relative path (e.g. "stacks/git/git.svg" or "deviprop") — prepend /media/
     return `/media/${path}`;
 }
 
@@ -78,8 +74,6 @@ export function truncateText(text: string, maxLength = 100): string {
     }
     return `${text.slice(0, maxLength)}...`;
 }
-
-type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'outline';
 
 const PROJECT_STATUS_MAP: Record<string, BadgeVariant> = {
     completed: 'success',

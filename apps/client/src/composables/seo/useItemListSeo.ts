@@ -1,21 +1,7 @@
 import { SITE_CONFIG } from './useSeo';
 
-import type { Ref, ComputedRef } from 'vue';
+import type { ItemListSeoOptions } from '@/types/composables/seo';
 
-interface ItemListItem {
-    name: string;
-    url: string;
-    image?: string;
-}
-
-interface ItemListSeoOptions {
-    items: Ref<ItemListItem[]> | ComputedRef<ItemListItem[]>;
-}
-
-/**
- * Ajoute un Schema.org ItemList sur les pages listing (blog, projets, stacks).
- * Google peut l'utiliser pour des resultats enrichis en carrousel.
- */
 export function useItemListSeo(options: ItemListSeoOptions) {
     useSchemaOrg([
         defineItemList({

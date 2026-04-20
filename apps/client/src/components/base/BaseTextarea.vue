@@ -44,26 +44,9 @@
 <script setup lang="ts">
     import { computed, ref, useId } from 'vue';
 
-    interface Props {
-        id?: string;
-        name?: string;
-        label?: string;
-        placeholder?: string;
-        required?: boolean;
-        disabled?: boolean;
-        readonly?: boolean;
-        rows?: number;
-        maxlength?: string | number;
-        autocomplete?: string;
-        resizable?: boolean;
-        showCount?: boolean;
-        error?: string;
-        success?: string;
-        hint?: string;
-        customClass?: string;
-    }
+    import type { TextareaProps } from '@/types/components/base';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<TextareaProps>(), {
         id: '',
         name: '',
         label: '',

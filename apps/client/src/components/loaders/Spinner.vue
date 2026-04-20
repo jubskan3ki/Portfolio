@@ -1,6 +1,5 @@
 <template>
     <div :class="classes" role="status" :aria-label="label">
-        <!-- Spinner visual -->
         <svg v-if="type === 'circle'" class="spinner__circle" viewBox="0 0 24 24">
             <circle
                 class="spinner__track"
@@ -24,10 +23,8 @@
             <span v-for="i in 3" :key="i" class="spinner__dot"></span>
         </div>
 
-        <!-- Label -->
         <span v-if="showLabel && label" class="spinner__label">{{ label }}</span>
 
-        <!-- Screen reader -->
         <span class="sr-only">{{ label }}</span>
     </div>
 </template>
@@ -35,16 +32,9 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    import type { SpinnerSize } from '@/types/components/loaders';
+    import type { SpinnerProps } from '@/types/components/loaders';
 
-    interface Props {
-        type?: 'circle' | 'dots';
-        size?: SpinnerSize;
-        label?: string;
-        showLabel?: boolean;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SpinnerProps>(), {
         type: 'circle',
         size: 'md',
         label: 'Chargement...',
@@ -70,7 +60,6 @@
             font-weight: v.$font-weight-medium;
         }
 
-        // Circle
         &__circle {
             animation: rotate 1s linear infinite;
         }
@@ -87,7 +76,6 @@
             stroke-dashoffset: 47.12;
         }
 
-        // Dots
         &__dots {
             display: flex;
             align-items: center;
@@ -106,7 +94,6 @@
             }
         }
 
-        // Sizes
         &--xs {
             .spinner__circle {
                 width: 16px;
@@ -163,7 +150,6 @@
         }
     }
 
-    // Animations
     @keyframes rotate {
         to {
             transform: rotate(360deg);
@@ -183,7 +169,6 @@
         }
     }
 
-    // Screen reader only
     .sr-only {
         position: absolute;
         width: 1px;

@@ -1,21 +1,25 @@
 <template>
     <div class="project-page">
-        <!-- Loading -->
         <LoadingState v-if="isLoading" message="Chargement du projet..." size="lg" />
 
-        <!-- Error -->
         <div v-else-if="error" class="project-error">
             <ErrorMessage :message="errorMessage" action-text="Retour aux projets" :to="ROUTES.PROJECTS" />
         </div>
 
         <template v-else-if="currentProject">
-            <!-- Hero -->
             <Hero
                 :title="currentProject.title"
                 :transition-key="currentProject.slug"
                 variant="primary"
                 has-meta
             >
+                <template v-if="breadcrumbItems.length > 1" #breadcrumb>
+                    <Breadcrumb
+                        :items="breadcrumbItems"
+                        variant="hero"
+                        separator="chevron"
+                    />
+                </template>
                 <template #meta>
                     <div class="hero__meta-item">
                         <BaseIcon name="folder" :size="16" />
@@ -36,18 +40,9 @@
                 </template>
             </Hero>
 
-            <!-- Breadcrumb -->
-            <Breadcrumb
-                v-if="breadcrumbItems.length > 1"
-                :items="breadcrumbItems"
-                separator="chevron"
-            />
-
-            <!-- Content -->
             <Main variant="default" size="large">
                 <DetailPageLayout sidebar-width="360px">
                     <template #main>
-                        <!-- Project Identity (image + title + short desc) -->
                         <div class="project-identity">
                             <div class="project-identity__image-wrapper">
                                 <BaseImage
@@ -66,7 +61,6 @@
                             </div>
                         </div>
 
-                        <!-- Long Description -->
                         <div v-if="currentProject.longDescription" class="detail-card">
                             <h2 class="detail-card__heading">
                                 <BaseIcon name="info" :size="20" class="detail-card__heading-icon" />
@@ -75,7 +69,6 @@
                             <p class="detail-card__text">{{ currentProject.longDescription }}</p>
                         </div>
 
-                        <!-- Features -->
                         <div v-if="currentProject.features && currentProject.features.length > 0" class="detail-card">
                             <h2 class="detail-card__heading">
                                 <BaseIcon name="zap" :size="20" class="detail-card__heading-icon" />
@@ -99,7 +92,6 @@
                     </template>
 
                     <template #sidebar>
-                        <!-- Technologies -->
                         <div class="sidebar-card">
                             <h3 class="sidebar-card__heading">
                                 <BaseIcon name="cpu" :size="16" class="sidebar-card__heading-icon" />
@@ -158,7 +150,6 @@
                             </div>
                         </div>
 
-                        <!-- Links -->
                         <div v-if="currentProject.links" class="sidebar-card">
                             <h3 class="sidebar-card__heading">
                                 <BaseIcon name="link" :size="16" class="sidebar-card__heading-icon" />
@@ -195,13 +186,11 @@
                             </div>
                         </div>
 
-                        <!-- Share -->
                         <ShareCard :title="currentProject.title" />
                     </template>
                 </DetailPageLayout>
             </Main>
 
-            <!-- Related Projects -->
             <Section v-if="relatedProjects.length > 0" variant="light" size="default">
                 <template #header>
                     <h2 class="project-page__section-title">
@@ -217,7 +206,6 @@
                 </div>
             </Section>
 
-            <!-- CTA -->
             <CTA
                 key="project-detail-cta"
                 title="Vous avez un projet similaire en tête ?"
@@ -265,32 +253,29 @@
 
     const router = useRouter();
 
-    // Validate slug parameter
     const { slug } = useDetailSlug(ROUTES.PROJECTS.path);
 
-    // API Queries
     const { data: currentProject, isLoading, isError, error } = useProject(slug);
     const { data: featuredProjects } = useFeaturedProjects(4);
     const { data: allStacks } = useFeaturedStacks(100);
 
-    // Record view
     const { mutate: recordView } = useRecordProjectView();
     useViewRecording(currentProject, recordView);
 
-    // Accessibility
     const { announceNavigation } = useAnnounce();
 
-    // Breadcrumb
     const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
 
-    // SEO and accessibility
     watch(
         currentProject,
         (project) => {
             if (project) {
                 useProjectSeo(project);
                 const { items } = useBreadcrumbSeo({
-                    meta: { title: project.title },
+                    meta: {
+                        title: project.title,
+                        category: project.category || undefined,
+                    },
                 });
                 breadcrumbItems.value = items.value;
                 announceNavigation(`Projet: ${project.title}`);
@@ -299,14 +284,12 @@
         { immediate: true },
     );
 
-    // Redirect on error
     watch(isError, (hasError) => {
         if (hasError) {
             router.push(ROUTES.PROJECTS);
         }
     });
 
-    // Error message
     const errorMessage = computed(() => {
         if (!error.value) {
             return 'Projet non trouvé';
@@ -314,12 +297,11 @@
         return (error.value as Error).message || 'Projet non trouvé';
     });
 
-    // Related projects (excluding current)
     const relatedProjects = computed(() => {
         return featuredProjects.value?.filter((p: { slug: string }) => p.slug !== slug.value) ?? [];
     });
 
-    // Stable color from string (for fallback tech letters)
+    // Couleur stable dérivée du nom (fallback lettre)
     const stringToColor = (str: string): string => {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -329,7 +311,7 @@
         return `hsl(${hue}, 55%, 45%)`;
     };
 
-    // Resolve tech names to stack objects (logos, slugs)
+    // Résout chaque tech en stack (logo, slug) pour maillage interne
     const resolvedTechnologies = computed(() => {
         const techs = currentProject.value?.technologies ?? [];
         const stacks = allStacks.value ?? [];
@@ -385,9 +367,6 @@
         padding: vars.$spacing-xl 0;
     }
 
-    /* ========================
-       Project Identity
-       ======================== */
     .project-identity {
         display: flex;
         align-items: center;
@@ -442,9 +421,6 @@
         }
     }
 
-    /* ========================
-       Detail Cards
-       ======================== */
     .detail-card {
         background: fn.color-alpha(vars.$white, 0.95);
         border: 1px solid fn.color-alpha(vars.$border-color, 0.1);
@@ -481,9 +457,6 @@
         }
     }
 
-    /* ========================
-       Features
-       ======================== */
     .features-grid {
         display: flex;
         flex-direction: column;
@@ -572,9 +545,6 @@
         }
     }
 
-    /* ========================
-       Sidebar Cards
-       ======================== */
     .sidebar-card {
         background: fn.color-alpha(vars.$white, 0.95);
         border: 1px solid fn.color-alpha(vars.$border-color, 0.1);
@@ -598,9 +568,6 @@
         }
     }
 
-    /* ========================
-       Tech Grid
-       ======================== */
     .tech-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -691,9 +658,6 @@
         }
     }
 
-    /* ========================
-       Project Links
-       ======================== */
     .project-links {
         display: flex;
         flex-direction: column;
@@ -721,9 +685,6 @@
         }
     }
 
-    /* ========================
-       Section Title
-       ======================== */
     .project-page__section-title {
         display: flex;
         align-items: center;
@@ -758,9 +719,6 @@
         margin: vars.$spacing-xs auto 0;
     }
 
-    /* ========================
-       Related Grid
-       ======================== */
     .related-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

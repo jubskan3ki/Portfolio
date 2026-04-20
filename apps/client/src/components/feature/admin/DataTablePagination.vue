@@ -1,11 +1,9 @@
 <template>
     <div class="data-table-pagination">
-        <!-- Info -->
         <div class="data-table-pagination__info">
             <small>Affichage {{ startItem }}-{{ endItem }} sur {{ totalItems }}</small>
         </div>
 
-        <!-- Per page selector -->
         <div class="data-table-pagination__per-page">
             <small>Par page:</small>
             <select
@@ -20,7 +18,6 @@
             </select>
         </div>
 
-        <!-- Navigation -->
         <div class="data-table-pagination__nav">
             <BaseButton
                 variant="ghost"
@@ -45,7 +42,6 @@
                 </template>
             </BaseButton>
 
-            <!-- Page numbers -->
             <div class="data-table-pagination__pages">
                 <button
                     v-for="page in visiblePages"
@@ -111,7 +107,6 @@
         perPageChange: [perPage: number];
     }>();
 
-    // Computed
     const startItem = computed(() => {
         return (props.currentPage - 1) * props.perPage + 1;
     });
@@ -154,7 +149,6 @@
         return pages;
     });
 
-    // Methods
     const goToPage = (page: number) => {
         if (page >= 1 && page <= props.totalPages && page !== props.currentPage) {
             emit('pageChange', page);

@@ -1,8 +1,6 @@
-// Glassmorphism Effects
 @use '../abstracts/variables' as vars;
 @use '../abstracts/mixins' as mix;
 
-// Glass card utility class
 .glass-card {
     @include mix.glass-card;
 
@@ -22,12 +20,10 @@
     }
 }
 
-// Glass panel utility class
 .glass-panel {
     @include mix.glass-panel;
 }
 
-// Glass button
 .glass-button {
     @include mix.glass(vars.$glass-blur-sm, vars.$glass-bg-medium);
 
@@ -46,7 +42,6 @@
     }
 }
 
-// Glass nav
 .glass-nav {
     @include mix.glass(vars.$glass-blur-lg, vars.$glass-bg-heavy);
 
@@ -57,7 +52,6 @@
     z-index: vars.$z-index-sticky;
 }
 
-// Glass modal backdrop
 .glass-backdrop {
     position: fixed;
     inset: 0;
@@ -66,7 +60,6 @@
     z-index: vars.$z-index-modal - 1;
 }
 
-// Glass tooltip
 .glass-tooltip {
     @include mix.glass(vars.$glass-blur-sm, vars.$glass-bg-heavy);
 
@@ -75,7 +68,6 @@
     box-shadow: vars.$glass-shadow;
 }
 
-// Frosted section background
 .frosted-section {
     position: relative;
     overflow: hidden;

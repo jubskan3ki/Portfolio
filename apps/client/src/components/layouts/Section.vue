@@ -1,7 +1,6 @@
 <template>
     <section :id="id" :class="sectionClasses" :data-animation="animationType" :aria-labelledby="titleId">
         <div :class="{ container: withContainer }">
-            <!-- Header -->
             <header v-if="hasHeader" class="section__header">
                 <slot name="header">
                     <h2 v-if="title" :id="titleId" class="section__title">{{ title }}</h2>
@@ -9,12 +8,10 @@
                 </slot>
             </header>
 
-            <!-- Content -->
             <div class="section__content">
                 <slot></slot>
             </div>
 
-            <!-- Footer -->
             <footer v-if="$slots.footer" class="section__footer">
                 <slot name="footer"></slot>
             </footer>
@@ -25,9 +22,9 @@
 <script setup lang="ts">
     import { computed, useSlots } from 'vue';
 
-    import type { SectionSize, SectionVariant, SectionAnimation } from '@/types/components/layouts';
+    import type { SectionProps } from '@/types/components/layouts';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SectionProps>(), {
         id: undefined,
         title: '',
         subtitle: '',
@@ -50,18 +47,6 @@
             .replace(/(^-|-$)/g, '');
         return `section-title-${slug}`;
     });
-
-    interface Props {
-        id?: string;
-        title?: string;
-        subtitle?: string;
-        size?: SectionSize;
-        variant?: SectionVariant;
-        withContainer?: boolean;
-        animated?: boolean;
-        animationType?: SectionAnimation;
-        customClass?: string;
-    }
 
     const slots = useSlots();
 

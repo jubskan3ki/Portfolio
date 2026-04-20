@@ -2,13 +2,9 @@
 
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
 
-# TAGS
-
 TAGS_EXPERIENCES = ["Experiences"]
 TAGS_TYPES = ["Experiences - Types"]
 TAGS_STATS = ["Experiences - Stats"]
-
-# PARAMETRES COMMUNS
 
 PARAM_TYPE = OpenApiParameter(
     "type",
@@ -48,8 +44,6 @@ EXPERIENCE_LIST_PARAMS = [
     PARAM_END_YEAR,
     PARAM_TECHNOLOGIES,
 ]
-
-# RESPONSES
 
 RESPONSE_200_STATS = OpenApiResponse(description="Statistiques des experiences")
 

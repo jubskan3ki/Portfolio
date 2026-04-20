@@ -37,15 +37,9 @@
     import { useScrollListener } from '@/composables';
     import { isActiveRoute, navigationItems } from '@/config/navBar';
 
-    interface Props {
-        sticky?: boolean;
-        transparent?: boolean;
-        elevated?: boolean;
-        ariaLabel?: string;
-        customClass?: string;
-    }
+    import type { NavBarProps } from '@/types/components/navigation';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<NavBarProps>(), {
         sticky: false,
         transparent: false,
         elevated: false,

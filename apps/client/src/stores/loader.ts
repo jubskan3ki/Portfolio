@@ -1,4 +1,3 @@
-// Store Pinia pour la gestion des loaders
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
@@ -7,14 +6,12 @@ import { TimeoutManager } from '@/services/utils/timeoutManager';
 import type { LoaderItem, LoaderOptions, LoaderPosition } from '@/types/stores/loader';
 
 export const useLoaderStore = defineStore('loader', () => {
-    // SSR-safe: each store instance gets its own TimeoutManager
+    // SSR-safe: TimeoutManager par instance
     const delayTimeouts = new TimeoutManager();
 
-    // State
     const loaders = ref<LoaderItem[]>([]);
     const isLoading = computed(() => loaders.value.length > 0);
 
-    // Getters
     const isLoadingById = computed(() => (id: string) => {
         return loaders.value.some((loader) => loader.id === id);
     });
@@ -27,7 +24,6 @@ export const useLoaderStore = defineStore('loader', () => {
         return loaders.value.filter((loader) => loader.position === 'container');
     });
 
-    // Actions
     function start(options: LoaderOptions = {}): string {
         const id = options.id ?? `loader-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -83,14 +79,11 @@ export const useLoaderStore = defineStore('loader', () => {
     }
 
     return {
-        // State
         loaders,
         isLoading,
-        // Getters
         isLoadingById,
         fullscreenLoaders,
         containerLoaders,
-        // Actions
         start,
         stop,
         stopAll,

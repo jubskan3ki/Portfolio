@@ -1,6 +1,5 @@
 <template>
     <footer class="footer" role="contentinfo">
-        <!-- Background decoration -->
         <div class="footer__bg" aria-hidden="true">
             <div class="footer__dots"></div>
             <div class="footer__glow"></div>
@@ -17,25 +16,29 @@
 
                 <aside class="footer__contact">
                     <FooterContact
-                        :title="footerData.contactTitle"
-                        :email="footerData.email"
-                        :phone="footerData.phone"
-                        :address="footerData.address"
-                        :is-available="footerData.isAvailable"
+                        :title="footerConfig.contactTitle"
+                        :email="settings.email"
+                        :phone="settings.phone"
+                        :address="address"
+                        :is-available="settings.isAvailable"
+                        :availability-label="settings.availabilityMessage"
                     />
 
-                    <FooterSocial title="Suivez-moi" :links="footerData.socialLinks" />
+                    <FooterSocial title="Suivez-moi" :links="socialLinks" />
                 </aside>
             </div>
 
             <div class="footer__bottom">
                 <p class="footer__copyright">
-                    <small>&copy; {{ currentYear }} {{ footerData.companyName }}. {{ footerData.copyrightText }}</small>
+                    <small>
+                        &copy; {{ currentYear }} {{ footerConfig.companyName }}.
+                        {{ footerConfig.copyrightText }}
+                    </small>
                 </p>
 
-                <nav v-if="footerData.legalLinks?.length" class="footer__legal" aria-label="Liens légaux">
+                <nav v-if="footerConfig.legalLinks?.length" class="footer__legal" aria-label="Liens légaux">
                     <NuxtLink
-                        v-for="link in footerData.legalLinks"
+                        v-for="link in footerConfig.legalLinks"
                         :key="link.label"
                         :to="link.url"
                         class="footer__legal-link"
@@ -54,9 +57,9 @@
     import FooterContact from '@/components/layouts/FooterContact.vue';
     import FooterSocial from '@/components/layouts/FooterSocial.vue';
     import PortfolioSummary from '@/components/ui/PortfolioSummary.vue';
+    import { useSiteSettings } from '@/composables/data/useSiteSettings';
     import { footerConfig } from '@/config/footer';
     import { ROUTES } from '@/config/routes';
-    import { useContactInfo } from '@/services/api/modules/contact';
     import { useExperienceStats } from '@/services/api/modules/experiences';
     import { useProjectStats } from '@/services/api/modules/projects';
     import { useStackStats } from '@/services/api/modules/stacks';
@@ -65,73 +68,52 @@
     import type { SocialLink, StatItem } from '@/types/config/footer';
 
     const summaryTitle = 'Donnez vie à vos idées avec des solutions digitales innovantes';
-    const summaryDescription = computed(
-        () =>
-            contactInfo.value?.bio
-            ?? 'Développeur Web & Mobile passionné par la création d\'expériences digitales modernes et performantes.',
-    );
 
-    // API Queries
-    const { data: contactInfo } = useContactInfo();
+    // Dynamic site settings (SSR — hydrated in initial HTML)
+    const { settings } = await useSiteSettings();
+
+    // Client-only stats
     const { data: projectStats } = useProjectStats();
     const { data: stackStats } = useStackStats();
     const { data: experienceStats } = useExperienceStats();
 
     const currentYear = computed(() => new Date().getFullYear());
 
-    // Contact info from API with fallbacks
-    const footerData = computed(() => {
-        const info = contactInfo.value;
+    const summaryDescription = computed(() => settings.value.bio);
 
-        const address = info?.address
-            ? [info.address.city, info.address.country].filter(Boolean).join(', ')
-            : footerConfig.address;
+    const address = computed(() =>
+        [settings.value.addressCity, settings.value.addressCountry].filter(Boolean).join(', '),
+    );
 
-        const socialLinks: SocialLink[] = [];
-        if (info?.socialMedia) {
-            const social = info.socialMedia;
-            if (social.github) {
-                socialLinks.push({ name: 'GitHub', icon: 'github', url: social.github });
-            }
-            if (social.linkedin) {
-                socialLinks.push({ name: 'LinkedIn', icon: 'linkedin', url: social.linkedin });
-            }
-            if (social.twitter) {
-                socialLinks.push({ name: 'Twitter', icon: 'twitter', url: social.twitter });
-            }
-            if (social.medium) {
-                socialLinks.push({ name: 'Medium', icon: 'medium', url: social.medium });
-            }
+    const socialLinks = computed<SocialLink[]>(() => {
+        const links: SocialLink[] = [];
+        if (settings.value.socialGithub) {
+            links.push({ name: 'GitHub', icon: 'github', url: settings.value.socialGithub });
         }
-
-        const isAvailable = info?.availability?.status === 'available';
-
-        return {
-            contactTitle: footerConfig.contactTitle,
-            email: info?.email ?? footerConfig.email,
-            phone: info?.phone ?? footerConfig.phone,
-            address,
-            companyName: footerConfig.companyName,
-            copyrightText: footerConfig.copyrightText,
-            isAvailable: info ? isAvailable : footerConfig.isAvailable,
-            socialLinks: socialLinks.length > 0 ? socialLinks : footerConfig.socialLinks,
-            legalLinks: footerConfig.legalLinks,
-            ctaLinks: footerConfig.ctaLinks,
-        };
+        if (settings.value.socialLinkedin) {
+            links.push({ name: 'LinkedIn', icon: 'linkedin', url: settings.value.socialLinkedin });
+        }
+        if (settings.value.socialTwitter) {
+            links.push({ name: 'Twitter', icon: 'twitter', url: settings.value.socialTwitter });
+        }
+        if (settings.value.socialMedium) {
+            links.push({ name: 'Medium', icon: 'medium', url: settings.value.socialMedium });
+        }
+        return links;
     });
 
     const ctaLinks = computed<CtaLinks>(() => ({
-        primary: footerData.value.ctaLinks?.primary || { label: 'Parlons de votre projet', url: ROUTES.CONTACT },
-        secondary: footerData.value.ctaLinks?.secondary || {
+        primary: footerConfig.ctaLinks?.primary || { label: 'Parlons de votre projet', url: ROUTES.CONTACT },
+        secondary: footerConfig.ctaLinks?.secondary || {
             label: 'Découvrir mes réalisations',
             url: ROUTES.PROJECTS,
         },
     }));
 
     const stats = computed<StatItem[]>(() => [
-        { value: projectStats.value?.totalProjects ?? footerConfig.projectsCount, label: 'Projets réalisés' },
-        { value: experienceStats.value?.totalYears ?? footerConfig.yearsExperience, label: 'Années d\'expérience' },
-        { value: stackStats.value?.totalStacks ?? footerConfig.techCount, label: 'Technologies maîtrisées' },
+        { value: projectStats.value?.totalProjects ?? 0, label: 'Projets réalisés' },
+        { value: experienceStats.value?.totalYears ?? 0, label: 'Années d\'expérience' },
+        { value: stackStats.value?.totalStacks ?? 0, label: 'Technologies maîtrisées' },
     ]);
 </script>
 

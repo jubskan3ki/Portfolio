@@ -2,25 +2,30 @@ import { refreshTokenManager } from '@/services/api/core/token';
 import { authApi } from '@/services/api/modules/auth';
 import { useAuthStore } from '@/stores/auth';
 
+const SESSION_HINT_KEY = 'portfolio.session.hint';
+
 export default defineNuxtRouteMiddleware(async (to) => {
-    // Only protect admin sub-routes (not the login page at /admin)
+    // Protège /admin/* mais pas la page de login /admin
     if (!to.path.startsWith('/admin/')) {
         return;
     }
 
-    // Skip on server — JWT is in HTTPOnly cookies, verified client-side
+    // Skip SSR: JWT en HTTPOnly cookies, vérification côté client
     if (!import.meta.client) {
         return;
     }
 
     const authStore = useAuthStore();
 
-    // Already authenticated in this session
     if (authStore.isAuthenticated) {
         return;
     }
 
-    // Try to verify with backend (imperative — outside component setup)
+    if (!localStorage.getItem(SESSION_HINT_KEY)) {
+        const redirectTo = to.fullPath !== '/admin' ? to.fullPath : '/admin/dashboard';
+        return navigateTo(`/admin?redirect=${encodeURIComponent(redirectTo)}`, { replace: true });
+    }
+
     try {
         const refreshed = await refreshTokenManager.refresh();
         if (!refreshed) {
@@ -29,7 +34,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
         const profile = await authApi.getProfile();
         authStore.setUser(profile);
     } catch {
-        // Not authenticated — redirect to login
+        localStorage.removeItem(SESSION_HINT_KEY);
         const redirectTo = to.fullPath !== '/admin' ? to.fullPath : '/admin/dashboard';
         return navigateTo(`/admin?redirect=${encodeURIComponent(redirectTo)}`, {
             replace: true,

@@ -1,6 +1,5 @@
 <template>
     <div :class="classes">
-        <!-- Image -->
         <Skeleton
             v-if="showImage"
             type="image"
@@ -9,9 +8,7 @@
             class="skeleton-card__image"
         />
 
-        <!-- Content -->
         <div class="skeleton-card__content">
-            <!-- Header (avatar + meta) -->
             <div v-if="showAvatar" class="skeleton-card__header">
                 <Skeleton type="avatar" :width="40" :height="40" />
                 <div class="skeleton-card__meta">
@@ -20,10 +17,8 @@
                 </div>
             </div>
 
-            <!-- Title -->
             <Skeleton type="text" width="90%" :height="titleHeight" class="skeleton-card__title" />
 
-            <!-- Description -->
             <div v-if="showDescription" class="skeleton-card__description">
                 <Skeleton
                     v-for="i in descriptionLines"
@@ -34,7 +29,6 @@
                 />
             </div>
 
-            <!-- Tags -->
             <div v-if="showTags" class="skeleton-card__tags">
                 <Skeleton
                     v-for="i in 3"
@@ -46,7 +40,6 @@
                 />
             </div>
 
-            <!-- Footer -->
             <div v-if="showFooter" class="skeleton-card__footer">
                 <Skeleton type="text" width="100px" height="14px" />
                 <Skeleton type="button" width="80px" height="32px" />
@@ -60,21 +53,9 @@
 
     import Skeleton from './Skeleton.vue';
 
-    import type { SkeletonCardVariant } from '@/types/components/loaders';
+    import type { SkeletonCardProps } from '@/types/components/loaders';
 
-    interface Props {
-        variant?: SkeletonCardVariant;
-        showImage?: boolean;
-        showAvatar?: boolean;
-        showDescription?: boolean;
-        showTags?: boolean;
-        showFooter?: boolean;
-        imageHeight?: string;
-        titleHeight?: string;
-        descriptionLines?: number;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SkeletonCardProps>(), {
         variant: 'default',
         showImage: true,
         showAvatar: false,
@@ -150,7 +131,6 @@
             border-top: 1px solid fn.color-alpha(v.$border-color, 0.3);
         }
 
-        // Variants
         &--article .skeleton-card__image {
             aspect-ratio: 16 / 10;
         }

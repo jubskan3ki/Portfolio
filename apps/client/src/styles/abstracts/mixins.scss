@@ -1,65 +1,44 @@
-// Mixins utilitaires
-
 @use 'sass:list';
 @use 'variables' as vars;
 @use 'functions' as func;
 
-// Responsive - Consistent breakpoint handling
-// Device ranges: mobile (0-767), tablet (768-1023), desktop (1024-1279), wide (1280+)
-//
-// Available options:
-// - mobile: 0-767px (mobile only)
-// - mobile-up: 768px+ (tablet and above)
-// - tablet: 0-1023px (mobile + tablet) - for backwards compatibility
-// - tablet-only: 768-1023px (tablet only)
-// - tablet-up / desktop: 1024px+ (desktop and above)
-// - desktop-only: 1024-1279px (desktop only)
-// - wide: 1280px+ (wide screens)
+// Keys: mobile, mobile-up, tablet, tablet-only, tablet-up, desktop, desktop-only, wide.
 @mixin responsive($breakpoint) {
     @if $breakpoint == mobile {
-        // Target: 0 - 767px (mobile only)
         @media (max-width: vars.$breakpoint-mobile) {
             @content;
         }
     } @else if $breakpoint == mobile-up {
-        // Target: 768px+ (tablet and above)
         @media (min-width: (vars.$breakpoint-mobile + 1px)) {
             @content;
         }
     } @else if $breakpoint == tablet {
-        // Target: 0 - 1023px (mobile + tablet) - backwards compatible
         @media (max-width: vars.$breakpoint-tablet) {
             @content;
         }
     } @else if $breakpoint == tablet-only {
-        // Target: 768px - 1023px (tablet only)
         @media (min-width: (vars.$breakpoint-mobile + 1px)) and (max-width: vars.$breakpoint-tablet) {
             @content;
         }
     } @else if $breakpoint == tablet-up {
-        // Target: 1024px+ (desktop and above) - same as desktop
         @media (min-width: (vars.$breakpoint-tablet + 1px)) {
             @content;
         }
     } @else if $breakpoint == desktop {
-        // Target: 1024px+ (desktop and above)
         @media (min-width: (vars.$breakpoint-tablet + 1px)) {
             @content;
         }
     } @else if $breakpoint == desktop-only {
-        // Target: 1024px - 1279px (desktop only, not wide)
         @media (min-width: (vars.$breakpoint-tablet + 1px)) and (max-width: vars.$breakpoint-desktop) {
             @content;
         }
     } @else if $breakpoint == wide {
-        // Target: 1280px+ (wide screens)
         @media (min-width: (vars.$breakpoint-desktop + 1px)) {
             @content;
         }
     }
 }
 
-// Flexbox
 @mixin flex($direction: row, $justify: flex-start, $align: stretch, $gap: 0) {
     display: flex;
     flex-direction: $direction;
@@ -77,7 +56,6 @@
     align-items: center;
 }
 
-// Grid
 @mixin grid($columns: 1fr, $gap: 0) {
     display: grid;
     grid-template-columns: $columns;
@@ -87,7 +65,6 @@
     }
 }
 
-// Positionnement
 @mixin absolute($top: auto, $right: auto, $bottom: auto, $left: auto) {
     position: absolute;
     top: $top;
@@ -104,7 +81,6 @@
     left: 0;
 }
 
-// Transitions
 @mixin transition($properties...) {
     $value: ();
 
@@ -115,7 +91,6 @@
     transition: $value;
 }
 
-// Carte
 @mixin card($padding: vars.$spacing-xxxxs) {
     background-color: vars.$white;
     border-radius: vars.$border-radius-lg;
@@ -123,7 +98,6 @@
     box-shadow: vars.$box-shadow;
 }
 
-// Troncature de texte
 @mixin truncate($lines: 1) {
     @if $lines == 1 {
         white-space: nowrap;
@@ -137,8 +111,7 @@
     }
 }
 
-// Form field chrome (label, required indicator, messages)
-// Use inside a BEM block to generate &__label, &__required, &__message
+// Use inside a BEM block to generate &__label, &__required, &__message.
 @mixin form-field-chrome {
     &__label {
         display: block;
@@ -169,7 +142,6 @@
     }
 }
 
-// Form field state (error/success) — for text inputs (input, select, textarea)
 @mixin form-field-state($field-selector, $color) {
     #{$field-selector} {
         border-color: $color;
@@ -181,13 +153,11 @@
     }
 }
 
-// Disabled state — unified across all form controls
 @mixin form-disabled($opacity: 0.7) {
     opacity: $opacity;
     cursor: not-allowed;
 }
 
-// Accessibilite
 @mixin focus-outline {
     &:focus-visible {
         outline: 2px solid vars.$primary-color;
@@ -207,7 +177,6 @@
     border: 0;
 }
 
-// Boutons
 @mixin button-base {
     display: inline-flex;
     align-items: center;
@@ -240,14 +209,12 @@
     }
 }
 
-// Image responsive
 @mixin responsive-image {
     max-width: 100%;
     height: auto;
     display: block;
 }
 
-// Masquer scrollbar
 @mixin hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -257,7 +224,6 @@
     }
 }
 
-// Glassmorphism
 @mixin glass($blur: vars.$glass-blur, $bg: vars.$glass-bg-light) {
     background: $bg;
     backdrop-filter: blur($blur);
@@ -285,7 +251,6 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-// Pattern de points
 @mixin dots-pattern($color: vars.$dots-color, $size: vars.$dots-size, $spacing: vars.$dots-spacing) {
     background-image: radial-gradient($color $size, transparent $size);
     background-size: $spacing $spacing;
@@ -311,7 +276,6 @@
     animation: dots-float $duration linear infinite;
 }
 
-// Tilt et parallax
 @mixin tilt-card {
     transform-style: preserve-3d;
     perspective: vars.$tilt-perspective;
@@ -358,7 +322,6 @@
     }
 }
 
-// Admin
 @mixin admin-card($padding: vars.$spacing-xxs) {
     background: vars.$admin-card-bg;
     border-radius: vars.$border-radius-lg;
@@ -467,7 +430,6 @@
     }
 }
 
-// Card hover lift effect (used across card components)
 @mixin card-hover-lift($distance: -4px, $shadow: vars.$box-shadow-medium) {
     transition:
         transform vars.$transition-base,
@@ -479,7 +441,7 @@
     }
 }
 
-// Staggered fade-in animation (uses --index CSS var per item)
+// Uses --index CSS var per item for per-child delay.
 @mixin staggered-fade-in($delay-per-item: 60ms, $duration: 0.5s) {
     opacity: 0;
     animation: fadeInUp $duration ease forwards;

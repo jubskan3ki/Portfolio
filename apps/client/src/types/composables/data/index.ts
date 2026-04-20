@@ -1,3 +1,4 @@
+export type * from './entity';
 export type * from './filters';
 export type * from './list';
 export type * from './pagination';

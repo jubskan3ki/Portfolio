@@ -37,9 +37,6 @@ class CsvImportStrategy(ImportStrategy):
         """Clean and parse JSON strings in row values."""
         cleaned: dict[str, Any] = {}
         for key, value in row.items():
-            # Note: dict keys from DictReader shouldn't be None in normal operation
-
-            # Try to parse JSON strings back to objects
             if value and isinstance(value, str) and value.startswith(("[", "{")):
                 try:
                     cleaned[key] = json.loads(value)
@@ -71,7 +68,6 @@ class CsvExportStrategy(ExportStrategy):
         if not data:
             return b""
 
-        # Collect all unique keys
         all_keys: set[str] = set()
         for record in data:
             all_keys.update(record.keys())
@@ -83,11 +79,10 @@ class CsvExportStrategy(ExportStrategy):
         writer.writeheader()
 
         for record in data:
-            # Convert complex objects to JSON strings
             row = {}
             for key in fieldnames:
                 value = record.get(key, "")
-                if isinstance(value, (list, dict)):
+                if isinstance(value, list | dict):
                     row[key] = json.dumps(value, ensure_ascii=False)
                 else:
                     row[key] = value

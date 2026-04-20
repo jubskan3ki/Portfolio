@@ -1,6 +1,3 @@
-// src/types/config/footer.ts
-
-// Type pour les objets route
 export interface RouteObject {
     path: string;
     name?: string;

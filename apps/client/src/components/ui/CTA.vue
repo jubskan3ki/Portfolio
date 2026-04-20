@@ -1,10 +1,8 @@
 <template>
     <section class="cta" :class="[`cta--${variant}`]">
-        <!-- Background layers -->
         <SectionBackground :variant="variant" />
 
         <div class="container">
-            <!-- Glass card -->
             <div class="cta__card">
                 <div class="cta__card-inner">
                     <h2 class="cta__title">{{ title }}</h2>
@@ -31,7 +29,6 @@
                     </div>
                 </div>
 
-                <!-- Decorative floating elements -->
                 <span class="cta__float cta__float--1"></span>
                 <span class="cta__float cta__float--2"></span>
                 <span class="cta__float cta__float--3"></span>
@@ -46,17 +43,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import SectionBackground from '@/components/ui/SectionBackground.vue';
 
-    import type { CTAButtonConfig, CTAVariant } from '@/types/components/ui';
+    import type { CTAProps } from '@/types/components/ui';
 
-    interface Props {
-        title?: string;
-        description?: string;
-        variant?: CTAVariant;
-        primaryButton?: CTAButtonConfig;
-        secondaryButton?: CTAButtonConfig;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<CTAProps>(), {
         title: 'Vous avez un projet ?',
         description: '',
         variant: 'primary',

@@ -7,12 +7,10 @@
             @mouseenter="pauseTimer"
             @mouseleave="resumeTimer"
         >
-            <!-- Icon -->
             <div v-if="showIcon" class="toast__icon">
                 <BaseIcon :name="iconName" :size="20" />
             </div>
 
-            <!-- Content -->
             <div class="toast__content">
                 <h6 v-if="title" class="toast__title">{{ title }}</h6>
                 <p class="toast__message">
@@ -20,12 +18,10 @@
                 </p>
             </div>
 
-            <!-- Action slot -->
             <div v-if="$slots.action" class="toast__action">
                 <slot name="action"></slot>
             </div>
 
-            <!-- Close button -->
             <button
                 v-if="dismissible"
                 type="button"
@@ -36,7 +32,6 @@
                 <BaseIcon name="x" :size="16" />
             </button>
 
-            <!-- Progress bar -->
             <div v-if="autoClose && progress" class="toast__progress">
                 <div class="toast__progress-bar" :style="{ width: `${progressValue}%` }"></div>
             </div>
@@ -96,7 +91,6 @@
         emit('close');
     };
 
-    // Use composable for timer management
     const timer = useProgressTimer({
         duration: props.duration,
         autoStart: props.autoClose,
@@ -151,7 +145,6 @@
         box-shadow: vars.$box-shadow-medium;
         overflow: hidden;
 
-        // Icon
         &__icon {
             flex-shrink: 0;
             width: 36px;
@@ -162,7 +155,6 @@
             justify-content: center;
         }
 
-        // Content
         &__content {
             flex: 1;
             min-width: 0;
@@ -181,13 +173,11 @@
             line-height: vars.$line-height-relaxed;
         }
 
-        // Action
         &__action {
             flex-shrink: 0;
             align-self: center;
         }
 
-        // Close
         &__close {
             flex-shrink: 0;
             width: 28px;
@@ -208,7 +198,6 @@
             }
         }
 
-        // Progress
         &__progress {
             position: absolute;
             bottom: 0;
@@ -223,7 +212,6 @@
             transition: width 10ms linear;
         }
 
-        // Variants
         &--info {
             .toast__icon {
                 background-color: func.color-alpha(vars.$info-color, 0.1);
@@ -285,7 +273,6 @@
         }
     }
 
-    // Transitions
     .toast-enter-active {
         transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     }

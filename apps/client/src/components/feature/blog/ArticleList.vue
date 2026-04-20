@@ -1,6 +1,5 @@
 <template>
     <div class="article-list" :class="[`article-list--${layout}`, customClass]">
-        <!-- En-tête de la liste -->
         <div v-if="title || $slots.header" class="article-list__header">
             <slot name="header">
                 <h2 v-if="title" class="article-list__title">{{ title }}</h2>
@@ -24,7 +23,6 @@
                 <slot name="empty-action"></slot>
             </template>
 
-            <!-- Liste des articles -->
             <div
                 class="article-list__grid"
                 :class="[`article-list__grid--${layout}`, { 'article-list__grid--animated': !prefersReducedMotion }]"
@@ -51,7 +49,6 @@
             </div>
         </QueryStateHandler>
 
-        <!-- Pagination -->
         <div v-if="showPagination && totalPages > 1" class="article-list__pagination">
             <Pagination
                 :current-page="currentPage"
@@ -61,7 +58,6 @@
             />
         </div>
 
-        <!-- Pied de liste -->
         <div v-if="$slots.footer" class="article-list__footer">
             <slot name="footer"></slot>
         </div>

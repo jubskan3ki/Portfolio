@@ -1,6 +1,3 @@
-// Experience Types
-
-// Type pour une experience professionnelle ou educative
 export interface Experience {
     id: number;
     title: string;
@@ -18,14 +15,12 @@ export interface Experience {
     type: string;
 }
 
-// Type pour un type d'experience (ex: professionnel, education)
 export interface ExperienceType {
     id: number;
     name: string;
     icon: string;
 }
 
-// Type pour les statistiques d'experience
 export interface ExperienceStats {
     totalYears: number;
     companiesCount: number;
@@ -33,13 +28,10 @@ export interface ExperienceStats {
     experienceByType: Array<{ type: string; count: number }>;
 }
 
-// Type pour la timeline groupee par annee
 export interface ExperienceTimeline {
     year: number;
     experiences: Experience[];
 }
-
-// API Request Types (Create/Update)
 
 export interface ExperienceCreateData {
     title: string;
@@ -65,13 +57,11 @@ export interface ExperienceTypeCreateData {
 
 export type ExperienceTypeUpdateData = Partial<ExperienceTypeCreateData>;
 
-// Filter option pour ExperienceTimeline
 export interface ExperienceFilterOption {
     label: string;
     value: string;
 }
 
-// Props pour ExperienceCard
 export interface ExperienceCardProps {
     title: string;
     company: string;
@@ -87,7 +77,6 @@ export interface ExperienceCardProps {
     currentText?: string;
 }
 
-// Props pour ExperienceTimeline
 export interface ExperienceTimelineProps {
     experiences?: Experience[];
     limit?: number;

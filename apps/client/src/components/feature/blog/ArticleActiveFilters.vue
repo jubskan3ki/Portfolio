@@ -33,18 +33,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import Card from '@/components/ui/Card.vue';
 
-    import type { Category, Tag } from '@/types/feature/blog';
+    import type { ArticleActiveFiltersProps } from '@/types/feature/blog';
 
-    interface Props {
-        title?: string;
-        activeCategory?: string | number | Category | null;
-        activeTags?: Array<string | number>;
-        categories?: Category[];
-        tags?: Tag[];
-        clearButtonText?: string;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<ArticleActiveFiltersProps>(), {
         title: 'Filtres actifs',
         activeCategory: null,
         activeTags: () => [],

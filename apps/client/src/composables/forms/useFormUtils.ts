@@ -4,7 +4,6 @@ import { buildImageUrl } from '@/services/utils/form';
 
 import type { UseImagePreviewReturn, UseRawValuesReturn } from '@/types/composables/forms';
 
-// Re-export pure functions for backwards compatibility
 export { toSelectOptions, findItemByIdOrName, mapToIds, buildImageUrl } from '@/services/utils/form';
 
 export function useImagePreview(): UseImagePreviewReturn {

@@ -1,7 +1,4 @@
-/**
- * Manages a Map of named timeouts with cleanup methods.
- * Centralizes the timeout tracking pattern used by stores (alert, loader, modal).
- */
+// Map timeouts nommés + cleanup (utilisé par stores alert/loader/modal)
 export class TimeoutManager {
     private timeouts = new Map<string, ReturnType<typeof setTimeout>>();
 

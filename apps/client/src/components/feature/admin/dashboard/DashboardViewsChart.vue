@@ -28,20 +28,11 @@
     import DateRangePicker from '@/components/ui/DateRangePicker.vue';
     import { dayjs } from '@/services/utils/date';
 
+    import type { DashboardViewData, DashboardViewsChartProps } from '@/types/components/admin';
     import type { DateRange } from '@/types/components/ui';
     import type { Chart } from 'chart.js';
 
-    interface ViewData {
-        date: string;
-        views: number;
-    }
-
-    interface Props {
-        data: ViewData[];
-        totalViews?: number;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<DashboardViewsChartProps>(), {
         totalViews: 0,
     });
 
@@ -129,12 +120,12 @@
                 existingChart.destroy();
             }
 
-            const labels = filteredData.value.map((d: ViewData) => {
+            const labels = filteredData.value.map((d: DashboardViewData) => {
                 const [, month, day] = d.date.split('-');
                 return `${day}/${month}`;
             });
 
-            const values = filteredData.value.map((d: ViewData) => d.views);
+            const values = filteredData.value.map((d: DashboardViewData) => d.views);
 
             chart.value = new ChartJS(canvasRef.value, {
                 type: 'line',

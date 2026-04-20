@@ -1,0 +1,6 @@
+# Dev-only TLS options; prod uses legacy certbot file provider (see docs/TRAEFIK-CUTOVER.md).
+tls:
+    options:
+        default:
+            minVersion: VersionTLS12
+            sniStrict: false

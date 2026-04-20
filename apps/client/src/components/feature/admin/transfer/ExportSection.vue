@@ -11,7 +11,6 @@
                 Exportez vos données dans le format de votre choix. Sélectionnez les modules à exporter.
             </p>
 
-            <!-- Module selection -->
             <div class="export-modules">
                 <label
                     v-for="module in modules"
@@ -31,7 +30,6 @@
                 </label>
             </div>
 
-            <!-- Format selection -->
             <fieldset class="export-format">
                 <legend class="form-group__label">Format d'export</legend>
                 <div class="export-format__options">
@@ -75,13 +73,7 @@
     import BaseButton from '@/components/base/BaseButton.vue';
 
     import type { TransferModule, ExportFormat } from '@/composables/data/useTransfer';
-
-    interface TransferModuleInfo {
-        key: TransferModule;
-        name: string;
-        icon: string;
-        count: number;
-    }
+    import type { TransferModuleInfo } from '@/types/components/admin';
 
     defineProps<{
         modules: TransferModuleInfo[];

@@ -2,17 +2,7 @@ import { ref, watch, type Ref } from 'vue';
 
 import { slugify } from '@/services/utils/string';
 
-interface UseSlugGeneratorOptions {
-    auto?: boolean;
-    trackManualEdit?: boolean;
-}
-
-interface UseSlugGeneratorReturn {
-    slug: Ref<string>;
-    generate: () => void;
-    setSlug: (value: string) => void;
-    wasManuallyEdited: Ref<boolean>;
-}
+import type { UseSlugGeneratorOptions, UseSlugGeneratorReturn } from '@/types/composables/forms';
 
 export function generateSlug(text: string): string {
     return slugify(text);

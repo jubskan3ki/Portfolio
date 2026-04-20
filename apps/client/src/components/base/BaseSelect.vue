@@ -13,16 +13,23 @@
             aria-haspopup="listbox"
             :aria-controls="isOpen ? `${inputId}-listbox` : undefined"
             :aria-activedescendant="activeDescendant"
-            :aria-labelledby="label ? `${inputId}-label` : undefined"
+            :aria-labelledby="triggerLabelledBy"
+            :aria-label="triggerAriaLabel"
             :aria-invalid="!!error || undefined"
             :aria-describedby="messageId || undefined"
             :aria-required="required || undefined"
+            :aria-disabled="disabled || undefined"
             @click="toggleDropdown"
+            @focus="handleFocus"
+            @blur="handleBlur"
             @keydown.enter.prevent="toggleDropdown"
             @keydown.space.prevent="toggleDropdown"
             @keydown.escape="close"
             @keydown.down.prevent="handleKeyDown"
             @keydown.up.prevent="handleKeyUp"
+            @keydown.home.prevent="handleHome"
+            @keydown.end.prevent="handleEnd"
+            @keydown.tab="close"
         >
             <div class="select__value">
                 <img
@@ -70,13 +77,13 @@
 
         <Transition name="dropdown">
             <div v-if="isOpen" class="select__dropdown">
-                <!-- Options -->
                 <div
                     :id="`${inputId}-listbox`"
                     ref="optionsRef"
                     class="select__options"
                     role="listbox"
-                    :aria-labelledby="label ? `${inputId}-label` : undefined"
+                    :aria-labelledby="triggerLabelledBy"
+                    :aria-label="triggerLabelledBy ? undefined : triggerAriaLabel"
                 >
                     <button
                         v-for="(option, index) in options"
@@ -124,7 +131,6 @@
                     </div>
                 </div>
 
-                <!-- Create option -->
                 <div v-if="allowCreate" class="select__create-section">
                     <div class="select__create-form">
                         <label :for="`${inputId}-create`" class="sr-only">{{ createPlaceholder }}</label>
@@ -167,32 +173,18 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref, useId, toRef } from 'vue';
+    import { computed, ref, useId, toRef, watch } from 'vue';
 
     import { useDropdown } from '@/composables/ui/useDropdown';
 
-    import type { SelectOption } from '@/types/composables/forms';
+    import type { SelectInitialValue, SelectOption, SelectProps } from '@/types/components/base';
 
-    interface Props {
-        options?: SelectOption[];
-        id?: string;
-        label?: string;
-        placeholder?: string;
-        required?: boolean;
-        disabled?: boolean;
-        error?: string;
-        success?: string;
-        hint?: string;
-        showImage?: boolean;
-        allowCreate?: boolean;
-        createLabel?: string;
-        createPlaceholder?: string;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SelectProps>(), {
         options: () => [],
         id: '',
         label: '',
+        ariaLabel: '',
+        ariaLabelledby: '',
         placeholder: 'Sélectionner...',
         required: false,
         disabled: false,
@@ -203,6 +195,7 @@
         allowCreate: false,
         createLabel: 'Créer nouveau',
         createPlaceholder: 'Nom...',
+        initialValue: undefined,
     });
 
     const emit = defineEmits<{
@@ -213,13 +206,11 @@
 
     const model = defineModel<string | number>({ default: '' });
 
-    // Refs
     const containerRef = ref<HTMLElement | null>(null);
     const optionsRef = ref<HTMLElement | null>(null);
     const newItemName = ref('');
     const generatedId = useId();
 
-    // Use dropdown composable
     const {
         isOpen,
         highlightedIndex,
@@ -236,11 +227,27 @@
         },
     });
 
-    // Computed
     const inputId = computed(() => props.id || generatedId);
     const messageId = computed(() =>
         props.error || props.success || props.hint ? `${inputId.value}-message` : undefined,
     );
+
+    const triggerLabelledBy = computed<string | undefined>(() => {
+        if (props.ariaLabelledby) {
+            return props.ariaLabelledby;
+        }
+        if (props.label) {
+            return `${inputId.value}-label`;
+        }
+        return undefined;
+    });
+
+    const triggerAriaLabel = computed<string | undefined>(() => {
+        if (triggerLabelledBy.value) {
+            return undefined;
+        }
+        return props.ariaLabel || props.placeholder || undefined;
+    });
 
     const selectedOption = computed(() => {
         if (!model.value && model.value !== 0) {
@@ -262,7 +269,6 @@
 
     const activeDescendant = computed(() => getActiveDescendant(inputId.value));
 
-    // Methods
     const isSelected = (option: SelectOption): boolean => {
         return model.value === option.value;
     };
@@ -287,7 +293,6 @@
             close();
         } else {
             openDropdown();
-            // Set highlighted to selected option or first
             highlightedIndex.value = selectedOption.value
                 ? props.options.findIndex((opt) => opt.value === model.value)
                 : 0;
@@ -310,6 +315,36 @@
         }
     };
 
+    const handleHome = () => {
+        if (!isOpen.value) {
+            return;
+        }
+        if (props.options.length === 0) {
+            return;
+        }
+        highlightedIndex.value = 0;
+        scrollToHighlighted(optionsRef, 'select__option');
+    };
+
+    const handleEnd = () => {
+        if (!isOpen.value) {
+            return;
+        }
+        if (props.options.length === 0) {
+            return;
+        }
+        highlightedIndex.value = props.options.length - 1;
+        scrollToHighlighted(optionsRef, 'select__option');
+    };
+
+    const handleFocus = (event: FocusEvent) => {
+        emit('focus', event);
+    };
+
+    const handleBlur = (event: FocusEvent) => {
+        emit('blur', event);
+    };
+
     const handleCreate = () => {
         if (!newItemName.value.trim()) {
             return;
@@ -317,6 +352,45 @@
         emit('create', newItemName.value.trim());
         newItemName.value = '';
     };
+
+    const resolveSelectInitialValue = (raw: SelectInitialValue, opts: SelectOption[]): SelectOption['value'] | null => {
+        if (raw === undefined || raw === null || raw === '') {
+            return null;
+        }
+        if (typeof raw === 'object') {
+            const candidate = raw.id ?? raw.slug ?? raw.name;
+            if (candidate === undefined) {
+                return null;
+            }
+            return resolveSelectInitialValue(candidate as SelectInitialValue, opts);
+        }
+        const direct = opts.find((opt) => opt.value === raw);
+        if (direct) {
+            return direct.value;
+        }
+        if (typeof raw === 'string') {
+            const byLabel = opts.find((opt) => opt.label === raw || String(opt.value) === raw);
+            return byLabel?.value ?? null;
+        }
+        return null;
+    };
+
+    watch(
+        [() => props.initialValue, () => props.options],
+        ([raw, opts]) => {
+            if (model.value !== '' && model.value !== undefined && model.value !== null) {
+                return;
+            }
+            if (!opts || opts.length === 0) {
+                return;
+            }
+            const resolved = resolveSelectInitialValue(raw, opts);
+            if (resolved !== null) {
+                model.value = resolved;
+            }
+        },
+        { immediate: true },
+    );
 
     defineExpose({
         focus: () => containerRef.value?.querySelector<HTMLElement>('.select__trigger')?.focus(),
@@ -439,7 +513,6 @@
             @include sel.create-button;
         }
 
-        // States
         &--open {
             .select__trigger {
                 border-color: vars.$primary-color;

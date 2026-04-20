@@ -1,6 +1,5 @@
 <template>
     <aside class="admin-sidebar" :class="sidebarClasses">
-        <!-- Logo -->
         <div class="admin-sidebar__logo">
             <NuxtLink to="/admin/dashboard" class="admin-sidebar__logo-link">
                 <AppLogo :size="collapsed ? 'sm' : 'md'" dark />
@@ -10,7 +9,6 @@
             </NuxtLink>
         </div>
 
-        <!-- Navigation -->
         <nav class="admin-sidebar__nav" aria-label="Navigation principale">
             <ul class="admin-sidebar__menu" role="list">
                 <li v-for="item in menuItems" :key="item.path" class="admin-sidebar__item">
@@ -37,9 +35,7 @@
             </ul>
         </nav>
 
-        <!-- Footer -->
         <div class="admin-sidebar__footer">
-            <!-- Logout -->
             <button
                 type="button"
                 class="admin-sidebar__footer-btn admin-sidebar__footer-btn--logout"
@@ -57,7 +53,6 @@
                 </Transition>
             </button>
 
-            <!-- View site link -->
             <a
                 href="/"
                 target="_blank"

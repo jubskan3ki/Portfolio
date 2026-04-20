@@ -10,17 +10,11 @@ from utils.images import optimize_image
 
 
 class WithItemCountMixin:
-    """Mixin pour les managers de categories/statuts qui annotent un count.
-
-    Usage:
-        class ProjectCategoryManager(WithItemCountMixin, models.Manager):
-            item_count_related_name = "projects"
-    """
+    """Manager qui annote un count sur la related_name."""
 
     item_count_related_name: str
 
     def with_item_count(self) -> QuerySet:
-        """Annote avec le nombre d'items lies."""
         annotation_name = f"{self.item_count_related_name}_count"
         return self.get_queryset().annotate(  # type: ignore[attr-defined]
             **{annotation_name: Count(self.item_count_related_name)}
@@ -28,14 +22,7 @@ class WithItemCountMixin:
 
 
 class AutoSlugMixin(models.Model):
-    """Mixin qui genere automatiquement le slug a partir d'un champ source.
-
-    Usage:
-        class MyModel(AutoSlugMixin, models.Model):
-            slug_source_field = "name"  # or "title"
-            name = models.CharField(max_length=100)
-            slug = models.SlugField(unique=True, blank=True)
-    """
+    """Genere slug depuis slug_source_field au save si vide."""
 
     slug: models.SlugField  # type: ignore[assignment]
     slug_source_field: str = "name"
@@ -51,13 +38,7 @@ class AutoSlugMixin(models.Model):
 
 
 class OptimizeImageMixin(models.Model):
-    """Mixin qui optimise automatiquement les images au save (WebP, resize).
-
-    Usage:
-        class MyModel(OptimizeImageMixin, models.Model):
-            image_fields = {"image": MAX_SIZE_LARGE}
-            image = models.ImageField(...)
-    """
+    """Resize + WebP pour chaque champ dans image_fields au save."""
 
     image_fields: dict[str, tuple[int, int]] = {}
 

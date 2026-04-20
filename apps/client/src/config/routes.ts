@@ -1,13 +1,11 @@
 import type { AppRoutes, AdminRoutes, PathCreator } from '@/types/config/routes';
 
-// Routes publiques
 export const ROUTES: AppRoutes = {
     HOME: {
         path: '/',
         name: 'Home',
     },
 
-    // Routes du blog
     BLOG: {
         path: '/blog',
         name: 'Blog',
@@ -17,7 +15,6 @@ export const ROUTES: AppRoutes = {
         }),
     },
 
-    // Routes des projets
     PROJECTS: {
         path: '/projects',
         name: 'Projects',
@@ -27,7 +24,6 @@ export const ROUTES: AppRoutes = {
         }),
     },
 
-    // Routes des stacks
     STACKS: {
         path: '/stacks',
         name: 'Stacks',
@@ -37,7 +33,6 @@ export const ROUTES: AppRoutes = {
         }),
     },
 
-    // Autres routes principales
     ABOUT: {
         path: '/about',
         name: 'About',
@@ -51,7 +46,6 @@ export const ROUTES: AppRoutes = {
         name: 'Experience',
     },
 
-    // Pages legales
     LEGAL: {
         path: '/legal',
         name: 'Legal',
@@ -65,16 +59,13 @@ export const ROUTES: AppRoutes = {
         name: 'Terms',
     },
 
-    // Pages d'erreur
     ERROR_404: {
         path: '/404',
         name: 'NotFound',
     },
 };
 
-// Routes admin
 export const ADMIN_ROUTES: AdminRoutes = {
-    // Base
     BASE: {
         path: '/admin',
         name: 'Admin',
@@ -88,7 +79,6 @@ export const ADMIN_ROUTES: AdminRoutes = {
         name: 'AdminDashboard',
     },
 
-    // Articles
     ARTICLES: {
         path: '/admin/articles',
         name: 'AdminArticles',
@@ -102,7 +92,6 @@ export const ADMIN_ROUTES: AdminRoutes = {
         }),
     },
 
-    // Projets
     PROJECTS: {
         path: '/admin/projects',
         name: 'AdminProjects',
@@ -116,7 +105,6 @@ export const ADMIN_ROUTES: AdminRoutes = {
         }),
     },
 
-    // Stacks
     STACKS: {
         path: '/admin/stacks',
         name: 'AdminStacks',
@@ -130,7 +118,6 @@ export const ADMIN_ROUTES: AdminRoutes = {
         }),
     },
 
-    // Experiences
     EXPERIENCES: {
         path: '/admin/experiences',
         name: 'AdminExperiences',
@@ -144,34 +131,27 @@ export const ADMIN_ROUTES: AdminRoutes = {
         }),
     },
 
-    // Messages
     MESSAGES: {
         path: '/admin/messages',
         name: 'AdminMessages',
     },
 
-    // Parametres
     SETTINGS: {
         path: '/admin/settings',
         name: 'AdminSettings',
     },
 
-    // Import/Export
     IMPORT_EXPORT: {
         path: '/admin/import-export',
         name: 'AdminImportExport',
     },
 
-    // Historique
     HISTORY: {
         path: '/admin/history',
         name: 'AdminHistory',
     },
 };
 
-// Fonctions helpers
-
-// Cree un chemin avec des parametres dynamiques
 export const createPath: PathCreator = (route: { path: string }, params: Record<string, string | number> = {}) => {
     let path = route.path;
 
@@ -182,7 +162,6 @@ export const createPath: PathCreator = (route: { path: string }, params: Record<
     return path;
 };
 
-// Verifie si un chemin correspond a la route actuelle
 export const isActiveRoute = (path: string, currentPath: string): boolean => {
     if (path === '/' && currentPath === '/') {
         return true;

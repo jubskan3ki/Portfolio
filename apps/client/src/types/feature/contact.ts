@@ -1,6 +1,3 @@
-// Contact Types
-
-// Type pour une question frequemment posee
 export interface FAQ {
     id: number;
     question: string;
@@ -9,13 +6,12 @@ export interface FAQ {
     order: number;
 }
 
-// Lightweight static FAQ item (front-only, emitted in FAQPage JSON-LD)
+// FAQ statique front-only (émis dans FAQPage JSON-LD)
 export interface FaqItem {
     question: string;
     answer: string;
 }
 
-// Type pour le formulaire de contact
 export interface ContactForm {
     name: string;
     email: string;
@@ -25,14 +21,12 @@ export interface ContactForm {
     company?: string;
 }
 
-// Type pour la reponse de soumission de contact
 export interface ContactResponse {
     success: boolean;
     message: string;
     referenceId: string;
 }
 
-// Type pour les informations de contact
 export interface ContactInfo {
     id: number;
     email: string;
@@ -58,7 +52,6 @@ export interface ContactInfo {
 
 export type ContactAvailabilityStatus = 'available' | 'limited' | 'unavailable';
 
-// Type pour les statistiques de contact
 export interface ContactStats {
     totalMessages: number;
     responseRate: number;
@@ -66,9 +59,6 @@ export interface ContactStats {
     popularSubjects: Array<{ subject: string; count: number }>;
 }
 
-// Admin Types
-
-// Contact message type (admin)
 export interface ContactMessage {
     id: number;
     name: string;
@@ -91,8 +81,6 @@ export interface ContactMessagesFilters {
     isArchived?: boolean;
 }
 
-// API Request Types (Create/Update)
-
 export interface FAQCreateData {
     question: string;
     answer: string;
@@ -105,6 +93,7 @@ export type FAQUpdateData = Partial<FAQCreateData>;
 export interface ContactInfoCreateData {
     email?: string;
     phone?: string;
+    is_primary?: boolean;
     address?: {
         street?: string;
         city?: string;
@@ -130,10 +119,30 @@ export interface ContactMessageUpdateData {
     isArchived?: boolean;
 }
 
-// Props pour ContactForm (component)
 export interface ContactFormProps {
     title?: string;
     subtitle?: string;
     customClass?: string;
     formId?: string;
+}
+
+// ContactInfos component
+
+export interface ContactSocialLink {
+    name: string;
+    icon: string;
+    url: string;
+}
+
+export interface ContactInfosProps {
+    title?: string;
+    subtitle?: string;
+    addressTitle?: string;
+    emailTitle?: string;
+    phoneTitle?: string;
+    socialTitle?: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+    socialLinks?: ContactSocialLink[];
 }

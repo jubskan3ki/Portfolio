@@ -14,9 +14,8 @@ class AuditConfig(AppConfig):
 
     def ready(self) -> None:
         """Import signals when app is ready."""
-        # Skip signal registration during migrations to avoid issues
+        # Evite l'enregistrement pendant migrate/makemigrations (FK sur AUTH_USER_MODEL).
         if "migrate" in sys.argv or "makemigrations" in sys.argv:
             return
 
-        # Import signals to register handlers
         from core.audit import signals  # noqa: F401

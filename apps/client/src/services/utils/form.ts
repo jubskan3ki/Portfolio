@@ -1,6 +1,6 @@
 import { getBaseUrl } from '@/services/api/core';
 
-import type { SelectOption } from '@/types/composables/forms';
+import type { SelectOption } from '@/types/components/base';
 
 export function toSelectOptions<T extends { id: number | string; name: string }>(
     items: T[],

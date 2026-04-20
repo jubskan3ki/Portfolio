@@ -3,12 +3,8 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { isValidSlug } from '@/services/utils/validation';
 
-import type { ComputedRef } from 'vue';
+import type { UseDetailSlugReturn } from '@/types/composables/data';
 import type { RouteLocationRaw } from 'vue-router';
-
-interface UseDetailSlugReturn {
-    slug: ComputedRef<string>;
-}
 
 export function useDetailSlug(fallbackRoute: RouteLocationRaw): UseDetailSlugReturn {
     const route = useRoute();

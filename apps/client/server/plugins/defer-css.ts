@@ -1,14 +1,5 @@
-/**
- * Nitro render hooks for CSS optimization:
- *
- * 1. Inline entry CSS directly into the HTML to eliminate a render-blocking request.
- *    Under slow networks (Lighthouse mobile simulation), this saves ~560ms by avoiding
- *    a separate round trip for the entry stylesheet.
- *
- * 2. Defer non-critical component CSS files to async loading.
- *    Since Nuxt inlines component styles via `features.inlineStyles`,
- *    the external CSS files are only needed for client-side navigation.
- */
+// 1. Inline entry CSS to avoid a render-blocking request (~560ms on Lighthouse mobile).
+// 2. Defer non-critical component CSS (Nuxt inlines styles via features.inlineStyles).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
@@ -43,7 +34,7 @@ export default defineNitroPlugin((nitroApp) => {
     nitroApp.hooks.hook('render:response', (response) => {
         if (typeof response.body !== 'string') return;
 
-        // 1. Inline entry CSS (lazy-load from disk on first request, then cached)
+        // Lazy-load from disk on first request, then cached.
         if (entryCssCache === null) {
             entryCssCache = findEntryCss();
         }
@@ -55,7 +46,6 @@ export default defineNitroPlugin((nitroApp) => {
             );
         }
 
-        // 2. Defer non-critical CSS to async preload
         response.body = response.body.replace(
             NON_ENTRY_CSS_RE,
             '<link rel="preload" href="$1" as="style" $2 onload="this.rel=\'stylesheet\'">'

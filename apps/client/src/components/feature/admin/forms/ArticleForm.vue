@@ -68,6 +68,7 @@
                 label="Catégorie"
                 placeholder="Sélectionner une catégorie"
                 :options="categoryOptions"
+                :initial-value="entity?.category"
                 allow-create
                 create-label="Créer une catégorie"
                 create-placeholder="Nom de la catégorie"
@@ -79,6 +80,7 @@
                 label="Tags"
                 placeholder="Rechercher ou créer un tag..."
                 :options="tagOptions"
+                :initial-value="entity?.tags"
                 allow-create
                 @create="handleCreateTag"
             />
@@ -96,6 +98,33 @@
         />
 
         <BaseSwitch v-model="form.is_published" :label="form.is_published ? 'Publié' : 'Brouillon'" />
+
+        <details class="admin-form__seo">
+            <summary class="admin-form__seo-summary">
+                <BaseIcon name="search" :size="16" />
+                Référencement (SEO)
+            </summary>
+            <div class="admin-form__seo-content">
+                <BaseInput
+                    id="seo_title"
+                    v-model="form.seo_title"
+                    label="Titre SEO"
+                    placeholder="Titre optimisé pour les moteurs de recherche"
+                    :maxlength="70"
+                    :hint="`${form.seo_title.length}/70 caractères — utilise le titre si vide`"
+                />
+
+                <BaseTextarea
+                    id="meta_description"
+                    v-model="form.meta_description"
+                    label="Meta description"
+                    placeholder="Résumé affiché dans les résultats de recherche..."
+                    :rows="3"
+                    :maxlength="160"
+                    :hint="`${form.meta_description.length}/160 caractères — utilise l'extrait si vide`"
+                />
+            </div>
+        </details>
     </AdminFormLayout>
 </template>
 
@@ -133,8 +162,6 @@
     import type { MultiSelectOption } from '@/types/components/base';
     import type { ArticleDetail, Category, Tag } from '@/types/feature/blog';
 
-    // Props
-
     const props = defineProps<ArticleFormProps>();
     const { success: showSuccess, error: showError } = useAlert();
 
@@ -163,6 +190,8 @@
             tags: Array<string | number>;
             cover_image: File | null;
             is_published: boolean;
+            seo_title: string;
+            meta_description: string;
         },
         ArticleDetail
     >({
@@ -176,6 +205,8 @@
             tags: [] as Array<string | number>,
             cover_image: null as File | null,
             is_published: false,
+            seo_title: '',
+            meta_description: '',
         },
         validate: (values) => {
             const errs: Partial<Record<string, string>> = {};
@@ -206,6 +237,8 @@
             ctx.setFieldValue('excerpt', data.excerpt || '');
             ctx.setFieldValue('content', parseJsonContent(data.content));
             ctx.setFieldValue('is_published', data.isPublished ?? false);
+            ctx.setFieldValue('seo_title', data.seoTitle ?? '');
+            ctx.setFieldValue('meta_description', data.metaDescription ?? '');
 
             if (data.category) {
                 ctx.setRawValue('category', data.category);
@@ -224,6 +257,8 @@
             fd.append('excerpt', formValues.excerpt);
             fd.append('content', formatContentForApi(formValues.content));
             fd.append('is_published', String(formValues.is_published));
+            fd.append('seo_title', formValues.seo_title);
+            fd.append('meta_description', formValues.meta_description);
 
             if (formValues.category) {
                 fd.append('category', String(formValues.category));
@@ -314,8 +349,49 @@
 
 <style lang="scss" scoped>
     @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/variables' as vars;
 
     .admin-form__row {
         @include mix.admin-form-row;
+    }
+
+    .admin-form__seo {
+        margin-top: vars.$spacing-md;
+        border: 1px solid vars.$border-color;
+        border-radius: vars.$border-radius-md;
+        background-color: vars.$bg-primary;
+    }
+
+    .admin-form__seo-summary {
+        display: flex;
+        align-items: center;
+        gap: vars.$spacing-xs;
+        padding: vars.$spacing-sm vars.$spacing-md;
+        cursor: pointer;
+        font-weight: vars.$font-weight-medium;
+        color: vars.$text-primary;
+        list-style: none;
+        user-select: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &::after {
+            content: '+';
+            margin-left: auto;
+            font-size: 1.25rem;
+            line-height: 1;
+            color: vars.$text-muted;
+        }
+    }
+
+    details[open] .admin-form__seo-summary::after {
+        content: '−';
+    }
+
+    .admin-form__seo-content {
+        padding: vars.$spacing-sm vars.$spacing-md vars.$spacing-md;
+        border-top: 1px solid vars.$border-color;
     }
 </style>

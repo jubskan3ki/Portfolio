@@ -1,7 +1,11 @@
 // Types for Admin components
 
-import type { ActivityType } from '@/types/api/stats';
-import type { DataItem } from '@/types/feature/admin';
+import type { ActivityType, DashboardModuleStats } from '@/types/api/stats';
+import type { JobStatus, TransferModule } from '@/types/api/transfer';
+import type { ListParams } from '@/types/composables';
+import type { DataItem, Session } from '@/types/feature/admin';
+
+// SessionItem
 
 export type { DataItem };
 
@@ -84,6 +88,128 @@ export type ProjectFormProps = EntityFormProps;
 export type StackFormProps = EntityFormProps;
 export type ExperienceFormProps = EntityFormProps;
 
+// Transfer (Export / Import / Jobs)
+
+export interface TransferModuleInfo {
+    key: TransferModule;
+    name: string;
+    icon: string;
+    count: number;
+}
+
+export interface TransferJob {
+    id: string | number;
+    type: 'export' | 'import';
+    module: string;
+    status: JobStatus;
+    createdAt: string;
+    downloadUrl?: string;
+}
+
+export interface ImportProgressProps {
+    isImporting: boolean;
+    canImport: boolean;
+    imagesCount: number;
+    updateExisting: boolean;
+    skipErrors: boolean;
+}
+
+export interface ImageItem {
+    id: string;
+    file: File;
+    preview: string;
+    key: string;
+    error?: string;
+}
+
+export interface FilePreviewListProps {
+    show: boolean;
+    images: ImageItem[];
+}
+
+export interface FileDropZoneProps {
+    accept?: string;
+    acceptLabel?: string;
+    maxSize?: number;
+    multiple?: boolean;
+    placeholderText?: string;
+    placeholderIcon?: string;
+    error?: string | null;
+    file?: File | null;
+    id?: string;
+}
+
+export interface SessionItemProps {
+    session: Session;
+    isRevoking?: boolean;
+}
+
+export interface SessionItemEmits {
+    (e: 'revoke', sessionId: string): void;
+}
+
+// AdminFormLayout
+
+export interface AdminFormLayoutProps {
+    title: string;
+    subtitle?: string;
+    loading?: boolean;
+    loadingText?: string;
+    error?: string;
+    errorTitle?: string;
+    errorIcon?: string;
+    showRetry?: boolean;
+    backUrl: string;
+    backText?: string;
+    cancelText?: string;
+    submitText?: string;
+    submittingText?: string;
+    submitting?: boolean;
+    submitDisabled?: boolean;
+}
+
+// AdminListPage (generic)
+
+export interface AdminListPageProps<T> {
+    // Page header
+    title: string;
+    subtitle: string;
+    createRoute: string;
+    createLabel?: string;
+
+    // SEO
+    seoTitle: string;
+    seoDescription: string;
+
+    // Table
+    columns: DataTableColumn[];
+
+    // Data fetching (useDataList config)
+    queryKey: string[];
+    queryFn: (params: ListParams) => Promise<unknown>;
+    deleteFn?: (item: T) => Promise<void>;
+    defaultSort?: string;
+    defaultSortOrder?: 'asc' | 'desc';
+    sortFieldMap?: Record<string, string>;
+
+    // Navigation
+    editRoute: (item: T) => string;
+    viewRoute?: (item: T) => string;
+    showView?: boolean;
+
+    // Type guard for casting DataItem -> T
+    typeGuard: (item: DataItem) => T;
+
+    // Delete messages
+    deleteTitle?: string;
+    deleteMessage?: (item: T) => string;
+    bulkDeleteTitle?: string;
+    bulkDeleteMessage?: (count: number) => string;
+
+    // Alert messages
+    resourceName: string;
+}
+
 // Admin Dashboard Props
 
 export interface DashboardTopItem {
@@ -94,4 +220,53 @@ export interface DashboardTopItem {
     category?: string;
     level?: number;
     type: 'article' | 'project' | 'stack';
+}
+
+export interface DashboardTopContentProps {
+    articles: DashboardTopItem[];
+    projects: DashboardTopItem[];
+    stacks: DashboardTopItem[];
+    loading?: boolean;
+}
+
+export interface DashboardDistributionItem {
+    label: string;
+    count: number;
+    color: string;
+}
+
+export interface DashboardDonutChartProps {
+    distribution: DashboardDistributionItem[];
+}
+
+export interface DashboardHeaderProps {
+    userName?: string;
+    isRefreshing?: boolean;
+}
+
+export interface DashboardActivity {
+    id: number;
+    type: string;
+    text: string;
+    date: Date;
+}
+
+export interface DashboardActivityFeedProps {
+    activities: DashboardActivity[];
+    loading?: boolean;
+}
+
+export interface DashboardViewData {
+    date: string;
+    views: number;
+}
+
+export interface DashboardViewsChartProps {
+    data: DashboardViewData[];
+    totalViews?: number;
+}
+
+export interface DashboardStatsGridProps {
+    stats: DashboardModuleStats | null;
+    loading?: boolean;
 }

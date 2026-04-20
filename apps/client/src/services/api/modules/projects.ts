@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQueryClient, useMutation } from '@tanstack/vue-query';
+import { useInfiniteQuery, useQueryClient, useMutation, keepPreviousData } from '@tanstack/vue-query';
 import { computed, unref } from 'vue';
 
 import { API_ENDPOINTS } from '@/config/api';
@@ -92,7 +92,6 @@ export const projectsApi = {
 
     getStats: (): Promise<ProjectStats> => httpClient.get(API_ENDPOINTS.PROJECTS.STATS),
 
-    // Admin methods
     getAdminList: <T = unknown>(params: Record<string, unknown>): Promise<T> =>
         httpClient.get(API_ENDPOINTS.PROJECTS.BASE, params),
 
@@ -118,6 +117,7 @@ export function useInfiniteProjects(filters?: MaybeRef<Omit<ProjectFilters, 'pag
             return page < totalPages ? page + 1 : undefined;
         },
         staleTime: CACHE_TIMES.LIST,
+        placeholderData: keepPreviousData,
     });
 }
 

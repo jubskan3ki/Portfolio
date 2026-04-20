@@ -21,13 +21,9 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    interface Props {
-        page: number;
-        isActive?: boolean;
-        isEllipsis?: boolean;
-    }
+    import type { PaginationItemProps } from '@/types/components/navigation';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<PaginationItemProps>(), {
         isActive: false,
         isEllipsis: false,
     });

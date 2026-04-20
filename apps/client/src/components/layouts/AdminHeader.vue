@@ -1,7 +1,6 @@
 <template>
     <header class="admin-header">
         <div class="admin-header__inner">
-            <!-- Mobile menu toggle -->
             <BaseButton
                 class="admin-header__menu-toggle"
                 variant="ghost"
@@ -14,7 +13,6 @@
                 </template>
             </BaseButton>
 
-            <!-- Collapse toggle (desktop) -->
             <BaseButton
                 class="admin-header__collapse-btn"
                 variant="ghost"
@@ -28,16 +26,12 @@
                 </template>
             </BaseButton>
 
-            <!-- Spacer left -->
             <div class="admin-header__spacer"></div>
 
-            <!-- Global Search (centered) -->
             <SearchGlobal class="admin-header__search" placeholder="Rechercher..." />
 
-            <!-- Spacer right -->
             <div class="admin-header__spacer"></div>
 
-            <!-- User info (no dropdown) -->
             <div class="admin-header__user">
                 <Avatar :src="authStore.user?.avatar" :alt="fullName" :name="fullName" size="sm" />
                 <div class="admin-header__user-info">
@@ -69,7 +63,6 @@
 
     const authStore = useAuthStore();
 
-    // Computed
     const collapseIcon = computed(() => (props.collapsed ? 'panel-left-open' : 'panel-left-close'));
     const fullName = computed(() => authStore.fullName || 'Admin');
 </script>

@@ -1,21 +1,25 @@
 <template>
     <div class="stack-page">
-        <!-- Loading -->
         <LoadingState v-if="isLoading" message="Chargement du stack..." size="lg" />
 
-        <!-- Error -->
         <div v-else-if="error" class="stack-error">
             <ErrorMessage :message="errorMessage" action-text="Retour aux stacks" :to="ROUTES.STACKS" />
         </div>
 
         <template v-else-if="currentStack">
-            <!-- Hero (sans logo) -->
             <Hero
                 :title="currentStack.name"
                 :transition-key="currentStack.slug"
                 variant="dark"
                 has-meta
             >
+                <template v-if="breadcrumbItems.length > 1" #breadcrumb>
+                    <Breadcrumb
+                        :items="breadcrumbItems"
+                        variant="hero"
+                        separator="chevron"
+                    />
+                </template>
                 <template #meta>
                     <div class="hero__meta-item">
                         <BaseIcon name="folder" :size="16" />
@@ -56,18 +60,9 @@
                 </template>
             </Hero>
 
-            <!-- Breadcrumb -->
-            <Breadcrumb
-                v-if="breadcrumbItems.length > 1"
-                :items="breadcrumbItems"
-                separator="chevron"
-            />
-
-            <!-- Content -->
             <Main variant="default" size="large">
                 <DetailPageLayout>
                     <template #main>
-                        <!-- Stack Identity Card (logo + description) -->
                         <div class="stack-identity">
                             <div
                                 class="stack-identity__logo-wrapper"
@@ -93,7 +88,6 @@
                             </div>
                         </div>
 
-                        <!-- Technical Details -->
                         <div v-if="currentStack.content" class="detail-card">
                             <h2 class="detail-card__heading">
                                 <BaseIcon name="cpu" :size="20" class="detail-card__icon" />
@@ -102,7 +96,6 @@
                             <p class="detail-card__text">{{ currentStack.content }}</p>
                         </div>
 
-                        <!-- Related Stacks (tech card grid) -->
                         <div v-if="relatedStacks.length" class="detail-card">
                             <h2 class="detail-card__heading">
                                 <BaseIcon name="layers" :size="20" class="detail-card__icon" />
@@ -138,7 +131,6 @@
                     </template>
 
                     <template #sidebar>
-                        <!-- Experience -->
                         <div class="sidebar-card">
                             <h3 class="sidebar-card__heading">
                                 <BaseIcon name="award" :size="16" />
@@ -166,16 +158,13 @@
                             </div>
                         </div>
 
-                        <!-- Tags -->
                         <StackTags :tags="currentStack.tags" />
 
-                        <!-- Share -->
                         <ShareCard :title="currentStack.name" />
                     </template>
                 </DetailPageLayout>
             </Main>
 
-            <!-- Resources (full-width section) -->
             <Section v-if="currentStack.resources?.length" variant="light" size="default">
                 <template #header>
                     <h2 class="stack-page__section-title">
@@ -206,7 +195,6 @@
                 </div>
             </Section>
 
-            <!-- Articles (full-width section) -->
             <Section v-if="stackArticles?.length" variant="default" size="default">
                 <template #header>
                     <h2 class="stack-page__section-title">
@@ -219,7 +207,6 @@
                 </div>
             </Section>
 
-            <!-- Projects (full-width section) -->
             <Section v-if="stackProjects?.length" variant="light" size="default">
                 <template #header>
                     <h2 class="stack-page__section-title">
@@ -233,7 +220,6 @@
                 </div>
             </Section>
 
-            <!-- CTA -->
             <CTA
                 key="stack-detail-cta"
                 :title="`Besoin d'un développeur ${currentStack.name} ?`"
@@ -283,29 +269,27 @@
 
     const router = useRouter();
 
-    // Validate slug parameter
     const { slug } = useDetailSlug(ROUTES.STACKS.path);
 
-    // API Queries
     const { data: currentStack, isLoading, isError, error } = useStack(slug);
     const { data: featuredStacks } = useFeaturedStacks(5);
     const { data: stackProjects } = useStackProjects(slug);
     const { data: stackArticles } = useStackArticles(slug);
 
-    // Accessibility
     const { announceNavigation } = useAnnounce();
 
-    // Breadcrumb
     const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
 
-    // SEO and accessibility
     watch(
         currentStack,
         (stack) => {
             if (stack) {
                 useStackSeo(stack);
                 const { items } = useBreadcrumbSeo({
-                    meta: { title: stack.name },
+                    meta: {
+                        title: stack.name,
+                        category: stack.category || undefined,
+                    },
                 });
                 breadcrumbItems.value = items.value;
                 announceNavigation(`Stack: ${stack.name}`);
@@ -314,14 +298,12 @@
         { immediate: true },
     );
 
-    // Redirect on error
     watch(isError, (hasError) => {
         if (hasError) {
             router.push(ROUTES.STACKS);
         }
     });
 
-    // Error message
     const errorMessage = computed(() => {
         if (!error.value) {
             return 'Stack non trouvé';
@@ -329,7 +311,6 @@
         return (error.value as Error).message || 'Stack non trouvé';
     });
 
-    // Resource type icon mapping
     const resourceIcon = (type: StackResourceType): string => {
         const icons: Record<StackResourceType, string> = {
             documentation: 'book',
@@ -341,7 +322,6 @@
         return icons[type] || 'link';
     };
 
-    // Experience: convert months to readable format
     const experienceDisplay = computed(() => {
         const months = currentStack.value?.experience ?? 0;
         const years = Math.floor(months / 12);
@@ -356,7 +336,6 @@
         return `${years} an${years > 1 ? 's' : ''} et ${remainingMonths} mois`;
     });
 
-    // Skill level label
     const skillLabel = computed(() => {
         const level = currentStack.value?.level ?? 0;
         if (level >= 4.5) {
@@ -374,13 +353,11 @@
         return 'Débutant';
     });
 
-    // CTA description
     const ctaDescription = computed(() => {
         const name = currentStack.value?.name ?? '';
         return `Avec ${experienceDisplay.value} d'expérience en ${name}, je peux vous aider à réaliser votre projet.`;
     });
 
-    // Related stacks
     const relatedStacks = computed(() => {
         if (currentStack.value?.relatedStacks?.length) {
             return currentStack.value.relatedStacks;
@@ -406,8 +383,6 @@
         padding: vars.$spacing-xl 0;
     }
 
-    /* Detail Layout */
-    /* Stack Identity Card */
     .stack-identity {
         display: flex;
         align-items: center;
@@ -485,7 +460,6 @@
         }
     }
 
-    /* Detail Cards */
     .detail-card {
         background: fn.color-alpha(vars.$white, 0.95);
         backdrop-filter: blur(vars.$glass-blur);
@@ -525,7 +499,6 @@
         }
     }
 
-    /* Related Stacks Grid (tech card style) */
     .related-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -622,7 +595,6 @@
         }
     }
 
-    /* Sidebar Cards */
     .sidebar-card {
         background: fn.color-alpha(vars.$white, 0.95);
         backdrop-filter: blur(vars.$glass-blur);
@@ -644,12 +616,10 @@
         }
     }
 
-    /* Skill Level */
     .skill-level {
         margin-top: vars.$spacing-md;
     }
 
-    /* Section titles (full-width sections) */
     .stack-page__section-title {
         display: flex;
         align-items: center;
@@ -684,7 +654,6 @@
         margin: vars.$spacing-xs auto 0;
     }
 
-    /* Resources Grid */
     .stack-page__resources-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -763,21 +732,18 @@
         }
     }
 
-    /* Articles Grid */
     .stack-page__articles-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: vars.$spacing-lg;
     }
 
-    /* Projects Grid */
     .stack-page__projects-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: vars.$spacing-lg;
     }
 
-    /* Experience Info */
     .experience-info {
         &__item {
             display: flex;

@@ -2,21 +2,17 @@
     <header class="header" role="banner">
         <nav class="header__nav" :class="{ 'header__nav--scrolled': isScrolled }" aria-label="Navigation principale">
             <div class="header__inner">
-                <!-- Left: Logo + Mobile Toggle -->
                 <div class="header__left">
-                    <MobileMenuToggle :is-active="isMobileMenuOpen" class="header__toggle" @toggle="toggleMobileMenu" />
                     <NuxtLink to="/" class="header__logo" aria-label="Accueil">
                         <AppLogo size="md" />
                         <span class="header__logo-text">Juba Ait-adda</span>
                     </NuxtLink>
                 </div>
 
-                <!-- Center: Search Bar (lazy-loaded via Nuxt Lazy prefix) -->
                 <div class="header__center">
                     <LazySearchGlobal placeholder="Rechercher..." mode="public" />
                 </div>
 
-                <!-- Right: Desktop Navigation -->
                 <div class="header__right">
                     <ClientOnly>
                         <ul class="header__menu" role="menubar">
@@ -29,19 +25,19 @@
                             />
                         </ul>
                     </ClientOnly>
+                    <MobileMenuToggle :is-active="isMobileMenuOpen" class="header__toggle" @toggle="toggleMobileMenu" />
                 </div>
             </div>
         </nav>
 
-        <!-- Mobile Menu (slides from left) -->
-        <MobileMenu :is-open="isMobileMenuOpen" @close="closeMobileMenu" />
+        <!-- Mobile Menu (slides from left, lazy-loaded on first open) -->
+        <LazyMobileMenu v-if="mobileMenuMounted" :is-open="isMobileMenuOpen" @close="closeMobileMenu" />
     </header>
 </template>
 
 <script setup lang="ts">
     import { ref, watch } from 'vue';
 
-    import MobileMenu from '@/components/navigation/MobileMenu.vue';
     import MobileMenuToggle from '@/components/navigation/MobileMenuToggle.vue';
     import NavbarItem from '@/components/navigation/NavbarItem.vue';
     import AppLogo from '@/components/ui/AppLogo.vue';
@@ -50,6 +46,7 @@
     import { isActiveRoute, navigationItems } from '@/config/navBar';
 
     const isMobileMenuOpen = ref(false);
+    const mobileMenuMounted = ref(false);
     const route = useRoute();
 
     const { isScrolled } = useHeaderScroll(20);
@@ -61,6 +58,9 @@
     });
 
     const toggleMobileMenu = () => {
+        if (!mobileMenuMounted.value) {
+            mobileMenuMounted.value = true;
+        }
         isMobileMenuOpen.value = !isMobileMenuOpen.value;
     };
 

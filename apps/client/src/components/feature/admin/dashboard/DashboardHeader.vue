@@ -26,12 +26,9 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    interface Props {
-        userName?: string;
-        isRefreshing?: boolean;
-    }
+    import type { DashboardHeaderProps } from '@/types/components/admin';
 
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<DashboardHeaderProps>(), {
         userName: 'Admin',
         isRefreshing: false,
     });

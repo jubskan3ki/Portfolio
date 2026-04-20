@@ -26,7 +26,6 @@ def find_tool_in_venvs(tool: str) -> str | None:
     ext = ".exe" if sys.platform == "win32" else ""
     base = Path(__file__).resolve().parent
 
-    # Search up the directory tree for .venv or venv containing the tool
     for _ in range(10):
         for venv_name in [".venv", "venv"]:
             venv_path = base / venv_name
@@ -84,7 +83,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.HTTP_INFO(" Code Quality Check"))
         self.stdout.write(self.style.HTTP_INFO("=" * 60 + "\n"))
 
-        # ── Ruff check ──
         self.stdout.write(self.style.MIGRATE_HEADING(">>> Ruff Linter"))
         fix_flag = ["--fix"] if options["fix"] else []
         if self.run_tool([ruff, "check", *fix_flag, *paths], base_dir) != 0:
@@ -93,7 +91,6 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS("    OK\n"))
 
-        # ── Ruff format ──
         self.stdout.write(self.style.MIGRATE_HEADING(">>> Ruff Formatter"))
         if options["format"]:
             if self.run_tool([ruff, "format", *paths], base_dir) != 0:
@@ -107,7 +104,6 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS("    OK\n"))
 
-        # ── Black ──
         if options["black"] or options["all"]:
             self.stdout.write(self.style.MIGRATE_HEADING(">>> Black Formatter"))
             if not self._tool_available("black"):
@@ -124,7 +120,6 @@ class Command(BaseCommand):
                 else:
                     self.stdout.write(self.style.SUCCESS("    OK\n"))
 
-        # ── isort ──
         if options["isort"] or options["all"]:
             self.stdout.write(self.style.MIGRATE_HEADING(">>> isort Import Sorter"))
             if not self._tool_available("isort"):
@@ -141,7 +136,6 @@ class Command(BaseCommand):
                 else:
                     self.stdout.write(self.style.SUCCESS("    OK\n"))
 
-        # ── Flake8 ──
         if options["flake8"] or options["all"]:
             self.stdout.write(self.style.MIGRATE_HEADING(">>> Flake8 Linter"))
             if not self._tool_available("flake8"):
@@ -154,7 +148,6 @@ class Command(BaseCommand):
                 else:
                     self.stdout.write(self.style.SUCCESS("    OK\n"))
 
-        # ── MyPy ──
         if options["mypy"] or options["all"]:
             self.stdout.write(self.style.MIGRATE_HEADING(">>> MyPy Type Checker"))
             mypy = self.get_tool_path("mypy")
@@ -165,7 +158,6 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.SUCCESS("    OK\n"))
 
-        # ── Django check ──
         self.stdout.write(self.style.MIGRATE_HEADING(">>> Django System Check"))
         try:
             call_command("check", verbosity=0)
@@ -174,7 +166,6 @@ class Command(BaseCommand):
             errors.append("django")
             self.stdout.write(self.style.ERROR(f"    {e}\n"))
 
-        # ── Summary ──
         self.stdout.write(self.style.HTTP_INFO("=" * 60))
         if not errors:
             self.stdout.write(self.style.SUCCESS(" All checks passed!"))

@@ -1,15 +1,8 @@
 import { ref, watch, toValue } from 'vue';
 
-import type { MaybeRefOrGetter, Ref } from 'vue';
+import type { UseViewRecordingReturn } from '@/types/composables/data';
+import type { MaybeRefOrGetter } from 'vue';
 
-interface UseViewRecordingReturn {
-    viewRecorded: Ref<boolean>;
-}
-
-/**
- * Records a single view for an entity when its data becomes available.
- * Ensures the view is recorded only once per component lifecycle.
- */
 export function useViewRecording(
     data: MaybeRefOrGetter<{ slug: string } | null | undefined>,
     recordFn: (slug: string) => void,

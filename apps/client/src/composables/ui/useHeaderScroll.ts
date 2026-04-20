@@ -1,10 +1,6 @@
 import { useEventListener } from '@vueuse/core';
 import { ref, onMounted } from 'vue';
 
-/**
- * Tracks whether the page has been scrolled past a threshold.
- * Uses RAF throttling for performance.
- */
 export function useHeaderScroll(threshold = 20) {
     const isScrolled = ref(false);
     let ticking = false;

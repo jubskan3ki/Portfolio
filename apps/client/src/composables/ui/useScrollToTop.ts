@@ -1,21 +1,15 @@
-// src/composables/ui/useScrollToTop.ts
-// Composable pour le bouton "retour en haut"
-
 import { ref, readonly, onMounted, onUnmounted } from 'vue';
 
 import { SCROLL_THRESHOLDS } from '@/config/constants';
 
 import type { UseScrollToTopOptions, UseScrollToTopReturn } from '@/types/composables/ui';
 
-// Scroll-to-top button with RAF throttling
 export function useScrollToTop(options: UseScrollToTopOptions = {}): UseScrollToTopReturn {
     const { threshold = SCROLL_THRESHOLDS.SHOW_SCROLL_TOP, onScroll } = options;
 
-    // État
     const showButton = ref(false);
     const scrollY = ref(0);
 
-    // RAF throttling
     let ticking = false;
 
     const handleScroll = () => {
@@ -24,7 +18,6 @@ export function useScrollToTop(options: UseScrollToTopOptions = {}): UseScrollTo
                 scrollY.value = window.scrollY;
                 showButton.value = window.scrollY > threshold;
 
-                // Callback optionnel
                 if (onScroll) {
                     onScroll(window.scrollY);
                 }
@@ -35,7 +28,6 @@ export function useScrollToTop(options: UseScrollToTopOptions = {}): UseScrollTo
         }
     };
 
-    // Méthodes
     const scrollToTop = (behavior: ScrollBehavior = 'smooth') => {
         window.scrollTo({ top: 0, behavior });
     };
@@ -51,9 +43,7 @@ export function useScrollToTop(options: UseScrollToTopOptions = {}): UseScrollTo
         }
     };
 
-    // Lifecycle
     onMounted(() => {
-        // Vérifier l'état initial
         scrollY.value = window.scrollY;
         showButton.value = window.scrollY > threshold;
 

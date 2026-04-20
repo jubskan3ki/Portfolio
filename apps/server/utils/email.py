@@ -22,12 +22,10 @@ EMAIL_EXCEPTIONS = (SMTPException, ImproperlyConfigured)
 
 
 def _get_sender(from_email: str | None = None) -> str:
-    """Retourne l'expediteur ou l'email par defaut."""
     return from_email or str(settings.DEFAULT_FROM_EMAIL)
 
 
 def _handle_retry(task: Task, exc: Exception, recipient_email: str) -> None:
-    """Gere la logique de retry pour les taches Celery."""
     retry_count = task.request.retries
     retry_delay = 60 * (2**retry_count)
 
@@ -45,7 +43,6 @@ def _send_html_email_sync(
     context: dict,
     from_email: str | None = None,
 ) -> bool:
-    """Envoie un email HTML de maniere synchrone."""
     html_message = render_to_string(template_path, context)
     num_sent = send_mail(
         subject=subject,
@@ -68,7 +65,6 @@ def _send_multipart_sync(
     html_content: str,
     from_email: str | None = None,
 ) -> bool:
-    """Envoie un email multipart de maniere synchrone."""
     email_msg = EmailMultiAlternatives(
         subject=subject,
         body=text_content,
@@ -92,7 +88,6 @@ def task_send_html_email(
     context: dict,
     from_email: str | None = None,
 ) -> bool:
-    """Tache Celery pour envoyer un email HTML."""
     try:
         _send_html_email_sync(subject, recipient_email, template_path, context, from_email)
         logger.info("Email envoye avec succes a %s", recipient_email)
@@ -113,7 +108,6 @@ def task_send_multipart_email(
     html_content: str,
     from_email: str | None = None,
 ) -> bool:
-    """Tache Celery pour envoyer un email multipart."""
     try:
         _send_multipart_sync(subject, recipient_email, text_content, html_content, from_email)
         logger.info("Email multipart envoye avec succes a %s", recipient_email)
@@ -126,7 +120,6 @@ def task_send_multipart_email(
 
 
 def _get_celery_app() -> Celery:
-    """Retourne l'application Celery."""
     from config.celery import app
 
     return app
@@ -141,7 +134,7 @@ def send_templated_email(
     *,
     async_send: bool = True,
 ) -> AsyncResult[bool] | bool:
-    """Envoie un email avec un template HTML, sync ou async."""
+    """Email HTML, sync ou async."""
     if async_send:
         celery_app = _get_celery_app()
         return celery_app.send_task(
@@ -167,7 +160,7 @@ def send_multi_part_email(
     *,
     async_send: bool = True,
 ) -> AsyncResult[bool] | bool:
-    """Envoie un email multipart avec versions texte et HTML."""
+    """Email multipart (text + HTML)."""
     if async_send:
         celery_app = _get_celery_app()
         return celery_app.send_task(
@@ -184,7 +177,6 @@ def send_multi_part_email(
         return True
 
 
-# Expose tasks for Celery autodiscover
 __all__ = [
     "send_multi_part_email",
     "send_templated_email",

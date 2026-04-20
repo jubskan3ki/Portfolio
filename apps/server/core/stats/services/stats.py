@@ -18,7 +18,6 @@ from core.stats.models import ViewLog
 
 logger = logging.getLogger("core.stats")
 
-# Configuration des sources d'activite (created/updated pattern)
 _ACTIVITY_SOURCES: list[dict[str, Any]] = [
     {"model": Article, "type": "article", "module": "articles", "title_field": "title"},
     {"model": Project, "type": "project", "module": "projects", "title_field": "title"},
@@ -37,7 +36,6 @@ class StatsService:
         Optimise avec des requetes agregees pour eviter les N+1.
         """
 
-        # Articles stats - une seule requete avec agregation
         articles_agg = Article.objects.aggregate(
             count=Count("id"),
             published=Count("id", filter=Q(is_published=True)),
@@ -51,7 +49,6 @@ class StatsService:
             "total_views": articles_agg["total_views"] or 0,
         }
 
-        # Projects stats - une seule requete
         projects_agg = Project.objects.aggregate(
             count=Count("id"),
             total_views=Sum("view_count"),
@@ -61,13 +58,11 @@ class StatsService:
             "total_views": projects_agg["total_views"] or 0,
         }
 
-        # Stacks + Experiences stats - une seule requete via Subquery
         stacks_count = Stack.objects.count()
         experiences_count = Experience.objects.count()
         stacks_stats = {"count": stacks_count}
         experiences_stats = {"count": experiences_count}
 
-        # Messages stats - une seule requete
         messages_agg = Contact.objects.aggregate(
             count=Count("id"),
             new=Count("id", filter=Q(status="new")),
@@ -79,7 +74,6 @@ class StatsService:
             "responded": messages_agg["responded"] or 0,
         }
 
-        # Totals
         total_views = articles_stats["total_views"] + projects_stats["total_views"]
 
         return {
@@ -100,7 +94,6 @@ class StatsService:
         end_date = timezone.now().date()
         start_date = end_date - timedelta(days=days - 1)
 
-        # Recuperer les vues par jour depuis ViewLog
         views_by_date = (
             ViewLog.objects.filter(viewed_at__gte=start_date, viewed_at__lte=end_date)
             .values("viewed_at")
@@ -108,10 +101,9 @@ class StatsService:
             .order_by("viewed_at")
         )
 
-        # Creer un dictionnaire pour acces rapide
         date_data = {item["viewed_at"]: item["views"] for item in views_by_date}
 
-        # Construire la liste complete des jours
+        # Remplit les jours sans events pour obtenir une serie continue (graphiques).
         data = []
         current_date = start_date
         while current_date <= end_date:
@@ -181,7 +173,6 @@ class StatsService:
         """
         activities: list[dict[str, Any]] = []
 
-        # Activites created/updated depuis _ACTIVITY_SOURCES
         for source in _ACTIVITY_SOURCES:
             activities.extend(
                 StatsService._collect_model_activities(
@@ -193,7 +184,7 @@ class StatsService:
                 )
             )
 
-        # Messages — structure differente (created_at, action "received", titre composite)
+        # Contact: schema distinct (created_at, titre compose) -> traite separement.
         recent_messages = Contact.objects.only("id", "name", "subject", "created_at").order_by("-created_at")[:limit]
         activities.extend(
             {
@@ -207,7 +198,6 @@ class StatsService:
             for message in recent_messages
         )
 
-        # Sort by timestamp and limit
         activities.sort(key=lambda x: x["timestamp"], reverse=True)
         return activities[:limit]
 
@@ -217,19 +207,15 @@ class StatsService:
 
         today = timezone.now().date()
 
-        # New messages today
         new_messages_today = Contact.objects.filter(created_at__date=today).count()
 
-        # Total views (pas de tracking journalier)
         total_article_views = Article.objects.aggregate(total=Sum("view_count"))["total"] or 0
         total_project_views = Project.objects.aggregate(total=Sum("view_count"))["total"] or 0
 
-        # Most popular article
         popular_article = (
             Article.objects.filter(is_published=True).order_by("-view_count").values_list("title", flat=True).first()
         )
 
-        # Most popular project
         popular_project = Project.objects.order_by("-view_count").values_list("title", flat=True).first()
 
         return {

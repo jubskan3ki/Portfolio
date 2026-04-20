@@ -68,26 +68,9 @@
 
     import { formatFileSize } from '@/composables/data/useTransfer';
 
-    export interface FileDropZoneProps {
-        /** Accepted file types (HTML accept attribute) */
-        accept?: string;
-        /** Human-readable label for accepted formats */
-        acceptLabel?: string;
-        /** Maximum file size in bytes */
-        maxSize?: number;
-        /** Allow multiple files */
-        multiple?: boolean;
-        /** Custom placeholder text */
-        placeholderText?: string;
-        /** Custom placeholder icon name */
-        placeholderIcon?: string;
-        /** External error message */
-        error?: string | null;
-        /** Currently selected file (v-model) */
-        file?: File | null;
-        /** Unique id prefix for accessibility */
-        id?: string;
-    }
+    import type { FileDropZoneProps } from '@/types/components/admin';
+
+    export type { FileDropZoneProps };
 
     const props = withDefaults(defineProps<FileDropZoneProps>(), {
         accept: '',

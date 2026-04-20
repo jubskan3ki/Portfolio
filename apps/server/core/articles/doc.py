@@ -2,13 +2,9 @@
 
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
 
-# TAGS
-
 TAGS_ARTICLES = ["Articles"]
 TAGS_CATEGORIES = ["Articles - Categories"]
 TAGS_TAGS = ["Articles - Tags"]
-
-# PARAMETERS
 
 PARAM_CATEGORY = OpenApiParameter(
     "category",
@@ -74,8 +70,6 @@ PARAM_PAGE = OpenApiParameter(
 
 PARAMS_LIST = [PARAM_CATEGORY, PARAM_TAG, PARAM_SEARCH, PARAM_SORT_BY, PARAM_SORT_DIRECTION]
 PARAMS_PAGINATION = [PARAM_PAGE, PARAM_LIMIT]
-
-# RESPONSES
 
 RESPONSE_200_ARTICLES = OpenApiResponse(description="Liste paginee des articles")
 

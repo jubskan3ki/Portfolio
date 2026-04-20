@@ -22,17 +22,15 @@ logger = logging.getLogger("core.transfer")
 class ImporterService:
     """Service pour l'import de donnees utilisant le Strategy Pattern."""
 
-    # Registry des strategies d'import
     _strategies: list[ImportStrategy] = [
         JsonImportStrategy(),
         CsvImportStrategy(),
         XlsxImportStrategy(),
     ]
 
-    # Modules supportes
     SUPPORTED_MODULES = ["articles", "projects", "stacks", "experiences"]
 
-    # Mapping des FK (field_name -> (app_label, model_name, lookup_field))
+    # Structure: module -> field_name -> (app_label, model_name, lookup_field)
     FK_MAPPINGS: dict[str, dict[str, tuple[str, str, str]]] = {
         "articles": {
             "category": ("articles", "Category", "name"),
@@ -49,7 +47,6 @@ class ImporterService:
         },
     }
 
-    # Mapping des M2M (field_name -> (app_label, model_name, lookup_field))
     M2M_MAPPINGS: dict[str, dict[str, tuple[str, str, str]]] = {
         "articles": {
             "tags": ("articles", "Tag", "name"),
@@ -59,8 +56,7 @@ class ImporterService:
         "experiences": {},
     }
 
-    # Champ unique par module pour update_or_create
-    # Peut etre un str pour un champ unique ou un tuple pour une cle composee
+    # str pour champ unique, tuple pour cle composee (update_or_create)
     UNIQUE_FIELDS: dict[str, str | tuple[str, ...]] = {
         "articles": "slug",
         "projects": "slug",
@@ -91,14 +87,8 @@ class ImporterService:
 
     @classmethod
     def parse_file(cls, file: UploadedFile) -> tuple[list[dict[str, Any]], str]:
-        """Parse le fichier uploade via la strategie appropriee.
-
-        Returns:
-            Tuple (records, format)
-        """
-        # Reset file position in case it was read before
+        """Parse le fichier uploade via la strategie appropriee; retourne (records, format)."""
         file.seek(0)
-
         filename = file.name or "unknown"
         strategy = cls._get_strategy(filename)
         records = strategy.parse(file)
@@ -106,14 +96,13 @@ class ImporterService:
 
     @classmethod
     def _parse_json(cls, file: UploadedFile) -> list[dict[str, Any]]:
-        """Parse un fichier JSON."""
         content = file.read().decode("utf-8")
         try:
             data = json.loads(content)
         except json.JSONDecodeError as e:
             raise ValueError(f"Fichier JSON invalide: {e}") from e
 
-        # Handle both flat list and wrapped format
+        # Accepte liste plate ou enveloppe {"data": [...]}
         if isinstance(data, list):
             return data
         if isinstance(data, dict) and "data" in data:
@@ -123,13 +112,11 @@ class ImporterService:
 
     @classmethod
     def _parse_csv(cls, file: UploadedFile) -> list[dict[str, Any]]:
-        """Parse un fichier CSV."""
         content = file.read().decode("utf-8")
         reader = csv.DictReader(io.StringIO(content))
         records = []
 
         for row in reader:
-            # Try to parse JSON strings back to objects
             cleaned_row = {}
             for key, value in row.items():
                 if key is None:
@@ -147,7 +134,6 @@ class ImporterService:
 
     @classmethod
     def _parse_xlsx(cls, file: UploadedFile) -> list[dict[str, Any]]:
-        """Parse un fichier Excel."""
         workbook = openpyxl.load_workbook(file, read_only=True, data_only=True)
         sheet = workbook.active
         records: list[dict[str, Any]] = []
@@ -160,7 +146,6 @@ class ImporterService:
         if not rows:
             return records
 
-        # Build headers from first row
         headers = []
         for i, h in enumerate(rows[0]):
             if h is not None:
@@ -173,7 +158,6 @@ class ImporterService:
             for i, value in enumerate(row):
                 if i < len(headers):
                     header = headers[i]
-                    # Try to parse JSON strings
                     if isinstance(value, str) and value.startswith(("[", "{")):
                         try:
                             record[header] = json.loads(value)
@@ -181,7 +165,6 @@ class ImporterService:
                             record[header] = value
                     else:
                         record[header] = value
-            # Only add non-empty records
             if any(v is not None and v != "" for v in record.values()):
                 records.append(record)
 
@@ -195,19 +178,12 @@ class ImporterService:
         module: str,
         limit: int = 5,
     ) -> dict[str, Any]:
-        """Preview les donnees avant import.
-
-        Returns:
-            Dict avec preview_data, columns, total_records, validation_errors
-        """
+        """Preview les donnees avant import: preview_data, columns, total_records, validation_errors."""
         cls.validate_module(module)
 
         records, file_format = cls.parse_file(file)
-
-        # Reset file position for later use
         file.seek(0)
 
-        # Validate first records
         preview_valid_count, errors = DataValidator.validate_batch(module, records[:limit])
 
         columns = list(records[0].keys()) if records else []
@@ -241,7 +217,6 @@ class ImporterService:
             file_format=file_format,
         )
 
-    # Image field names per module
     IMAGE_FIELDS: dict[str, str] = {
         "articles": "image",
         "projects": "image",
@@ -263,7 +238,6 @@ class ImporterService:
         job.save(update_fields=["status"])
 
         try:
-            # Reset file position
             file.seek(0)
 
             records, _ = cls.parse_file(file)
@@ -276,7 +250,6 @@ class ImporterService:
                 job.save()
                 return job
 
-            # Validate all records
             _, validation_errors = DataValidator.validate_batch(job.module, records)
 
             if validation_errors:
@@ -287,23 +260,19 @@ class ImporterService:
             job.status = ImportJob.Status.PROCESSING
             job.save(update_fields=["status"])
 
-            # Import records
             model_class = DataValidator.get_model_class(job.module)
             if not model_class:
                 raise ValueError(f"Modele non trouve pour le module '{job.module}'")
 
-            # Accumuler les erreurs et les succes en memoire
-            # Utiliser des savepoints pour permettre le rollback par enregistrement
             import_errors: list[dict[str, Any]] = []
             success_count = 0
             processed_count = 0
 
-            # Get image field for this module
             image_field = cls.IMAGE_FIELDS.get(job.module)
 
             for i, record in enumerate(records, start=1):
                 try:
-                    # Utiliser un savepoint pour chaque enregistrement
+                    # Savepoint par enregistrement pour isoler les rollbacks
                     with transaction.atomic():
                         cleaned_data = DataValidator.clean_data(record, job.module)
                         cls._import_record(
@@ -321,7 +290,6 @@ class ImporterService:
 
                 processed_count += 1
 
-            # Mettre a jour le job apres tous les imports
             job.success_count = success_count
             job.processed_records = processed_count
             if import_errors:
@@ -329,7 +297,6 @@ class ImporterService:
                 job.errors = existing_errors + import_errors
                 job.error_count = len(job.errors)
 
-            # Determine final status
             if job.error_count == 0:
                 job.status = ImportJob.Status.COMPLETED
             elif job.success_count > 0:
@@ -361,20 +328,15 @@ class ImporterService:
         images: dict[str, UploadedFile] | None = None,
         image_field: str | None = None,
     ) -> Any:
-        """Importe un enregistrement."""
-        # Handle image field - match key in data with uploaded image
         if image_field and image_field in data:
             image_key = data.get(image_field)
             if isinstance(image_key, str) and images and image_key in images:
                 data[image_field] = images[image_key]
             elif isinstance(image_key, str):
-                # Remove string path if no matching uploaded image — prevents
-                # SuspiciousFileOperation when the path is absolute (e.g. /media/...)
+                # Evite SuspiciousFileOperation si le chemin est absolu (/media/...)
                 data.pop(image_field, None)
 
-        # Filter out fields that don't exist as concrete/forward fields on the model.
-        # get_fields() includes reverse relations (e.g. resources on Stack) which
-        # cannot be directly assigned — exclude them via the auto_created check.
+        # get_fields() inclut les reverse relations non assignables; on les exclut via auto_created.
         model_field_names = {
             f.name
             for f in model_class._meta.get_fields()
@@ -382,21 +344,14 @@ class ImporterService:
         }
         data = {k: v for k, v in data.items() if k in model_field_names}
 
-        # Handle foreign keys
         data = cls._resolve_foreign_keys(data, module)
 
-        # Handle M2M fields (remove from data, process after save)
         m2m_fields = cls._extract_m2m_fields(data, model_class)
-
-        # Resolve M2M field values (names -> PKs)
         m2m_fields = cls._resolve_m2m_fields(m2m_fields, module)
 
-        # Get unique identifier(s)
         unique_fields = cls.UNIQUE_FIELDS.get(module, "id")
 
-        # Handle compound unique keys (tuple) or single field (str)
         if isinstance(unique_fields, tuple):
-            # Cle composee: verifier que toutes les valeurs sont presentes
             unique_lookup = {}
             all_values_present = True
             for field in unique_fields:
@@ -409,9 +364,8 @@ class ImporterService:
             manager = model_class._default_manager
 
             if update_existing and all_values_present:
-                # Remove unique fields from defaults
                 defaults = {k: v for k, v in data.items() if k not in unique_fields}
-                # Clear select_related to avoid FOR UPDATE on nullable outer joins
+                # select_related(None) pour eviter FOR UPDATE sur outer joins nullable
                 qs = manager.all().select_related(None)
                 instance, _ = qs.update_or_create(
                     **unique_lookup,
@@ -420,14 +374,12 @@ class ImporterService:
             else:
                 instance = manager.create(**data)
         else:
-            # Champ unique simple
             unique_value = data.get(unique_fields)
             manager = model_class._default_manager
 
             if update_existing and unique_value:
-                # Remove unique field from defaults to avoid constraint issues
                 defaults = {k: v for k, v in data.items() if k != unique_fields}
-                # Clear select_related to avoid FOR UPDATE on nullable outer joins
+                # select_related(None) pour eviter FOR UPDATE sur outer joins nullable
                 qs = manager.all().select_related(None)
                 instance, _ = qs.update_or_create(
                     **{unique_fields: unique_value},
@@ -436,7 +388,6 @@ class ImporterService:
             else:
                 instance = manager.create(**data)
 
-        # Handle M2M fields
         for field_name, values in m2m_fields.items():
             if hasattr(instance, field_name) and values:
                 m2m_manager = getattr(instance, field_name)

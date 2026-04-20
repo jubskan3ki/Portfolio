@@ -1,7 +1,6 @@
 import type { ArticleBase, CategoryBase, TagBase } from './admin';
 import type { PaginationData } from '@/types/api/common';
 
-// Content Block Types
 export type ContentBlockType = 'paragraph' | 'heading' | 'blockquote' | 'image' | 'code' | 'list' | 'table';
 
 export interface ParagraphBlock {
@@ -55,13 +54,11 @@ export type ContentBlock
         | ListBlock
         | TableBlock;
 
-// API Response Types
 export interface ArticlesResponse {
     data: Article[];
     pagination: PaginationData;
 }
 
-// API Request/Create/Update Types
 export interface ArticleCreateData {
     title: string;
     content: ContentBlock[] | string[];
@@ -90,7 +87,6 @@ export interface TagCreateData {
 
 export type TagUpdateData = Partial<TagCreateData>;
 
-// Entity Types
 export interface Article extends ArticleBase {
     excerpt: string;
     image: string;
@@ -115,6 +111,7 @@ export interface Category extends CategoryBase {
 
 export interface Tag extends TagBase {
     count: number;
+    view_count?: number;
 }
 
 export interface ArticleCardProps {
@@ -180,6 +177,7 @@ export interface ArticleCategoriesProps {
     title?: string;
     categories?: ArticleCategoryItem[];
     modelValue?: string | number | ArticleCategoryItem | null;
+    maxVisible?: number;
 }
 
 export interface ArticleTagsProps {
@@ -188,4 +186,34 @@ export interface ArticleTagsProps {
     modelValue?: Array<string | number>;
     display?: 'cloud' | 'simple';
     multiSelect?: boolean;
+    maxVisible?: number;
+}
+
+// ArticleActiveFilters
+
+export interface ArticleActiveFiltersProps {
+    title?: string;
+    activeCategory?: string | number | Category | null;
+    activeTags?: Array<string | number>;
+    categories?: Category[];
+    tags?: Tag[];
+    clearButtonText?: string;
+}
+
+// ArticlePopular
+
+export interface PopularArticle {
+    id: string | number;
+    slug: string;
+    title: string;
+    image?: string;
+    date: string;
+    readTime?: number;
+    views?: number;
+}
+
+export interface ArticlePopularProps {
+    articles?: PopularArticle[];
+    title?: string;
+    showTitle?: boolean;
 }

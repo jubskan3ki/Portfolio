@@ -20,6 +20,7 @@
             label="Type d'expérience"
             placeholder="Sélectionner un type"
             :options="typeOptions"
+            :initial-value="entity?.type"
             required
             :error="errors.type"
             allow-create
@@ -96,6 +97,7 @@
             label="Stacks utilisées"
             placeholder="Rechercher une technologie..."
             :options="stackOptions"
+            :initial-value="entity?.technologies"
             show-images
             hint="Sélectionnez les technologies utilisées"
         />
@@ -142,8 +144,6 @@
     import type { Experience, ExperienceType } from '@/types/feature/experience';
     import type { Stack } from '@/types/feature/stacks';
 
-    // Props
-
     const props = defineProps<ExperienceFormProps>();
     const { success: showSuccess, error: showError } = useAlert();
 
@@ -153,6 +153,7 @@
         isLoading,
         isSubmitting,
         pageError,
+        entity,
         form,
         errors,
         setFieldValue,

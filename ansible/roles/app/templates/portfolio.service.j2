@@ -1,0 +1,26 @@
+[Unit]
+Description=Portfolio app (docker compose)
+After=docker.service network-online.target
+Requires=docker.service network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User={{ app_system_user }}
+Group={{ app_system_user }}
+WorkingDirectory={{ deploy_path }}
+Environment="SOPS_AGE_KEY_FILE={{ sops_age_key_path }}"
+Environment="ENV={{ deployment_env }}"
+Environment="DOMAIN={{ deploy_domain }}"
+
+# Decrypt secrets then start the stack (base + env overlay).
+ExecStartPre=/usr/bin/make -C {{ deploy_path }} secrets-decrypt ENV={{ deployment_env }}
+ExecStart=/usr/bin/make -C {{ deploy_path }} up ENV={{ deployment_env }}
+ExecStop=/usr/bin/make -C {{ deploy_path }} down ENV={{ deployment_env }}
+
+TimeoutStartSec=300
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

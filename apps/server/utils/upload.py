@@ -10,13 +10,7 @@ from django.utils.text import slugify
 
 @deconstructible
 class UploadTo:
-    """Callable serialisable pour les chemins d'upload dynamiques.
-
-    Args:
-        prefix: Dossier racine (ex: "articles", "stacks").
-        slug_source: Nom du champ (str) ou tuple de champs a concatener.
-        fallback: Valeur par defaut si le champ est absent.
-    """
+    """Callable serialisable (migrations Django) pour upload_to dynamique."""
 
     def __init__(
         self,
@@ -46,28 +40,11 @@ def make_upload_to(
     slug_source: str | tuple[str, ...] = "title",
     fallback: str = "unknown",
 ) -> UploadTo:
-    """Cree un callable upload_to serialisable par les migrations Django.
-
-    Args:
-        prefix: Dossier racine (ex: "articles", "stacks").
-        slug_source: Nom du champ (str) ou tuple de champs a concatener.
-        fallback: Valeur par defaut si le champ est absent.
-
-    Returns:
-        Instance UploadTo compatible avec le parametre upload_to de Django.
-    """
     return UploadTo(prefix=prefix, slug_source=slug_source, fallback=fallback)
 
 
 def extract_images_from_files(files) -> dict:
-    """Extrait les images d'un MultiValueDict avec le pattern images[key].
-
-    Args:
-        files: MultiValueDict de fichiers uploades (request.FILES).
-
-    Returns:
-        Dict {key: file} pour chaque fichier correspondant au pattern.
-    """
+    """Extrait les fichiers matchant images[key] depuis request.FILES."""
     images: dict = {}
     for key in files:
         if key.startswith("images[") and key.endswith("]"):

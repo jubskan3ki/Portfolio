@@ -1,6 +1,5 @@
 <template>
     <div class="stacks-page">
-        <!-- Hero Section -->
         <Hero
             title="Stacks"
             description="Les outils et frameworks que je maîtrise pour créer des applications web performantes."
@@ -27,7 +26,6 @@
             </template>
         </Hero>
 
-        <!-- Main Content -->
         <Main
             variant="default"
             size="large"
@@ -37,9 +35,7 @@
             :glass-animated="!prefersReducedMotion"
             :bubble-count="4"
         >
-            <!-- Navigation Bar: Tabs + Search -->
             <div class="stacks-nav">
-                <!-- Tabs -->
                 <div v-if="!isSearchMode" class="stacks-nav__tabs">
                     <NavigationTabs
                         v-if="availableTabs.length > 1"
@@ -53,14 +49,23 @@
                         variant="primary"
                         size="lg"
                     />
-                    <button class="stacks-nav__search-btn" @click="toggleSearchMode">
+                    <button
+                        type="button"
+                        class="stacks-nav__search-btn"
+                        aria-label="Rechercher dans les stacks"
+                        @click="toggleSearchMode"
+                    >
                         <BaseIcon name="search" :size="16" />
                     </button>
                 </div>
 
-                <!-- Search -->
                 <div v-else class="stacks-nav__search">
-                    <button class="stacks-nav__back-btn" @click="toggleSearchMode">
+                    <button
+                        type="button"
+                        class="stacks-nav__back-btn"
+                        aria-label="Quitter la recherche"
+                        @click="toggleSearchMode"
+                    >
                         <BaseIcon name="arrow-left" :size="16" />
                     </button>
                     <SearchInput
@@ -76,7 +81,6 @@
                 </div>
             </div>
 
-            <!-- Content Section -->
             <div
                 :id="`panel-${activeCategory}`"
                 class="stacks-section"
@@ -84,7 +88,6 @@
                 :aria-labelledby="`tab-${activeCategory}`"
             >
                 <Transition name="slide-fade" mode="out-in">
-                    <!-- Loading State -->
                     <div v-if="isLoading" key="loader" class="stacks-loader">
                         <SkeletonList
                             :count="6"
@@ -96,7 +99,6 @@
                         />
                     </div>
 
-                    <!-- Error State -->
                     <EmptyState
                         v-else-if="hasError"
                         key="error"
@@ -111,7 +113,6 @@
                         </template>
                     </EmptyState>
 
-                    <!-- Empty State -->
                     <EmptyState
                         v-else-if="!hasAnyData"
                         key="empty-all"
@@ -131,9 +132,7 @@
                         </template>
                     </EmptyState>
 
-                    <!-- Content: Sections by Category or Grid -->
                     <div v-else :key="contentKey" class="stacks-content">
-                        <!-- Netflix Mode: Carousel sections when "All" is selected -->
                         <template v-if="showSections">
                             <StackCategorySlider
                                 v-for="section in stackSections"
@@ -145,7 +144,6 @@
                             />
                         </template>
 
-                        <!-- Single Category Mode: Carousel for selected category -->
                         <template v-else-if="!isSearchMode && activeCategory !== 'all'">
                             <StackCategorySlider
                                 :label="activeCategoryLabel"
@@ -155,7 +153,6 @@
                             />
                         </template>
 
-                        <!-- Search Mode: Grid for search results -->
                         <template v-else>
                             <div class="stacks-grid">
                                 <StackCard
@@ -173,11 +170,10 @@
             </div>
         </Main>
 
-        <!-- CTA -->
         <CTA
             title="Besoin d'un développeur ?"
             description="Discutons de votre projet et voyons comment je peux vous aider."
-            variant="light"
+            variant="dark"
             :primary-button="{ label: 'Me contacter', to: ROUTES.CONTACT.path, icon: 'mail' }"
             :secondary-button="{ label: 'Mes articles', to: ROUTES.BLOG.path }"
         />
@@ -208,26 +204,19 @@
     import { useStacksPage } from '@/composables/data/useStacksPage';
     import { useItemListSeo } from '@/composables/seo/useItemListSeo';
     import { useStacksSeo } from '@/composables/seo/useSeo';
-    import { useScrollToTop } from '@/composables/ui/useScrollToTop';
     import { filterPresets } from '@/config/filterPresets';
     import { ROUTES } from '@/config/routes';
     import { useStacks, useStackCategories, useStackStats } from '@/services/api/modules/stacks';
 
-    // SEO
     useStacksSeo();
 
-    // Router
     const router = useRouter();
 
-    // Composables
     const { announceLoaded, announce } = useAnnounce();
-    const { scrollToTop } = useScrollToTop();
     const { prefersReducedMotion } = useReducedMotion();
 
-    // Filters with URL sync
     const { filters, setFilter } = useFilters(filterPresets.stacks);
 
-    // API Queries
     const {
         data: stacksData,
         isLoading: stacksLoading,
@@ -244,11 +233,9 @@
 
     const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useStackStats();
 
-    // Search mode state (local, not URL-synced)
     const isSearchMode = ref(false);
     const searchInputRef = ref<HTMLInputElement | null>(null);
 
-    // Computed aliases for template compatibility with URL sync
     const searchQuery = computed({
         get: () => filters.value.search,
         set: (val: string) => setFilter('search', val),
@@ -259,7 +246,6 @@
         set: (val: string) => setFilter('category', val === 'all' ? '' : val),
     });
 
-    // Data transformation via composable
     const {
         isLoading,
         hasError,
@@ -288,7 +274,7 @@
         isSearchMode,
     });
 
-    // ItemList Schema.org pour resultats enrichis
+    // Schema.org ItemList pour rich results
     const stackListItems = computed(() =>
         (allStacks.value ?? []).map((s) => ({ name: s.name, url: `/stacks/${s.slug}`, image: s.logo })),
     );
@@ -298,19 +284,16 @@
         }
     }, { immediate: true });
 
-    // Navigation
     const navigateToStack = (slug: string) => {
         router.push(`${ROUTES.STACKS.path}/${slug}`);
     };
 
-    // Retry handler
     const handleRetry = () => {
         refetchStacks();
         refetchCategories();
         refetchStats();
     };
 
-    // Search handlers
     const toggleSearchMode = () => {
         isSearchMode.value = !isSearchMode.value;
         if (isSearchMode.value) {
@@ -329,17 +312,14 @@
         searchInputRef.value?.focus();
     };
 
-    // Announce tab changes
     watch(activeCategory, (newCategory) => {
         const tab = availableTabs.value.find((t) => t.key === newCategory);
         if (tab) {
             const labelWithoutCount = tab.label.replace(/\s*\(\d+\)$/, '');
             announce(`Affichage: ${labelWithoutCount}`);
-            scrollToTop('smooth');
         }
     });
 
-    // Announce loaded data
     watch(
         allStacks,
         (list) => {
@@ -350,9 +330,7 @@
         { once: true },
     );
 
-    // Scroll to top on mount and check for search in URL
     onMounted(() => {
-        scrollToTop('instant');
         if (filters.value.search) {
             isSearchMode.value = true;
         }
@@ -368,13 +346,11 @@
         min-height: 100vh;
     }
 
-    // Hero skeleton
     .stat-skeleton {
         @include mix.flex(column, center, center, vars.$spacing-xs);
         padding: vars.$spacing-sm;
     }
 
-    // Main Content - No motion modifier
     .stacks-main--no-motion {
         .stacks-grid__item {
             animation: none;
@@ -382,7 +358,6 @@
         }
     }
 
-    // Navigation Bar
     .stacks-nav {
         margin-bottom: vars.$spacing-xl;
 
@@ -436,14 +411,12 @@
         }
     }
 
-    // Tabs wrapper
     .tabs-wrapper {
         position: relative;
         display: flex;
         justify-content: center;
     }
 
-    // Single category indicator
     .single-category-indicator {
         @include mix.flex(column, center, center, vars.$spacing-xs);
 
@@ -454,7 +427,6 @@
         }
     }
 
-    // Stacks section
     .stacks-section {
         position: relative;
         z-index: 5;
@@ -469,7 +441,6 @@
         animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    // Grid (for search results)
     .stacks-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -486,7 +457,6 @@
         }
     }
 
-    // Empty State
     :deep(.stacks-empty-state) {
         max-width: 500px;
         margin: vars.$spacing-xl auto;
@@ -498,7 +468,6 @@
         box-shadow: 0 8px 32px fn.color-alpha(vars.$black, 0.06);
     }
 
-    // Animations
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -511,7 +480,6 @@
         }
     }
 
-    // Transitions
     .slide-fade-enter-active {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -530,8 +498,6 @@
         transform: translateY(-10px);
     }
 
-    // Responsive - Tablet
-    // Responsive - Mobile
     @include mix.responsive(mobile) {
         .stacks-nav {
             padding: 0 vars.$spacing-md;

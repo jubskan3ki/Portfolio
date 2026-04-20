@@ -220,7 +220,6 @@
             border-top: 1px solid;
         }
 
-        // Light variant
         &--light {
             background: vars.$white;
             border-right: 1px solid func.color-alpha(vars.$gray-light, 0.5);
@@ -250,7 +249,6 @@
             }
         }
 
-        // Dark variant
         &--dark {
             background: vars.$black-light;
 
@@ -279,7 +277,6 @@
             }
         }
 
-        // Glass variant
         &--glass {
             background: func.color-alpha(vars.$white, 0.8);
             backdrop-filter: blur(20px);
@@ -312,7 +309,6 @@
         }
     }
 
-    // Fade transition
     .fade-enter-active,
     .fade-leave-active {
         transition: opacity 0.2s ease;

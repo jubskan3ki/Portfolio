@@ -1,11 +1,9 @@
-"""Definition des metriques Prometheus pour Django."""
+"""Metriques Prometheus pour Django."""
 
 from prometheus_client import Counter, Gauge, Histogram
 
-# Prefixe pour toutes les metriques
 PREFIX = "django"
 
-# Metriques HTTP
 REQUESTS_TOTAL = Counter(
     f"{PREFIX}_http_requests_total",
     "Total des requetes HTTP",
@@ -25,7 +23,6 @@ REQUEST_IN_PROGRESS = Gauge(
     ["method", "endpoint"],
 )
 
-# Metriques Database
 DB_QUERY_DURATION = Histogram(
     f"{PREFIX}_db_query_duration_seconds",
     "Duree des requetes SQL en secondes",
@@ -39,7 +36,6 @@ DB_QUERY_TOTAL = Counter(
     ["operation"],
 )
 
-# Metriques Cache
 CACHE_HIT_COUNTER = Counter(
     f"{PREFIX}_cache_hits_total",
     "Total des cache hits",
@@ -52,14 +48,12 @@ CACHE_MISS_COUNTER = Counter(
     ["cache_name"],
 )
 
-# Metriques Exceptions
 EXCEPTIONS_COUNTER = Counter(
     f"{PREFIX}_exceptions_total",
     "Total des exceptions",
     ["exception_type", "endpoint"],
 )
 
-# Metriques Business
 ACTIVE_USERS_GAUGE = Gauge(
     f"{PREFIX}_active_users",
     "Nombre d'utilisateurs actifs",
@@ -71,7 +65,6 @@ ARTICLE_VIEWS_TOTAL = Counter(
     ["article_slug"],
 )
 
-# Metriques Celery
 CELERY_TASKS_TOTAL = Counter(
     f"{PREFIX}_celery_tasks_total",
     "Total des taches Celery",

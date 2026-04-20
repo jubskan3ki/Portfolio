@@ -1,15 +1,11 @@
 import type { ApiError, ApiErrorCode } from '@/types/api/common';
 
-/**
- * Converts backend error array [{code, message, field}] to {field: [messages]} map.
- * Handles both the normalized backend format and raw DRF dict format.
- */
+// Normalise backend [{code,message,field}] ou DRF {field:[...]} -> {field:[msg]}
 function extractFieldErrors(errors: unknown): Record<string, string[]> {
     if (!errors) {
         return {};
     }
 
-    // Backend normalized format: [{code, message, field}]
     if (Array.isArray(errors)) {
         const fields: Record<string, string[]> = {};
         for (const err of errors) {
@@ -23,7 +19,6 @@ function extractFieldErrors(errors: unknown): Record<string, string[]> {
         return fields;
     }
 
-    // Fallback: raw DRF format {field: ["error1", "error2"]}
     if (typeof errors === 'object') {
         const result: Record<string, string[]> = {};
         for (const [key, val] of Object.entries(errors as Record<string, unknown>)) {

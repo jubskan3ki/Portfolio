@@ -8,22 +8,18 @@
         aria-live="assertive"
     >
         <div class="error-boundary__content">
-            <!-- Icon -->
             <div v-if="variant !== 'inline'" class="error-boundary__icon-wrapper">
                 <div class="error-boundary__icon-bg"></div>
                 <BaseIcon :name="errorIcon" :size="iconSize" class="error-boundary__icon" />
             </div>
 
-            <!-- Inline icon -->
             <BaseIcon v-else :name="errorIcon" :size="16" class="error-boundary__inline-icon" />
 
-            <!-- Text -->
             <div class="error-boundary__text">
                 <h3 v-if="variant !== 'inline'" class="error-boundary__title">{{ title }}</h3>
                 <p class="error-boundary__message">{{ displayMessage }}</p>
             </div>
 
-            <!-- Actions -->
             <div v-if="showActions" class="error-boundary__actions">
                 <BaseButton
                     v-if="showRetry"
@@ -71,7 +67,11 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { ROUTES } from '@/config/routes';
 
-    import type { ErrorBoundaryProps, ErrorBoundarySize } from '@/types/components/feedback';
+    import type {
+        ErrorBoundaryErrorType,
+        ErrorBoundaryProps,
+        ErrorBoundarySize,
+    } from '@/types/components/feedback';
 
     type Props = ErrorBoundaryProps;
 
@@ -92,10 +92,7 @@
 
     const error = ref<Error | null>(null);
 
-    // Detect error type for better icons and messages
-    type ErrorType = 'type' | 'reference' | 'syntax' | 'network' | 'timeout' | 'unknown';
-
-    const errorType = computed<ErrorType>(() => {
+    const errorType = computed<ErrorBoundaryErrorType>(() => {
         if (!error.value) {
             return 'unknown';
         }
@@ -121,7 +118,7 @@
     });
 
     const errorIcon = computed(() => {
-        const icons: Record<ErrorType, string> = {
+        const icons: Record<ErrorBoundaryErrorType, string> = {
             type: 'alert-triangle',
             reference: 'file-question',
             syntax: 'code',

@@ -1,6 +1,5 @@
 <template>
     <div class="contact-page">
-        <!-- Hero -->
         <Hero
             title="À propos & Contact"
             description="Développeur full-stack et DevOps basé à Paris, passionné par la création d'applications
@@ -9,11 +8,9 @@
             show-title-underline
         />
 
-        <!-- About Section -->
         <Section class="about-section">
             <div class="container">
                 <div class="about-section__wrapper">
-                    <!-- Photo + identité -->
                     <div class="about-section__profile animate-fade-in-up">
                         <div class="about-section__photo">
                             <NuxtImg
@@ -42,7 +39,6 @@
                         </div>
                     </div>
 
-                    <!-- Bio -->
                     <div class="about-section__bio animate-fade-in-up delay-1">
                         <h2 class="about-section__title">Qui suis-je ?</h2>
                         <p>
@@ -65,14 +61,12 @@
             </div>
         </Section>
 
-        <!-- FAQ Section -->
         <Section class="faq-section">
             <div class="container">
                 <ContactFAQ :items="faqItems" />
             </div>
         </Section>
 
-        <!-- Contact Section -->
         <Section class="contact-section" variant="light">
             <div class="container">
                 <h2 class="contact-section__heading animate-fade-in">Me contacter</h2>
@@ -80,12 +74,10 @@
                     Vous avez un projet ou une opportunité professionnelle ? N'hésitez pas à me contacter.
                 </p>
                 <div class="contact-section__wrapper">
-                    <!-- Formulaire de contact -->
                     <div class="contact-section__form animate-fade-in-up delay-1">
                         <ContactForm form-id="contact-form-fixed" />
                     </div>
 
-                    <!-- Informations de contact -->
                     <div class="contact-section__info animate-fade-in-up delay-2">
                         <ContactInfos
                             title="Mes coordonnées"
@@ -117,13 +109,10 @@
     import { useScrollToTop } from '@/composables/ui/useScrollToTop';
     import { useContactInfo } from '@/services/api/modules/contact';
 
-    // SEO with Schema.org (ContactPage + AboutPage + Person)
     useContactSeo();
-    // FAQPage JSON-LD + static items rendered below
     const { items: faqItems } = useContactFaqSeo();
     useScrollToTop();
 
-    // About data
     const { author } = SITE_CONFIG;
     const name = author.name;
     const jobTitle = author.jobTitle;
@@ -133,7 +122,6 @@
         { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
     ];
 
-    // Contact API
     const { data: contactInfo } = useContactInfo();
 
     const contactAddress = computed(() => contactInfo.value?.address?.city ?? 'Paris, France');
@@ -166,7 +154,6 @@
     @use '@/styles/abstracts/variables' as vars;
     @use '@/styles/abstracts/mixins' as mix;
 
-    /* About Section */
     .about-section {
         padding: vars.$spacing-xl 0;
 
@@ -266,7 +253,6 @@
 
     }
 
-    /* Contact Section */
     .contact-section {
         padding: vars.$spacing-xl 0;
 
@@ -306,7 +292,6 @@
         }
     }
 
-    /* Animations */
     .animate-fade-in {
         animation: fadeIn vars.$transition-base forwards;
     }

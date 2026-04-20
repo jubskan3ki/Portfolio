@@ -1,10 +1,9 @@
 import { API_ENDPOINTS, getBaseUrl } from '@/config/api';
 
-type AuthFailureHandler = () => void | Promise<void>;
+import type { AuthFailureHandler } from '@/types/services/api';
 
 let authFailureHandler: AuthFailureHandler | null = null;
 
-// Register callback for authentication failure (after token refresh fails)
 export function onAuthFailure(handler: AuthFailureHandler): () => void {
     authFailureHandler = handler;
     return () => {
@@ -17,12 +16,11 @@ export async function notifyAuthFailure(): Promise<void> {
         try {
             await authFailureHandler();
         } catch {
-            // Silent fail
+            // silent
         }
     }
 }
 
-// Token Refresh Manager (Singleton)
 class RefreshTokenManager {
     private static instance: RefreshTokenManager;
     private isRefreshing = false;
@@ -40,7 +38,7 @@ class RefreshTokenManager {
     }
 
     refresh(): Promise<boolean> {
-        // Check cooldown after too many failures
+        // Cooldown après trop d'échecs
         if (this.failedAttempts >= RefreshTokenManager.MAX_FAILED_ATTEMPTS) {
             const elapsed = Date.now() - this.lastFailTime;
             if (elapsed < RefreshTokenManager.COOLDOWN_MS) {
@@ -49,15 +47,12 @@ class RefreshTokenManager {
             this.failedAttempts = 0;
         }
 
-        // Si un refresh est déjà en cours, retourner la promise existante
-        // Note: Cette vérification est atomique dans le contexte JS single-threaded
-        // car la lecture de refreshPromise et le return sont synchrones
+        // Dédup: single-flight refresh (lecture/return atomique JS single-threaded)
         if (this.refreshPromise) {
             return this.refreshPromise;
         }
 
-        // Créer la promise AVANT d'assigner isRefreshing pour éviter les race conditions
-        // Tout appel concurrent verra refreshPromise défini et attendra la même promise
+        // Assigner refreshPromise AVANT await pour que les appels concurrents partagent la même promise
         this.refreshPromise = (async () => {
             this.isRefreshing = true;
             try {

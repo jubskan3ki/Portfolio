@@ -1,0 +1,118 @@
+# SLO targets: availability 99.5%/30d, latency p95 < 300ms on /api/**.
+# Burn-rate windows (Google SRE workbook): 1h/5m 14.4× page, 6h/30m 6× page, 1d/2h 3× ticket, 3d/6h 1× ticket.
+
+groups:
+    - name: slo_recording_api_availability
+      interval: 30s
+      rules:
+          # Total requests (5xx included).
+          - record: slo:api_requests:rate5m
+            expr: sum(rate(django_http_responses_total_by_status_total{status!~"^[0-9]+$"}[5m])) or sum(rate(django_http_responses_total_by_status_total[5m]))
+
+          # Good requests (non-5xx).
+          - record: slo:api_requests_good:rate5m
+            expr: sum(rate(django_http_responses_total_by_status_total{status!~"5.."}[5m]))
+
+          # Availability ratio (1.0 = perfect).
+          - record: slo:api_availability:ratio5m
+            expr: (slo:api_requests_good:rate5m / ignoring() slo:api_requests:rate5m) or vector(1)
+
+          # Multi-window ratios for burn-rate alerts.
+          - record: slo:api_availability:ratio_rate1h
+            expr: sum(rate(django_http_responses_total_by_status_total{status!~"5.."}[1h])) / sum(rate(django_http_responses_total_by_status_total[1h]))
+          - record: slo:api_availability:ratio_rate6h
+            expr: sum(rate(django_http_responses_total_by_status_total{status!~"5.."}[6h])) / sum(rate(django_http_responses_total_by_status_total[6h]))
+          - record: slo:api_availability:ratio_rate1d
+            expr: sum(rate(django_http_responses_total_by_status_total{status!~"5.."}[1d])) / sum(rate(django_http_responses_total_by_status_total[1d]))
+          - record: slo:api_availability:ratio_rate3d
+            expr: sum(rate(django_http_responses_total_by_status_total{status!~"5.."}[3d])) / sum(rate(django_http_responses_total_by_status_total[3d]))
+
+    - name: slo_recording_api_latency
+      interval: 30s
+      rules:
+          - record: slo:api_latency:p95_5m
+            expr: histogram_quantile(0.95, sum by (le) (rate(django_http_requests_latency_including_middlewares_seconds_bucket[5m])))
+          - record: slo:api_latency:p99_5m
+            expr: histogram_quantile(0.99, sum by (le) (rate(django_http_requests_latency_including_middlewares_seconds_bucket[5m])))
+
+    - name: slo_alerts_availability
+      rules:
+          - alert: APIAvailabilityBurnFast
+            expr: |
+                (1 - slo:api_availability:ratio_rate1h) > (14.4 * (1 - 0.995))
+                and
+                (1 - slo:api_availability:ratio_rate1d) > (14.4 * (1 - 0.995))
+            for: 2m
+            labels:
+                severity: page
+                slo: api_availability
+            annotations:
+                summary: "API availability burning 14.4× budget over 1h window"
+                description: "Availability ratio is {{ $value | humanizePercentage }} over 1h. At this rate, the 30d error budget is exhausted in 2 days."
+
+          - alert: APIAvailabilityBurnMedium
+            expr: |
+                (1 - slo:api_availability:ratio_rate6h) > (6 * (1 - 0.995))
+                and
+                (1 - slo:api_availability:ratio_rate1d) > (6 * (1 - 0.995))
+            for: 15m
+            labels:
+                severity: page
+                slo: api_availability
+            annotations:
+                summary: "API availability burning 6× budget over 6h window"
+                description: "Availability ratio is {{ $value | humanizePercentage }} over 6h."
+
+          - alert: APIAvailabilityBurnSlow
+            expr: |
+                (1 - slo:api_availability:ratio_rate1d) > (3 * (1 - 0.995))
+                and
+                (1 - slo:api_availability:ratio_rate3d) > (3 * (1 - 0.995))
+            for: 1h
+            labels:
+                severity: ticket
+                slo: api_availability
+            annotations:
+                summary: "API availability burning 3× budget over 1d window"
+                description: "Availability ratio is {{ $value | humanizePercentage }} over 1d."
+
+    - name: slo_alerts_latency
+      rules:
+          - alert: APILatencyP95High
+            expr: slo:api_latency:p95_5m > 0.3
+            for: 10m
+            labels:
+                severity: page
+                slo: api_latency
+            annotations:
+                summary: "API p95 latency {{ $value }}s > 300ms SLO"
+                description: "Request latency p95 over 5m is {{ $value }}s. Target: < 0.3s."
+
+    # Infra-level hard failures (not SLO-based).
+    - name: infra_alerts
+      rules:
+          - alert: TargetDown
+            expr: up == 0
+            for: 5m
+            labels:
+                severity: page
+            annotations:
+                summary: "{{ $labels.instance }} ({{ $labels.job }}) is down"
+                description: "Scrape target {{ $labels.instance }} has been unreachable for 5m."
+
+          - alert: ContainerUnhealthy
+            expr: container_tasks_state{state="stopped"} > 0
+            for: 5m
+            labels:
+                severity: ticket
+            annotations:
+                summary: "Container {{ $labels.name }} in stopped state"
+
+          - alert: OtelCollectorRefusingSpans
+            expr: increase(otelcol_processor_refused_spans_total[5m]) > 0
+            for: 2m
+            labels:
+                severity: page
+            annotations:
+                summary: "OTel collector refusing spans (memory limiter hit)"
+                description: "{{ $value }} spans refused in last 5m. Check collector memory usage."

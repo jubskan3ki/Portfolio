@@ -1,5 +1,9 @@
 <template>
-    <div class="navigation-tabs" :class="[`navigation-tabs--${variant}`, customClass]">
+    <div
+        ref="rootRef"
+        class="navigation-tabs"
+        :class="[`navigation-tabs--${variant}`, customClass]"
+    >
         <div
             ref="trackRef"
             class="navigation-tabs__track"
@@ -32,23 +36,12 @@
     import { computed, nextTick, ref } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
+    import { useDragScroll } from '@/composables/ui/useDragScroll';
     import { useTabIndicator } from '@/composables/ui/useTabIndicator';
 
-    interface Tab {
-        key: string;
-        label: string;
-        icon?: string;
-    }
+    import type { NavigationTabsProps } from '@/types/components/navigation';
 
-    interface Props {
-        tabs: Tab[];
-        modelValue: string;
-        variant?: 'default' | 'glass' | 'minimal';
-        iconSize?: number;
-        customClass?: string;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<NavigationTabsProps>(), {
         variant: 'glass',
         iconSize: 14,
         customClass: '',
@@ -58,9 +51,12 @@
         'update:modelValue': [value: string];
     }>();
 
+    const rootRef = ref<HTMLElement | null>(null);
     const trackRef = ref<HTMLElement | null>(null);
     const tabRefs = ref<Array<HTMLButtonElement | null>>([]);
     const activeIndex = computed(() => props.tabs.findIndex((t) => t.key === props.modelValue));
+
+    useDragScroll(rootRef);
 
     const { setTabRef, indicatorReady } = useTabIndicator({
         trackRef,
@@ -118,6 +114,13 @@
         overflow-x: auto;
         overflow-y: hidden;
         scrollbar-width: none;
+        cursor: grab;
+        touch-action: pan-y;
+        user-select: none;
+
+        &.is-dragging {
+            cursor: grabbing;
+        }
 
         &::-webkit-scrollbar {
             display: none;

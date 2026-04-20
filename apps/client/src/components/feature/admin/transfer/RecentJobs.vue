@@ -37,16 +37,7 @@
     import BaseButton from '@/components/base/BaseButton.vue';
     import { formatTransferDate, getStatusLabel } from '@/composables/data/useTransfer';
 
-    import type { JobStatus } from '@/types/api/transfer';
-
-    interface TransferJob {
-        id: string | number;
-        type: 'export' | 'import';
-        module: string;
-        status: JobStatus;
-        createdAt: string;
-        downloadUrl?: string;
-    }
+    import type { TransferJob } from '@/types/components/admin';
 
     defineProps<{
         jobs: TransferJob[];

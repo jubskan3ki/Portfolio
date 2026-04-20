@@ -46,6 +46,7 @@
     import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 
     import TabsItem from '@/components/navigation/TabsItem.vue';
+    import { useDragScroll } from '@/composables/ui/useDragScroll';
 
     import type { TabsProps } from '@/types/components/navigation';
 
@@ -72,6 +73,8 @@
     const id = useId();
     const navRef = ref<HTMLElement | null>(null);
     const indicatorStyle = ref({ width: '0px', transform: 'translateX(0px)' });
+
+    useDragScroll(navRef);
 
     const tabsId = computed(() => {
         if (props.tabs.length > 0) {
@@ -227,6 +230,14 @@
                 scroll-behavior: smooth;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
+                cursor: grab;
+                touch-action: pan-y;
+                user-select: none;
+
+                &.is-dragging {
+                    cursor: grabbing;
+                    scroll-behavior: auto;
+                }
 
                 &::-webkit-scrollbar {
                     display: none;

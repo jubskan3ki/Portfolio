@@ -39,25 +39,9 @@
     import Badge from '@/components/ui/Badge.vue';
 
     import type { BadgeVariant } from '@/types/components/base';
+    import type { TabsItemProps } from '@/types/components/navigation';
 
-    interface TabBadge {
-        text: string | number;
-        type?: string;
-        variant?: string;
-    }
-
-    interface Props {
-        id: string;
-        tabsId: string;
-        isActive?: boolean;
-        isTab?: boolean;
-        label?: string;
-        icon?: string;
-        disabled?: boolean;
-        badge?: TabBadge | null;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<TabsItemProps>(), {
         isActive: false,
         isTab: false,
         label: '',

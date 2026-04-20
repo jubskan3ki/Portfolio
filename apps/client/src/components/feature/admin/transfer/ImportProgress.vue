@@ -25,18 +25,7 @@
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseSwitch from '@/components/base/BaseSwitch.vue';
 
-    interface ImportProgressProps {
-        /** Whether an import is currently in progress */
-        isImporting: boolean;
-        /** Whether the import button should be enabled */
-        canImport: boolean;
-        /** Number of images attached */
-        imagesCount: number;
-        /** Whether to update existing records */
-        updateExisting: boolean;
-        /** Whether to skip errors */
-        skipErrors: boolean;
-    }
+    import type { ImportProgressProps } from '@/types/components/admin';
 
     const props = defineProps<ImportProgressProps>();
 

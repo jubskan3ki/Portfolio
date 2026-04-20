@@ -3,15 +3,7 @@ import { computed, ref } from 'vue';
 import { dayjs } from '@/services/utils/date';
 
 import type { CalendarDay } from '@/types/components/ui';
-import type { Ref } from 'vue';
-
-interface UseCalendarGridOptions {
-    tempStartDate: Ref<string>;
-    tempEndDate: Ref<string>;
-    hoverDate: Ref<string>;
-    isDateAvailable: (date: string) => boolean;
-    isDateDisabled: (date: string) => boolean;
-}
+import type { UseCalendarGridOptions } from '@/types/composables/ui';
 
 export function useCalendarGrid(options: UseCalendarGridOptions) {
     const { tempStartDate, tempEndDate, hoverDate, isDateAvailable, isDateDisabled } = options;
@@ -28,7 +20,6 @@ export function useCalendarGrid(options: UseCalendarGridOptions) {
         const startDay = startOfMonth.day() === 0 ? 6 : startOfMonth.day() - 1;
         const today = dayjs().format('YYYY-MM-DD');
 
-        // Previous month padding
         for (let i = startDay - 1; i >= 0; i--) {
             const date = startOfMonth.subtract(i + 1, 'day');
             const dateStr = date.format('YYYY-MM-DD');
@@ -46,7 +37,6 @@ export function useCalendarGrid(options: UseCalendarGridOptions) {
             });
         }
 
-        // Current month days
         const daysInMonth = endOfMonth.date();
         for (let i = 1; i <= daysInMonth; i++) {
             const date = startOfMonth.date(i);
@@ -82,7 +72,7 @@ export function useCalendarGrid(options: UseCalendarGridOptions) {
             });
         }
 
-        // Next month padding (fill to 42 = 6 rows)
+        // Pad to 42 cells (6 rows of 7 days).
         const remainingDays = 42 - days.length;
         for (let i = 1; i <= remainingDays; i++) {
             const date = endOfMonth.add(i, 'day');

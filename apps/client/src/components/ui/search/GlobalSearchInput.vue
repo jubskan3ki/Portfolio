@@ -19,15 +19,9 @@
 
     import SearchInput from './SearchInput.vue';
 
-    interface Props {
-        modelValue: string;
-        placeholder?: string;
-        compact?: boolean;
-        loading?: boolean;
-        isExpanded?: boolean;
-    }
+    import type { GlobalSearchInputProps } from '@/types/components/ui';
 
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<GlobalSearchInputProps>(), {
         placeholder: 'Rechercher...',
         compact: false,
         loading: false,

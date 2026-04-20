@@ -20,14 +20,9 @@
 
     import StatsCard from '@/components/feature/admin/StatsCard.vue';
 
-    import type { DashboardModuleStats } from '@/types/api/stats';
+    import type { DashboardStatsGridProps } from '@/types/components/admin';
 
-    interface Props {
-        stats: DashboardModuleStats | null;
-        loading?: boolean;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<DashboardStatsGridProps>(), {
         loading: false,
     });
 

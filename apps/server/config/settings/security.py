@@ -2,13 +2,11 @@
 
 from config.settings.base import _ALL_INTERFACES, ALLOWED_HOSTS, DEBUG
 
-# SECURITY SETTINGS
-
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
 if not DEBUG:
-    SECURE_SSL_REDIRECT = False  # SSL handled by Nginx host, not Django
+    SECURE_SSL_REDIRECT = False  # Nginx terminates SSL upstream
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
@@ -17,16 +15,13 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     X_FRAME_OPTIONS = "DENY"
 
-# CSRF trusted origins for reverse proxy setup
 CSRF_TRUSTED_ORIGINS = [
     f"https://{host}" for host in ALLOWED_HOSTS if host not in ["localhost", "127.0.0.1", "backend", "*"]
 ]
 
-# CORS — toujours explicite, même en dev, pour détecter les problèmes CORS tôt
-
+# CORS explicit in dev too — surfaces misconfiguration early.
 CORS_ALLOW_ALL_ORIGINS = False
 
-# Dev: origines Docker internes + localhost/0.0.0.0 sur les ports utilisés
 _DEV_ORIGINS = [
     "http://frontend:80",
     "http://swagger-ui:8080",

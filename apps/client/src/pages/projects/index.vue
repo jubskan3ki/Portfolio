@@ -1,6 +1,5 @@
 <template>
     <div class="projects-page">
-        <!-- Hero -->
         <Hero
             title="Mes Projets"
             description="Explorez mes réalisations, des applications web innovantes aux solutions DevOps robustes."
@@ -19,11 +18,8 @@
             </template>
         </Hero>
 
-        <!-- Main -->
         <Main variant="default" size="large">
-            <!-- Filters -->
             <div class="projects-filters">
-                <!-- Search -->
                 <div class="projects-filters__search">
                     <SearchInput
                         v-model="searchQuery"
@@ -33,32 +29,29 @@
                     />
                 </div>
 
-                <!-- Category Select -->
                 <BaseSelect
                     v-model="selectedCategory"
                     :options="categoryOptions"
                     placeholder="Catégorie"
+                    aria-label="Filtrer par catégorie"
                     class="projects-filters__select"
                 />
 
-                <!-- Technologies MultiSelect -->
                 <BaseMultiSelect
                     v-model="selectedTechs"
                     :options="techOptions"
-                    placeholder="Technologies..."
+                    placeholder="Compétences..."
+                    aria-label="Filtrer par compétences"
                     class="projects-filters__multiselect"
                 />
 
-                <!-- Reset -->
                 <button v-if="hasActiveFilters" type="button" class="projects-filters__reset" @click="resetFilters">
                     <BaseIcon name="x" :size="14" />
                     Réinitialiser
                 </button>
             </div>
 
-            <!-- Content -->
             <ClientOnly>
-                <!-- Loading -->
                 <div v-if="isLoading && !hasProjects" class="projects-grid">
                     <div v-for="i in 6" :key="i" class="project-skeleton">
                         <div class="project-skeleton__image"></div>
@@ -75,7 +68,6 @@
                     </div>
                 </div>
 
-                <!-- Empty -->
                 <EmptyState
                     v-else-if="!hasProjects"
                     icon="folder-open"
@@ -87,8 +79,7 @@
                     @action="resetFilters"
                 />
 
-                <!-- Grid -->
-                <div v-else class="projects-grid">
+                <div v-else class="projects-grid" :class="{ 'projects-grid--fetching': isFilterFetching }">
                     <ProjectCard
                         v-for="(project, index) in allProjects"
                         :key="project.id"
@@ -98,7 +89,6 @@
                     />
                 </div>
 
-                <!-- Load More -->
                 <div v-if="hasProjects && hasNextPage" ref="targetRef" class="projects-more">
                     <button v-if="!isFetchingNextPage" type="button" class="projects-more__btn" @click="loadMore">
                         Voir plus
@@ -127,7 +117,6 @@
             </ClientOnly>
         </Main>
 
-        <!-- CTA -->
         <CTA
             title="Un projet en tête ?"
             description="Discutons de vos idées et voyons comment transformer votre vision en réalité."
@@ -170,13 +159,10 @@
     import type { SelectOption } from '@/types/components/base';
     import type { Project, ProjectCategory } from '@/types/feature/project';
 
-    // SEO
     useProjectsSeo();
 
-    // Filters with URL sync
-    const { filters, hasActiveFilters, reset, setFilter } = useFilters(filterPresets.projects);
+    const { filters, debouncedFilters, hasActiveFilters, reset, setFilter } = useFilters(filterPresets.projects);
 
-    // Computed aliases for template compatibility
     const searchQuery = computed({
         get: () => filters.value.search,
         set: (val: string) => setFilter('search', val),
@@ -192,18 +178,20 @@
         set: (val: string[]) => setFilter('technologies', val),
     });
 
-    // API filters (adapt technologies array to comma-separated string)
+    // debouncedFilters évite un refetch à chaque frappe; technologies sérialisées en CSV
     const apiFilters = computed(() => ({
-        category: filters.value.category || undefined,
-        search: filters.value.search || undefined,
-        technologies: filters.value.technologies.length ? filters.value.technologies.join(',') : undefined,
-        ordering: filters.value.ordering,
+        category: debouncedFilters.value.category || undefined,
+        search: debouncedFilters.value.search || undefined,
+        technologies: debouncedFilters.value.technologies.length
+            ? debouncedFilters.value.technologies.join(',')
+            : undefined,
+        ordering: debouncedFilters.value.ordering,
     }));
 
-    // Data fetching
     const {
         data: projectsData,
         isLoading,
+        isFetching,
         isFetchingNextPage,
         hasNextPage,
         fetchNextPage,
@@ -212,7 +200,6 @@
     const { data: categoriesData } = useProjectCategories();
     const { data: statsData } = useProjectStats();
 
-    // Computed
     const allProjects = computed(() => {
         if (!projectsData.value?.pages) {
             return [];
@@ -222,7 +209,10 @@
 
     const hasProjects = computed(() => allProjects.value.length > 0);
 
-    // ItemList Schema.org pour resultats enrichis
+    // Fetch déclenché par filtres uniquement (hors pagination infinie)
+    const isFilterFetching = computed(() => isFetching.value && !isFetchingNextPage.value && hasProjects.value);
+
+    // Schema.org ItemList pour rich results
     const projectListItems = computed(() =>
         allProjects.value.map((p) => ({ name: p.title, url: `/projects/${p.slug}`, image: p.image })),
     );
@@ -232,16 +222,14 @@
         }
     }, { immediate: true });
 
-    // Category options
     const categoryOptions = computed<SelectOption[]>(() => {
         const cats = (categoriesData.value?.data ?? []) as ProjectCategory[];
         return [
             { value: '', label: 'Toutes les catégories' },
-            ...cats.filter((c) => c.count > 0).map((c) => ({ value: String(c.id), label: c.name })),
+            ...cats.filter((c) => c.count > 0).map((c) => ({ value: c.slug, label: c.name })),
         ];
     });
 
-    // Technology options (extracted from all projects)
     const techOptions = computed(() => {
         const techSet = new Set<string>();
         for (const project of allProjects.value) {
@@ -254,7 +242,6 @@
             .map((tech) => ({ value: tech, label: tech }));
     });
 
-    // Stats
     const statsCards = computed(() => {
         const stats = statsData.value;
         return [
@@ -264,7 +251,6 @@
         ];
     });
 
-    // Methods
     const resetFilters = () => reset();
 
     const loadMore = () => {
@@ -275,7 +261,7 @@
 
     const canAutoLoad = computed(() => hasNextPage.value && !isFetchingNextPage.value);
     const { targetRef } = useInfiniteScroll(loadMore, { enabled: canAutoLoad });
-    void targetRef; // Used as template ref
+    void targetRef;
 </script>
 
 <style lang="scss" scoped>
@@ -287,7 +273,6 @@
         min-height: 100vh;
     }
 
-    /* Filters */
     .projects-filters {
         display: flex;
         flex-wrap: wrap;
@@ -356,11 +341,11 @@
         }
     }
 
-    /* Grid */
     .projects-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: vars.$spacing-lg;
+        transition: opacity 0.2s ease;
 
         @include mix.responsive(tablet) {
             grid-template-columns: repeat(2, 1fr);
@@ -368,6 +353,11 @@
 
         @include mix.responsive(mobile) {
             grid-template-columns: 1fr;
+        }
+
+        &--fetching {
+            opacity: 0.55;
+            pointer-events: none;
         }
 
         &__item {
@@ -388,7 +378,6 @@
         }
     }
 
-    /* Skeleton */
     .project-skeleton {
         background: vars.$white;
         border: 1px solid vars.$border-color;
@@ -455,7 +444,6 @@
         }
     }
 
-    /* Load More */
     .projects-more {
         display: flex;
         justify-content: center;

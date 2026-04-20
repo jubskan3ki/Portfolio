@@ -39,16 +39,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import Spinner from '@/components/loaders/Spinner.vue';
 
-    interface Props {
-        modelValue: string;
-        placeholder?: string;
-        compact?: boolean;
-        loading?: boolean;
-        isExpanded?: boolean;
-        shortcut?: string;
-    }
+    import type { SearchInputProps } from '@/types/components/ui';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SearchInputProps>(), {
         placeholder: 'Rechercher...',
         compact: false,
         loading: false,

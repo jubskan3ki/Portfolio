@@ -1,6 +1,3 @@
-// Couleurs du design system
-
-// Couleurs de marque
 $primary-color: #673c5c;
 $primary-light: #7a4a6e;
 $primary-dark: #542f4a;
@@ -8,7 +5,6 @@ $secondary-color: #ac72a0;
 $secondary-light: #c994bc;
 $secondary-dark: #9a6590;
 
-// Couleurs semantiques
 $success-color: #22c55e;
 $success-light: #4ade80;
 $success-dark: #16a34a;
@@ -22,7 +18,6 @@ $info-color: #0ea5e9;
 $info-light: #38bdf8;
 $info-dark: #0284c7;
 
-// Neutres
 $black: #111827;
 $black-light: #1f2937;
 $gray-dark: #4b5563;
@@ -31,26 +26,22 @@ $gray-light: #d1d5db;
 $white-dark: #f3f4f6;
 $white: #fff;
 
-// Texte
 $text-primary: $black;
 $text-secondary: $gray-dark;
-// Muted avec meilleur contraste WCAG AA (4.5:1 minimum)
+// WCAG AA 4.5:1
 $text-muted: #6b7280;
 $text-inverted: $white;
 
-// Fonds
 $bg-primary: $white;
 $bg-secondary: #f9fafb;
 $bg-tertiary: $white-dark;
 $bg-dark: #f8fafc;
 
-// Bordures
 $border-color: #e5e7eb;
 $border-color-light: $white-dark;
 $border-color-dark: $gray-light;
 $border-subtle: #e2e8f0;
 
-// Overlays (pour sidebar dark, modals, etc.)
 $overlay-light: rgba(255, 255, 255, 0.85);
 $overlay-light-hover: rgba(255, 255, 255, 0.1);
 $overlay-light-active: rgba(255, 255, 255, 0.15);

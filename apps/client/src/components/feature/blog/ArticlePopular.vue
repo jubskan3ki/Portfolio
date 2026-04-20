@@ -50,23 +50,9 @@
     import { formatRelativeDate } from '@/services/utils/date';
     import { formatViews } from '@/services/utils/helpers';
 
-    interface PopularArticle {
-        id: string | number;
-        slug: string;
-        title: string;
-        image?: string;
-        date: string;
-        readTime?: number;
-        views?: number;
-    }
+    import type { ArticlePopularProps } from '@/types/feature/blog';
 
-    interface Props {
-        articles?: PopularArticle[];
-        title?: string;
-        showTitle?: boolean;
-    }
-
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<ArticlePopularProps>(), {
         articles: () => [],
         title: 'Articles populaires',
         showTitle: true,

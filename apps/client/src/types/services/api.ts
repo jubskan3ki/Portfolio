@@ -1,7 +1,30 @@
-// Types pour les services API core
-
 import type { ApiError } from '@/types/api/common';
 import type { QueryKey, UseQueryOptions } from '@tanstack/vue-query';
+
+// createQuery presets
+export type QueryPreset = 'list' | 'detail' | 'static' | 'realtime';
+
+// Token manager
+export type AuthFailureHandler = () => void | Promise<void>;
+
+// Query keys factory
+export type QueryKeyModule
+    = | 'articles'
+        | 'projects'
+        | 'stacks'
+        | 'experiences'
+        | 'contact'
+        | 'auth'
+        | 'stats'
+        | 'transfer'
+        | 'search';
+
+export interface QueryKeys<T extends string> {
+    all: readonly [T];
+    list: <F extends object = object>(filters?: F) => readonly [T, 'list', F | undefined];
+    detail: (id: string | number) => readonly [T, 'detail', string | number];
+    custom: <K extends string>(...keys: [K, ...unknown[]]) => readonly [T, K, ...unknown[]];
+}
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -10,7 +33,7 @@ export interface FetchOptions {
     skipRefresh?: boolean;
     transformResponse?: boolean;
     transformRequest?: boolean;
-    /** @internal Tracks recursive call depth to prevent infinite loops */
+    /** @internal récursion max pour éviter boucle infinie */
     _depth?: number;
 }
 
@@ -50,5 +73,4 @@ export interface SubResourceKeys {
     detail?: (id: string | number) => readonly unknown[];
 }
 
-// Re-export common types for convenience
 export type { ApiError } from '@/types/api/common';

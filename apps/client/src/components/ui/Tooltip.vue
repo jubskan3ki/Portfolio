@@ -171,12 +171,11 @@
         }
     };
 
-    // Throttled handlers for performance
     const handleResize = useThrottleFn(() => {
         if (isVisible.value) {
             updatePosition();
         }
-    }, 16); // ~60fps
+    }, 16);
 
     const handleScroll = useThrottleFn(() => {
         if (isVisible.value) {

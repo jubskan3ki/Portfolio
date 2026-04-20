@@ -12,11 +12,9 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    interface Props {
-        sidebarWidth?: string;
-    }
+    import type { DetailPageLayoutProps } from '@/types/components/layouts';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<DetailPageLayoutProps>(), {
         sidebarWidth: '340px',
     });
 

@@ -3,20 +3,10 @@ import { useRouter } from 'vue-router';
 
 import { SITE_CONFIG } from '@/composables/seo/useSeo';
 
-export interface SearchAction {
-    id: string;
-    title: string;
-    subtitle?: string;
-    icon: string;
-    // Either a navigation target or an imperative action — never both
-    link?: string;
-    external?: boolean;
-    run?: () => void | Promise<void>;
-}
+import type { SearchAction } from '@/types/composables/data';
 
-// Static "command palette" actions shown when the search is empty.
-// Kept here (not in store) because the set is tiny and doesn't depend
-// on server data — avoids a round-trip on every palette open.
+export type { SearchAction };
+
 export function useSearchActions() {
     const router = useRouter();
     const email = SITE_CONFIG.author.email;
@@ -28,7 +18,6 @@ export function useSearchActions() {
         try {
             await navigator.clipboard.writeText(email);
         } catch (err) {
-            // Fallback silently — browser blocked clipboard or not in a secure context
             console.warn('[search-actions] clipboard write failed:', err);
         }
     }

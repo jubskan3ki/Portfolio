@@ -1,25 +1,32 @@
-# Root level dockerignore
-.git
-.github
+.git/
+.github/
 .gitignore
-.vscode
-.idea
+.gitlab-ci.yml
+.vscode/
+.idea/
 *.md
 LICENSE
 
-# Monitoring
 monitoring/
-backups/
+traefik/
+nginx/
+ansible/
+bench/
+docs/
 
-# Environment files
+backups/
+Data/
+
+# Secrets — NEVER ship these in an image.
 .env
 .env.*
 !.env.example
+secrets/
+*.age
+age-key.txt
 
-# Logs
 logs/
 *.log
 
-# OS files
 .DS_Store
 Thumbs.db

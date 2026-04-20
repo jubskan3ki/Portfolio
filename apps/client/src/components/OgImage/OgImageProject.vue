@@ -9,7 +9,6 @@
             color: '#ffffff',
         }"
     >
-        <!-- Text content -->
         <div
             :style="{
                 display: 'flex',
@@ -19,7 +18,6 @@
                 flex: 1,
             }"
         >
-            <!-- Category -->
             <div :style="{ display: 'flex', alignItems: 'center', gap: '14px' }">
                 <span
                     :style="{
@@ -51,7 +49,6 @@
                 </span>
             </div>
 
-            <!-- Title + description -->
             <div
                 :style="{
                     display: 'flex',
@@ -87,7 +84,6 @@
                 </p>
             </div>
 
-            <!-- Footer: tech badges + identity -->
             <div
                 :style="{
                     display: 'flex',
@@ -134,7 +130,6 @@
             </div>
         </div>
 
-        <!-- Cover -->
         <div
             v-if="image"
             :style="{

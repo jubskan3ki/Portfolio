@@ -15,14 +15,9 @@
 
     import AlertItem from './AlertItem.vue';
 
-    import type { FeedbackPosition } from '@/types/components/feedback';
+    import type { AlertListProps } from '@/types/components/feedback';
 
-    interface Props {
-        position?: FeedbackPosition;
-        maxAlerts?: number;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<AlertListProps>(), {
         position: 'top-right',
         maxAlerts: 5,
     });
@@ -57,7 +52,6 @@
             pointer-events: auto;
         }
 
-        /* Positions */
         &--top-right {
             top: 0;
             right: 0;
@@ -100,7 +94,6 @@
         }
     }
 
-    /* Animations */
     .alert-slide-enter-active {
         transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     }

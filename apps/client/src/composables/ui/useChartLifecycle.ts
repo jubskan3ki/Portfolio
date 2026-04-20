@@ -1,21 +1,7 @@
 import { ref, onUnmounted, nextTick, type Ref } from 'vue';
 
+import type { UseChartLifecycleOptions, UseChartLifecycleReturn } from '@/types/composables/ui';
 import type { Chart, ChartConfiguration, ChartType, ChartData, ChartOptions } from 'chart.js';
-
-interface UseChartLifecycleOptions<T extends ChartType = ChartType> {
-    type: T;
-    defaultOptions?: ChartOptions<T>;
-}
-
-interface UseChartLifecycleReturn<T extends ChartType = ChartType> {
-    chart: Ref<Chart<T> | null>;
-    canvasRef: Ref<HTMLCanvasElement | null>;
-    initChart: (data: ChartData<T>, options?: ChartOptions<T>) => Promise<boolean>;
-    updateData: (data: ChartData<T>) => void;
-    updateOptions: (options: ChartOptions<T>) => void;
-    destroyChart: () => void;
-    isInitialized: Ref<boolean>;
-}
 
 const waitForCanvas = (
     canvasRef: Ref<HTMLCanvasElement | null>,
@@ -55,7 +41,7 @@ export function useChartLifecycle<T extends ChartType = ChartType>(
             try {
                 chart.value.destroy();
             } catch {
-                // Ignore destruction errors
+                /* noop */
             }
             chart.value = null;
         }
@@ -74,7 +60,7 @@ export function useChartLifecycle<T extends ChartType = ChartType>(
                 try {
                     chart.value.destroy();
                 } catch {
-                    // Ignore
+                    /* noop */
                 }
                 chart.value = null;
                 isInitialized.value = false;
@@ -153,7 +139,6 @@ export function useChartLifecycle<T extends ChartType = ChartType>(
             return;
         }
 
-        // Ensure canvas is still connected
         if (!canvasRef.value?.isConnected) {
             return;
         }
@@ -183,7 +168,7 @@ export function useChartLifecycle<T extends ChartType = ChartType>(
             };
             chart.value.update('none');
         } catch {
-            // Ignore errors
+            /* noop */
         }
     };
 

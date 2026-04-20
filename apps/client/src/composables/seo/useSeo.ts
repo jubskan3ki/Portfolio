@@ -3,7 +3,6 @@ import type { ArticleDetail } from '@/types/feature/blog';
 import type { ProjectDetail } from '@/types/feature/project';
 import type { StackDetail } from '@/types/feature/stacks';
 
-// Configuration SEO centralisee
 export const SITE_CONFIG: SiteConfig = {
     name: 'Juba Ait-Adda',
     title: 'Juba Ait-Adda | Développeur Full-Stack & DevOps',
@@ -28,10 +27,9 @@ export const SITE_CONFIG: SiteConfig = {
     },
 };
 
-// Identifiant stable pour la reconciliation d'entite Person sur toutes les pages
+// Stable @id shared across pages so Schema.org graph reconciles Person references.
 export const PERSON_ID = `${SITE_CONFIG.url}/#person`;
 
-// Reference auteur partagee — relie articles/projets a l'entite principale
 export const AUTHOR_REF = {
     '@type': 'Person' as const,
     '@id': PERSON_ID,
@@ -39,9 +37,7 @@ export const AUTHOR_REF = {
     url: SITE_CONFIG.url,
 };
 
-// Retourne l'URL telle quelle si elle est absolue, undefined sinon.
-// Satori (via nuxt-og-image) doit pouvoir fetch l'image server-side — un chemin
-// relatif ne résoudrait pas correctement selon l'environnement.
+// Satori (nuxt-og-image) fetches images server-side; relative paths fail to resolve across envs.
 function absoluteImage(url?: string | null): string | undefined {
     if (!url) {
         return undefined;
@@ -52,7 +48,6 @@ function absoluteImage(url?: string | null): string | undefined {
     return undefined;
 }
 
-// Extrait le nombre de mots depuis les blocs de contenu JSON
 function extractWordCount(content: unknown): number {
     if (!content || !Array.isArray(content)) {
         return 0;
@@ -64,7 +59,6 @@ function extractWordCount(content: unknown): number {
     }, 0);
 }
 
-// Composable SEO principal - utilise les auto-imports Nuxt
 export function useSeo(options: SeoOptions) {
     const fullTitle = options.title.includes('|') ? options.title : `${options.title} | ${SITE_CONFIG.name}`;
 
@@ -74,7 +68,6 @@ export function useSeo(options: SeoOptions) {
 
     const pageUrl = options.url?.startsWith('http') ? options.url : `${SITE_CONFIG.url}${options.url || ''}`;
 
-    // useSeoMeta auto-importe par Nuxt
     useSeoMeta({
         title: fullTitle,
         description: options.description,
@@ -97,7 +90,6 @@ export function useSeo(options: SeoOptions) {
         ...(options.noindex && { robots: 'noindex, nofollow' }),
     });
 
-    // useHead auto-importe par Nuxt
     useHead({
         title: fullTitle,
         meta: [
@@ -108,7 +100,6 @@ export function useSeo(options: SeoOptions) {
     });
 }
 
-// SEO pour les articles avec Schema.org BlogPosting
 export function useArticleSeo(article: ArticleDetail) {
     const seoTitle = article.seoTitle || article.title;
     const seoDescription = article.metaDescription || article.excerpt?.substring(0, 155);
@@ -136,7 +127,6 @@ export function useArticleSeo(article: ArticleDetail) {
 
     const articleUrl = `${SITE_CONFIG.url}/blog/${article.slug}`;
 
-    // Schema.org BlogPosting - auto-importe par @nuxtjs/seo
     useSchemaOrg([
         defineArticle({
             '@type': 'BlogPosting',
@@ -167,7 +157,6 @@ export function useArticleSeo(article: ArticleDetail) {
     ]);
 }
 
-// SEO pour les projets avec Schema.org SoftwareApplication
 export function useProjectSeo(project: ProjectDetail) {
     const seoTitle = project.seoTitle || project.title;
     const seoDescription = project.metaDescription || project.description?.substring(0, 155);
@@ -211,7 +200,6 @@ export function useProjectSeo(project: ProjectDetail) {
     ]);
 }
 
-// SEO pour les pages de technologies avec Schema.org TechArticle
 export function useStackSeo(stack: StackDetail) {
     const seoTitle = stack.seoTitle || `${stack.name} - Compétences`;
     const seoDescription = stack.metaDescription || stack.description?.substring(0, 155);
@@ -233,7 +221,6 @@ export function useStackSeo(stack: StackDetail) {
         level: stack.level,
     } as Record<string, unknown>);
 
-    // Mapper le niveau numerique vers un libelle de competence
     const proficiencyMap: Record<string, string> = {
         1: 'Beginner', 1.5: 'Beginner', 2: 'Beginner',
         2.5: 'Intermediate', 3: 'Intermediate',
@@ -263,7 +250,6 @@ export function useStackSeo(stack: StackDetail) {
     ]);
 }
 
-// SEO pour la page d'accueil avec Schema.org Person + ProfilePage + WebSite
 export function useHomeSeo() {
     useSeo({
         title: SITE_CONFIG.title,
@@ -342,7 +328,6 @@ export function useHomeSeo() {
     ]);
 }
 
-// SEO pour la page contact + about fusionnee avec Schema.org ContactPage + AboutPage + Person
 export function useContactSeo() {
     useSeo({
         title: 'À propos & Contact',
@@ -393,7 +378,6 @@ export function useContactSeo() {
     ]);
 }
 
-// SEO pour la page experiences avec Schema.org ProfilePage
 export function useExperienceSeo() {
     useSeo({
         title: 'Mon Parcours',
@@ -412,7 +396,6 @@ export function useExperienceSeo() {
     ]);
 }
 
-// SEO pour la page blog (liste) avec Schema.org CollectionPage
 export function useBlogSeo() {
     useSeo({
         title: 'Blog',
@@ -431,7 +414,6 @@ export function useBlogSeo() {
     ]);
 }
 
-// SEO pour la page projets (liste) avec Schema.org CollectionPage
 export function useProjectsSeo() {
     useSeo({
         title: 'Projets',
@@ -450,7 +432,6 @@ export function useProjectsSeo() {
     ]);
 }
 
-// SEO pour la page technologies (liste) avec Schema.org CollectionPage
 export function useStacksSeo() {
     useSeo({
         title: 'Stacks',
@@ -469,7 +450,6 @@ export function useStacksSeo() {
     ]);
 }
 
-// SEO pour la page a propos avec Schema.org AboutPage
 export function useAboutSeo() {
     useSeo({
         title: 'À propos de Juba Ait-Adda',

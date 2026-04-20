@@ -9,24 +9,19 @@
                 :aria-labelledby="titleId"
                 :aria-describedby="messageId"
             >
-                <!-- Overlay -->
                 <div class="confirm-dialog__overlay" aria-hidden="true" @click="handleCancel"></div>
 
-                <!-- Content -->
                 <div ref="containerRef" :class="dialogClasses">
-                    <!-- Icon -->
                     <div class="confirm-dialog__icon-wrapper">
                         <div :class="iconBgClasses"></div>
                         <BaseIcon :name="iconName" :size="28" :class="iconClasses" />
                     </div>
 
-                    <!-- Text -->
                     <div class="confirm-dialog__content">
                         <h5 :id="titleId" class="confirm-dialog__title">{{ title }}</h5>
                         <p :id="messageId" class="confirm-dialog__message">{{ message }}</p>
                     </div>
 
-                    <!-- Actions -->
                     <div class="confirm-dialog__actions">
                         <BaseButton variant="ghost" :text="cancelText" :disabled="loading" @click="handleCancel" />
                         <BaseButton
@@ -113,18 +108,15 @@
         emit('cancel');
     };
 
-    // Accessibility: Focus trap and Escape key
     const containerRef = ref<HTMLElement | null>(null);
     const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(containerRef);
 
-    // Handle Escape key
     useEscapeKey(() => {
         if (props.modelValue && !props.loading) {
             handleCancel();
         }
     });
 
-    // Activate/deactivate focus trap when dialog opens/closes
     watch(
         () => props.modelValue,
         async (isOpen) => {
@@ -170,7 +162,6 @@
             text-align: center;
         }
 
-        // Icon
         &__icon-wrapper {
             position: relative;
             display: inline-flex;
@@ -215,7 +206,6 @@
             }
         }
 
-        // Content
         &__content {
             margin-bottom: vars.$spacing-lg;
         }
@@ -232,7 +222,6 @@
             line-height: vars.$line-height-relaxed;
         }
 
-        // Actions
         &__actions {
             display: flex;
             gap: vars.$spacing-xs;
@@ -240,7 +229,6 @@
         }
     }
 
-    // Animations
     .confirm-enter-active {
         transition: opacity 0.2s ease-out;
 

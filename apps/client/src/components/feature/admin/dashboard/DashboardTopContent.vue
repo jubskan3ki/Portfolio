@@ -44,24 +44,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import SegmentedTabs from '@/components/ui/SegmentedTabs.vue';
 
-    interface TopItem {
-        id: number;
-        title: string;
-        slug: string;
-        views: number;
-        category?: string;
-        level?: number;
-        type: 'article' | 'project' | 'stack';
-    }
+    import type { DashboardTopContentProps, DashboardTopItem } from '@/types/components/admin';
 
-    interface Props {
-        articles: TopItem[];
-        projects: TopItem[];
-        stacks: TopItem[];
-        loading?: boolean;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<DashboardTopContentProps>(), {
         loading: false,
     });
 
@@ -86,7 +71,7 @@
         }
     });
 
-    const getItemLink = (item: TopItem): string => {
+    const getItemLink = (item: DashboardTopItem): string => {
         const routes: Record<string, string> = {
             article: `/admin/articles/${item.id}`,
             project: `/admin/projects/${item.id}`,

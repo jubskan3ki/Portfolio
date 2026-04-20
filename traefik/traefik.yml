@@ -1,0 +1,81 @@
+# Tracing v3 (otlp, sampleRate) : en flags CLI dans docker-compose.yml — schema IDE bloque ces clés ici.
+global:
+    checkNewVersion: false
+    sendAnonymousUsage: false
+
+entryPoints:
+    web:
+        address: ":80"
+        http:
+            redirections:
+                entryPoint:
+                    to: websecure
+                    scheme: https
+                    permanent: true
+    websecure:
+        address: ":443"
+        http:
+            middlewares:
+                - security-headers@file
+                - compress@file
+        http3: {}
+    metrics:
+        address: ":8082"
+
+api:
+    dashboard: true
+    insecure: false
+
+providers:
+    file:
+        directory: /etc/traefik/dynamic
+        watch: true
+
+certificatesResolvers:
+    letsencrypt:
+        acme:
+            email: "${ACME_EMAIL}"
+            storage: /letsencrypt/acme.json
+            httpChallenge:
+                entryPoint: web
+
+log:
+    level: INFO
+    format: json
+
+accessLog:
+    format: json
+    filters:
+        statusCodes:
+            - "400-599"
+        retryAttempts: true
+        minDuration: 100ms
+    fields:
+        defaultMode: keep
+        headers:
+            defaultMode: drop
+            names:
+                User-Agent: keep
+                Referer: keep
+                X-Forwarded-For: keep
+                X-Real-Ip: keep
+
+metrics:
+    prometheus:
+        entryPoint: metrics
+        addEntryPointsLabels: true
+        addServicesLabels: true
+        addRoutersLabels: true
+        buckets:
+            - 0.1
+            - 0.3
+            - 0.5
+            - 1.0
+            - 2.5
+            - 5.0
+
+serversTransport:
+    forwardingTimeouts:
+        dialTimeout: 5s
+        responseHeaderTimeout: 30s
+        idleConnTimeout: 90s

@@ -28,7 +28,7 @@ class JsonImportStrategy(ImportStrategy):
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON file: {e}") from e
 
-        # Handle both flat list and wrapped format
+        # Accepte liste plate ou enveloppe {"data": [...]}.
         if isinstance(data, list):
             return data
         if isinstance(data, dict) and "data" in data:

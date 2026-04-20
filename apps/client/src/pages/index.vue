@@ -1,10 +1,8 @@
 <template>
     <div ref="pageRef" class="home-page" :class="{ 'home-page--ready': pageReady }">
-        <!-- Background decorations (dots handled by layout) -->
         <div class="home-page__orb home-page__orb--primary"></div>
         <div class="home-page__orb home-page__orb--secondary"></div>
 
-        <!-- Floating blob shapes (always visible, parallax disabled if reduced motion) -->
         <div class="home-page__shapes">
             <span
                 v-for="shape in shapes"
@@ -22,10 +20,8 @@
             ></span>
         </div>
 
-        <!-- Hero Section -->
         <HeroSection :featured-stacks="featuredStacks" :bio="heroBio" />
 
-        <!-- Stats/Expertise Section -->
         <section class="expertise-section">
             <div class="container">
                 <div class="expertise-grid">
@@ -65,7 +61,6 @@
             </div>
         </section>
 
-        <!-- Experience Section -->
         <Section
             id="Experiences"
             title="Expériences récentes"
@@ -88,7 +83,6 @@
             </div>
         </Section>
 
-        <!-- Projets Section -->
         <Section
             id="projects"
             title="Projets récents"
@@ -109,7 +103,6 @@
             </div>
         </Section>
 
-        <!-- Stacks Section -->
         <Section
             id="stacks"
             title="Stacks"
@@ -134,7 +127,6 @@
             </div>
         </Section>
 
-        <!-- Blog Preview Section -->
         <Section
             id="blog"
             title="Articles récents"
@@ -162,7 +154,6 @@
             </div>
         </Section>
 
-        <!-- Section Contact -->
         <section class="contact-section">
             <div class="container">
                 <div class="contact-section__header">
@@ -210,10 +201,9 @@
     import type { HeroStack } from '@/types/feature/home';
     import type { Stack } from '@/types/feature/stacks';
 
-    // SEO
     useHomeSeo();
 
-    // Preload hero image (LCP element) via IPX processed URL
+    // Preload LCP hero image via IPX processed URL
     useHead({
         link: [
             {
@@ -226,23 +216,16 @@
         ],
     });
 
-    // Accessibility - respect reduced motion preference
     const { prefersReducedMotion } = useReducedMotion();
-
-    // Responsive - disable parallax on mobile for performance
     const { isMobile } = useResponsive();
 
-    // Should parallax be disabled (reduced motion OR mobile)
     const shouldDisableParallax = computed(() => prefersReducedMotion.value || isMobile.value);
 
-    // Deferred animations
     const pageReady = ref(false);
 
-    // Parallax refs
     const pageRef = ref<HTMLElement | null>(null);
     const shapeRefs = ref<Map<number, HTMLElement>>(new Map());
 
-    // Floating blob shapes configuration
     const shapes = [
         { id: 1, type: 'blob-1', size: 120, x: 3, y: 8, depth: 25, opacity: 0.12 },
         { id: 2, type: 'blob-3', size: 150, x: 88, y: 45, depth: 30, opacity: 0.08 },
@@ -255,7 +238,6 @@
         }
     };
 
-    // Parallax animation
     let targetX = 0;
     let targetY = 0;
     let currentX = 0;
@@ -333,7 +315,6 @@
         document.removeEventListener('visibilitychange', handleVisibilityChange);
     });
 
-    // ── Above-fold: hero stacks — useAsyncData + transform for minimal payload ──
     const defaultStacks: HeroStack[] = [
         { id: 1, name: 'Vue.js', logo: '', level: 90 },
         { id: 2, name: 'React', logo: '', level: 85 },
@@ -355,7 +336,6 @@
         },
     );
 
-    // ── Above-fold: contact — single request, transform to keep only needed fields ──
     const { data: contactData } = await useAsyncData(
         'contact-home',
         () => contactApi.getInfo(),
@@ -377,23 +357,20 @@
         },
     );
 
-    // ── Below-fold: deferred until section nears viewport ──
     const {
-        targetRef: experiencesTargetRef, // used as template ref
+        targetRef: experiencesTargetRef,
         enabled: experiencesEnabled,
     } = useViewportTrigger({ rootMargin: '300px' });
     void experiencesTargetRef;
     const { data: experiencesData } = useProfessionalExperiences({ enabled: experiencesEnabled });
 
     const {
-        targetRef: articlesTargetRef, // used as template ref
+        targetRef: articlesTargetRef,
         enabled: articlesEnabled,
     } = useViewportTrigger({ rootMargin: '300px' });
     void articlesTargetRef;
     const { data: articlesData } = useRecentArticles(4, { enabled: articlesEnabled });
-    // ProjectCarousel and StackCarousel fetch their own data internally
 
-    // Computed
     const featuredStacks = computed(() =>
         heroStacks.value?.length ? heroStacks.value : defaultStacks,
     );
@@ -442,7 +419,6 @@
         min-height: 100vh;
         overflow-x: hidden;
 
-        /* Ambient glow effects - inspired by portfolio-summary */
         &__orb {
             position: fixed;
             border-radius: 50%;
@@ -478,7 +454,6 @@
             }
         }
 
-        /* Floating organic shapes */
         &__shapes {
             position: fixed;
             inset: 0;
@@ -527,7 +502,6 @@
         }
     }
 
-    /* Smooth glow animation */
     @keyframes glow-drift {
         0%,
         100% {
@@ -539,7 +513,6 @@
         }
     }
 
-    /* Organic blob animations */
     @keyframes blob-float-1 {
         0%,
         100% {
@@ -584,7 +557,6 @@
         }
     }
 
-    /* Expertise Section */
     .expertise-section {
         position: relative;
         z-index: 10;
@@ -611,7 +583,6 @@
         }
     }
 
-    /* Contact Section - premium feel */
     .contact-section {
         position: relative;
         z-index: 10;
@@ -619,7 +590,6 @@
         background: linear-gradient(135deg, vars.$primary-color 0%, vars.$primary-dark 100%);
         overflow: hidden;
 
-        /* Subtle pattern overlay */
         &::before {
             content: '';
             position: absolute;
@@ -630,7 +600,6 @@
             pointer-events: none;
         }
 
-        /* Glow accents */
         &::after {
             content: '';
             position: absolute;
@@ -665,7 +634,6 @@
         }
     }
 
-    /* Contact Wrapper */
     .contact-wrapper {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -709,7 +677,6 @@
         }
     }
 
-    /* Section Actions */
     .section-actions {
         display: flex;
         justify-content: center;
@@ -717,7 +684,6 @@
         gap: vars.$spacing-md;
     }
 
-    /* Project Timeline */
     .project-timeline {
         position: relative;
         z-index: 1;

@@ -66,10 +66,9 @@ class ContactsThrottle(BaseModuleThrottle):
             email,
         )
 
-        # Track abuse count via atomic increment
         abuse_key = f"contact_abuse:{ip}"
         count: int = cache.get(abuse_key, 0) + 1
-        cache.set(abuse_key, count, 86400)  # 24h
+        cache.set(abuse_key, count, 86400)
 
         if count >= 10:
             logger.error(
@@ -78,5 +77,4 @@ class ContactsThrottle(BaseModuleThrottle):
                 ip,
                 email,
             )
-            # Block IP for 24h via a dedicated flag
             cache.set(key=f"contact_abuse_blocked:{ip}", value=True, timeout=86400)

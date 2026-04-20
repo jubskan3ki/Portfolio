@@ -1,0 +1,49 @@
+---
+# Non-secret defaults shared across envs. Secrets (host, SSH creds, age, B2, webhook) live in vault.yml.
+
+target_ssh_port: 2200
+sshd_allow_users: ["{{ ansible_user | default('portfolio') }}"]
+
+ufw_allowed_tcp_ports:
+    - "{{ target_ssh_port }}"
+    - 80
+    - 443
+
+fail2ban_jails:
+    - name: sshd
+      enabled: true
+      maxretry: 5
+      findtime: 10m
+      bantime: 1h
+    - name: traefik-auth
+      enabled: true
+      logpath: /var/log/traefik/access.log
+      maxretry: 10
+      findtime: 10m
+      bantime: 1h
+
+unattended_upgrades:
+    auto_reboot: false
+    auto_reboot_time: "03:00"
+    allowed_origins:
+        - "origin=Debian,codename=${distro_codename},label=Debian-Security"
+        - "origin=Ubuntu,codename=${distro_codename}-security"
+
+lynis_cron_schedule: "0 3 1 * *"  # 3am on the 1st of each month
+
+docker_daemon_config:
+    log-driver: json-file
+    log-opts:
+        max-size: "10m"
+        max-file: "3"
+    default-address-pools:
+        - base: "172.20.0.0/16"
+          size: 24
+    live-restore: true
+
+app_system_user: portfolio
+app_systemd_service: portfolio
+sops_age_key_path: /etc/sops/age-key.txt
+secrets_runtime_dir: /run/secrets
+
+backup_retention_days: 30

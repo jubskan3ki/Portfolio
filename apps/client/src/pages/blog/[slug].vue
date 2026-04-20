@@ -1,6 +1,5 @@
 <template>
     <div class="article-page">
-        <!-- Reading Progress Bar -->
         <div
             v-if="progressVisible"
             class="reading-progress"
@@ -12,10 +11,8 @@
             aria-label="Progression de lecture"
         ></div>
 
-        <!-- Loading -->
         <LoadingState v-if="isLoading" message="Chargement de l'article..." size="lg" />
 
-        <!-- Error -->
         <div v-else-if="error" class="article-error">
             <ErrorMessage
                 :message="error?.message ?? 'Une erreur est survenue'"
@@ -25,13 +22,19 @@
         </div>
 
         <template v-else-if="currentArticle">
-            <!-- Hero -->
             <Hero
                 :title="currentArticle.title"
                 :transition-key="currentArticle.slug"
                 variant="secondary"
                 has-meta
             >
+                <template v-if="breadcrumbItems.length > 1" #breadcrumb>
+                    <Breadcrumb
+                        :items="breadcrumbItems"
+                        variant="hero"
+                        separator="chevron"
+                    />
+                </template>
                 <template #meta>
                     <div class="hero__meta-item">
                         <BaseIcon name="folder" :size="16" />
@@ -52,16 +55,7 @@
                 </template>
             </Hero>
 
-            <!-- Breadcrumb -->
-            <Breadcrumb
-                v-if="breadcrumbItems.length > 1"
-                :items="breadcrumbItems"
-                separator="chevron"
-            />
-
-            <!-- Content -->
             <Main variant="default" size="large">
-                <!-- Article Intro -->
                 <div class="article-intro">
                     <div v-if="currentArticle.image" class="article-intro__media">
                         <BaseImage
@@ -82,14 +76,12 @@
 
                 <DetailPageLayout>
                     <template #main>
-                        <!-- Article Body -->
                         <article ref="articleRef" class="detail-card">
                             <ArticleBlockRenderer :blocks="contentBlocks" />
                         </article>
                     </template>
 
                     <template #sidebar>
-                        <!-- Table of Contents -->
                         <nav v-if="tocHeadings.length" class="toc-card" aria-label="Table des matières">
                             <div class="toc-card__header">
                                 <span class="toc-card__label">Sommaire</span>
@@ -117,7 +109,6 @@
                             </div>
                         </nav>
 
-                        <!-- Related Stacks (maillage interne) -->
                         <div v-if="resolvedStacks.length" class="sidebar-card">
                             <h3 class="sidebar-card__heading">
                                 <BaseIcon name="layers" :size="16" class="sidebar-card__heading-icon" />
@@ -144,15 +135,12 @@
                             </div>
                         </div>
 
-                        <!-- Share -->
                         <ShareCard :title="currentArticle.title" />
 
-                        <!-- Popular Articles -->
                         <div v-if="popularArticles?.length" class="sidebar-card sidebar-card--flush">
                             <PopularArticles :articles="popularArticles" show-title />
                         </div>
 
-                        <!-- Tags -->
                         <div v-if="currentArticle.tags?.length" class="sidebar-card sidebar-card--flush">
                             <ArticleTags :tags="currentArticle.tags" display="simple" show-title />
                         </div>
@@ -160,7 +148,6 @@
                 </DetailPageLayout>
             </Main>
 
-            <!-- Related Articles -->
             <Section v-if="displayedRelatedArticles?.length" variant="light" size="default">
                 <template #header>
                     <h2 class="article-page__section-title">
@@ -173,7 +160,6 @@
                 </div>
             </Section>
 
-            <!-- CTA -->
             <CTA
                 key="article-cta"
                 title="Vous avez un projet ?"
@@ -231,18 +217,16 @@
 
     const router = useRouter();
 
-    // Validate slug parameter
     const { slug } = useDetailSlug(ROUTES.BLOG.path);
 
-    // API
     const { data: currentArticle, isLoading, isError, error } = useArticle(slug);
     const { data: popularArticles } = usePopularArticles(3);
     const { data: relatedArticles } = useRelatedArticles(slug);
 
-    // Normalize content blocks (handles raw markdown, JSON string, or mixed blocks)
+    // Normalise markdown brut, JSON string ou blocs mixtes
     const contentBlocks = computed(() => normalizeContent(currentArticle.value?.content));
 
-    // Related articles (dedicated endpoint with popular fallback)
+    // Endpoint related dédié, fallback sur populaires
     const displayedRelatedArticles = computed(() => {
         if (relatedArticles.value?.length) {
             return relatedArticles.value;
@@ -250,7 +234,7 @@
         return popularArticles.value?.filter((a) => a.slug !== slug.value) ?? [];
     });
 
-    // Resolve article tags against known stacks for internal linking
+    // Résout les tags vs stacks connus (maillage interne)
     const { data: allStacks } = useFeaturedStacks(100);
     const resolvedStacks = computed(() => {
         const tags = currentArticle.value?.tags ?? [];
@@ -263,17 +247,13 @@
         );
     });
 
-    // Record view
     const { mutate: recordView } = useRecordArticleView();
     useViewRecording(currentArticle, recordView);
 
-    // Accessibility
     const { announceNavigation } = useAnnounce();
 
-    // Breadcrumb
     const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
 
-    // SEO
     watch(
         currentArticle,
         (article) => {
@@ -292,21 +272,17 @@
         { immediate: true },
     );
 
-    // Error redirect
     watch(isError, (hasError) => {
         if (hasError) {
             router.push(ROUTES.BLOG.path);
         }
     });
 
-    // Reading progress
     const articleRef = ref<HTMLElement | null>(null);
     const { progress, isVisible: progressVisible } = useReadingProgress(articleRef);
 
-    // Table of contents (uses normalized blocks)
     const { headings: tocHeadings, activeId: activeHeadingId } = useTableOfContents(contentBlocks);
 
-    // Formatting
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return new Intl.DateTimeFormat('fr-FR', {
@@ -355,7 +331,6 @@
         }
     }
 
-    /* Reading Progress */
     .reading-progress {
         position: fixed;
         top: 0;
@@ -378,7 +353,6 @@
         padding: vars.$spacing-xl 0;
     }
 
-    /* Detail Cards */
     .detail-card {
         background: fn.color-alpha(vars.$white, 0.95);
         backdrop-filter: blur(20px);
@@ -394,7 +368,6 @@
         }
     }
 
-    /* Article Intro */
     .article-intro {
         display: flex;
         align-items: stretch;
@@ -485,7 +458,6 @@
         }
     }
 
-    /* Sidebar Cards */
     .sidebar-card {
         background: fn.color-alpha(vars.$white, 0.95);
         backdrop-filter: blur(20px);
@@ -517,7 +489,6 @@
         }
     }
 
-    /* TOC Card */
     .toc-card {
         background: fn.color-alpha(vars.$white, 0.95);
         backdrop-filter: blur(20px);
@@ -621,7 +592,6 @@
         }
     }
 
-    /* Article Stacks (maillage interne) */
     .article-stacks {
         display: flex;
         flex-wrap: wrap;
@@ -653,7 +623,6 @@
         }
     }
 
-    /* Related Grid */
     .related-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

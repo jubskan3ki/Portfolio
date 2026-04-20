@@ -1,8 +1,6 @@
-// typography.scss
 @use '../abstracts/mixins' as mix;
 @use '../abstracts/variables' as vars;
 
-// Base headings
 h1,
 h2,
 h3,
@@ -80,7 +78,6 @@ h6 {
     }
 }
 
-// Base text elements
 p,
 li,
 td {
@@ -97,7 +94,6 @@ small {
     font-size: vars.$font-size-sm;
 }
 
-// Links
 a {
     color: vars.$primary-color;
     transition: color 200ms ease-out;
@@ -108,7 +104,6 @@ a {
     }
 }
 
-// Form elements
 input,
 textarea,
 select {
@@ -130,7 +125,6 @@ select {
     }
 }
 
-// Base button styles
 button {
     @include mix.button-base;
 
@@ -145,7 +139,6 @@ button {
     }
 }
 
-// Lists
 ul {
     list-style-type: disc;
     padding-left: vars.$spacing-xxxxs;
@@ -156,7 +149,6 @@ ol {
     padding-left: vars.$spacing-xxxxs;
 }
 
-// Blockquote
 blockquote {
     padding-left: vars.$spacing-xxxxs;
     border-left: 4px solid vars.$primary-color;
@@ -164,7 +156,6 @@ blockquote {
     color: vars.$gray-dark;
 }
 
-// Code blocks
 code {
     font-family: vars.$font-family-mono;
     background-color: vars.$white-dark;
@@ -186,7 +177,6 @@ pre {
     }
 }
 
-// Text utilities
 .text-truncate {
     @include mix.truncate(1);
 }

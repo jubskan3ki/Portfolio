@@ -1,25 +1,8 @@
-import { computed, type ComputedRef } from 'vue';
+import { computed } from 'vue';
 
 import { createPath } from '@/config/routes';
 
-import type { RouteObject, LinkTarget } from '@/types/components/base';
-
-export interface UseLinkResolverOptions {
-    to?: string | RouteObject;
-    params?: Record<string, string | number>;
-    target?: LinkTarget | '';
-}
-
-export interface UseLinkResolverReturn {
-    /** Whether the link points to an external URL (http, https, //, tel:, mailto:) */
-    isExternalLink: ComputedRef<boolean>;
-    /** Whether the link points to an internal route */
-    isInternalLink: ComputedRef<boolean>;
-    /** The resolved props to bind on the component (href/to/rel/target) */
-    linkProps: ComputedRef<Record<string, unknown>>;
-    /** The resolved URL path */
-    resolvedPath: ComputedRef<string>;
-}
+import type { UseLinkResolverOptions, UseLinkResolverReturn } from '@/types/composables/ui';
 
 const EXTERNAL_PREFIXES = ['http://', 'https://', '//', 'tel:', 'mailto:'] as const;
 

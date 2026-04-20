@@ -5,8 +5,6 @@ from pathlib import Path
 
 from config.settings.base import BASE_DIR, DEBUG
 
-# LOGGING
-
 LOG_DIR = BASE_DIR / "logs"
 try:
     LOG_DIR.mkdir(mode=0o755, exist_ok=True)
@@ -57,7 +55,7 @@ LOGGING = {
         "django": {
             "handlers": ["console"],
             "level": "INFO" if DEBUG else "ERROR",
-            "propagate": True,
+            "propagate": False,
         },
         "django.request": {
             "handlers": ["console"],
@@ -72,7 +70,7 @@ LOGGING = {
         "core": {
             "handlers": ["console"],
             "level": "DEBUG" if DEBUG else "ERROR",
-            "propagate": True,
+            "propagate": False,
         },
         "core.audit": {
             "handlers": ["console"],

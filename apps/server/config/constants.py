@@ -2,28 +2,23 @@
 
 import string
 
-# PAGINATION
 DEFAULT_PAGE_SIZE = 10
 MAX_PAGE_SIZE = 100
 
-# Pagination pour les listes limitees (featured, popular, related)
 MIN_PAGE_LIMIT = 1
 MAX_PAGE_LIMIT = 20
 DEFAULT_PAGE_LIMIT = 5
 
-# Limites par défaut par module
 DEFAULT_FEATURED_ARTICLES = 5
 DEFAULT_POPULAR_ARTICLES = 5
 DEFAULT_RELATED_ARTICLES = 3
 DEFAULT_FEATURED_PROJECTS = 3
 DEFAULT_FEATURED_RESOURCES = 10
 
-# Aliases pour compatibilite
 MIN_LIMIT = MIN_PAGE_LIMIT
 MAX_LIMIT = MAX_PAGE_LIMIT
 DEFAULT_LIMIT = DEFAULT_PAGE_LIMIT
 
-# SORT FIELDS - Mapping standardise pour chaque module
 ARTICLE_SORT_FIELDS = {
     "date": "published_date",
     "views": "view_count",
@@ -50,7 +45,6 @@ EXPERIENCE_SORT_FIELDS = {
     "company": "company",
 }
 
-# Query params standardises (camelCase pour le frontend)
 QUERY_PARAM_SORT_BY = "sortBy"
 QUERY_PARAM_SORT_DIRECTION = "sortDirection"
 QUERY_PARAM_LIMIT = "limit"
@@ -59,24 +53,21 @@ QUERY_PARAM_SEARCH = "search"
 QUERY_PARAM_CATEGORY = "category"
 QUERY_PARAM_TAG = "tag"
 
-# CACHE
 DEFAULT_CACHE_TIMEOUT = 600
 API_CACHE_TIMEOUT = 600
 SESSION_CACHE_TIMEOUT = 86400
 
-# SESSIONS
 DEFAULT_MAX_SESSIONS = 5
 DEFAULT_SESSION_TIMEOUT = 24 * 60 * 60
 SESSION_CACHE_PREFIX = "user_session"
 
-# SECURITE
 RESET_CODE_LENGTH = 8
 RESET_CODE_CHARS = string.ascii_uppercase + string.digits
 RESET_CODE_EXPIRY_MINUTES = 10
 RESET_CODE_MAX_ATTEMPTS = 3
 MIN_RESPONSE_TIME = 0.5
 
-# Throttle rates — source of truth is config/settings/rest_framework.py
+# Source of truth: config/settings/rest_framework.py
 THROTTLE_RATES = {
     "anon": "20/minute",
     "user": "1000/day",
@@ -95,25 +86,20 @@ THROTTLE_RATES = {
     "web_vitals": "180/minute",
 }
 
-# JWT
 ACCESS_TOKEN_LIFETIME_HOURS = 1
 REFRESH_TOKEN_LIFETIME_DAYS = 14
 
-# FICHIERS
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024
 ALLOWED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"]
 ALLOWED_DOCUMENT_EXTENSIONS = ["pdf", "doc", "docx"]
 
-# LOGGING
 LOG_MAX_BYTES = 10485760
 LOG_BACKUP_COUNT = 5
 
-# EMAIL
 EMAIL_TIMEOUT = 30
 EMAIL_MAX_RETRIES = 3
 EMAIL_RETRY_DELAY = 60
 
-# API PATTERNS
 CACHEABLE_API_URLS = [
     "/api/projects/",
     "/api/experiences/",
@@ -127,7 +113,6 @@ NON_CACHEABLE_API_URLS = [
     "/api/users/",
 ]
 
-# VALIDATION
 MIN_PASSWORD_LENGTH = 8
 MAX_BIO_LENGTH = 1000
 MAX_TITLE_LENGTH = 200

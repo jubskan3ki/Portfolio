@@ -4,8 +4,7 @@ from typing import cast
 
 from config.settings.base import env
 
-# CACHE — Always use Redis (available in Docker stack, required for delete_pattern support)
-
+# Redis required for delete_pattern (pattern-based cache invalidation).
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",

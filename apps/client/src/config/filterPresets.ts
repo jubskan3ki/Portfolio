@@ -4,19 +4,18 @@ import type {
     StackListFilters,
     ExperienceListFilters,
 } from '@/types/composables/data';
-
-interface FilterPresetConfig {
-    enabled: boolean;
-    itemsPerPage?: number;
-}
+import type { FilterPresetConfig } from '@/types/config/filterPresets';
 
 function createPreset<T extends Record<string, unknown>>(
     defaults: T,
     pagination: FilterPresetConfig = { enabled: false },
 ) {
     const fieldConfig = Object.fromEntries(
-        Object.keys(defaults).map((key) => [key, { resetOnChange: key !== 'ordering' }]),
-    ) as Record<keyof T, { resetOnChange: boolean }>;
+        Object.keys(defaults).map((key) => [
+            key,
+            { resetOnChange: key !== 'ordering', debounced: key === 'search' },
+        ]),
+    ) as Record<keyof T, { resetOnChange: boolean; debounced: boolean }>;
 
     return { defaults, fieldConfig, pagination };
 }

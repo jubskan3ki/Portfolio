@@ -11,8 +11,22 @@
             </button>
         </div>
 
-        <div ref="swiperRef" class="swiper__wrapper">
-            <div class="swiper__track" :style="{ transform: `translateX(-${translateX}px)` }">
+        <div
+            ref="swiperRef"
+            class="swiper__wrapper"
+            :class="{ 'swiper__wrapper--dragging': isDragging }"
+            @pointerdown="onDragStart"
+            @pointermove="onDragMove"
+            @pointerup="onDragEnd"
+            @pointercancel="onDragEnd"
+        >
+            <div
+                class="swiper__track"
+                :style="{
+                    transform: `translateX(-${translateX - dragOffset}px)`,
+                    transition: isDragging ? 'none' : undefined,
+                }"
+            >
                 <div
                     v-for="idx in slides"
                     :key="idx - 1"
@@ -50,6 +64,8 @@
 </template>
 
 <script setup lang="ts">
+    import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useSwiper } from '@/composables/ui/useSwiper';
 
@@ -87,6 +103,102 @@
         goToSlide,
     } = useSwiper({ props, emit, swiperRef });
 
+    // Pointer drag (mouse + touch + stylus)
+    const DRAG_THRESHOLD = 5;
+    const SNAP_THRESHOLD = 50;
+    const isDragging = ref(false);
+    const hasDragged = ref(false);
+    const dragOffset = ref(0);
+    let dragStartX = 0;
+    let dragPointerId: number | null = null;
+
+    const onDragStart = (e: PointerEvent) => {
+        if (props.slides <= (props.slidesToShow ?? 1)) {
+            return;
+        }
+        if (e.pointerType === 'mouse' && e.button !== 0) {
+            return;
+        }
+
+        dragStartX = e.pageX;
+        dragPointerId = e.pointerId;
+        isDragging.value = true;
+        hasDragged.value = false;
+        dragOffset.value = 0;
+
+        const el = swiperRef.value;
+        if (el) {
+            try {
+                el.setPointerCapture(e.pointerId);
+            } catch {
+                /* noop */
+            }
+        }
+    };
+
+    const onDragMove = (e: PointerEvent) => {
+        if (!isDragging.value || e.pointerId !== dragPointerId) {
+            return;
+        }
+        const dx = e.pageX - dragStartX;
+        if (!hasDragged.value && Math.abs(dx) > DRAG_THRESHOLD) {
+            hasDragged.value = true;
+        }
+        dragOffset.value = dx;
+    };
+
+    const onDragEnd = (e: PointerEvent) => {
+        if (!isDragging.value || e.pointerId !== dragPointerId) {
+            return;
+        }
+        const dx = dragOffset.value;
+
+        const el = swiperRef.value;
+        if (el) {
+            try {
+                el.releasePointerCapture(e.pointerId);
+            } catch {
+                /* noop */
+            }
+        }
+
+        isDragging.value = false;
+        dragOffset.value = 0;
+        dragPointerId = null;
+
+        if (dx <= -SNAP_THRESHOLD) {
+            next();
+        } else if (dx >= SNAP_THRESHOLD) {
+            prev();
+        }
+    };
+
+    const onClickCapture = (e: MouseEvent) => {
+        if (hasDragged.value) {
+            e.preventDefault();
+            e.stopPropagation();
+            hasDragged.value = false;
+        }
+    };
+
+    let attachedEl: HTMLElement | null = null;
+    const attachClickCapture = (el: HTMLElement | null) => {
+        if (attachedEl === el) {
+            return;
+        }
+        if (attachedEl) {
+            attachedEl.removeEventListener('click', onClickCapture, { capture: true });
+        }
+        attachedEl = el;
+        if (attachedEl) {
+            attachedEl.addEventListener('click', onClickCapture, { capture: true });
+        }
+    };
+
+    onMounted(() => attachClickCapture(swiperRef.value));
+    watch(swiperRef, (el) => attachClickCapture(el));
+    onBeforeUnmount(() => attachClickCapture(null));
+
     defineExpose({
         prev,
         next,
@@ -117,6 +229,13 @@
         &__wrapper {
             overflow: hidden;
             width: 100%;
+            cursor: grab;
+            touch-action: pan-y;
+            user-select: none;
+
+            &--dragging {
+                cursor: grabbing;
+            }
         }
 
         &__track {

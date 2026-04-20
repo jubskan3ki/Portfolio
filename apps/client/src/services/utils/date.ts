@@ -25,7 +25,6 @@ export function formatDateShort(date: DateInput): string {
     return dayjs(date).format('DD/MM/YYYY');
 }
 
-// Relative date with smart formatting
 export function formatRelativeDate(date: DateInput): string {
     if (!date) {
         return '';
@@ -50,7 +49,6 @@ export function formatRelativeDate(date: DateInput): string {
         return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
     }
 
-    // Affiche l'année seulement si différente
     const format = d.year() !== now.year() ? 'D MMM YYYY' : 'D MMM';
     return d.format(format);
 }

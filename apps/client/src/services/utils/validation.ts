@@ -1,5 +1,3 @@
-// Validation utilities for route parameters and user input
-
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_SLUG_LENGTH = 100;
 

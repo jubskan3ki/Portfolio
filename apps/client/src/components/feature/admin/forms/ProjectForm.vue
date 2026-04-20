@@ -68,6 +68,7 @@
                 label="Catégorie"
                 placeholder="Sélectionner une catégorie"
                 :options="categoryOptions"
+                :initial-value="entity?.category ?? undefined"
                 required
                 :error="errors.category"
                 allow-create
@@ -84,6 +85,7 @@
             label="Stacks utilisées"
             placeholder="Rechercher une technologie..."
             :options="stackOptions"
+            :initial-value="entity?.technologies"
             show-images
             hint="Sélectionnez les technologies utilisées dans ce projet"
         />
@@ -126,6 +128,33 @@
         />
 
         <BaseSwitch v-model="form.is_featured" label="Projet vedette (affiché en priorité)" />
+
+        <details class="admin-form__seo">
+            <summary class="admin-form__seo-summary">
+                <BaseIcon name="search" :size="16" />
+                Référencement (SEO)
+            </summary>
+            <div class="admin-form__seo-content">
+                <BaseInput
+                    id="seo_title"
+                    v-model="form.seo_title"
+                    label="Titre SEO"
+                    placeholder="Titre optimisé pour les moteurs de recherche"
+                    :maxlength="70"
+                    :hint="`${form.seo_title.length}/70 caractères — utilise le titre si vide`"
+                />
+
+                <BaseTextarea
+                    id="meta_description"
+                    v-model="form.meta_description"
+                    label="Meta description"
+                    placeholder="Résumé affiché dans les résultats de recherche..."
+                    :rows="3"
+                    :maxlength="160"
+                    :hint="`${form.meta_description.length}/160 caractères — utilise la description si vide`"
+                />
+            </div>
+        </details>
     </AdminFormLayout>
 </template>
 
@@ -163,8 +192,6 @@
     import type { AdminProject, AdminCategory } from '@/types/feature/admin';
     import type { Stack } from '@/types/feature/stacks';
 
-    // Props
-
     const props = defineProps<ProjectFormProps>();
     const { success: showSuccess, error: showError } = useAlert();
     const slugManuallyEdited = ref(false);
@@ -199,6 +226,8 @@
             documentation_url: string;
             image: File | null;
             is_featured: boolean;
+            seo_title: string;
+            meta_description: string;
         },
         AdminProject
     >({
@@ -216,6 +245,8 @@
             documentation_url: '',
             image: null as File | null,
             is_featured: false,
+            seo_title: '',
+            meta_description: '',
         },
         validate: (values) => {
             const errs: Partial<Record<string, string>> = {};
@@ -253,6 +284,8 @@
             ctx.setFieldValue('github_url', data.links?.github || '');
             ctx.setFieldValue('documentation_url', data.links?.documentation || '');
             ctx.setFieldValue('is_featured', data.isFeatured ?? false);
+            ctx.setFieldValue('seo_title', data.seoTitle ?? '');
+            ctx.setFieldValue('meta_description', data.metaDescription ?? '');
 
             if (data.category) {
                 ctx.setRawValue('category', data.category);
@@ -289,6 +322,8 @@
                 .append('slug', formValues.slug)
                 .append('description', formValues.description)
                 .append('category', String(formValues.category))
+                .append('seo_title', formValues.seo_title)
+                .append('meta_description', formValues.meta_description)
                 .appendBoolean('is_featured', formValues.is_featured)
                 .appendIfPresent('longDescription', formValues.long_description)
                 .appendIfPresent('status', typeof formValues.status === 'number' ? formValues.status : null)
@@ -376,8 +411,49 @@
 
 <style lang="scss" scoped>
     @use '@/styles/abstracts/mixins' as mix;
+    @use '@/styles/abstracts/variables' as vars;
 
     .admin-form__row {
         @include mix.admin-form-row;
+    }
+
+    .admin-form__seo {
+        margin-top: vars.$spacing-md;
+        border: 1px solid vars.$border-color;
+        border-radius: vars.$border-radius-md;
+        background-color: vars.$bg-primary;
+    }
+
+    .admin-form__seo-summary {
+        display: flex;
+        align-items: center;
+        gap: vars.$spacing-xs;
+        padding: vars.$spacing-sm vars.$spacing-md;
+        cursor: pointer;
+        font-weight: vars.$font-weight-medium;
+        color: vars.$text-primary;
+        list-style: none;
+        user-select: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &::after {
+            content: '+';
+            margin-left: auto;
+            font-size: 1.25rem;
+            line-height: 1;
+            color: vars.$text-muted;
+        }
+    }
+
+    details[open] .admin-form__seo-summary::after {
+        content: '−';
+    }
+
+    .admin-form__seo-content {
+        padding: vars.$spacing-sm vars.$spacing-md vars.$spacing-md;
+        border-top: 1px solid vars.$border-color;
     }
 </style>

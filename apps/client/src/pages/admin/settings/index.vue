@@ -1,6 +1,5 @@
 <template>
     <div class="admin-page">
-        <!-- Header -->
         <div class="admin-page__header">
             <div>
                 <h1 class="admin-page__title">Parametres</h1>
@@ -15,13 +14,11 @@
         </div>
 
         <div class="settings-grid">
-            <!-- Profile Card -->
             <div class="admin-card admin-card--full">
                 <div class="admin-card__header">
                     <h2 class="admin-card__title">Profil</h2>
                 </div>
                 <form @submit.prevent="updateProfile">
-                    <!-- Avatar Section -->
                     <div class="profile-header">
                         <div
                             class="profile-avatar"
@@ -58,7 +55,6 @@
                         </div>
                     </div>
 
-                    <!-- Identity Section -->
                     <BaseDivider label="Identite" spacing="lg" />
                     <div class="form-grid">
                         <BaseInput v-model="profileForm.firstName" label="Prenom" placeholder="Votre prenom" />
@@ -67,7 +63,6 @@
                     <BaseInput v-model="profileForm.position" label="Poste" placeholder="Ex: Developpeur Full-Stack" />
                     <BaseTextarea v-model="profileForm.bio" label="Bio" placeholder="Courte description..." :rows="3" />
 
-                    <!-- Contact Section -->
                     <BaseDivider label="Contact" spacing="lg" />
                     <div class="form-grid">
                         <BaseInput
@@ -91,7 +86,6 @@
                         placeholder="+33 6 00 00 00 00"
                     />
 
-                    <!-- Social Section -->
                     <BaseDivider label="Reseaux sociaux" spacing="lg" />
                     <BaseInput
                         v-model="profileForm.linkedin"
@@ -124,7 +118,6 @@
                         </template>
                     </BaseInput>
 
-                    <!-- Actions -->
                     <div class="form-actions">
                         <BaseButton type="submit" variant="primary" :loading="isUpdatingProfile">
                             <template #icon-left>
@@ -145,7 +138,6 @@
                 </form>
             </div>
 
-            <!-- Security Card -->
             <div class="admin-card">
                 <div class="admin-card__header">
                     <h2 class="admin-card__title">Securite</h2>
@@ -229,21 +221,94 @@
                 </form>
             </div>
 
-            <!-- Sessions Card -->
+            <div class="admin-card admin-card--full">
+                <div class="admin-card__header">
+                    <h2 class="admin-card__title">Contact public &amp; disponibilite</h2>
+                    <small>Ces informations s'affichent dans le footer du site public.</small>
+                </div>
+                <form @submit.prevent="saveSiteSettings">
+                    <div class="form-grid">
+                        <BaseInput
+                            v-model="siteForm.email"
+                            label="Email public"
+                            type="email"
+                            placeholder="contact@exemple.com"
+                            required
+                        />
+                        <BaseInput
+                            v-model="siteForm.phone"
+                            label="Telephone public"
+                            type="tel"
+                            placeholder="+33 6 00 00 00 00"
+                        />
+                    </div>
+
+                    <BaseDivider label="Adresse" spacing="lg" />
+                    <div class="form-grid">
+                        <BaseInput v-model="siteForm.city" label="Ville" placeholder="Paris" />
+                        <BaseInput v-model="siteForm.country" label="Pays" placeholder="France" />
+                    </div>
+
+                    <BaseDivider label="Disponibilite" spacing="lg" />
+                    <div class="availability-row">
+                        <BaseSwitch v-model="siteForm.isAvailable" label="Disponible pour de nouveaux projets" />
+                    </div>
+                    <BaseInput
+                        v-model="siteForm.availabilityMessage"
+                        label="Texte affiche dans le footer"
+                        placeholder="Disponible pour de nouveaux projets"
+                        hint="Laisser vide pour utiliser le texte par defaut selon le statut."
+                    />
+
+                    <div class="form-actions">
+                        <BaseButton type="submit" variant="primary" :loading="isSavingSite">
+                            <template #icon-left>
+                                <BaseIcon name="save" :size="16" />
+                            </template>
+                            {{ isSavingSite ? 'Enregistrement...' : 'Enregistrer' }}
+                        </BaseButton>
+                        <Transition name="fade">
+                            <Badge
+                                v-if="siteMessage"
+                                :variant="siteMessage.type === 'success' ? 'success' : 'danger'"
+                                :icon="siteMessage.type === 'success' ? 'check' : 'x'"
+                            >
+                                {{ siteMessage.text }}
+                            </Badge>
+                        </Transition>
+                    </div>
+                </form>
+            </div>
+
             <div class="admin-card">
                 <SessionList />
+
+                <div class="fingerprint-lock">
+                    <div class="fingerprint-lock__icon">
+                        <BaseIcon name="shield" :size="18" />
+                    </div>
+                    <div class="fingerprint-lock__body">
+                        <div class="fingerprint-lock__title">Verrouillage par fingerprint</div>
+                        <p class="fingerprint-lock__text">
+                            Chaque session est liee a l'empreinte de votre navigateur. Un token utilise depuis un
+                            autre appareil est automatiquement rejete.
+                        </p>
+                    </div>
+                    <Badge variant="success" icon="check">Actif</Badge>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-    import { ref, reactive, computed, onMounted } from 'vue';
+    import { ref, reactive, computed, onMounted, watch } from 'vue';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseDivider from '@/components/base/BaseDivider.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseInput from '@/components/base/BaseInput.vue';
+    import BaseSwitch from '@/components/base/BaseSwitch.vue';
     import BaseTextarea from '@/components/base/BaseTextarea.vue';
     import { SessionList } from '@/components/feature/admin';
     import Avatar from '@/components/ui/Avatar.vue';
@@ -251,6 +316,7 @@
     import ProgressBar from '@/components/ui/ProgressBar.vue';
     import { useSeo } from '@/composables/seo/useSeo';
     import { authApi, useUpdateProfile, useUploadProfileAvatar, useLogout } from '@/services/api/modules/auth';
+    import { useContactInfo, useContactInfoUpsert } from '@/services/api/modules/contact';
     import { formatDate } from '@/services/utils/date';
     import { useAuthStore } from '@/stores/auth';
 
@@ -267,7 +333,6 @@
     const uploadAvatarMutation = useUploadProfileAvatar();
     const logoutMutation = useLogout();
 
-    // Refs
     const avatarInput = ref<HTMLInputElement | null>(null);
     const isUpdatingProfile = updateProfileMutation.isPending;
     const isChangingPassword = ref(false);
@@ -278,6 +343,7 @@
     // Messages
     const profileMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
     const passwordMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
+    const siteMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
 
     // Forms
     const profileForm = reactive({
@@ -298,7 +364,21 @@
         confirmPassword: '',
     });
 
-    // Computed
+    const siteForm = reactive({
+        id: undefined as number | undefined,
+        email: '',
+        phone: '',
+        city: '',
+        country: '',
+        isAvailable: true,
+        availabilityMessage: '',
+    });
+
+    // Contact info query + upsert mutation
+    const { data: contactInfo } = useContactInfo();
+    const contactInfoMutation = useContactInfoUpsert();
+    const isSavingSite = contactInfoMutation.isPending;
+
     const passwordStrengthValue = computed(() => {
         const password = passwordForm.newPassword;
         if (!password) {
@@ -352,7 +432,6 @@
         );
     });
 
-    // Methods
     const triggerAvatarUpload = () => avatarInput.value?.click();
 
     const showMessage = (
@@ -446,8 +525,50 @@
         }
     };
 
+    const initSiteForm = () => {
+        const info = contactInfo.value;
+        if (!info) {
+            return;
+        }
+        siteForm.id = info.id;
+        siteForm.email = info.email || '';
+        siteForm.phone = info.phone || '';
+        siteForm.city = info.address?.city || '';
+        siteForm.country = info.address?.country || '';
+        siteForm.isAvailable = info.availability?.status === 'available';
+        siteForm.availabilityMessage = info.availability?.message || '';
+    };
+
+    watch(contactInfo, () => initSiteForm(), { immediate: true });
+
+    const saveSiteSettings = () => {
+        contactInfoMutation.mutate(
+            {
+                id: siteForm.id,
+                email: siteForm.email,
+                phone: siteForm.phone,
+                address: {
+                    city: siteForm.city,
+                    country: siteForm.country,
+                },
+                availability: {
+                    status: siteForm.isAvailable ? 'available' : 'unavailable',
+                    message: siteForm.availabilityMessage,
+                },
+            },
+            {
+                onSuccess: (updated) => {
+                    siteForm.id = updated.id;
+                    showMessage(siteMessage, 'success', 'Informations enregistrees');
+                },
+                onError: () => showMessage(siteMessage, 'error', 'Erreur lors de l\'enregistrement'),
+            },
+        );
+    };
+
     onMounted(() => {
         initForm();
+        initSiteForm();
     });
 </script>
 
@@ -574,6 +695,11 @@
         }
     }
 
+    /* Availability row */
+    .availability-row {
+        margin-bottom: vars.$spacing-sm;
+    }
+
     /* Form Layout */
     .form-grid {
         display: grid;
@@ -612,6 +738,40 @@
     :deep(.password-strength-bar) {
         margin-top: calc(-1 * vars.$spacing-xs);
         margin-bottom: vars.$spacing-xs;
+    }
+
+    /* Fingerprint lock info */
+    .fingerprint-lock {
+        display: flex;
+        align-items: flex-start;
+        gap: vars.$spacing-sm;
+        margin-top: vars.$spacing-lg;
+        padding: vars.$spacing-md;
+        background-color: func.color-alpha(vars.$primary-color, 0.04);
+        border: 1px solid func.color-alpha(vars.$primary-color, 0.12);
+        border-radius: vars.$border-radius-md;
+
+        &__icon {
+            color: vars.$primary-color;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        &__body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        &__title {
+            font-weight: vars.$font-weight-semibold;
+            margin-bottom: 2px;
+        }
+
+        &__text {
+            color: vars.$text-muted;
+            font-size: 13px;
+            margin: 0;
+        }
     }
 
     /* Transitions */

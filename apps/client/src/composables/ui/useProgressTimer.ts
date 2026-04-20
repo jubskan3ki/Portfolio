@@ -1,27 +1,7 @@
-import { onBeforeUnmount, ref, type Ref } from 'vue';
+import { onBeforeUnmount, ref } from 'vue';
 
-interface UseProgressTimerOptions {
-    duration: number;
-    onComplete?: () => void;
-    autoStart?: boolean;
-    stepTime?: number;
-}
+import type { UseProgressTimerOptions, UseProgressTimerReturn } from '@/types/composables/ui';
 
-interface UseProgressTimerReturn {
-    progress: Ref<number>;
-    isRunning: Ref<boolean>;
-    remainingTime: Ref<number>;
-    start: () => void;
-    pause: () => void;
-    resume: () => void;
-    reset: () => void;
-    stop: () => void;
-}
-
-/**
- * Composable for managing progress-based timers with pause/resume functionality
- * Used by Toast, AlertItem, and other auto-closing components
- */
 export function useProgressTimer(options: UseProgressTimerOptions): UseProgressTimerReturn {
     const { duration, onComplete, autoStart = false, stepTime = 10 } = options;
 

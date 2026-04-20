@@ -1,4 +1,3 @@
-<!-- components/feature/home/ExpertiseCard.vue -->
 <template>
     <component
         :is="props.to ? NuxtLink : 'div'"
@@ -14,10 +13,8 @@
         @mouseleave="onMouseLeave"
         @mousemove="onMouseMove"
     >
-        <!-- Decorative corner dots -->
         <div class="expertise-card__dots"></div>
 
-        <!-- Decorative bubbles (primary & secondary variants) -->
         <div v-if="variant === 'primary' || variant === 'secondary'" class="expertise-card__bubbles">
             <span class="expertise-card__bubble expertise-card__bubble--1"></span>
             <span class="expertise-card__bubble expertise-card__bubble--2"></span>
@@ -32,7 +29,6 @@
         </div>
         <p class="expertise-card__description">{{ description }}</p>
 
-        <!-- Shine effect on hover -->
         <div class="expertise-card__shine" :style="shineStyle"></div>
     </component>
 </template>
@@ -57,16 +53,13 @@
 
     const NuxtLink = resolveComponent('NuxtLink');
 
-    // Accessibility
     const { prefersReducedMotion } = useReducedMotion();
 
-    // Refs for tilt effect
     const cardRef = ref<HTMLElement | ComponentPublicInstance | null>(null);
     const isHovering = ref(false);
     const mouseX = ref(0.5);
     const mouseY = ref(0.5);
 
-    // Mouse handlers for tilt effect
     const onMouseEnter = () => {
         if (prefersReducedMotion.value) {
             return;
@@ -93,14 +86,12 @@
         mouseY.value = (e.clientY - rect.top) / rect.height;
     };
 
-    // Calculate gradient colors
     const getGradientColors = computed(() => {
         const baseColor = props.color || '#673c5c';
         const lightColor = adjustColorBrightness(baseColor, 30);
         return { base: baseColor, light: lightColor };
     });
 
-    // Card styles with CSS variables and tilt
     const cardStyle = computed(() => {
         const rotateX = isHovering.value ? (mouseY.value - 0.5) * -10 : 0;
         const rotateY = isHovering.value ? (mouseX.value - 0.5) * 10 : 0;
@@ -113,7 +104,6 @@
         };
     });
 
-    // Shine effect position
     const shineStyle = computed(() => {
         if (!isHovering.value) {
             return { opacity: 0 };
@@ -124,7 +114,6 @@
         };
     });
 
-    // Helper function to adjust color brightness
     function adjustColorBrightness(color: string, percent: number): string {
         if (!color.startsWith('#')) {
             return color;
@@ -157,7 +146,6 @@
         cursor: pointer;
         overflow: hidden;
 
-        // 3D tilt effect
         transform-style: preserve-3d;
         transform: perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg));
         transition:
@@ -175,7 +163,6 @@
             outline-offset: 2px;
         }
 
-        // Disable animations for reduced motion
         &--no-motion {
             transform: none;
             transition: box-shadow 0.3s ease;
@@ -189,7 +176,6 @@
             }
         }
 
-        // Decorative dots
         &__dots {
             position: absolute;
             top: 0;
@@ -210,7 +196,6 @@
             z-index: 1;
         }
 
-        // Icon style inspired by StatCard
         &__icon {
             display: flex;
             align-items: center;
@@ -241,7 +226,6 @@
             flex-grow: 1;
         }
 
-        // Decorative bubbles
         &__bubbles {
             position: absolute;
             inset: 0;
@@ -285,7 +269,6 @@
             }
         }
 
-        // Shine overlay effect
         &__shine {
             position: absolute;
             inset: 0;
@@ -294,7 +277,6 @@
             border-radius: inherit;
         }
 
-        // ─── Light variant (section bg: $bg-secondary) ───
         &--light {
             background: fn.color-alpha(vars.$white, 0.9);
             border: 1px solid fn.color-alpha(vars.$white, 0.8);
@@ -304,7 +286,6 @@
                 @include mix.dots-pattern(fn.color-alpha(vars.$gray, 0.3), 2px, 12px);
             }
 
-            // StatCard light icon style
             .expertise-card__icon {
                 background: fn.color-alpha(vars.$primary-color, 0.1);
                 color: vars.$primary-color;
@@ -327,7 +308,6 @@
             }
         }
 
-        // ─── Dark variant (section bg: $black-light) ───
         &--dark {
             background: vars.$black-light;
             border: 1px solid fn.color-alpha(vars.$primary-color, 0.25);
@@ -337,7 +317,6 @@
                 @include mix.dots-pattern(fn.color-alpha(vars.$primary-color, 0.15), 2px, 12px);
             }
 
-            // StatCard dark icon style
             .expertise-card__icon {
                 background: fn.color-alpha(vars.$primary-color, 0.2);
                 border: 1px solid fn.color-alpha(vars.$primary-color, 0.3);
@@ -360,7 +339,6 @@
             }
         }
 
-        // ─── Secondary variant ───
         &--secondary {
             background: linear-gradient(135deg, vars.$primary-dark 0%, vars.$black-light 100%);
             border: 1px solid fn.color-alpha(vars.$primary-color, 0.45);
@@ -377,7 +355,6 @@
                 box-shadow: 0 2px 8px fn.color-alpha(vars.$primary-color, 0.1);
             }
 
-            // Secondary icon style
             .expertise-card__icon {
                 background: fn.color-alpha(vars.$primary-color, 0.35);
                 border: 1px solid fn.color-alpha(vars.$primary-color, 0.5);
@@ -401,7 +378,6 @@
             }
         }
 
-        // ─── Primary variant (section bg: primary gradient) ───
         &--primary {
             background: linear-gradient(135deg, vars.$primary-light 0%, vars.$primary-dark 100%);
             border: 1px solid fn.color-alpha(vars.$white, 0.2);
@@ -416,7 +392,6 @@
                 box-shadow: 0 2px 8px fn.color-alpha(vars.$white, 0.06);
             }
 
-            // StatCard primary icon style
             .expertise-card__icon {
                 background: fn.color-alpha(vars.$white, 0.15);
                 border: 1px solid fn.color-alpha(vars.$white, 0.2);

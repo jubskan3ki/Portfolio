@@ -21,48 +21,27 @@ def cached_queryset(
     timeout: int = CacheKeys.TTL_MEDIUM,
     serializer: Callable[[object], object] | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """
-    Decorator to cache queryset results.
-
-    Args:
-        cache_key: Static key string or callable that returns key from args
-        timeout: Cache timeout in seconds
-        serializer: Optional function to serialize queryset before caching
-
-    Usage:
-        @cached_queryset(CacheKeys.article_featured, timeout=300)
-        def get_featured(limit: int = 5):
-            return Article.objects.featured()[:limit]
-
-        @cached_queryset(lambda slug: CacheKeys.article_detail(slug), timeout=600)
-        def get_by_slug(slug: str):
-            return Article.objects.get(slug=slug)
-    """
+    """Cache queryset; cache_key peut etre callable(args)."""
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            # Generate cache key
             if callable(cache_key):
                 try:
-                    # Try to call with the same args
-                    key = cache_key(*args[1:], **kwargs)  # Skip self for methods
+                    key = cache_key(*args[1:], **kwargs)  # skip self
                 except TypeError:
                     key = cache_key(**kwargs)
             else:
                 key = cache_key
 
-            # Try to get from cache
             cached = cache.get(key)
             if cached is not None:
                 logger.debug("Cache hit: %s", key)
                 return cached
 
-            # Call the actual function
             logger.debug("Cache miss: %s", key)
             result = func(*args, **kwargs)
 
-            # Serialize if needed
             if serializer and result is not None:
                 try:
                     cache_value = serializer(result)
@@ -70,10 +49,9 @@ def cached_queryset(
                     logger.warning("Failed to serialize for cache: %s", e)
                     return result
             else:
-                # Convert queryset to list for caching
+                # queryset -> list pour serialisation
                 cache_value = list(result) if hasattr(result, "__iter__") and hasattr(result, "model") else result
 
-            # Store in cache
             cache.set(key, cache_value, timeout)
             logger.debug("Cached: %s (timeout=%ds)", key, timeout)
 
@@ -90,39 +68,20 @@ def cached_method(
     *,
     include_args: bool = True,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """
-    Decorator to cache method results with auto-generated keys.
-
-    Args:
-        key_prefix: Prefix for the cache key
-        timeout: Cache timeout in seconds
-        include_args: Whether to include args in cache key
-
-    Usage:
-        class ArticleService:
-            @cached_method("articles:search", timeout=60)
-            def search(self, query: str, limit: int = 10):
-                return Article.objects.search(query)[:limit]
-    """
+    """Cache methode; cle auto-generee depuis args."""
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            # Build cache key
             if include_args:
-                # Create hash of arguments
                 key_parts = [key_prefix]
-
-                # Add positional args (skip self)
-                key_parts.extend(str(arg) for arg in args[1:])
-
-                # Add keyword args (sorted for consistency)
+                key_parts.extend(str(arg) for arg in args[1:])  # skip self
                 for k, v in sorted(kwargs.items()):
                     key_parts.append(f"{k}={v}")
 
                 key_string = ":".join(key_parts)
 
-                # Hash if too long
+                # Hash si cle > 200 chars
                 if len(key_string) > 200:
                     key_hash = hashlib.sha256(key_string.encode()).hexdigest()[:16]
                     key = f"{CacheKeys.PREFIX}:{CacheKeys.VERSION}:{key_prefix}:{key_hash}"
@@ -131,15 +90,12 @@ def cached_method(
             else:
                 key = f"{CacheKeys.PREFIX}:{CacheKeys.VERSION}:{key_prefix}"
 
-            # Try to get from cache
             cached = cache.get(key)
             if cached is not None:
                 return cached
 
-            # Call function
             result = func(*args, **kwargs)
 
-            # Cache result (convert queryset to list)
             cache_value = list(result) if hasattr(result, "__iter__") and hasattr(result, "model") else result
 
             cache.set(key, cache_value, timeout)
@@ -154,14 +110,7 @@ def cache_result(
     key: str,
     timeout: int = CacheKeys.TTL_MEDIUM,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """
-    Simple decorator to cache function result with a fixed key.
-
-    Usage:
-        @cache_result("stats:global", timeout=3600)
-        def get_global_stats():
-            return compute_expensive_stats()
-    """
+    """Cache resultat fonction avec cle fixe."""
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         full_key = f"{CacheKeys.PREFIX}:{CacheKeys.VERSION}:{key}"

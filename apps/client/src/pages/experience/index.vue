@@ -1,6 +1,5 @@
 <template>
     <div class="experience-page">
-        <!-- Hero with Stats -->
         <Hero
             title="Expérience & Formation"
             description="Mon parcours professionnel et académique dans le développement web et logiciel."
@@ -20,14 +19,11 @@
             </template>
         </Hero>
 
-        <!-- Content Section -->
         <Main variant="default" size="large" :custom-class="prefersReducedMotion ? 'content--no-motion' : ''">
-            <!-- Tabs Navigation -->
             <div v-if="availableTabs.length > 1" class="tabs-wrapper">
                 <NavigationTabs v-model="activeType" :tabs="availableTabs" variant="glass" />
             </div>
 
-            <!-- Single type indicator -->
             <div v-else-if="availableTabs.length === 1 && availableTabs[0]" class="single-type-indicator">
                 <Badge :text="availableTabs[0].label" variant="primary" size="lg" />
                 <span class="single-type-indicator__count">
@@ -35,7 +31,6 @@
                 </span>
             </div>
 
-            <!-- Timeline Section -->
             <div
                 :id="`panel-${activeType}`"
                 class="timeline-section"
@@ -43,7 +38,6 @@
                 :aria-labelledby="`tab-${activeType}`"
             >
                 <Transition name="slide-fade" mode="out-in">
-                    <!-- Loading State -->
                     <div v-if="isLoading" key="loader" class="timeline-loader">
                         <SkeletonList
                             :count="3"
@@ -55,7 +49,6 @@
                         />
                     </div>
 
-                    <!-- Error State -->
                     <EmptyState
                         v-else-if="hasError"
                         key="error"
@@ -70,7 +63,6 @@
                         </template>
                     </EmptyState>
 
-                    <!-- Empty State -->
                     <EmptyState
                         v-else-if="!hasAnyData"
                         key="empty-all"
@@ -81,7 +73,6 @@
                         custom-class="timeline-empty-state"
                     />
 
-                    <!-- Timeline Content -->
                     <div v-else :key="activeType" class="timeline-content">
                         <ExperienceTimeline
                             :experiences="experiences"
@@ -92,7 +83,6 @@
                 </Transition>
             </div>
 
-            <!-- Skills Summary -->
             <Transition name="fade-up">
                 <div v-if="topSkills.length > 0 && !isLoading" class="skills-section">
                     <SectionHeading
@@ -127,7 +117,6 @@
             </Transition>
         </Main>
 
-        <!-- CTA -->
         <CTA
             title="Intéressé par mon profil ?"
             description="Discutons de vos projets ou opportunités de collaboration."
@@ -170,18 +159,15 @@
 
     import type { ExperienceType } from '@/types/feature/experience';
 
-    // SEO
     useExperienceSeo();
 
-    // Composables
     const { announceLoaded, announce } = useAnnounce();
     const { scrollToTop } = useScrollToTop();
     const { prefersReducedMotion } = useReducedMotion();
 
-    // URL-synced filters
     const { filters, setFilter } = useFilters(filterPresets.experiences);
 
-    // API Queries — fetch all experiences (limit=100 to bypass pagination for client-side filtering)
+    // limit=100 contourne la pagination pour filtrer côté client
     const { data: allExperiencesResponse, isLoading: allExperiencesLoading } = useExperiences({ limit: 100 });
     const allExperiences = computed(() => allExperiencesResponse.value?.data ?? []);
 
@@ -194,7 +180,6 @@
 
     const { data: stats, refetch: refetchStats } = useExperienceStats();
 
-    // Type mappings
     const typeIconMap: Record<string, string> = {
         professional: 'briefcase',
         professionnel: 'briefcase',
@@ -219,12 +204,10 @@
         stage: 'Stage',
     };
 
-    // Get count for a specific tab type
     const getTypeCount = (typeKey: string): number => {
         return (allExperiences.value ?? []).filter((exp) => exp.type?.toLowerCase() === typeKey).length;
     };
 
-    // Build tabs dynamically based on types that have actual data
     const availableTabs = computed(() => {
         const allExp = allExperiences.value ?? [];
         const typesWithData = new Set(allExp.map((exp) => exp.type?.toLowerCase()));
@@ -233,7 +216,6 @@
             return [];
         }
 
-        // Use API types if available, filtered by those with data
         if (experienceTypes.value && experienceTypes.value.length > 0) {
             return experienceTypes.value
                 .filter((type: ExperienceType) => typesWithData.has(type.name.toLowerCase()))
@@ -249,7 +231,6 @@
                 });
         }
 
-        // Fallback: build tabs from experience types directly
         return Array.from(typesWithData).map((type) => {
             const count = getTypeCount(type);
             const label = typeLabelMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
@@ -261,25 +242,20 @@
         });
     });
 
-    // Active type from URL-synced filters
     const activeType = computed({
         get: () => {
             const urlType = filters.value.type;
             const tabs = availableTabs.value;
 
-            // If URL type exists and is valid, use it
             if (urlType && tabs.some((t) => t.key === urlType)) {
                 return urlType;
             }
 
-            // Fallback to first tab
             return tabs[0]?.key ?? '';
         },
         set: (val: string) => setFilter('type', val),
     });
 
-    // Set initial tab from URL or default to first available
-    // Only run when tabs are loaded and no valid type is set
     watch(
         availableTabs,
         (tabs) => {
@@ -290,7 +266,6 @@
             const currentType = filters.value.type;
             const isValidType = tabs.some((t) => t.key === currentType);
 
-            // Only set default if no type or invalid type
             const firstTab = tabs[0];
             if ((!currentType || !isValidType) && firstTab) {
                 setFilter('type', firstTab.key);
@@ -299,7 +274,6 @@
         { immediate: true },
     );
 
-    // Fetch experiences by type (server-side filtering)
     const {
         data: experiences,
         isLoading: experiencesLoading,
@@ -307,18 +281,14 @@
         refetch: refetchExperiences,
     } = useExperiencesByType(activeType);
 
-    // Total experiences count
     const totalExperiences = computed(() => experiences.value?.length ?? 0);
 
-    // Loading & Error states
     const isLoading = computed(() => experiencesLoading.value || typesLoading.value || allExperiencesLoading.value);
     const hasError = computed(() => experiencesError.value || typesError.value);
     const hasAnyData = computed(() => (experiences.value?.length ?? 0) > 0);
 
-    // Top skills from stats (all skills, no limit)
     const topSkills = computed(() => stats.value?.topSkills ?? []);
 
-    // Resolve skills against known stacks for internal linking
     const { data: allStacksData } = useFeaturedStacks(100);
     const skillStackMap = computed(() => {
         const stacks = allStacksData.value ?? [];
@@ -332,7 +302,6 @@
         return skillStackMap.value.get(skillName.toLowerCase());
     };
 
-    // Hero stats
     const heroStats = computed(() => [
         {
             value: stats.value?.totalYears ?? 0,
@@ -354,14 +323,12 @@
         },
     ]);
 
-    // Retry handler
     const handleRetry = () => {
         refetchExperiences();
         refetchTypes();
         refetchStats();
     };
 
-    // Announce tab changes for accessibility
     watch(activeType, (newType) => {
         const tab = availableTabs.value.find((t) => t.key === newType);
         if (tab) {
@@ -371,7 +338,6 @@
         }
     });
 
-    // Announce loaded data
     watch(
         experiences,
         (list) => {
@@ -382,7 +348,6 @@
         { once: true },
     );
 
-    // Scroll to top on mount
     onMounted(() => {
         scrollToTop('instant');
     });
@@ -397,7 +362,6 @@
         min-height: 100vh;
     }
 
-    // Tabs wrapper
     .tabs-wrapper {
         position: relative;
         z-index: 10;
@@ -406,7 +370,6 @@
         margin-bottom: vars.$spacing-xl;
     }
 
-    // Single type indicator
     .single-type-indicator {
         @include mix.flex(column, center, center, vars.$spacing-xs);
 
@@ -419,7 +382,6 @@
         }
     }
 
-    // Timeline section
     .timeline-section {
         position: relative;
         z-index: 5;
@@ -435,7 +397,6 @@
         animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    // Empty state styling
     :deep(.timeline-empty-state) {
         max-width: 500px;
         margin: vars.$spacing-xl auto;
@@ -447,7 +408,6 @@
         box-shadow: 0 8px 32px fn.color-alpha(vars.$black, 0.06);
     }
 
-    // Skills section
     .skills-section {
         position: relative;
         z-index: 5;
@@ -503,7 +463,6 @@
         }
     }
 
-    // Animations
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -528,7 +487,6 @@
         }
     }
 
-    // Transitions
     .slide-fade-enter-active {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -565,7 +523,6 @@
         transform: translateY(-20px);
     }
 
-    // Reduced motion support
     .content--no-motion {
         .timeline-content,
         .skills-section__badge {
@@ -581,7 +538,6 @@
         }
     }
 
-    // Responsive - Tablet
     @include mix.responsive(tablet) {
         .skills-section {
             padding: vars.$spacing-lg;
@@ -590,7 +546,6 @@
         }
     }
 
-    // Responsive - Mobile
     @include mix.responsive(mobile) {
         .content {
             padding: vars.$spacing-xl 0;

@@ -1,5 +1,10 @@
 import { API_ENDPOINTS } from '@/config/api';
 
+import type {
+    AnyMetricWithAttribution,
+    WebVitalsAttribution,
+    WebVitalsPayload,
+} from '@/types/services/web-vitals';
 import type { Router } from 'vue-router';
 import type {
     CLSMetricWithAttribution,
@@ -8,61 +13,6 @@ import type {
     LCPMetricWithAttribution,
     TTFBMetricWithAttribution,
 } from 'web-vitals/attribution';
-
-type AnyMetricWithAttribution
-    = | CLSMetricWithAttribution
-        | FCPMetricWithAttribution
-        | INPMetricWithAttribution
-        | LCPMetricWithAttribution
-        | TTFBMetricWithAttribution;
-
-interface WebVitalsAttribution {
-    // LCP — quel élément est responsable du rendu le plus lourd
-    lcpElement?: string;
-    lcpUrl?: string;
-    lcpTimeToFirstByte?: number;
-    lcpResourceLoadDuration?: number;
-    lcpElementRenderDelay?: number;
-    // CLS — quelle balise a bougé et de combien
-    clsLargestShiftTarget?: string;
-    clsLargestShiftValue?: number;
-    clsLoadState?: string;
-    // INP — quelle interaction a causé le délai
-    inpInteractionTarget?: string;
-    inpInteractionType?: string;
-    inpInputDelay?: number;
-    inpProcessingDuration?: number;
-    inpPresentationDelay?: number;
-    // TTFB — décomposition du temps réseau
-    ttfbWaitingDuration?: number;
-    ttfbDnsDuration?: number;
-    ttfbConnectionDuration?: number;
-    ttfbRequestDuration?: number;
-    // FCP
-    fcpTimeToFirstByte?: number;
-    fcpFirstByteToFCP?: number;
-    fcpLoadState?: string;
-}
-
-interface WebVitalsPayload {
-    name: string;
-    value: number;
-    rating: 'good' | 'needs-improvement' | 'poor';
-    delta: number;
-    id: string;
-    page: string;
-    url: string;
-    userAgent: string;
-    language: string;
-    viewport: {
-        width?: number;
-        height?: number;
-    };
-    connectionType: string | null;
-    isMobile: boolean | null;
-    timestamp: string;
-    attribution: WebVitalsAttribution;
-}
 
 const clampSampleRate = (value: string | number | undefined, fallback: number): number => {
     const parsed = Number(value);
@@ -130,7 +80,6 @@ export default defineNuxtPlugin((nuxtApp) => {
         return;
     }
 
-    // Skip web vitals in dev — backend is often not running
     if (import.meta.dev) {
         return;
     }
@@ -147,7 +96,20 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     const endpoint = getWebVitalsEndpoint();
 
-    void import('web-vitals/attribution').then(({ onCLS, onFCP, onINP, onLCP, onTTFB }) => {
+    // Registration en idle: ne concurrence pas hydration/paint. web-vitals utilise buffered:true donc capture rétroactive OK
+    const scheduleInit = (cb: () => void): void => {
+        type WindowWithIdle = Window & {
+            requestIdleCallback?: (cb: IdleRequestCallback, opts?: { timeout: number }) => number;
+        };
+        const ric = (window as WindowWithIdle).requestIdleCallback;
+        if (typeof ric === 'function') {
+            ric(() => cb(), { timeout: 3000 });
+        } else {
+            setTimeout(cb, 1500);
+        }
+    };
+
+    scheduleInit(() => void import('web-vitals/attribution').then(({ onCLS, onFCP, onINP, onLCP, onTTFB }) => {
         const sendMetric = (metric: AnyMetricWithAttribution): void => {
             try {
                 const route = (nuxtApp.$router as Router).currentRoute.value;
@@ -192,7 +154,7 @@ export default defineNuxtPlugin((nuxtApp) => {
                     credentials: 'omit',
                 });
             } catch {
-                // Silently swallow — web vitals are non-critical telemetry
+                // telemetry non-critique
             }
         };
 
@@ -201,5 +163,5 @@ export default defineNuxtPlugin((nuxtApp) => {
         onINP(sendMetric);
         onFCP(sendMetric);
         onTTFB(sendMetric);
-    });
+    }));
 });

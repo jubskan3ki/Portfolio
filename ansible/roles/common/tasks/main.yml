@@ -1,0 +1,125 @@
+---
+# OS hardening: SSH, firewall, fail2ban, unattended upgrades, lynis audit.
+- name: Install base packages
+  apt:
+      name:
+          - ufw
+          - fail2ban
+          - unattended-upgrades
+          - lynis
+          - rsync
+          - curl
+          - ca-certificates
+          - gnupg
+          - jq
+          - htop
+      state: present
+      update_cache: yes
+      cache_valid_time: 3600
+
+- name: Set SSH port
+  lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: "^#?Port "
+      line: "Port {{ target_ssh_port }}"
+      validate: "/usr/sbin/sshd -t -f %s"
+  notify: restart sshd
+
+- name: Disable password auth
+  lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: "^#?PasswordAuthentication "
+      line: "PasswordAuthentication no"
+      validate: "/usr/sbin/sshd -t -f %s"
+  notify: restart sshd
+
+- name: Disable root login
+  lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: "^#?PermitRootLogin "
+      line: "PermitRootLogin no"
+      validate: "/usr/sbin/sshd -t -f %s"
+  notify: restart sshd
+
+- name: Restrict SSH to allowed users
+  lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: "^#?AllowUsers "
+      line: "AllowUsers {{ sshd_allow_users | join(' ') }}"
+      validate: "/usr/sbin/sshd -t -f %s"
+  notify: restart sshd
+
+- name: Reset UFW to defaults
+  ufw:
+      state: reset
+
+- name: UFW default policies
+  ufw:
+      direction: "{{ item.dir }}"
+      policy: "{{ item.policy }}"
+  loop:
+      - { dir: incoming, policy: deny }
+      - { dir: outgoing, policy: allow }
+
+- name: UFW allow TCP ports
+  ufw:
+      rule: allow
+      proto: tcp
+      port: "{{ item }}"
+  loop: "{{ ufw_allowed_tcp_ports }}"
+
+- name: UFW enabled
+  ufw:
+      state: enabled
+      logging: "on"
+
+- name: fail2ban jail.local
+  copy:
+      dest: /etc/fail2ban/jail.local
+      mode: "0644"
+      content: |
+          [DEFAULT]
+          bantime = 3600
+          findtime = 600
+          maxretry = 5
+          {% for jail in fail2ban_jails %}
+
+          [{{ jail.name }}]
+          enabled  = {{ jail.enabled | string | lower }}
+          {% if jail.port is defined %}port     = {{ jail.port }}{% endif %}
+          {% if jail.logpath is defined %}logpath  = {{ jail.logpath }}{% endif %}
+          maxretry = {{ jail.maxretry }}
+          findtime = {{ jail.findtime }}
+          bantime  = {{ jail.bantime }}
+          {% endfor %}
+  notify: restart fail2ban
+
+- name: fail2ban service
+  systemd:
+      name: fail2ban
+      enabled: yes
+      state: started
+
+- name: unattended-upgrades config
+  template:
+      src: 50unattended-upgrades.j2
+      dest: /etc/apt/apt.conf.d/50unattended-upgrades
+      mode: "0644"
+
+- name: auto-upgrades enabled
+  copy:
+      dest: /etc/apt/apt.conf.d/20auto-upgrades
+      mode: "0644"
+      content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+          APT::Periodic::AutocleanInterval "7";
+
+- name: lynis monthly audit cron
+  cron:
+      name: "lynis monthly security audit"
+      job: "/usr/sbin/lynis audit system --cronjob --quiet --no-colors > /var/log/lynis-audit.log 2>&1"
+      user: root
+      minute: "0"
+      hour: "3"
+      day: "1"

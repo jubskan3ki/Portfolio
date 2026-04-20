@@ -11,11 +11,9 @@
 <script setup lang="ts">
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    interface Props {
-        query: string;
-    }
+    import type { SearchEmptyStateProps } from '@/types/components/ui';
 
-    defineProps<Props>();
+    defineProps<SearchEmptyStateProps>();
 </script>
 
 <style lang="scss" scoped>

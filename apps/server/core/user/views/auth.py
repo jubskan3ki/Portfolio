@@ -126,7 +126,6 @@ class AdminLogoutView(APIView):
             except (TokenError, ValueError, TypeError):
                 pass
 
-        # Remove session from SessionManager
         if user_id:
             fingerprint = generate_fingerprint(request)
             session_manager = SessionManager(user_id)

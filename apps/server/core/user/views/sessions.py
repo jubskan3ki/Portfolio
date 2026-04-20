@@ -34,15 +34,22 @@ class AdminSessionsView(APIView):
         session_manager = SessionManager(request.user.id)
         sessions = session_manager.get_sessions()
 
-        # Get current session fingerprint
         current_fingerprint = generate_fingerprint(request)
         current_session_id = current_fingerprint.fingerprint_hash
 
-        # Format sessions with is_current flag
+        # Expose only safe device fields — never leak refresh_jti or raw UA to the client
+        def public_device(device: dict) -> dict:
+            return {
+                "browser": device.get("browser") or "Unknown",
+                "os": device.get("os") or "Unknown",
+                "is_mobile": bool(device.get("is_mobile", False)),
+                "ip_address": device.get("ip_address") or "",
+            }
+
         formatted_sessions = [
             {
                 "id": session.get("id", ""),
-                "device": session.get("device", {}),
+                "device": public_device(session.get("device", {}) or {}),
                 "created_at": session.get("created_at", ""),
                 "last_activity": session.get("last_activity", ""),
                 "is_current": session.get("id") == current_session_id,
@@ -50,10 +57,16 @@ class AdminSessionsView(APIView):
             for session in sessions
         ]
 
+        # Stable sort: most-recent-first, then current-first
+        formatted_sessions.sort(key=lambda s: s.get("last_activity", ""), reverse=True)
+        formatted_sessions.sort(key=lambda s: not s["is_current"])
+
         return Response(
             {
                 "sessions": formatted_sessions,
                 "count": len(formatted_sessions),
+                "current_session_id": current_session_id,
+                "fingerprint_lock_enabled": True,
             },
             status=status.HTTP_200_OK,
         )
@@ -75,9 +88,7 @@ class AdminSessionsView(APIView):
         current_session_id = current_fingerprint.fingerprint_hash
 
         if revoke_all:
-            # Revoke all sessions except current
             revoked_sessions = session_manager.revoke_all_sessions(except_session_id=current_session_id)
-            # Blacklist all revoked tokens
             blacklisted_count = sum(
                 1 for session in revoked_sessions if TokenBlacklistService.blacklist_session_token(session)
             )

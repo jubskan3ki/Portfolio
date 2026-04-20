@@ -1,6 +1,3 @@
-// Dashboard Statistics API Types - Aligned with backend response
-
-// Module Stats (per module)
 export interface ArticleStats {
     count: number;
     published: number;
@@ -27,7 +24,6 @@ export interface MessageStats {
     responded: number;
 }
 
-// Dashboard Stats (from /api/stats/ or /api/stats/overview/)
 export interface DashboardModuleStats {
     articles: ArticleStats;
     projects: ProjectStats;
@@ -37,7 +33,6 @@ export interface DashboardModuleStats {
     totalViews: number;
 }
 
-// Chart Data Points
 export interface ViewsDataPoint {
     date: string;
     views: number;
@@ -48,13 +43,11 @@ export interface MessagesDataPoint {
     count: number;
 }
 
-// Chart Data (from /api/stats/charts/)
 export interface ChartData {
     viewsOverTime: ViewsDataPoint[];
     messagesPerMonth: MessagesDataPoint[];
 }
 
-// Activity Item (from /api/stats/activity/)
 export interface ActivityItem {
     id: number;
     type: ActivityType;
@@ -67,7 +60,6 @@ export interface ActivityItem {
 export type ActivityType = 'project' | 'article' | 'stack' | 'message' | 'experience' | 'user';
 type ActivityAction = 'created' | 'updated' | 'received';
 
-// Quick Stats (from /api/stats/quick/)
 export interface QuickStats {
     newMessagesToday: number;
     totalViews: number;
@@ -75,7 +67,6 @@ export interface QuickStats {
     popularProject: string | null;
 }
 
-// Full Dashboard Overview (from /api/stats/overview/)
 export interface DashboardOverview {
     stats: DashboardModuleStats;
     charts: ChartData;
@@ -83,6 +74,6 @@ export interface DashboardOverview {
     quickStats: QuickStats;
 }
 
-// Legacy aliases for backwards compatibility
+// Legacy aliases (backward compat)
 export type DashboardStats = DashboardModuleStats;
 export type RecentActivity = ActivityItem[];

@@ -95,7 +95,6 @@
         transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         line-height: 1;
 
-        // Sizes
         &--sm {
             padding: 2px vars.$spacing-xxs;
             border-radius: vars.$border-radius-sm;
@@ -111,7 +110,6 @@
             border-radius: vars.$border-radius-md;
         }
 
-        // Variants
         &--primary {
             background-color: func.color-alpha(vars.$primary-color, 0.12);
             color: vars.$primary-color;
@@ -177,12 +175,10 @@
             }
         }
 
-        // Rounded
         &--rounded {
             border-radius: vars.$border-radius-full;
         }
 
-        // Clickable
         &--clickable {
             cursor: pointer;
 
@@ -200,7 +196,6 @@
             }
         }
 
-        // Icon
         &__icon {
             display: flex;
             align-items: center;
@@ -208,7 +203,6 @@
             flex-shrink: 0;
         }
 
-        // Dot
         &__dot {
             width: 6px;
             height: 6px;
@@ -217,7 +211,6 @@
             animation: dot-pulse 2s ease-in-out infinite;
         }
 
-        // Remove button
         &__remove {
             display: inline-flex;
             align-items: center;

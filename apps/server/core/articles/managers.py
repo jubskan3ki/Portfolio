@@ -49,6 +49,18 @@ class TagQuerySet(models.QuerySet):
             )
         )
 
+    def with_view_count_sum(self) -> TagQuerySet:
+        """Annote chaque tag avec la somme des vues des articles publies lies."""
+        return self.annotate(
+            view_count_sum=models.Sum(
+                "articles__view_count",
+                filter=models.Q(
+                    articles__is_published=True,
+                    articles__published_date__lte=timezone.now(),
+                ),
+            )
+        )
+
     def non_empty(self) -> TagQuerySet:
         """Retourne les tags ayant au moins un article publie."""
         return self.with_article_count().filter(published_count__gt=0)
@@ -69,8 +81,8 @@ class ArticleQuerySet(models.QuerySet):
         return self.select_related("category").prefetch_related("tags")
 
     def published(self) -> ArticleQuerySet:
-        """Filtre les articles publies."""
-        return self.filter(is_published=True, published_date__lte=timezone.now())
+        """Filtre les articles publies (exclut les soft-deleted)."""
+        return self.filter(is_published=True, published_date__lte=timezone.now(), deleted_at__isnull=True)
 
     def published_with_related(self) -> ArticleQuerySet:
         """Filtre les articles publies avec leurs relations."""

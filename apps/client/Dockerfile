@@ -1,33 +1,48 @@
 # syntax=docker/dockerfile:1.4
 
-# ──────────────────────────────────────────────
-# Build arguments (overridable from docker-compose)
-# ──────────────────────────────────────────────
 ARG NODE_VERSION=24
 ARG PNPM_VERSION=10.28.0
 
-# Stage 1: Dependencies
 FROM node:${NODE_VERSION}-alpine AS deps
 
 ARG PNPM_VERSION
 
 WORKDIR /app
 
-# Update Alpine packages
 RUN apk upgrade --no-cache --available && \
     apk add --no-cache ca-certificates && \
     rm -rf /var/cache/apk/*
 
-# Install pnpm
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-# Copy dependency files for optimal caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Stage 2: Builder
+FROM node:${NODE_VERSION}-alpine AS dev
+
+ARG PNPM_VERSION
+
+WORKDIR /app
+
+RUN apk upgrade --no-cache --available && \
+    apk add --no-cache curl ca-certificates && \
+    rm -rf /var/cache/apk/*
+
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+
+# dev.yml mounts ./apps/client:/app on top; these deps are only a fallback when node_modules volume is fresh.
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Do NOT set PORT here: listhen/Nitro reads PORT and conflicts with `--port` CLI, yielding "http://0.0.0.0:/".
+ENV NODE_ENV=development \
+    HOST=0.0.0.0 \
+    NUXT_TELEMETRY_DISABLED=1
+
+EXPOSE 80
+CMD ["pnpm", "dev", "--host", "0.0.0.0", "--port", "80"]
+
 FROM node:${NODE_VERSION}-alpine AS builder
 
 ARG PNPM_VERSION
@@ -37,25 +52,20 @@ ARG NODE_MAX_OLD_SPACE_SIZE=4096
 
 WORKDIR /app
 
-# Update Alpine packages
 RUN apk upgrade --no-cache --available && \
     rm -rf /var/cache/apk/*
 
-# Install pnpm
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 
-# Copy source files
 COPY nuxt.config.ts tsconfig.json ./
 COPY app.vue error.vue ./
 COPY src ./src
 COPY public ./public
 COPY server ./server
 
-# Build with cache mounts and optimizations
 ENV NODE_ENV=production \
     NITRO_PRESET=node-server \
     NUXT_TELEMETRY_DISABLED=1 \
@@ -67,27 +77,20 @@ RUN --mount=type=cache,target=/app/.nuxt \
     --mount=type=cache,target=/app/node_modules/.cache \
     pnpm nuxt prepare && pnpm run build
 
-# Stage 3: Runner (Production)
-FROM node:${NODE_VERSION}-alpine AS runner
+FROM gcr.io/distroless/nodejs24-debian12:nonroot AS runner
+
+ARG VCS_REF=unknown
+ARG BUILD_DATE=unknown
+LABEL org.opencontainers.image.title="portfolio-frontend" \
+      org.opencontainers.image.source="https://github.com/jubskan3ki/portfolio" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
-# Update Alpine packages and install curl
-RUN apk upgrade --no-cache --available && \
-    apk add --no-cache curl ca-certificates && \
-    rm -rf /var/cache/apk/*
+COPY --from=builder --chown=nonroot:nonroot /app/.output ./
 
-# Copy built application
-COPY --from=builder /app/.output ./
-
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nuxtjs && \
-    chown -R nuxtjs:nodejs /app
-
-USER nuxtjs
-
-# Runtime environment variables (overridable at container start)
 ENV NODE_ENV=production \
     PORT=80 \
     HOST=0.0.0.0 \
@@ -96,8 +99,9 @@ ENV NODE_ENV=production \
 
 EXPOSE 80
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:80/ || exit 1
+USER nonroot
 
-CMD ["node", "server/index.mjs"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+    CMD ["/nodejs/bin/node", "-e", "require('http').get('http://localhost:80/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+
+CMD ["server/index.mjs"]

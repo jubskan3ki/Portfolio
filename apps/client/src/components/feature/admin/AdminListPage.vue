@@ -40,7 +40,6 @@
                 </slot>
             </template>
 
-            <!-- Actions slot -->
             <template #actions="{ item }">
                 <slot name="actions" :item="item">
                     <DataTableActions
@@ -53,7 +52,6 @@
             </template>
         </DataTable>
 
-        <!-- Single delete modal -->
         <ConfirmDialog
             v-if="deletion"
             v-model="deletion.showModal.value"
@@ -66,7 +64,6 @@
             @cancel="deletion.cancel()"
         />
 
-        <!-- Bulk delete modal -->
         <ConfirmDialog
             v-if="bulkDeletion"
             v-model="bulkDeletion.showModal.value"
@@ -94,51 +91,11 @@
     import { useSeo } from '@/composables/seo/useSeo';
     import { useAlert } from '@/composables/ui/useAlert';
 
-    import type { DataTableColumn } from '@/types/components/admin';
+    import type { AdminListPageProps } from '@/types/components/admin';
     import type { ListParams, BulkDeleteResult } from '@/types/composables';
     import type { DataItem } from '@/types/feature/admin';
 
-    interface Props {
-        // Page header
-        title: string;
-        subtitle: string;
-        createRoute: string;
-        createLabel?: string;
-
-        // SEO
-        seoTitle: string;
-        seoDescription: string;
-
-        // Table
-        columns: DataTableColumn[];
-
-        // Data fetching (useDataList config)
-        queryKey: string[];
-        queryFn: (params: ListParams) => Promise<unknown>;
-        deleteFn?: (item: T) => Promise<void>;
-        defaultSort?: string;
-        defaultSortOrder?: 'asc' | 'desc';
-        sortFieldMap?: Record<string, string>;
-
-        // Navigation
-        editRoute: (item: T) => string;
-        viewRoute?: (item: T) => string;
-        showView?: boolean;
-
-        // Type guard for casting DataItem -> T
-        typeGuard: (item: DataItem) => T;
-
-        // Delete messages
-        deleteTitle?: string;
-        deleteMessage?: (item: T) => string;
-        bulkDeleteTitle?: string;
-        bulkDeleteMessage?: (count: number) => string;
-
-        // Alert messages
-        resourceName: string;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<AdminListPageProps<T>>(), {
         createLabel: 'Créer',
         defaultSort: 'created_at',
         defaultSortOrder: 'desc',

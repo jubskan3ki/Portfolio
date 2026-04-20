@@ -7,7 +7,6 @@ from .services import WebhookDispatcher
 
 logger = logging.getLogger(__name__)
 
-# Mapping des modeles vers les types d'evenements
 MODEL_EVENT_MAPPING = {
     "articles.Article": {
         "created": WebhookEventType.ARTICLE_CREATED,
@@ -46,7 +45,6 @@ def get_payload(instance) -> dict:
         "model": get_model_label(type(instance)),
     }
 
-    # Ajoute les champs communs s'ils existent
     if hasattr(instance, "title"):
         payload["title"] = instance.title
     if hasattr(instance, "name"):

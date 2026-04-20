@@ -1,9 +1,5 @@
 import type { ContentBlock } from '@/types/feature/blog';
 
-/**
- * Decode HTML entities back to plain text.
- * Handles both named (&amp;) and numeric (&#39; / &#x27;) entities.
- */
 export function decodeHtmlEntities(text: string): string {
     return text
         .replace(/&amp;/g, '&')
@@ -16,10 +12,7 @@ export function decodeHtmlEntities(text: string): string {
         .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
-/**
- * Sanitize text to prevent XSS when used with v-html.
- * First decodes any pre-existing HTML entities to avoid double-encoding.
- */
+// XSS-safe pour v-html: decode d'abord pour éviter double-encoding
 function escapeHtml(text: string): string {
     const decoded = decodeHtmlEntities(text);
     return decoded
@@ -32,9 +25,7 @@ function escapeHtml(text: string): string {
 
 const SAFE_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 
-/**
- * Check if a URL uses a safe protocol (blocks javascript:, data:, vbscript:, etc.).
- */
+// Bloque javascript:, data:, vbscript:...
 function isSafeUrl(url: string): boolean {
     try {
         const parsed = new URL(url, 'https://placeholder.invalid');
@@ -44,23 +35,14 @@ function isSafeUrl(url: string): boolean {
     }
 }
 
-/**
- * Convert inline markdown syntax to HTML.
- * Handles: **bold**, *italic*, `code`, [links](url)
- */
+// Inline md: **bold**, *italic*, `code`, [text](url safe-protocol)
 export function renderInlineMarkdown(text: string): string {
     let html = escapeHtml(text);
 
-    // Bold: **text**
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-    // Italic: *text*
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-    // Inline code: `code`
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
 
-    // Links: [text](url) — only render safe protocols
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, text: string, url: string) => {
         if (isSafeUrl(url)) {
             return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
@@ -71,9 +53,6 @@ export function renderInlineMarkdown(text: string): string {
     return html;
 }
 
-/**
- * Parse a raw markdown string into structured ContentBlock[].
- */
 export function parseMarkdownToBlocks(content: string): ContentBlock[] {
     const blocks: ContentBlock[] = [];
     const lines = content.replace(/\r\n/g, '\n').split('\n');
@@ -99,7 +78,6 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
             continue;
         }
 
-        // Headings
         const headingMatch = line.match(/^(#{2,4})\s+(.+)$/);
         if (headingMatch) {
             blocks.push({
@@ -111,7 +89,6 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
             continue;
         }
 
-        // Code blocks
         if (line.trim().startsWith('```')) {
             const language = line.trim().slice(3).trim() || undefined;
             const codeLines: string[] = [];
@@ -129,7 +106,6 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
             continue;
         }
 
-        // Tables
         if (isTableRow(line) && i + 1 < lines.length && isTableSeparator(lineAt(i + 1))) {
             const parseRow = (row: string) =>
                 row
@@ -151,7 +127,7 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
             continue;
         }
 
-        // Images — only allow safe URL protocols
+        // Images: safe protocol only (XSS)
         const imageMatch = line.match(/^!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)$/);
         if (imageMatch) {
             const imageSrc = imageMatch[2] as string;
@@ -167,7 +143,6 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
             continue;
         }
 
-        // Blockquotes
         if (line.startsWith('> ')) {
             const quoteLines: string[] = [];
             while (i < lines.length && lineAt(i).startsWith('> ')) {
@@ -178,7 +153,6 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
             continue;
         }
 
-        // Unordered lists
         if (/^[-*]\s+/.test(line)) {
             const items: string[] = [];
             while (i < lines.length && /^[-*]\s+/.test(lineAt(i))) {
@@ -189,7 +163,6 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
             continue;
         }
 
-        // Ordered lists
         if (/^\d+\.\s+/.test(line)) {
             const items: string[] = [];
             while (i < lines.length && /^\d+\.\s+/.test(lineAt(i))) {
@@ -200,7 +173,6 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
             continue;
         }
 
-        // Paragraphs
         const paragraphLines: string[] = [];
         while (i < lines.length) {
             const cur = lineAt(i);
@@ -227,10 +199,6 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
     return blocks;
 }
 
-/**
- * Check if a paragraph block contains unprocessed markdown syntax.
- * Checks both start-of-line (multiline) and after-newline positions.
- */
 function hasMarkdownSyntax(text: string): boolean {
     return (
         /^#{2,4}\s/m.test(text)
@@ -247,21 +215,16 @@ function hasMarkdownSyntax(text: string): boolean {
     );
 }
 
-/**
- * Normalize content from API into proper ContentBlock[].
- * Handles: raw markdown string, JSON string, ContentBlock[] with embedded markdown.
- */
+// Accepte: string md brut, string JSON, ContentBlock[] (avec md potentiellement imbriqué)
 export function normalizeContent(content: unknown): ContentBlock[] {
-    // Raw markdown string
     if (typeof content === 'string') {
-        // Try JSON parse first (might be stringified blocks)
         try {
             const parsed = JSON.parse(content);
             if (Array.isArray(parsed)) {
                 return normalizeContent(parsed);
             }
         } catch {
-            // Not JSON — parse as markdown
+            // pas JSON -> md brut
         }
         return parseMarkdownToBlocks(content);
     }
@@ -270,7 +233,6 @@ export function normalizeContent(content: unknown): ContentBlock[] {
         return [];
     }
 
-    // Already ContentBlock[] — check if paragraphs contain unprocessed markdown
     const result: ContentBlock[] = [];
     for (const block of content) {
         if (typeof block === 'string') {
@@ -285,7 +247,7 @@ export function normalizeContent(content: unknown): ContentBlock[] {
             && typeof block.content === 'string'
         ) {
             const text = block.content as string;
-            // Re-parse if contains markdown syntax or newlines that might hide block-level syntax
+            // Re-parse si md non-traité ou block-level caché
             if (hasMarkdownSyntax(text) || (text.includes('\n') && parseMarkdownToBlocks(text).length > 1)) {
                 result.push(...parseMarkdownToBlocks(text));
                 continue;
@@ -298,9 +260,6 @@ export function normalizeContent(content: unknown): ContentBlock[] {
     return result;
 }
 
-/**
- * Parse structured content blocks back to Markdown-like text for the admin textarea.
- */
 export function parseJsonContent(content: unknown): string {
     if (typeof content === 'string') {
         return content;
@@ -364,9 +323,6 @@ export function parseJsonContent(content: unknown): string {
         .join('\n\n');
 }
 
-/**
- * Parse Markdown-like text from admin textarea into structured content blocks (JSON string).
- */
 export function formatContentForApi(content: string): string {
     return JSON.stringify(parseMarkdownToBlocks(content));
 }

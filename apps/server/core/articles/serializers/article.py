@@ -23,6 +23,8 @@ class ArticleWriteSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "slug",
+            "seo_title",
+            "meta_description",
             "excerpt",
             "content",
             "image",
@@ -35,6 +37,8 @@ class ArticleWriteSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "is_featured"]
         extra_kwargs = {
             "slug": {"required": False},
+            "seo_title": {"required": False, "allow_blank": True},
+            "meta_description": {"required": False, "allow_blank": True},
             "excerpt": {"required": False, "allow_blank": True},
             "image": {"required": False},
             "read_time": {"required": False},
@@ -42,15 +46,10 @@ class ArticleWriteSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data: dict[str, Any]) -> Article:
-        """Cree un article en deleguant au service.
-
-        La logique metier (date de publication automatique) est geree par ArticleService.
-        """
-        # Convertir les objets Tag en noms pour le service
+        """Delegue la creation a ArticleService (publication auto)."""
         tags = validated_data.pop("tags", [])
         tag_names = [tag.name for tag in tags] if tags else None
 
-        # Deleguer au service qui gere la logique metier
         data = {**validated_data}
         if tag_names:
             data["tags"] = tag_names
@@ -58,15 +57,10 @@ class ArticleWriteSerializer(serializers.ModelSerializer):
         return ArticleService.create(data)
 
     def update(self, instance: Article, validated_data: dict[str, Any]) -> Article:
-        """Met a jour un article en deleguant au service.
-
-        La logique metier (date de publication automatique) est geree par ArticleService.
-        """
-        # Convertir les objets Tag en noms pour le service
+        """Delegue la mise a jour a ArticleService (publication auto)."""
         tags = validated_data.pop("tags", None)
         tag_names = [tag.name for tag in tags] if tags is not None else None
 
-        # Deleguer au service qui gere la logique metier
         data = {**validated_data}
         if tag_names is not None:
             data["tags"] = tag_names

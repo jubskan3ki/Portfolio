@@ -23,7 +23,7 @@ export function useTransfer() {
     const { data: statsData, refetch: refetchStats } = useQuery({
         queryKey: TRANSFER_QUERY_KEYS.stats,
         queryFn: () => statsApi.getStats<TransferStats>(),
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 60 * 5,
     });
 
     const modules = computed<ModuleInfo[]>(() =>

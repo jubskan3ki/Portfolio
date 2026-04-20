@@ -17,14 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class HasGetSerializerClass(Protocol):
-    """Protocol pour les classes ayant get_serializer_class."""
-
     def get_serializer_class(self) -> type[Serializer]: ...
 
 
 class ViewSetProtocol(Protocol):
-    """Protocol pour les methodes de ViewSet utilisees par les mixins."""
-
     request: Any
     kwargs: dict[str, Any]
 
@@ -34,33 +30,17 @@ class ViewSetProtocol(Protocol):
 
 
 class SerializerByActionMixin:
-    """Mixin pour selectionner le serializer selon l'action.
-
-    Attributes:
-        serializer_classes: Dict mapping action -> serializer class
-        default_serializer_class: Serializer par defaut
-
-    Usage:
-        class MyViewSet(SerializerByActionMixin, viewsets.ModelViewSet):
-            serializer_classes = {
-                'list': MyListSerializer,
-                'retrieve': MyDetailSerializer,
-                'create': MyWriteSerializer,
-                'update': MyWriteSerializer,
-            }
-            default_serializer_class = MyDetailSerializer
-    """
+    """Selectionne le serializer selon action via serializer_classes dict."""
 
     serializer_classes: ClassVar[dict[str, type[Serializer]]] = {}
     default_serializer_class: ClassVar[type[Serializer] | None] = None
 
     def get_serializer_class(self) -> type[Serializer]:
-        """Retourne le serializer selon l'action courante."""
         action = getattr(self, "action", None)
         if action and action in self.serializer_classes:
             return self.serializer_classes[action]
 
-        # Grouper les actions similaires
+        # Alias d'actions similaires
         if action in ("create", "update", "partial_update") and "write" in self.serializer_classes:
             return self.serializer_classes["write"]
 
@@ -73,22 +53,14 @@ class SerializerByActionMixin:
         if self.default_serializer_class:
             return self.default_serializer_class
 
-        # Call parent's get_serializer_class - relies on MRO with ViewSet
         parent = cast(HasGetSerializerClass, super())
         return parent.get_serializer_class()
 
 
 class SlugOrPkLookupMixin:
-    """Mixin pour lookup par slug ou pk.
+    """Lookup par slug (defaut), fallback sur pk si la valeur est numerique.
 
-    Permet d'acceder aux objets via /resource/slug/ ou /resource/123/
-    Designed to be used with ViewSet (methods provided via MRO).
-
-    Lookup strategy per module:
-        - slug (via ce mixin): articles, projects, stacks
-          → ces modeles ont un champ slug unique pour les URLs publiques
-        - pk (lookup_field="pk"): experiences, contact
-          → ces modeles n'ont pas de slug dans leur modele
+    Modeles avec slug : articles, projects, stacks. Sans slug : experiences, contact (lookup_field='pk').
     """
 
     lookup_field: str = "slug"
@@ -96,7 +68,6 @@ class SlugOrPkLookupMixin:
     kwargs: dict[str, str]
     request: Request
 
-    # Provided by ViewSet via MRO — declared here for type checking only
     if TYPE_CHECKING:
 
         def get_queryset(self) -> QuerySet[Any]: ...
@@ -104,16 +75,13 @@ class SlugOrPkLookupMixin:
         def check_object_permissions(self, request: Any, obj: Any) -> None: ...
 
     def get_object(self) -> Model:
-        """Recupere l'objet par slug ou pk."""
         queryset = self.filter_queryset(self.get_queryset())
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         lookup_value = self.kwargs.get(lookup_url_kwarg)
 
-        # Essayer d'abord par slug
         filter_kwargs = {self.lookup_field: lookup_value}
         obj = queryset.filter(**filter_kwargs).first()
 
-        # Si pas trouve et que c'est un nombre, essayer par pk
         if obj is None and lookup_value and lookup_value.isdigit():
             obj = queryset.filter(pk=int(lookup_value)).first()
 
@@ -122,38 +90,27 @@ class SlugOrPkLookupMixin:
 
             raise NotFoundError(f"Objet non trouve: {lookup_value}")
 
-        # Verifier les permissions
         self.check_object_permissions(self.request, obj)
         return obj
 
 
 class AdminWritePermissionMixin:
-    """Mixin pour permissions: lecture publique, ecriture admin.
-
-    Usage:
-        class MyViewSet(AdminWritePermissionMixin, viewsets.ModelViewSet):
-            pass
-    """
+    """Lecture publique, ecriture admin."""
 
     action: str
 
     def get_permissions(self) -> list[permissions.BasePermission]:
-        """Retourne les permissions selon l'action."""
         if self.action in ("create", "update", "partial_update", "destroy"):
             return [permissions.IsAdminUser()]
         return [permissions.AllowAny()]
 
 
 class LoggingMixin:
-    """Mixin pour ajouter du logging aux actions CRUD.
-
-    Ajoute automatiquement des logs pour create, update, destroy.
-    """
+    """Logs automatiques sur create/update/destroy."""
 
     request: Request
 
     def perform_create(self, serializer: Serializer) -> None:
-        """Log la creation d'un objet."""
         instance = serializer.save()
         logger.info(
             "[CREATE] %s id=%s by user=%s",
@@ -163,7 +120,6 @@ class LoggingMixin:
         )
 
     def perform_update(self, serializer: Serializer) -> None:
-        """Log la mise a jour d'un objet."""
         instance = serializer.save()
         logger.info(
             "[UPDATE] %s id=%s by user=%s",
@@ -173,7 +129,6 @@ class LoggingMixin:
         )
 
     def perform_destroy(self, instance: Model) -> None:
-        """Log la suppression d'un objet."""
         model_name = instance.__class__.__name__
         instance_pk = instance.pk
         instance.delete()
@@ -192,39 +147,13 @@ class BaseAPIViewSet(
     LoggingMixin,
     viewsets.ModelViewSet,
 ):
-    """ViewSet de base avec toutes les fonctionnalites communes.
-
-    Combine:
-    - Selection automatique du serializer par action
-    - Lookup par slug ou pk
-    - Permissions admin pour ecriture
-    - Logging automatique des actions CRUD
-    - Guard automatique pour swagger_fake_view
-
-    Usage:
-        class ArticleViewSet(BaseAPIViewSet):
-            queryset = Article.objects.all()
-            serializer_classes = {
-                'list': ArticleListSerializer,
-                'detail': ArticleDetailSerializer,
-                'write': ArticleWriteSerializer,
-            }
-            default_serializer_class = ArticleDetailSerializer
-
-            def _get_base_queryset(self):
-                return Article.objects.with_related()
-    """
+    """ViewSet de base. Sous-classes surchargent _get_base_queryset() (guard swagger_fake_view auto)."""
 
     def get_queryset(self) -> QuerySet[Any]:
-        """Retourne le queryset avec guard swagger_fake_view.
-
-        Les sous-classes doivent surcharger _get_base_queryset()
-        au lieu de get_queryset() pour beneficier du guard automatique.
-        """
         if getattr(self, "swagger_fake_view", False):
             if self.queryset is not None:
                 return self.queryset.model.objects.none()
-            # Pas de queryset défini — dériver le modèle depuis le serializer
+            # Fallback : derive model depuis serializer.Meta
             serializer_class = getattr(self, "serializer_class", None)
             if serializer_class is not None:
                 meta = getattr(serializer_class, "Meta", None)
@@ -235,7 +164,6 @@ class BaseAPIViewSet(
         return self._get_base_queryset()
 
     def _get_base_queryset(self) -> QuerySet[Any]:
-        """Retourne le queryset de base. A surcharger dans les sous-classes."""
         return super().get_queryset()
 
     def paginated_response(
@@ -243,13 +171,6 @@ class BaseAPIViewSet(
         queryset: QuerySet[Any],
         serializer_class: type[Serializer] | None = None,
     ) -> Response:
-        """Pagine un queryset et retourne une reponse serialisee.
-
-        Args:
-            queryset: QuerySet a paginer.
-            serializer_class: Serializer a utiliser. Si None, utilise
-                le serializer de l'action courante.
-        """
         cls = serializer_class or self.get_serializer_class()
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -266,17 +187,7 @@ class BaseAPIViewSet(
         instance: Model | None = None,
         partial: bool = False,
     ) -> Response:
-        """Ecrit avec le serializer d'action et repond avec un autre serializer.
-
-        Utile quand on veut valider avec un WriteSerializer mais repondre
-        avec un ListSerializer (ex: ProjectViewSet).
-
-        Args:
-            request: La requete HTTP.
-            response_serializer_class: Serializer pour la reponse.
-            instance: Instance existante (update) ou None (create).
-            partial: Mise a jour partielle.
-        """
+        """Valide avec WriteSerializer, repond avec un autre serializer (ex: ListSerializer)."""
         write_serializer = cast(
             Serializer,
             self.get_serializer(instance, data=request.data, partial=partial),
@@ -297,6 +208,4 @@ class ReadOnlyAPIViewSet(
     SlugOrPkLookupMixin,
     viewsets.ReadOnlyModelViewSet,
 ):
-    """ViewSet en lecture seule avec fonctionnalites communes."""
-
     permission_classes = [permissions.AllowAny]

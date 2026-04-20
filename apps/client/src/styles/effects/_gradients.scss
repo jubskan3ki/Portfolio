@@ -1,7 +1,5 @@
-// Gradient Utilities (Flat Style - Minimal Gradients)
 @use '../abstracts/variables' as vars;
 
-// Text gradients - KEEP for important headings (Hero, Section headings)
 .text-gradient {
     background: linear-gradient(135deg, vars.$primary-color, vars.$secondary-color);
     -webkit-text-fill-color: transparent;
@@ -32,7 +30,6 @@
     }
 }
 
-// Gradient overlay - KEEP for image readability
 .gradient-overlay {
     position: relative;
 
@@ -52,7 +49,6 @@
     }
 }
 
-// Shimmer effect - KEEP for skeleton/loading states
 .shimmer {
     position: relative;
     overflow: hidden;

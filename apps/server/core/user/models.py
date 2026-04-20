@@ -30,24 +30,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_("nom"), max_length=150, blank=True)
     phone_number = models.CharField(_("numero telephone"), max_length=15, blank=True, null=True)
 
-    # Profil administrateur
     bio = models.TextField(_("biographie"), blank=True)
     avatar = models.ImageField(
         upload_to=user_avatar_upload_to, blank=True, null=True, validators=[validate_image_upload]
     )
     position = models.CharField(_("poste"), max_length=255, blank=True)
 
-    # Contacts publics
     public_email = models.EmailField(_("email public"), blank=True, null=True)
     linkedin = models.URLField(_("LinkedIn"), blank=True, null=True)
     github = models.URLField(_("GitHub"), blank=True, null=True)
     twitter = models.URLField(_("Twitter"), blank=True, null=True)
 
-    # Etat
     is_active = models.BooleanField(_("actif"), default=True)
     is_staff = models.BooleanField(_("statut staff"), default=False)
 
-    # Metadonnees
     date_joined = models.DateTimeField(_("date inscription"), default=timezone.now)
     updated_at = models.DateTimeField(_("derniere mise a jour"), auto_now=True)
 

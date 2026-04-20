@@ -9,15 +9,9 @@
 
     import Spinner from './Spinner.vue';
 
-    import type { SpinnerSize } from '@/types/components/loaders';
+    import type { LoadingStateProps } from '@/types/components/loaders';
 
-    interface Props {
-        message?: string;
-        size?: 'sm' | 'md' | 'lg';
-        spinnerSize?: SpinnerSize;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<LoadingStateProps>(), {
         message: 'Chargement...',
         size: 'md',
         spinnerSize: 'lg',

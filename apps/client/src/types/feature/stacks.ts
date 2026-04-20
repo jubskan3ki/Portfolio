@@ -1,8 +1,6 @@
 import type { PaginatedResponse } from '@/types/api/common';
+import type { Ref } from 'vue';
 
-// Stack Types
-
-// Type pour une stack technique (liste)
 export interface Stack {
     id: number;
     name: string;
@@ -16,7 +14,6 @@ export interface Stack {
     level: number;
 }
 
-// Type pour une stack technique (detail)
 export interface StackDetail extends Stack {
     description: string;
     isFeatured?: boolean;
@@ -35,7 +32,6 @@ export interface StackDetail extends Stack {
     updatedAt: string;
 }
 
-// Type pour une categorie de stack technique
 export interface StackCategory {
     id: number;
     name: string;
@@ -44,7 +40,6 @@ export interface StackCategory {
     count: number;
 }
 
-// Type pour une ressource de stack
 export interface StackResource {
     id: number;
     title: string;
@@ -56,7 +51,6 @@ export interface StackResource {
 
 export type StackResourceType = 'documentation' | 'tutorial' | 'article' | 'video' | 'other';
 
-// Type pour une stack associee
 export interface RelatedStack {
     name: string;
     logo: string;
@@ -67,7 +61,6 @@ export interface RelatedStack {
 
 export type StackRelationship = 'alternative' | 'complementary' | 'dependency' | 'similarTo';
 
-// Type pour les statistiques de stacks
 export interface StackStats {
     totalStacks: number;
     stacksByCategory: Array<{ category: string; count: number }>;
@@ -76,11 +69,7 @@ export interface StackStats {
     yearsOfExperience: Array<{ name: string; years: number }>;
 }
 
-// API Response Types
-
 export type StacksResponse = PaginatedResponse<Stack>;
-
-// API Request Types (Create/Update)
 
 export interface StackCreateData {
     name: string;
@@ -125,7 +114,6 @@ export interface StackResourceFilters {
     type?: string;
 }
 
-// Props pour StackCard
 export interface StackCardProps {
     stack: Stack;
     hoverable?: boolean;
@@ -135,13 +123,11 @@ export interface StackCardProps {
     customClass?: string;
 }
 
-// Filter option pour StackList
 interface StackFilterOption {
     label: string;
     value: string;
 }
 
-// Props pour StackList
 export interface StackListProps {
     stacks?: Stack[];
     title?: string;
@@ -169,8 +155,73 @@ export interface StackListProps {
     customClass?: string;
 }
 
-// Props pour StackCarousel
 export interface StackCarouselProps {
     limit?: number;
     autoplay?: boolean;
+}
+
+// Light entry for StackBadge — minimal fields the caller is expected to pass.
+export interface StackBadgeStack {
+    id: string | number;
+    name: string;
+    logo?: string;
+    icon?: string;
+    color?: string;
+    level?: number;
+    category?: string;
+}
+
+export interface StackBadgeProps {
+    stack: StackBadgeStack;
+    size?: 'small' | 'medium' | 'large';
+    showName?: boolean;
+    showLevel?: boolean;
+    clickable?: boolean;
+    customClass?: string;
+}
+
+// Light entry for StackRelated — the sidebar accepts entries without the canonical `relationship`.
+export interface StackRelatedEntry {
+    name: string;
+    logo: string;
+    slug: string;
+    category: string;
+}
+
+export interface StackRelatedProps {
+    stacks?: StackRelatedEntry[];
+}
+
+// Light resource entry for the StackResources sidebar.
+export interface StackResourceEntry {
+    title: string;
+    description: string;
+    url: string;
+}
+
+export interface StackResourcesProps {
+    resources?: StackResourceEntry[];
+}
+
+export interface StackTagsProps {
+    tags?: string[];
+}
+
+export interface StackCategorySliderProps {
+    label: string;
+    icon: string;
+    stacks: Stack[];
+}
+
+export interface UseStacksPageOptions {
+    stacksData: Ref<{ data: Stack[] } | undefined>;
+    categoriesData: Ref<unknown>;
+    statsData: Ref<{ totalStacks?: number; averageProficiency?: number } | undefined>;
+    stacksLoading: Ref<boolean>;
+    categoriesLoading: Ref<boolean>;
+    stacksError: Ref<boolean>;
+    categoriesError: Ref<boolean>;
+    activeCategory: Ref<string>;
+    searchQuery: Ref<string>;
+    isSearchMode: Ref<boolean>;
 }

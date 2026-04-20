@@ -1,8 +1,6 @@
 <template>
     <div class="data-table-toolbar">
-        <!-- Left side -->
         <div class="data-table-toolbar__left">
-            <!-- Search -->
             <SearchInput
                 v-model="searchQuery"
                 :placeholder="searchPlaceholder"
@@ -11,7 +9,6 @@
                 @clear="clearSearch"
             />
 
-            <!-- Filters -->
             <div v-if="filters.length" class="data-table-toolbar__filters">
                 <div v-for="filter in filters" :key="filter.key" class="data-table-toolbar__filter">
                     <BaseSelect
@@ -24,7 +21,6 @@
                 </div>
             </div>
 
-            <!-- Bulk actions -->
             <Transition name="slide-fade">
                 <div v-if="selectedCount > 0" class="data-table-toolbar__bulk">
                     <small class="data-table-toolbar__bulk-count">
@@ -40,7 +36,6 @@
             </Transition>
         </div>
 
-        <!-- Right side -->
         <div class="data-table-toolbar__right">
             <slot name="actions"></slot>
         </div>
@@ -55,17 +50,13 @@
     import BaseSelect from '@/components/base/BaseSelect.vue';
     import SearchInput from '@/components/ui/search/SearchInput.vue';
 
-    interface Filter {
-        key: string;
-        label: string;
-        options: Array<{ value: string; label: string }>;
-    }
+    import type { DataTableFilter } from '@/types/components/admin';
 
     const props = withDefaults(
         defineProps<{
             searchPlaceholder?: string;
             selectedCount?: number;
-            filters?: Filter[];
+            filters?: DataTableFilter[];
             activeFilters?: Record<string, string>;
         }>(),
         {

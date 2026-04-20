@@ -1,6 +1,4 @@
-# ============================================================
 # .gitignore — Portfolio Monorepo
-# ============================================================
 
 # ── OS ───────────────────────────────────────────────────────
 .DS_Store
@@ -15,12 +13,41 @@ __MACOSX/
 *.swo
 *.swn
 *.~lock
+*.log
+core.*
+*.dmp
+*.cpuprofile
+*.heapsnapshot
+*.heapprofile
 
 # ── Secrets & Environment ────────────────────────────────────
 .env
 .env.*
 !.env.example
 !.env.production.example
+
+# Decrypted sops output — only the encrypted *.sops.yaml files are tracked
+/run/secrets/
+secrets/*.env
+!secrets/*.env.sops.yaml
+!secrets/.gitkeep
+!secrets/README.md
+
+# Age private keys must never land in the repo
+*.age
+age-key.txt
+keys.txt
+
+# Ansible vault files (encrypted or decrypted) — only *.example is tracked
+ansible/group_vars/**/vault.yml
+ansible/group_vars/**/vault.yaml
+!ansible/group_vars/**/vault.yml.example
+ansible/.vault_pass
+ansible/*.retry
+
+# Direnv
+.envrc.local
+.direnv/
 
 # ── Python & Django ──────────────────────────────────────────
 __pycache__/
@@ -35,9 +62,10 @@ celerybeat-schedule
 celerybeat.pid
 *.pid
 
-# Collected static / uploaded media
+# Collected static / uploaded media + runtime logs
 apps/server/staticfiles/
 apps/server/media/
+apps/server/logs/
 
 # Python packaging
 *.egg-info/
@@ -55,6 +83,10 @@ env/
 .mypy_cache/
 .ruff_cache/
 .pylint.d/
+.dmypy.json
+.pyright/
+.pyre/
+.pytype/
 
 # Testing
 .tox/
@@ -70,6 +102,7 @@ nosetests.xml
 # ── Node.js & Nuxt ───────────────────────────────────────────
 node_modules/
 .npm/
+.pnpm-store/
 .nuxt/
 .output/
 .nitro/
@@ -78,6 +111,27 @@ node_modules/
 dist/
 .cache/
 .eslintcache
+*.tsbuildinfo
+.stylelintcache
+bun.lockb
+
+# IPX image cache (@nuxt/image)
+.ipx/
+
+# Vite generated config snapshot files (timestamped)
+vite.config.*.timestamp-*
+vitest.config.*.timestamp-*
+
+# Playwright / Vitest artefacts
+playwright-report/
+test-results/
+.vitest-cache/
+blob-report/
+*.snapshots/
+
+# Bundle analyzer output
+.nuxt-analyze/
+stats.html
 
 # Logs
 npm-debug.log*
@@ -96,8 +150,41 @@ docker-compose.override.yaml
 # ── Backups & Data persistants ───────────────────────────────
 backups/
 postgres-data/
+redis-data/
+rabbitmq-data/
+pgbouncer-data/
 monitoring/grafana/data/
 monitoring/loki/
+monitoring/prometheus/data/
+monitoring/alertmanager/data/
+monitoring/tempo/data/
+
+# Exports JSON locaux (données personnelles — ne jamais push)
+/data/*
+!/data/.gitkeep
+
+# Let's Encrypt / certbot (généré au runtime)
+letsencrypt/
+certbot/
+nginx/certbot-www/
+nginx/letsencrypt/
+
+# Traefik ACME storage (contient la clé privée !)
+traefik/acme.json
+traefik/acme/
+
+# Infra as Code state
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfplan
+terraform/crash.log
+*.auto.tfvars
+
+# k6 / bench results
+bench/results/
+bench/*.json
+!bench/scenarios/*.js
 
 # ── Lighthouse CI ────────────────────────────────────────────
 **/.lighthouseci/
@@ -108,10 +195,34 @@ lhr-*.json
 .idea/
 *.sublime-workspace
 *.sublime-project
+.vscode/*
+!.vscode/settings.recommended.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.history/
+.zed/
 
 
-# --- Claude Code (AI tooling) --- #
+# AI tooling (caches, sessions, project-local configs)
 CLAUDE.md
 CONTEXT/
 claude.config.json
 .claude/
+.aider*
+.continue/
+.cursor/
+.cursorrules
+.cursorignore
+.dccache
+.specstory/
+.windsurf*
+.codeium/
+.copilotignore.local
+
+# Local-only overrides (never push)
+*.local
+*.local.json
+*.local.yaml
+*.local.yml
+!package-lock.json
+pyrightconfig.local.json

@@ -1,13 +1,11 @@
 <template>
     <div class="query-state-handler">
-        <!-- Loading -->
         <div v-if="loading" class="query-state-handler__state">
             <slot name="loading">
                 <Spinner :size="loadingSize" :label="loadingMessage" />
             </slot>
         </div>
 
-        <!-- Error -->
         <div v-else-if="error" class="query-state-handler__state query-state-handler__state--error">
             <slot name="error" :error="error">
                 <ErrorMessage :message="typeof error === 'string' ? error : error.message" />
@@ -23,7 +21,6 @@
             </slot>
         </div>
 
-        <!-- Empty -->
         <div v-else-if="empty" class="query-state-handler__state">
             <slot name="empty">
                 <EmptyState :title="emptyTitle" :description="emptyDescription" :icon="emptyIcon" :icon-size="48">
@@ -34,7 +31,6 @@
             </slot>
         </div>
 
-        <!-- Content -->
         <slot v-else></slot>
     </div>
 </template>
@@ -45,20 +41,9 @@
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import Spinner from '@/components/loaders/Spinner.vue';
 
-    interface Props {
-        loading?: boolean;
-        error?: string | Error | null;
-        empty?: boolean;
-        loadingMessage?: string;
-        loadingSize?: 'sm' | 'md' | 'lg';
-        emptyTitle?: string;
-        emptyDescription?: string;
-        emptyIcon?: string;
-        retryable?: boolean;
-        retryText?: string;
-    }
+    import type { QueryStateHandlerProps } from '@/types/components/feedback';
 
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<QueryStateHandlerProps>(), {
         loading: false,
         error: null,
         empty: false,

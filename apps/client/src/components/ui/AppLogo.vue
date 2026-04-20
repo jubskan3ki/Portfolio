@@ -34,7 +34,6 @@
         priority: false,
     });
 
-    // Dimensions selon la taille
     const sizeMap = {
         xs: { width: 24, height: 24 },
         sm: { width: 32, height: 32 },
@@ -61,7 +60,6 @@
             object-fit: contain;
         }
 
-        // Tailles
         &--xs .app-logo__image {
             width: 24px;
             height: 24px;
@@ -87,12 +85,10 @@
             height: 80px;
         }
 
-        // Variante sombre
         &--dark {
             filter: brightness(0) invert(1);
         }
 
-        // Transition au hover si c'est un lien
         &[href] {
             transition: opacity vars.$transition-fast;
 

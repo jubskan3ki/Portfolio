@@ -1,6 +1,5 @@
 <template>
     <div class="stack-list" :class="[customClass]">
-        <!-- En-tête -->
         <div v-if="title || $slots.header" class="stack-list__header">
             <slot name="header">
                 <h2 v-if="title" class="stack-list__title">{{ title }}</h2>
@@ -8,7 +7,6 @@
             </slot>
         </div>
 
-        <!-- Filtres par catégorie -->
         <div v-if="showFilters && categoryFilters.length > 0" class="stack-list__filters">
             <div class="stack-list__filter-label">{{ filterLabel }}:</div>
             <div class="stack-list__filter-options">
@@ -47,7 +45,6 @@
                 <slot name="empty-action"></slot>
             </template>
 
-            <!-- Mode badges -->
             <div v-if="displayMode === 'badges'" class="stack-list__badges">
                 <StackBadge
                     v-for="stack in filteredStacks"
@@ -61,7 +58,6 @@
                 />
             </div>
 
-            <!-- Mode grille ou liste -->
             <div v-else class="stack-list__grid" :class="[`stack-list__grid--${displayMode}`]">
                 <template v-for="(stack, index) in filteredStacks" :key="stack.id ?? index">
                     <slot name="stack" :stack="stack" :index="index">
@@ -78,7 +74,6 @@
             </div>
         </QueryStateHandler>
 
-        <!-- Pied de liste -->
         <div v-if="$slots.footer" class="stack-list__footer">
             <slot name="footer"></slot>
         </div>

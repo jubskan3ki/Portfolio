@@ -206,6 +206,58 @@
             }
         }
 
+        // Hero variant — tuned for dark/gradient hero backgrounds
+        &--hero {
+            padding: 0;
+
+            .breadcrumb__list {
+                justify-content: center;
+            }
+
+            .breadcrumb__item {
+                color: func.color-alpha(vars.$white, 0.75);
+
+                &:last-child {
+                    color: vars.$white;
+                }
+            }
+
+            .breadcrumb__link {
+                color: func.color-alpha(vars.$white, 0.75);
+
+                &::before {
+                    background: transparent;
+                }
+
+                &:hover {
+                    color: vars.$white;
+
+                    &::before {
+                        background: func.color-alpha(vars.$white, 0.12);
+                    }
+                }
+
+                &:focus-visible {
+                    outline-color: func.color-alpha(vars.$white, 0.7);
+                }
+            }
+
+            .breadcrumb__current {
+                background: func.color-alpha(vars.$white, 0.14);
+                color: vars.$white;
+                border: 1px solid func.color-alpha(vars.$white, 0.2);
+            }
+
+            .breadcrumb__separator {
+                color: func.color-alpha(vars.$white, 0.4);
+            }
+
+            .breadcrumb__separator-dot {
+                background: func.color-alpha(vars.$white, 0.5);
+                opacity: 0.8;
+            }
+        }
+
         // Mobile responsive
         @include mix.responsive(mobile) {
             padding: vars.$spacing-xxs 0;

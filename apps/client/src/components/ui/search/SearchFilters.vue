@@ -18,19 +18,9 @@
 <script setup lang="ts">
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    interface FilterGroup {
-        type: string;
-        label: string;
-        icon: string;
-        count: number;
-    }
+    import type { SearchFiltersProps } from '@/types/components/ui';
 
-    interface Props {
-        groups: FilterGroup[];
-        activeFilter: string | null;
-    }
-
-    defineProps<Props>();
+    defineProps<SearchFiltersProps>();
 
     defineEmits<{
         toggle: [type: string];

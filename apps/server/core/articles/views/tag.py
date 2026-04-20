@@ -1,13 +1,10 @@
-"""
-Vues pour les tags d'articles avec CRUD complet.
-"""
+"""Vues pour les tags d'articles."""
 
 from typing import Any
 
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Count, Q, QuerySet, Sum
+from django.db.models.functions import Coalesce
 from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -34,6 +31,8 @@ class TagViewSet(BaseAPIViewSet):
     serializer_class = TagSerializer
     throttle_classes = [ArticlesThrottle]
     lookup_field = "name"
+    # Liste complete renvoyee sans pagination (consommee en sidebar/admin-select).
+    pagination_class = None
 
     serializer_classes = {
         "list": TagSerializer,
@@ -42,18 +41,27 @@ class TagViewSet(BaseAPIViewSet):
     }
 
     def get_queryset(self) -> QuerySet[Tag]:
-        """Filtre les tags pour n'afficher que ceux ayant des articles publiés (public)."""
+        """Filtre + ordonne les tags selon l'action.
+
+        - list/retrieve: annote published_count et view_count_sum.
+        - Public: exclut les tags sans article publie (published_count > 0).
+        - list: tri par view_count_sum DESC, puis published_count DESC, puis name.
+        """
         qs = super().get_queryset()
         if self.action in ("list", "retrieve"):
             now = timezone.now()
+            published_filter = Q(articles__is_published=True, articles__published_date__lte=now)
             qs = qs.annotate(
-                published_count=Count(
-                    "articles",
-                    filter=Q(articles__is_published=True, articles__published_date__lte=now),
-                )
+                published_count=Count("articles", filter=published_filter),
+                view_count_sum=Coalesce(
+                    Sum("articles__view_count", filter=published_filter),
+                    0,
+                ),
             )
             if not self.request.user.is_staff:
                 qs = qs.filter(published_count__gt=0)
+            if self.action == "list":
+                qs = qs.order_by("-view_count_sum", "-published_count", "name")
         return qs
 
     @extend_schema(
@@ -62,9 +70,10 @@ class TagViewSet(BaseAPIViewSet):
         responses={200: TagSerializer(many=True)},
         tags=["Articles - Tags"],
     )
-    @method_decorator(cache_page(1800))
     def list(self, request, *args, **kwargs):
         """Récupère la liste des tags d'articles."""
+        # Pas de cache_page: la reponse varie par is_staff (admin voit les vides)
+        # et doit refleter immediatement chaque publication d'article.
         return super().list(request, *args, **kwargs)
 
     @extend_schema(
@@ -73,7 +82,6 @@ class TagViewSet(BaseAPIViewSet):
         responses={200: TagSerializer, 404: OpenApiResponse(description="Tag non trouve")},
         tags=["Articles - Tags"],
     )
-    @method_decorator(cache_page(1800))
     def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Récupère les détails d'un tag par son nom."""
         name = str(kwargs.get("name", ""))

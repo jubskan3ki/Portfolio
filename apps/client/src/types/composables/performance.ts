@@ -41,3 +41,14 @@ export type UsePrefetchReturn<S extends PrefetchOptions['strategy']> = S extends
     : S extends 'idle'
         ? UsePrefetchIdleReturn
         : never;
+
+// useViewportTrigger
+
+export interface UseViewportTriggerOptions {
+    /** Distance before the element enters viewport to start loading */
+    rootMargin?: string;
+    /** Once triggered, stay triggered (default: true) */
+    once?: boolean;
+    /** Force immediate on server for SSR-critical content (default: false) */
+    ssrEager?: boolean;
+}

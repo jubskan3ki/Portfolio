@@ -57,7 +57,6 @@ class StatsService:
         Returns:
             Dictionnaire avec toutes les statistiques.
         """
-        # Aggregations en une seule requete
         aggregates = Stack.objects.aggregate(
             total=Count("id"),
             avg_level=Avg("level"),
@@ -66,7 +65,6 @@ class StatsService:
         total_stacks = aggregates["total"] or 0
         average_level = aggregates["avg_level"] or 0.0
 
-        # Categories avec comptage
         categories_data = (
             StackCategory.objects.annotate(count=Count("stacks")).values("name", "count").order_by("-count")
         )
@@ -75,14 +73,12 @@ class StatsService:
             {"category": item["name"], "count": item["count"]} for item in categories_data
         ]
 
-        # Top stacks par niveau
         top_stacks_data = Stack.objects.order_by("-level").values("name", "level")[: StatsService.TOP_STACKS_LIMIT]
 
         top_stacks: list[StackLevel] = [
             {"name": item["name"], "level": float(item["level"])} for item in top_stacks_data
         ]
 
-        # Experience calculee depuis started_date
         today = timezone.now().date()
         stacks_with_dates = (
             Stack.objects.filter(started_date__isnull=False)

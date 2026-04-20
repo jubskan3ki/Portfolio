@@ -40,22 +40,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import Tooltip from '@/components/ui/Tooltip.vue';
 
-    type BadgeType = 'info' | 'success' | 'warning' | 'danger';
+    import type { SideBarItemProps } from '@/types/components/navigation';
 
-    interface Badge {
-        type?: BadgeType;
-        value?: string | number;
-    }
-
-    interface Props {
-        text: string;
-        to: string;
-        icon?: string;
-        badge?: Badge;
-        isCollapsed?: boolean;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SideBarItemProps>(), {
         icon: '',
         badge: undefined,
         isCollapsed: false,

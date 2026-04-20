@@ -32,18 +32,9 @@
 <script setup lang="ts">
     import BaseLink from '@/components/base/BaseLink.vue';
 
-    interface RelatedStack {
-        name: string;
-        logo: string;
-        slug: string;
-        category: string;
-    }
+    import type { StackRelatedProps } from '@/types/feature/stacks';
 
-    interface Props {
-        stacks?: RelatedStack[];
-    }
-
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<StackRelatedProps>(), {
         stacks: () => [],
     });
 </script>

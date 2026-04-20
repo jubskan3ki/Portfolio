@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 
+from core.versioning.models import SoftDeleteAllManager, SoftDeleteMixin
 from utils.images import MAX_SIZE_LARGE
 from utils.models import AutoSlugMixin, OptimizeImageMixin
 from utils.upload import make_upload_to
@@ -65,8 +67,9 @@ class Tag(models.Model):
     id: int
     name = models.CharField(max_length=50, unique=True)
 
-    # Annotation added by TagQuerySet.with_article_count()
+    # Annotations added by TagQuerySet.with_article_count() / with_view_count_sum()
     published_count: int
+    view_count_sum: int | None
 
     objects: TagManager = TagManager()
     articles: RelatedManager[Article]
@@ -92,8 +95,19 @@ class Tag(models.Model):
             return self.published_count
         return 0
 
+    @property
+    def total_view_count(self) -> int:
+        """Retourne la somme des vues des articles publies lies a ce tag.
 
-class Article(OptimizeImageMixin, AutoSlugMixin, models.Model):
+        Uses 'view_count_sum' annotation when available (list/retrieve).
+        Falls back to 0 for single-object responses (create/update).
+        """
+        if hasattr(self, "view_count_sum"):
+            return self.view_count_sum or 0
+        return 0
+
+
+class Article(OptimizeImageMixin, AutoSlugMixin, SoftDeleteMixin):
     """Article de blog."""
 
     slug_source_field = "title"
@@ -122,8 +136,10 @@ class Article(OptimizeImageMixin, AutoSlugMixin, models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     published_date = models.DateTimeField(null=True, blank=True)
+    search_vector = SearchVectorField(null=True, editable=False)
 
     objects: ArticleManager = ArticleManager()
+    all_objects = SoftDeleteAllManager()
 
     class Meta:
         verbose_name = "Article"
@@ -135,7 +151,6 @@ class Article(OptimizeImageMixin, AutoSlugMixin, models.Model):
             models.Index(fields=["is_published"]),
             models.Index(fields=["published_date"]),
             models.Index(fields=["category"]),
-            # Composite indexes for common query patterns
             models.Index(fields=["is_published", "-published_date"]),
             models.Index(fields=["category", "is_published", "-published_date"]),
             models.Index(fields=["is_featured", "is_published", "-published_date"]),

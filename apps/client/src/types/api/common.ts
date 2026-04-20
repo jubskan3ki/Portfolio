@@ -1,3 +1,5 @@
+import type { PaginationMeta } from '@/types/composables/data';
+
 export interface PaginationData {
     total: number;
     page: number;
@@ -8,6 +10,11 @@ export interface PaginationData {
 export interface PaginatedResponse<T> {
     data: T[];
     pagination: PaginationData;
+}
+
+export interface NormalizedPaginatedData<T> {
+    data: T[];
+    pagination: PaginationMeta;
 }
 
 export interface DjangoPaginatedResponse<T> {
@@ -92,6 +99,16 @@ export type ApiError
         | NetworkError
         | TimeoutError
         | UnknownError;
+
+// Normalized error info produced by the error handler (services/utils/errors/)
+
+export interface ErrorInfo {
+    message: string;
+    code: ApiErrorCode | 'UNKNOWN';
+    status: number;
+    details?: Record<string, string[]>;
+    isRetryable: boolean;
+}
 
 interface PaginationFilters {
     page?: number;

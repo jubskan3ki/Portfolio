@@ -1,14 +1,6 @@
-// Constants pour la gestion d'erreurs
+import type { ApiErrorCode, ErrorInfo } from '@/types/api/common';
 
-import type { ApiErrorCode } from '@/types/api/common';
-
-export interface ErrorInfo {
-    message: string;
-    code: ApiErrorCode | 'UNKNOWN';
-    status: number;
-    details?: Record<string, string[]>;
-    isRetryable: boolean;
-}
+export type { ErrorInfo };
 
 export const API_ERROR_MESSAGES: Record<ApiErrorCode | 'UNKNOWN', string> = {
     VALIDATION_ERROR: 'Veuillez vérifier les informations saisies',

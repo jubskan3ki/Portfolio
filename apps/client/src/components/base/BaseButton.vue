@@ -6,9 +6,13 @@
             <span class="button__loader-dot"></span>
         </span>
         <span v-else class="button__content">
-            <slot name="icon-left"></slot>
-            <slot>{{ text }}</slot>
-            <slot name="icon-right"></slot>
+            <slot name="icon-left">
+                <BaseIcon v-if="icon && iconPosition !== 'right'" :name="icon" :size="iconSize" />
+            </slot>
+            <slot>{{ displayText }}</slot>
+            <slot name="icon-right">
+                <BaseIcon v-if="icon && iconPosition === 'right'" :name="icon" :size="iconSize" />
+            </slot>
         </span>
     </NuxtLink>
 
@@ -25,9 +29,13 @@
             <span class="button__loader-dot"></span>
         </span>
         <span v-else class="button__content">
-            <slot name="icon-left"></slot>
-            <slot>{{ text }}</slot>
-            <slot name="icon-right"></slot>
+            <slot name="icon-left">
+                <BaseIcon v-if="icon && iconPosition !== 'right'" :name="icon" :size="iconSize" />
+            </slot>
+            <slot>{{ displayText }}</slot>
+            <slot name="icon-right">
+                <BaseIcon v-if="icon && iconPosition === 'right'" :name="icon" :size="iconSize" />
+            </slot>
         </span>
     </a>
 
@@ -44,9 +52,13 @@
             <span class="button__loader-dot"></span>
         </span>
         <span v-else class="button__content">
-            <slot name="icon-left"></slot>
-            <slot>{{ text }}</slot>
-            <slot name="icon-right"></slot>
+            <slot name="icon-left">
+                <BaseIcon v-if="icon && iconPosition !== 'right'" :name="icon" :size="iconSize" />
+            </slot>
+            <slot>{{ displayText }}</slot>
+            <slot name="icon-right">
+                <BaseIcon v-if="icon && iconPosition === 'right'" :name="icon" :size="iconSize" />
+            </slot>
         </span>
     </button>
 </template>
@@ -54,15 +66,19 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
+    import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useLinkResolver } from '@/composables/ui/useLinkResolver';
 
     import type { ButtonVariant, ButtonSize, LinkTarget, ButtonProps } from '@/types/components/base';
 
-    // Extended Props to allow empty strings for optional variants
     type Props = Omit<ButtonProps, 'variant' | 'size' | 'target'> & {
         variant?: ButtonVariant | '';
         size?: ButtonSize | '';
         target?: LinkTarget | '';
+        label?: string;
+        icon?: string;
+        iconPosition?: 'left' | 'right';
+        iconSize?: number;
     };
 
     const props = withDefaults(defineProps<Props>(), {
@@ -78,11 +94,17 @@
         params: () => ({}),
         target: '',
         ariaLabel: '',
+        label: '',
+        icon: '',
+        iconPosition: 'left',
+        iconSize: 16,
     });
 
     const emit = defineEmits<{
         click: [event: MouseEvent];
     }>();
+
+    const displayText = computed(() => props.label || props.text);
 
     const { isInternalLink, isExternalLink, linkProps } = useLinkResolver(() => ({
         to: props.to,
@@ -90,7 +112,6 @@
         target: props.target,
     }));
 
-    // Provide aria-label when loading (no visible text)
     const effectiveAriaLabel = computed(() => {
         if (props.ariaLabel) {
             return props.ariaLabel;
@@ -171,7 +192,6 @@
             gap: vars.$spacing-xxs;
         }
 
-        // Variants
         &--primary {
             background-color: vars.$primary-color;
             color: vars.$white;
@@ -219,7 +239,6 @@
             }
         }
 
-        // Sizes (système unifié xs/sm/md/lg/xl)
         &--xs {
             padding: 0.25rem 0.5rem;
             font-size: 0.75rem;
@@ -229,8 +248,6 @@
             padding: vars.$spacing-xxs vars.$spacing-xs;
             font-size: 0.875rem;
         }
-
-        // md = taille par défaut (pas de classe spécifique)
 
         &--lg {
             padding: vars.$spacing-md vars.$spacing-lg;
@@ -249,7 +266,6 @@
             min-width: 36px;
         }
 
-        // Aliases de compatibilité (anciennes valeurs)
         &--small {
             padding: vars.$spacing-xxs vars.$spacing-xs;
             font-size: 0.875rem;
@@ -260,7 +276,6 @@
             font-size: 1.125rem;
         }
 
-        // States
         &--full-width {
             width: 100%;
         }
@@ -276,7 +291,6 @@
             cursor: wait;
         }
 
-        // Loader
         &__loader {
             display: flex;
             align-items: center;

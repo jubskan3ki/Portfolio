@@ -1,23 +1,16 @@
-// Dimensions de layout
-
-// Container
 $container-padding: 16px;
 $container-padding-lg: 32px;
 $container-max-width: 1280px;
 
-// Navbar
 $navbar-height: 64px;
 $navbar-height-mobile: 56px;
 
-// Sidebar (utilise pour admin et autres)
 $sidebar-width: 260px;
 $sidebar-width-large: 280px;
 $sidebar-collapsed: 75px;
 
-// Header
 $header-height: 75px;
 
-// Z-index layers
 $z-index-base: 1;
 $z-index-dropdown: 100;
 $z-index-sticky: 200;

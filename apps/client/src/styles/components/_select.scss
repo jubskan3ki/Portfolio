@@ -1,10 +1,7 @@
-// Styles partages entre BaseSelect et BaseMultiSelect.
-// Utiliser via @include dans chaque composant scoped.
-
+// Shared between BaseSelect and BaseMultiSelect; @include from scoped components.
 @use '../abstracts/variables' as vars;
 @use '../abstracts/functions' as func;
 
-// --- Bouton clear ---
 @mixin clear-button {
     display: flex;
     align-items: center;
@@ -23,7 +20,6 @@
     }
 }
 
-// --- Fleche chevron ---
 @mixin arrow-icon {
     display: flex;
     align-items: center;
@@ -38,7 +34,6 @@
     }
 }
 
-// --- Panneau dropdown ---
 @mixin dropdown-panel {
     position: absolute;
     top: 100%;
@@ -52,7 +47,6 @@
     overflow: hidden;
 }
 
-// --- Liste d'options ---
 @mixin options-list {
     max-height: 240px;
     overflow-y: auto;
@@ -62,8 +56,7 @@
     gap: vars.$spacing-xxs;
 }
 
-// --- Item d'option ---
-// $block: nom du bloc BEM parent (ex: "select" ou "multi-select")
+// $block: parent BEM block name (e.g. "select" or "multi-select").
 @mixin option-item($block) {
     display: flex;
     align-items: center;
@@ -95,7 +88,6 @@
     }
 }
 
-// --- Image dans option ---
 @mixin option-image($size: 20px) {
     width: $size;
     height: $size;
@@ -103,25 +95,21 @@
     object-fit: contain;
 }
 
-// --- Texte dans option ---
 @mixin option-text {
     flex: 1;
 }
 
-// --- Check dans option ---
 @mixin option-check {
     color: vars.$primary-color;
     flex-shrink: 0;
 }
 
-// --- Etat vide ---
 @mixin empty-state {
     padding: vars.$spacing-lg;
     text-align: center;
     color: vars.$text-muted;
 }
 
-// --- Section creation ---
 @mixin create-section {
     border-top: 1px solid vars.$border-color;
     padding: vars.$spacing-xs;
@@ -187,8 +175,7 @@
     }
 }
 
-// --- Etats du trigger/container ---
-// $trigger-selector: selecteur du trigger (ex: ".select__trigger")
+// $trigger-selector: trigger selector (e.g. ".select__trigger").
 @mixin state-error($trigger-selector) {
     #{$trigger-selector} {
         border-color: vars.$danger-color;
@@ -205,7 +192,6 @@
     }
 }
 
-// --- Transition dropdown ---
 @mixin dropdown-transition {
     .dropdown-enter-active,
     .dropdown-leave-active {

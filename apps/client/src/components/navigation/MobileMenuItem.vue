@@ -61,14 +61,9 @@
     import { isActiveRoute } from '@/config/navBar';
     import { useUiStore } from '@/stores/ui';
 
-    import type { NavItem } from '@/types/config/navBar';
+    import type { MobileMenuItemProps } from '@/types/components/navigation';
 
-    interface Props {
-        item: NavItem;
-        index: number;
-    }
-
-    const props = defineProps<Props>();
+    const props = defineProps<MobileMenuItemProps>();
 
     const route = useRoute();
     const navStore = useUiStore();

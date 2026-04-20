@@ -1,10 +1,8 @@
-// Shared detail page mixins (blog/[slug], projects/[slug], stacks/[slug])
-
+// Shared mixins for blog/[slug], projects/[slug], stacks/[slug].
 @use '../abstracts/variables' as vars;
 @use '../abstracts/functions' as fn;
 @use '../abstracts/mixins' as mix;
 
-// Glassmorphism sidebar card
 @mixin sidebar-card($padding: vars.$spacing-lg) {
     background: fn.color-alpha(vars.$white, 0.95);
     backdrop-filter: blur(20px);
@@ -17,7 +15,6 @@
     overflow: hidden;
 }
 
-// Glassmorphism detail content card
 @mixin detail-card($padding: vars.$spacing-xl) {
     background: fn.color-alpha(vars.$white, 0.95);
     backdrop-filter: blur(20px);
@@ -33,7 +30,6 @@
     }
 }
 
-// Decorative section title with gradient lines
 @mixin section-title-gradient($max-line-width: 80px) {
     display: flex;
     align-items: center;

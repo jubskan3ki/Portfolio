@@ -29,17 +29,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useChartLifecycle } from '@/composables/ui/useChartLifecycle';
 
-    interface DistributionItem {
-        label: string;
-        count: number;
-        color: string;
-    }
+    import type { DashboardDonutChartProps } from '@/types/components/admin';
 
-    interface Props {
-        distribution: DistributionItem[];
-    }
-
-    const props = defineProps<Props>();
+    const props = defineProps<DashboardDonutChartProps>();
     const isMounted = ref(false);
 
     const totalContent = computed(() => {

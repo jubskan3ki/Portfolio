@@ -1,6 +1,5 @@
 <template>
     <div class="data-table-actions">
-        <!-- View -->
         <BaseButton
             v-if="showView"
             variant="ghost"
@@ -14,7 +13,6 @@
             </template>
         </BaseButton>
 
-        <!-- Edit -->
         <BaseButton
             v-if="showEdit"
             variant="ghost"
@@ -28,7 +26,6 @@
             </template>
         </BaseButton>
 
-        <!-- Delete -->
         <BaseButton
             v-if="showDelete"
             variant="ghost"
@@ -43,7 +40,6 @@
             </template>
         </BaseButton>
 
-        <!-- Custom actions slot -->
         <slot></slot>
     </div>
 </template>

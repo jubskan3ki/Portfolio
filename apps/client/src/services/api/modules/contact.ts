@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/vue-query';
+import { useMutation, useQueryClient } from '@tanstack/vue-query';
 
 import { useAlert } from '@/composables/ui/useAlert';
 import { API_ENDPOINTS } from '@/config/api';
@@ -76,7 +76,6 @@ export const contactApi = {
 
     getStats: (): Promise<ContactStats> => httpClient.get(API_ENDPOINTS.CONTACT.STATS),
 
-    // Admin methods
     getAdminMessages: <T = unknown>(params: Record<string, unknown>): Promise<T> =>
         httpClient.get(API_ENDPOINTS.CONTACT.BASE, params),
 
@@ -90,6 +89,32 @@ export function useFaqs() {
 
 export function useContactInfo(options?: QueryOptions<ContactInfo>) {
     return createStaticQuery(contactKeys.info(), contactApi.getInfo, options);
+}
+
+export function useContactInfoUpsert() {
+    const queryClient = useQueryClient();
+    const { success, error: showError } = useAlert();
+
+    return useMutation({
+        mutationFn: (
+            payload: ContactInfoCreateData & { id?: number },
+        ): Promise<ContactInfo> => {
+            if (payload.id) {
+                const { id, ...data } = payload;
+                return contactApi.updateInfo(id, data);
+            }
+            const { id: _id, ...data } = payload;
+            return contactApi.createInfo({ ...data, is_primary: true });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: contactKeys.info() });
+            success('Informations mises a jour', 'Succes');
+        },
+        onError: (err: unknown) => {
+            const { message } = parseError(err);
+            showError(message, 'Erreur');
+        },
+    });
 }
 
 export function useSubmitContact() {

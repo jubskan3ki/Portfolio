@@ -1,0 +1,108 @@
+http:
+    services:
+        backend:
+            loadBalancer:
+                servers:
+                    - url: "http://backend:8000"
+                healthCheck:
+                    path: /health
+                    interval: 10s
+                    timeout: 3s
+
+        frontend:
+            loadBalancer:
+                servers:
+                    - url: "http://frontend:80"
+                healthCheck:
+                    path: /health
+                    interval: 10s
+                    timeout: 3s
+
+        static-files:
+            loadBalancer:
+                servers:
+                    - url: "http://nginx-static:80"
+                healthCheck:
+                    path: /healthz
+                    interval: 30s
+
+    routers:
+        # HostRegexp(`.+`) match n'importe quel Host — on est derrière un DNS qui filtre déjà.
+        traefik-dashboard:
+            rule: "HostRegexp(`^traefik\\..+$`)"
+            entryPoints: [websecure]
+            service: api@internal
+            middlewares: [dashboard-auth@file, security-headers@file]
+            priority: 200
+            tls:
+                certResolver: letsencrypt
+
+        contacts:
+            rule: "PathPrefix(`/api/contacts/`)"
+            entryPoints: [websecure]
+            service: backend
+            middlewares: [contact-ratelimit@file, security-headers@file]
+            priority: 100
+            tls:
+                certResolver: letsencrypt
+
+        djadmin:
+            rule: "PathPrefix(`/django-admin/`)"
+            entryPoints: [websecure]
+            service: backend
+            middlewares: [admin-ratelimit@file, admin-noindex@file, cache-none@file, security-headers@file]
+            priority: 90
+            tls:
+                certResolver: letsencrypt
+
+        metrics:
+            rule: "Path(`/metrics`)"
+            entryPoints: [websecure]
+            service: backend
+            tls:
+                certResolver: letsencrypt
+
+        api:
+            rule: "PathPrefix(`/api/`)"
+            entryPoints: [websecure]
+            service: backend
+            middlewares: [api-ratelimit@file, security-headers@file, compress@file]
+            priority: 50
+            tls:
+                certResolver: letsencrypt
+
+        static:
+            rule: "PathPrefix(`/static/`) || PathPrefix(`/media/`)"
+            entryPoints: [websecure]
+            service: static-files
+            middlewares: [cache-longterm@file, security-headers@file, compress@file]
+            priority: 40
+            tls:
+                certResolver: letsencrypt
+
+        nuxt-assets:
+            rule: "PathPrefix(`/_nuxt/`)"
+            entryPoints: [websecure]
+            service: frontend
+            middlewares: [cache-longterm@file, security-headers@file, compress@file]
+            priority: 30
+            tls:
+                certResolver: letsencrypt
+
+        nuxt-admin:
+            rule: "PathPrefix(`/admin`)"
+            entryPoints: [websecure]
+            service: frontend
+            middlewares: [admin-noindex@file, cache-none@file, security-headers@file, compress@file]
+            priority: 20
+            tls:
+                certResolver: letsencrypt
+
+        nuxt:
+            rule: "HostRegexp(`.+`)"
+            entryPoints: [websecure]
+            service: frontend
+            middlewares: [security-headers@file, compress@file]
+            priority: 1
+            tls:
+                certResolver: letsencrypt

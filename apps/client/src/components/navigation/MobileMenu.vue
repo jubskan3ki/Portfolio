@@ -2,7 +2,6 @@
     <ClientOnly>
         <Teleport to="body">
             <div :class="menuClasses" :aria-hidden="!isOpen">
-                <!-- Backdrop -->
                 <Transition name="fade">
                     <div
                         v-if="isOpen"
@@ -16,7 +15,6 @@
                     ></div>
                 </Transition>
 
-                <!-- Panel -->
                 <Transition name="slide">
                     <aside
                         v-show="isOpen"
@@ -26,18 +24,16 @@
                         aria-modal="true"
                         aria-label="Menu de navigation"
                     >
-                        <!-- Header -->
                         <header class="mobile-menu__header">
                             <NuxtLink to="/" class="mobile-menu__logo" @click="close">
                                 <AppLogo dark />
                                 <span class="mobile-menu__logo-text">Menu</span>
                             </NuxtLink>
                             <button class="mobile-menu__close" aria-label="Fermer le menu" @click="close">
-                                <BaseIcon name="x" :size="20" />
+                                <BaseIcon name="x" :size="24" />
                             </button>
                         </header>
 
-                        <!-- Navigation -->
                         <nav class="mobile-menu__nav" aria-label="Navigation mobile">
                             <ul class="mobile-menu__list">
                                 <li v-for="item in navigationItems" :key="item.path" class="mobile-menu__item">
@@ -58,7 +54,6 @@
                             </ul>
                         </nav>
 
-                        <!-- Footer -->
                         <footer class="mobile-menu__footer">
                             <NuxtLink to="/contact" class="mobile-menu__cta" @click="close">
                                 <BaseIcon name="mail" :size="18" />
@@ -242,13 +237,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
+            padding: 0;
             border-radius: vars.$border-radius-md;
-            color: func.color-alpha(vars.$white, 0.6);
+            color: func.color-alpha(vars.$white, 0.7);
             background: func.color-alpha(vars.$white, 0.06);
             border: 1px solid func.color-alpha(vars.$white, 0.08);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            transition:
+                background-color vars.$transition-base,
+                color vars.$transition-base,
+                transform vars.$transition-base;
 
             &:hover {
                 background: func.color-alpha(vars.$white, 0.1);
@@ -266,7 +266,7 @@
         &__nav {
             flex: 1;
             overflow-y: auto;
-            padding: vars.$spacing-lg vars.$spacing-xxxxs;
+            padding: vars.$spacing-lg;
 
             // Custom scrollbar
             &::-webkit-scrollbar {

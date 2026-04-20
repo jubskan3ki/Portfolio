@@ -15,7 +15,7 @@ import { useAlertStore } from '@/stores/alert';
 import type { Pinia } from 'pinia';
 
 export default defineNuxtPlugin((nuxtApp) => {
-    // Initialize API base URL from Nuxt runtime config (SSR-safe)
+    // API base URL via runtime config, SSR-safe (apiBaseServer > public.apiBase)
     const config = useRuntimeConfig();
     const apiBase = import.meta.server
         ? ((config as Record<string, unknown>).apiBaseServer as string) || (config.public?.apiBase as string) || ''
@@ -24,20 +24,17 @@ export default defineNuxtPlugin((nuxtApp) => {
         setBaseUrl(apiBase);
     }
 
-    // Global mutation error handler — catches unhandled mutation errors
     const mutationCache = new MutationCache({
         onError: (error, _variables, _context, mutation) => {
-            // Allow per-mutation opt-out
             if (mutation.meta?.suppressGlobalError) {
                 return;
             }
 
             if (isApiError(error)) {
-                // Auth errors handled by auth plugin interceptor
+                // AUTH gérée par plugin auth, VALIDATION gérée par les forms
                 if (error.code === 'AUTH_ERROR') {
                     return;
                 }
-                // Validation errors handled at form level
                 if (error.code === 'VALIDATION_ERROR') {
                     return;
                 }
@@ -56,9 +53,9 @@ export default defineNuxtPlugin((nuxtApp) => {
         mutationCache,
         defaultOptions: {
             queries: {
-                staleTime: 1000 * 60 * 5, // 5 minutes
-                gcTime: 1000 * 60 * 60, // 1 hour (garbage collection)
-                // Smart retry: never retry network errors (API down), retry server errors only
+                staleTime: 1000 * 60 * 5,
+                gcTime: 1000 * 60 * 60,
+                // Pas de retry sur NETWORK_ERROR (API down), sinon max 2
                 retry: import.meta.server
                     ? 0
                     : (failureCount, error) => {
@@ -81,13 +78,13 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     nuxtApp.vueApp.use(VueQueryPlugin, options);
 
-    // SSR: Dehydrate only above-fold critical queries to reduce hydration payload
+    // SSR: ne déshydrate que les queries critiques above-fold (réduit payload hydration)
     if (import.meta.server) {
         nuxtApp.hooks.hook('app:rendered', () => {
             if (nuxtApp.payload) {
                 const dehydratedState = dehydrate(queryClient, {
                     shouldDehydrateQuery: (query) => {
-                        // Only dehydrate successful queries — pending promises crash devalue
+                        // Skip non-success: pending promises crashent devalue
                         if (query.state.status !== 'success') {
                             return false;
                         }
@@ -96,7 +93,7 @@ export default defineNuxtPlugin((nuxtApp) => {
                         return typeof key[0] === 'string' && criticalPrefixes.includes(key[0]);
                     },
                 });
-                // Strip any residual promise fields that devalue cannot serialize
+                // Strip promise fields résiduels non sérialisables par devalue
                 if (dehydratedState.queries) {
                     for (const q of dehydratedState.queries) {
                         delete (q as unknown as Record<string, unknown>).promise;
@@ -107,7 +104,6 @@ export default defineNuxtPlugin((nuxtApp) => {
         });
     }
 
-    // Client: Hydrate state from server
     if (import.meta.client) {
         nuxtApp.hooks.hook('app:created', () => {
             const state = nuxtApp.payload?.vueQueryState as DehydratedState | undefined;

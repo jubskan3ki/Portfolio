@@ -1,6 +1,5 @@
 <template>
     <div class="activity-feed">
-        <!-- Loading state -->
         <template v-if="loading">
             <div v-for="i in 4" :key="i" class="activity-feed__item activity-feed__item--skeleton">
                 <div class="activity-feed__icon-skeleton"></div>
@@ -11,10 +10,8 @@
             </div>
         </template>
 
-        <!-- Empty state -->
         <EmptyState v-else-if="!activities.length" title="Aucune activité récente" icon="inbox" size="sm" />
 
-        <!-- Activities list -->
         <template v-else>
             <div v-for="activity in activities" :key="activity.id" class="activity-feed__item">
                 <div class="activity-feed__icon" :class="`activity-feed__icon--${activity.type}`">

@@ -1,10 +1,6 @@
-import { ref, onMounted, onUnmounted, type Ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
-interface UseInfiniteScrollOptions {
-    threshold?: number;
-    rootMargin?: string;
-    enabled?: Ref<boolean>;
-}
+import type { UseInfiniteScrollOptions } from '@/types/composables/data';
 
 export function useInfiniteScroll(callback: () => void, options: UseInfiniteScrollOptions = {}) {
     const { threshold = 0.1, rootMargin = '100px', enabled = ref(true) } = options;

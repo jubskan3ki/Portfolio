@@ -21,16 +21,9 @@
 <script setup lang="ts">
     import { computed, useId } from 'vue';
 
-    interface Props {
-        id?: string;
-        name?: string;
-        label?: string;
-        disabled?: boolean;
-        customClass?: string;
-        error?: string;
-    }
+    import type { SwitchProps } from '@/types/components/base';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SwitchProps>(), {
         id: '',
         name: '',
         label: '',

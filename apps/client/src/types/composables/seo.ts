@@ -67,3 +67,15 @@ export interface BreadcrumbSeoOptions {
 export interface BreadcrumbSeoReturn {
     items: ComputedRef<BreadcrumbSeoItem[]>;
 }
+
+// useItemListSeo
+
+export interface ItemListItem {
+    name: string;
+    url: string;
+    image?: string;
+}
+
+export interface ItemListSeoOptions {
+    items: Ref<ItemListItem[]> | ComputedRef<ItemListItem[]>;
+}

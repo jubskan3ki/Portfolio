@@ -1,0 +1,20 @@
+// Managed by Ansible — do not edit manually.
+
+Unattended-Upgrade::Allowed-Origins {
+{% for origin in unattended_upgrades.allowed_origins %}
+    "{{ origin }}";
+{% endfor %}
+};
+
+Unattended-Upgrade::Package-Blacklist {
+    // Don't auto-reboot for Docker (containers take it down).
+    "docker-ce";
+    "docker-ce-cli";
+    "containerd.io";
+};
+
+Unattended-Upgrade::Automatic-Reboot "{{ unattended_upgrades.auto_reboot | string | lower }}";
+Unattended-Upgrade::Automatic-Reboot-Time "{{ unattended_upgrades.auto_reboot_time }}";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::SyslogEnable "true";

@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class HealthStatus(Enum):
-    """Status de sante d'un service."""
-
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -22,8 +20,6 @@ class HealthStatus(Enum):
 
 @dataclass
 class HealthCheckResult:
-    """Resultat d'un health check."""
-
     name: str
     status: HealthStatus
     latency_ms: float
@@ -31,7 +27,6 @@ class HealthCheckResult:
     details: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        """Convertit le resultat en dictionnaire."""
         result: dict[str, Any] = {
             "name": self.name,
             "status": self.status.value,
@@ -45,7 +40,6 @@ class HealthCheckResult:
 
 
 def check_database() -> HealthCheckResult:
-    """Verifie la connexion a la base de donnees."""
     start = time.perf_counter()
     try:
         with connection.cursor() as cursor:
@@ -53,7 +47,6 @@ def check_database() -> HealthCheckResult:
             cursor.fetchone()
         latency = (time.perf_counter() - start) * 1000
 
-        # Degraded si latence > 100ms
         status = HealthStatus.DEGRADED if latency > 100 else HealthStatus.HEALTHY
 
         return HealthCheckResult(
@@ -74,12 +67,10 @@ def check_database() -> HealthCheckResult:
 
 
 def check_redis() -> HealthCheckResult:
-    """Verifie la connexion a Redis."""
     start = time.perf_counter()
     try:
         from django.core.cache import cache
 
-        # Test write/read
         test_key = "_health_check_"
         cache.set(test_key, "ok", timeout=10)
         value = cache.get(test_key)
@@ -114,12 +105,10 @@ def check_redis() -> HealthCheckResult:
 
 
 def check_celery() -> HealthCheckResult:
-    """Verifie que Celery est operationnel."""
     start = time.perf_counter()
     try:
         from config.celery import app as celery_app
 
-        # Ping le worker
         inspector = celery_app.control.inspect()
         stats = inspector.stats()
 
@@ -152,17 +141,15 @@ def check_celery() -> HealthCheckResult:
 
 
 def run_all_checks() -> dict[str, Any]:
-    """Execute tous les health checks et retourne un resume."""
     checks = [
         check_database(),
         check_redis(),
     ]
 
-    # Celery check optionnel (peut etre lent)
+    # Celery optionnel (ping worker peut etre lent).
     if getattr(settings, "CELERY_BROKER_URL", None):
         checks.append(check_celery())
 
-    # Determine le status global
     statuses = [c.status for c in checks]
     if HealthStatus.UNHEALTHY in statuses:
         overall_status = HealthStatus.UNHEALTHY

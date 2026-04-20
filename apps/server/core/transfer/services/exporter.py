@@ -35,14 +35,12 @@ class ExporterService:
             msg = f"Module '{module}' non supporte. Modules valides: {list(MODULE_REGISTRY.keys())}"
             raise ValueError(msg)
 
-        # Get model via Django apps registry
         try:
             model_class = apps.get_model(config["app_label"], config["model_name"])
         except LookupError as e:
             msg = f"Modele non trouve: {config['app_label']}.{config['model_name']}"
             raise ValueError(msg) from e
 
-        # Get serializer dynamically
         try:
             serializer_module = imp_module(config["serializer_module"])
             serializer_class = getattr(serializer_module, config["serializer_name"])
@@ -111,7 +109,7 @@ class ExporterService:
         for row in data:
             cleaned_row = {}
             for key, value in row.items():
-                if isinstance(value, (dict, list)):
+                if isinstance(value, dict | list):
                     cleaned_row[key] = json.dumps(value, ensure_ascii=False)
                 else:
                     cleaned_row[key] = value
@@ -145,26 +143,22 @@ class ExporterService:
             output.seek(0)
             return output.getvalue(), 0
 
-        # Header style
         header_font = Font(bold=True, color="FFFFFF")
         header_fill = PatternFill(start_color="673C5C", end_color="673C5C", fill_type="solid")
 
-        # Write headers
         headers = list(data[0].keys())
         for col, header in enumerate(headers, start=1):
             cell = sheet.cell(row=1, column=col, value=header)
             cell.font = header_font
             cell.fill = header_fill
 
-        # Write data
         for row_num, row_data in enumerate(data, start=2):
             for col, header in enumerate(headers, start=1):
                 value = row_data.get(header)
-                if isinstance(value, (dict, list)):
+                if isinstance(value, dict | list):
                     value = json.dumps(value, ensure_ascii=False)
                 sheet.cell(row=row_num, column=col, value=value)
 
-        # Auto-adjust column widths
         for col_idx, column_cells in enumerate(sheet.columns, start=1):
             max_length = 0
             column_cells_list = list(column_cells)
@@ -308,7 +302,6 @@ class ExporterService:
         timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
         files_added = 0
 
-        # Normaliser le format (case-insensitive)
         export_format = export_format.lower().strip()
 
         logger.info(
@@ -317,7 +310,6 @@ class ExporterService:
             export_format,
         )
 
-        # Creer le buffer et le ZIP
         zip_buffer = io.BytesIO()
 
         with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
@@ -365,12 +357,10 @@ class ExporterService:
                         )
                         continue
 
-                    # Verifier que le contenu n'est pas vide
                     if len(file_content) == 0:
                         logger.warning("Contenu vide pour %s, skip", module)
                         continue
 
-                    # Ecrire le fichier dans le ZIP
                     logger.info(
                         "Ajout de %s au ZIP (%d bytes, %d records)",
                         filename,
@@ -388,11 +378,9 @@ class ExporterService:
                     logger.exception("Erreur DB export module %s", module)
                     module_counts[module] = -1
 
-        # Verifier que des fichiers ont ete ajoutes
         if files_added == 0:
             logger.error("ATTENTION: Aucun fichier ajoute au ZIP!")
 
-        # Recuperer le contenu avec getvalue()
         zip_bytes = zip_buffer.getvalue()
 
         logger.info(

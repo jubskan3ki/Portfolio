@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
+from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 
 from utils.images import MAX_SIZE_LARGE
@@ -116,6 +117,7 @@ class Project(OptimizeImageMixin, AutoSlugMixin, models.Model):
     view_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    search_vector = SearchVectorField(null=True, editable=False)
 
     objects: ProjectManager = ProjectManager()
 
@@ -130,7 +132,6 @@ class Project(OptimizeImageMixin, AutoSlugMixin, models.Model):
             models.Index(fields=["category"]),
             models.Index(fields=["status"]),
             models.Index(fields=["-view_count"]),
-            # Composite indexes for common query patterns
             models.Index(fields=["category", "-date"]),
             models.Index(fields=["status", "-date"]),
         ]

@@ -1,5 +1,9 @@
 // Types pour les composables ui/
 
+import type { LinkTarget, RouteObject } from '../components/base';
+import type { DateRange, SwiperProps } from '../components/ui';
+import type { Breakpoint, StorageKey } from '@/config/constants';
+import type { Chart, ChartData, ChartOptions, ChartType } from 'chart.js';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 
 // useClickOutside
@@ -45,7 +49,7 @@ export interface UseScrollToTopReturn {
 // useSidebar
 
 export interface UseSidebarOptions {
-    storageKey?: string;
+    storageKey?: StorageKey;
     defaultCollapsed?: boolean;
     closeOnRouteChange?: boolean;
     classPrefix?: string;
@@ -101,4 +105,148 @@ export interface UseDropdownReturn {
     handleKeydown: (event: KeyboardEvent, optionsLength: number, onSelect?: () => void) => void;
     scrollToHighlighted: (optionsRef: Ref<HTMLElement | null>, optionClass: string) => void;
     getActiveDescendant: (baseId: string) => string | undefined;
+}
+
+// useShare
+
+export interface UseShareReturn {
+    shareUrl: ComputedRef<string>;
+    linkCopied: Ref<boolean>;
+    shareOn: (platform: 'twitter' | 'linkedin') => void;
+    copyLink: () => Promise<void>;
+}
+
+// useTableOfContents
+
+export interface TocItem {
+    id: string;
+    text: string;
+    level: number;
+}
+
+// useLinkResolver
+
+export interface UseLinkResolverOptions {
+    to?: string | RouteObject;
+    params?: Record<string, string | number>;
+    target?: LinkTarget | '';
+}
+
+export interface UseLinkResolverReturn {
+    isExternalLink: ComputedRef<boolean>;
+    isInternalLink: ComputedRef<boolean>;
+    linkProps: ComputedRef<Record<string, unknown>>;
+    resolvedPath: ComputedRef<string>;
+}
+
+// useChartLifecycle
+
+export interface UseChartLifecycleOptions<T extends ChartType = ChartType> {
+    type: T;
+    defaultOptions?: ChartOptions<T>;
+}
+
+export interface UseChartLifecycleReturn<T extends ChartType = ChartType> {
+    chart: Ref<Chart<T> | null>;
+    canvasRef: Ref<HTMLCanvasElement | null>;
+    initChart: (data: ChartData<T>, options?: ChartOptions<T>) => Promise<boolean>;
+    updateData: (data: ChartData<T>) => void;
+    updateOptions: (options: ChartOptions<T>) => void;
+    destroyChart: () => void;
+    isInitialized: Ref<boolean>;
+}
+
+// useSwiper
+
+export interface UseSwiperOptions {
+    props: SwiperProps;
+    emit: (event: 'change', index: number) => void;
+    swiperRef: Readonly<Ref<HTMLElement | null>>;
+}
+
+// useDateRangePicker
+
+export interface UseDateRangePickerOptions {
+    model: Ref<DateRange>;
+    availableDates: Ref<string[]>;
+    minDays: Ref<number>;
+    maxDays: Ref<number>;
+    disabled: Ref<boolean>;
+    dropdownRef: Readonly<Ref<HTMLElement | null>>;
+}
+
+// useDateRangeSelection
+
+export interface UseDateRangeSelectionOptions {
+    model: Ref<DateRange>;
+    availableDates: Ref<string[]>;
+    minDays: Ref<number>;
+    maxDays: Ref<number>;
+}
+
+// useTypingEffect
+
+export interface UseTypingEffectOptions {
+    typeSpeed?: number;
+    deleteSpeed?: number;
+    pauseMs?: number;
+    startDelay?: number;
+}
+
+export interface UseTypingEffectReturn {
+    currentText: Ref<string>;
+    isPaused: Ref<boolean>;
+}
+
+// useProgressTimer
+
+export interface UseProgressTimerOptions {
+    duration: number;
+    onComplete?: () => void;
+    autoStart?: boolean;
+    stepTime?: number;
+}
+
+export interface UseProgressTimerReturn {
+    progress: Ref<number>;
+    isRunning: Ref<boolean>;
+    remainingTime: Ref<number>;
+    start: () => void;
+    pause: () => void;
+    resume: () => void;
+    reset: () => void;
+    stop: () => void;
+}
+
+// useDragScroll
+
+export interface UseDragScrollOptions {
+    inertia?: boolean;
+    dragThreshold?: number;
+}
+
+// useCalendarGrid
+
+export interface UseCalendarGridOptions {
+    tempStartDate: Ref<string>;
+    tempEndDate: Ref<string>;
+    hoverDate: Ref<string>;
+    isDateAvailable: (date: string) => boolean;
+    isDateDisabled: (date: string) => boolean;
+}
+
+// useResponsive
+
+export interface UseResponsiveOptions {
+    initialBreakpoint?: Breakpoint;
+}
+
+export interface UseResponsiveReturn {
+    windowWidth: Readonly<Ref<number>>;
+    isMobile: Readonly<Ref<boolean>>;
+    isTablet: Readonly<Ref<boolean>>;
+    isDesktop: Readonly<Ref<boolean>>;
+    currentBreakpoint: Readonly<Ref<Breakpoint>>;
+    isBelow: (breakpoint: Breakpoint) => boolean;
+    isAbove: (breakpoint: Breakpoint) => boolean;
 }

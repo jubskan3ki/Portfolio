@@ -27,10 +27,11 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
     const router = useRouter();
 
     const filters = ref({ ...defaults }) as Ref<T>;
+    const debouncedFilters = ref({ ...defaults }) as Ref<T>;
     const currentPage = ref(1);
 
     const apiFilters = computed(() => {
-        const result = { ...filters.value };
+        const result = { ...debouncedFilters.value };
 
         if (pagination.enabled) {
             (result as Record<string, unknown>)[pagination.pageKey || 'page'] = currentPage.value;
@@ -56,7 +57,7 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
                 const defaultValue = defaults[key as keyof T];
 
                 if (Array.isArray(defaultValue)) {
-                    // Support both ?tags=Vue&tags=React and ?tags=Vue,React
+                    // Supports ?tags=Vue&tags=React and ?tags=Vue,React
                     if (Array.isArray(queryValue)) {
                         (filters.value as Record<string, unknown>)[key] = queryValue.map(String);
                     } else if (typeof queryValue === 'string' && queryValue.includes(',')) {
@@ -82,7 +83,7 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
         }
     };
 
-    const updateUrl = useDebounceFn(() => {
+    const syncUrlNow = () => {
         if (!urlSync.enabled) {
             return;
         }
@@ -103,34 +104,55 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
         }
 
         router.replace({ query });
-    }, urlSync.debounceMs);
+    };
+
+    const syncUrlDebounced = useDebounceFn(syncUrlNow, urlSync.debounceMs);
+
+    const syncDebouncedFiltersNow = () => {
+        debouncedFilters.value = JSON.parse(JSON.stringify(filters.value));
+    };
+    const syncDebouncedFiltersDelayed = useDebounceFn(syncDebouncedFiltersNow, searchDebounceMs);
 
     watch(
-        filters,
+        () => JSON.parse(JSON.stringify(filters.value)) as T,
         (newFilters, oldFilters) => {
-            const shouldResetPage = Object.keys(newFilters as Record<string, unknown>).some((key) => {
-                const config = fieldConfig[key as keyof T];
-                const oldValue = (oldFilters as Record<string, unknown>)?.[key];
+            const changedKeys = Object.keys(newFilters as Record<string, unknown>).filter((key) => {
+                const oldValue = (oldFilters as Record<string, unknown> | undefined)?.[key];
                 const newValue = (newFilters as Record<string, unknown>)[key];
-
-                return config?.resetOnChange && oldValue !== newValue;
+                if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+                    return oldValue.length !== newValue.length || oldValue.some((v, i) => v !== newValue[i]);
+                }
+                return oldValue !== newValue;
             });
 
+            if (changedKeys.length === 0) {
+                return;
+            }
+
+            const shouldResetPage = changedKeys.some((key) => fieldConfig[key as keyof T]?.resetOnChange);
             if (shouldResetPage && pagination.enabled) {
                 currentPage.value = 1;
             }
 
-            updateUrl();
+            const hasNonDebouncedChange = changedKeys.some((key) => !fieldConfig[key as keyof T]?.debounced);
+            const hasDebouncedChange = changedKeys.some((key) => fieldConfig[key as keyof T]?.debounced);
+
+            if (hasNonDebouncedChange) {
+                syncUrlNow();
+                syncDebouncedFiltersNow();
+            } else if (hasDebouncedChange) {
+                syncUrlDebounced();
+                syncDebouncedFiltersDelayed();
+            }
         },
-        { deep: true },
     );
 
     if (pagination.enabled) {
-        watch(currentPage, updateUrl);
+        watch(currentPage, syncUrlNow);
     }
 
-    // Sync from URL immediately (works in SSR and client)
     syncFromUrl();
+    debouncedFilters.value = JSON.parse(JSON.stringify(filters.value));
 
     const hasActiveFilters = computed(() => {
         return Object.entries(filters.value as Record<string, unknown>).some(([key, value]) =>
@@ -150,6 +172,7 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
 
     const reset = () => {
         filters.value = { ...defaults } as T;
+        debouncedFilters.value = { ...defaults } as T;
         currentPage.value = 1;
     };
 
@@ -193,6 +216,7 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
 
     return {
         filters,
+        debouncedFilters,
         currentPage,
         apiFilters,
         hasActiveFilters,

@@ -1,11 +1,9 @@
 <template>
     <div ref="cardRef" class="stats-card" :class="{ 'stats-card--loading': loading }">
-        <!-- Icon -->
         <div class="stats-card__icon" :style="{ backgroundColor: iconBgColor, color }">
             <BaseIcon :name="icon" :size="22" />
         </div>
 
-        <!-- Content -->
         <div class="stats-card__content">
             <span class="stats-card__label">{{ label }}</span>
             <div class="stats-card__value-row">

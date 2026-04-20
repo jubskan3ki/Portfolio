@@ -12,13 +12,15 @@ export default defineNuxtConfig({
         '@nuxtjs/seo',
         'nuxt-delay-hydration',
         'nuxt-security',
-        '@vite-pwa/nuxt',
+        ...(process.env.NODE_ENV !== 'development' ? ['@vite-pwa/nuxt' as const] : []),
     ],
 
     plugins: [
         '~/src/services/plugins/vue-query.ts',
         '~/src/services/plugins/auth.ts',
         '~/src/services/plugins/web-vitals.client.ts',
+        '~/src/services/plugins/easter-egg.client.ts',
+        ...(process.env.NODE_ENV === 'development' ? ['~/src/services/plugins/sw-cleanup.client.ts'] : []),
     ],
 
     ssr: true,
@@ -111,7 +113,6 @@ export default defineNuxtConfig({
     },
 
     routeRules: {
-        // headers gérés par nuxt-security (cf. bloc security ci-dessous)
         '/': { swr: 600 },
         '/blog': { swr: 300 },
         '/blog/**': { swr: 600 },
@@ -159,7 +160,7 @@ export default defineNuxtConfig({
         payloadExtraction: true,
         inlineRouteRules: true,
         renderJsonPayloads: true,
-        // true respects prefers-reduced-motion; 'always' would force it on.
+        // true respects prefers-reduced-motion; 'always' would override it.
         viewTransition: true,
     },
 
@@ -174,7 +175,7 @@ export default defineNuxtConfig({
             brotli: true,
             gzip: true,
         },
-        // API proxy handled by server/routes/api/[...path].ts (works in dev + production)
+        // API proxy handled by server/routes/api/[...path].ts.
         routeRules: {
             '/_nuxt/**': {
                 headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
@@ -203,6 +204,8 @@ export default defineNuxtConfig({
 
     vite: {
         cacheDir: 'node_modules/.cache/vite',
+
+        server: process.env.NODE_ENV === 'development' ? { allowedHosts: true } : undefined,
 
         plugins:
             process.env.ANALYZE === 'true'
@@ -435,7 +438,7 @@ export default defineNuxtConfig({
         },
     },
 
-    // ── Security headers (remplace les headers manuels dans routeRules) ───────
+    // Security headers — replaces manual headers in routeRules.
     security: {
         headers: {
             contentSecurityPolicy: false,

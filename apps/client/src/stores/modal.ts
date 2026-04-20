@@ -21,14 +21,12 @@ const defaultOptions: ModalState['options'] = {
 };
 
 export const useModalStore = defineStore('modal', () => {
-    // SSR-safe: each store instance gets its own TimeoutManager
+    // SSR-safe: TimeoutManager par instance (pas de fuite inter-requêtes)
     const closeTimeouts = new TimeoutManager();
 
-    // State
     const visible = ref(false);
     const options = ref<ModalState['options']>({ ...defaultOptions });
 
-    // Actions
     function open(opts: ModalOptions): void {
         const modalId = opts.id || `modal-${Date.now()}`;
 

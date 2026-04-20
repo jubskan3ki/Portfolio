@@ -35,12 +35,10 @@ export function createSubResourceMutations<T, TCreate, TUpdate, TId extends stri
                 onSuccess: (data, variables, context) => {
                     const id = variables[idField] as TId;
 
-                    // Update detail cache directly (avoids a refetch)
                     if (keys.detail) {
                         queryClient.setQueryData(keys.detail(id as string | number), data);
                     }
 
-                    // Invalidate lists only, or fall back to all queries
                     queryClient.invalidateQueries({
                         queryKey: keys.list ? keys.list() : keys.all(),
                         refetchType: 'active',

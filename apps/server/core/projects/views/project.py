@@ -44,7 +44,6 @@ class ProjectViewSet(BaseAPIViewSet):
     filterset_class = ProjectFilter
     lookup_field = "slug"
 
-    # Configuration pour SerializerByActionMixin
     serializer_classes = {
         "list": ProjectListSerializer,
         "featured": ProjectListSerializer,

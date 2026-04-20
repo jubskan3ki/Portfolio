@@ -13,14 +13,11 @@ def _default(obj):
 
 
 class ORJSONRenderer(BaseRenderer):
-    """
-    DRF renderer using orjson — 2-10x faster than the standard JSONRenderer.
-    Supports numpy arrays, dataclasses, UUID, datetime nativement.
-    """
+    """DRF renderer orjson : 2-10x plus rapide, supporte UUID/datetime/numpy nativement."""
 
     media_type = "application/json"
     format = "json"
-    charset = None  # orjson retourne des bytes directement
+    charset = None  # orjson retourne bytes
 
     def render(self, data, accepted_media_type=None, renderer_context=None):  # noqa: ARG002
         if data is None:
@@ -30,3 +27,10 @@ class ORJSONRenderer(BaseRenderer):
             default=_default,
             option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SERIALIZE_NUMPY,
         )
+
+
+class ProblemDetailRenderer(ORJSONRenderer):
+    """RFC 7807 : application/problem+json (meme serialisation qu'ORJSONRenderer)."""
+
+    media_type = "application/problem+json"
+    format = "problem+json"

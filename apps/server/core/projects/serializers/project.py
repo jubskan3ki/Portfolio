@@ -18,7 +18,7 @@ class ProjectWriteSerializer(serializers.ModelSerializer[Project]):
         allow_null=True,
     )
     long_description = serializers.CharField(required=False, allow_blank=True)
-    # Accept longDescription from frontend and map to long_description
+    # Alias camelCase pour compat frontend (mappe sur long_description).
     longDescription = serializers.CharField(
         source="long_description",
         required=False,
@@ -37,6 +37,8 @@ class ProjectWriteSerializer(serializers.ModelSerializer[Project]):
             "id",
             "title",
             "slug",
+            "seo_title",
+            "meta_description",
             "description",
             "long_description",
             "longDescription",
@@ -51,6 +53,8 @@ class ProjectWriteSerializer(serializers.ModelSerializer[Project]):
         read_only_fields = ["id"]
         extra_kwargs = {
             "slug": {"required": False},
+            "seo_title": {"required": False, "allow_blank": True},
+            "meta_description": {"required": False, "allow_blank": True},
             "technologies": {"required": False},
             "features": {"required": False},
             "date": {"required": False},

@@ -138,7 +138,6 @@ class ExportDownloadView(APIView):
     )
     def get(self, request: Request, module: str) -> Response | FileResponse:
         """Telecharge directement le fichier d'export."""
-        # Log pour debug
         logger.info(
             "Export download request: module=%s, user=%s, authenticated=%s",
             module,
@@ -170,7 +169,7 @@ class ExportDownloadView(APIView):
                     filename=file_name,
                     content_type=content_types.get(export_format, "application/octet-stream"),
                 )
-                # Empecher la double compression pour les fichiers binaires (xlsx)
+                # xlsx est deja compresse: identity evite double-compression par GZipMiddleware.
                 if export_format == "xlsx":
                     response["Content-Encoding"] = "identity"
                 return response
@@ -259,7 +258,6 @@ class ExportBulkView(APIView):
                 module_counts,
             )
 
-            # Verifier si au moins un module a ete exporte
             successful_exports = {k: v for k, v in module_counts.items() if v >= 0}
             if not successful_exports:
                 logger.error("Aucun export reussi parmi: %s", module_counts)
@@ -268,7 +266,7 @@ class ExportBulkView(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
-            # Verifier que le ZIP n'est pas vide
+            # ZIP header minimal = 22 bytes (EOCD) => en dessous, archive invalide.
             if not zip_content or len(zip_content) < 22:
                 logger.error("ZIP vide ou trop petit: %d bytes", len(zip_content) if zip_content else 0)
                 return Response(
@@ -276,7 +274,6 @@ class ExportBulkView(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
-            # Generer le nom du fichier
             timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
             filename = f"export_bulk_{timestamp}.zip"
 
@@ -286,8 +283,7 @@ class ExportBulkView(APIView):
                 len(zip_content),
             )
 
-            # Retourner le fichier ZIP
-            # Content-Encoding: identity empeche GZipMiddleware de re-compresser le ZIP
+            # identity empeche GZipMiddleware de re-compresser un ZIP deja compresse.
             response = HttpResponse(
                 content=zip_content,
                 content_type="application/zip",

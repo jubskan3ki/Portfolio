@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from django.contrib.postgres.search import SearchVectorField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -26,7 +27,6 @@ if TYPE_CHECKING:
     # Type alias for related managers
     RelatedManager = QuerySet
 
-# CONSTANTES
 
 ALLOWED_LOGO_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]
 ALLOWED_LOGO_TYPES = [
@@ -53,9 +53,6 @@ RESOURCE_TYPES = (
 )
 
 
-# FONCTIONS UTILITAIRES
-
-
 def validate_logo_file(value: Any) -> None:
     """Valide que le fichier est une image ou un SVG."""
     from pathlib import Path
@@ -69,16 +66,12 @@ def validate_logo_file(value: Any) -> None:
             f"Extension '{ext}' non autorisee. Extensions acceptees: {', '.join(ALLOWED_LOGO_EXTENSIONS)}"
         )
 
-    # Verifier le content type si disponible
     content_type = getattr(value, "content_type", None)
     if content_type and content_type not in ALLOWED_LOGO_TYPES:
         raise ValidationError(f"Type de fichier '{content_type}' non autorise.")
 
 
 stack_logo_upload_to = make_upload_to("stacks", "name")
-
-
-# MODELES
 
 
 class StackCategory(models.Model):
@@ -151,6 +144,7 @@ class Stack(AutoSlugMixin, models.Model):
     content = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    search_vector = SearchVectorField(null=True, editable=False)
 
     related_stacks_m2m = models.ManyToManyField(
         "self",

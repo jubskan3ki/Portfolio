@@ -1,5 +1,4 @@
 repos:
-    # ── Hooks généraux ────────────────────────────────────────────────────────
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v5.0.0
       hooks:
@@ -16,7 +15,6 @@ repos:
           - id: debug-statements
             files: ^apps/server/
 
-    # ── Python: Black ─────────────────────────────────────────────────────────
     - repo: https://github.com/psf/black
       rev: 25.1.0
       hooks:
@@ -24,7 +22,6 @@ repos:
             args: [--line-length=120]
             files: ^apps/server/
 
-    # ── Python: isort ─────────────────────────────────────────────────────────
     - repo: https://github.com/PyCQA/isort
       rev: 6.0.1
       hooks:
@@ -32,7 +29,6 @@ repos:
             args: [--profile=black, --line-length=120]
             files: ^apps/server/
 
-    # ── Python: Ruff ──────────────────────────────────────────────────────────
     - repo: https://github.com/astral-sh/ruff-pre-commit
       rev: v0.11.2
       hooks:

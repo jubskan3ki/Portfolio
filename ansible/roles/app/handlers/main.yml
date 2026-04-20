@@ -1,0 +1,8 @@
+- name: reload systemd
+  systemd:
+      daemon_reload: yes
+
+- name: restart portfolio
+  systemd:
+      name: "{{ app_systemd_service }}"
+      state: restarted

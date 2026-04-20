@@ -38,7 +38,6 @@
             </div>
         </div>
 
-        <!-- Images preview grid -->
         <div v-if="images.length > 0" class="images-grid">
             <div
                 v-for="(img, index) in images"
@@ -84,20 +83,9 @@
 
     import { formatFileSize } from '@/composables/data/useTransfer';
 
-    export interface ImageItem {
-        id: string;
-        file: File;
-        preview: string;
-        key: string;
-        error?: string;
-    }
+    import type { FilePreviewListProps, ImageItem } from '@/types/components/admin';
 
-    interface FilePreviewListProps {
-        /** Whether to show the section */
-        show: boolean;
-        /** List of image items to display */
-        images: ImageItem[];
-    }
+    export type { ImageItem };
 
     defineProps<FilePreviewListProps>();
 

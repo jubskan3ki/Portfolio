@@ -28,14 +28,12 @@
                 @change="handleFileChange"
             />
 
-            <!-- Placeholder -->
             <div v-if="!preview" class="file-upload__placeholder">
                 <BaseIcon :name="placeholderIcon" :size="32" class="file-upload__icon" />
                 <p class="file-upload__text">{{ placeholderText }}</p>
                 <small class="file-upload__hint">{{ hint }}</small>
             </div>
 
-            <!-- Preview -->
             <div v-else class="file-upload__preview">
                 <img :src="preview" :alt="previewAlt" />
                 <button type="button" class="file-upload__remove" :aria-label="removeLabel" @click.stop="handleRemove">
@@ -44,7 +42,6 @@
             </div>
         </div>
 
-        <!-- Error -->
         <p v-if="error" class="file-upload-group__error">{{ error }}</p>
     </div>
 </template>
@@ -54,24 +51,9 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    interface Props {
-        modelValue?: File | null;
-        preview?: string;
-        id?: string;
-        label?: string;
-        accept?: string;
-        maxSize?: number; // in MB
-        required?: boolean;
-        disabled?: boolean;
-        error?: string;
-        placeholderIcon?: string;
-        placeholderText?: string;
-        hint?: string;
-        previewAlt?: string;
-        removeLabel?: string;
-    }
+    import type { FileUploadProps } from '@/types/components/base';
 
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<FileUploadProps>(), {
         modelValue: null,
         preview: '',
         id: 'file-upload',

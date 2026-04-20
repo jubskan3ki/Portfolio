@@ -1,15 +1,14 @@
 <template>
     <div class="base-image" :class="containerClasses">
-        <!-- Placeholder/Skeleton while loading -->
         <div v-if="isLoading && showPlaceholder" class="base-image__placeholder">
             <slot name="placeholder">
                 <div class="base-image__skeleton"></div>
             </slot>
         </div>
 
-        <!-- API/external images — plain <img>, no IPX -->
+        <!-- External absolute URLs bypass IPX proxying -->
         <img
-            v-if="src && isRemoteImage"
+            v-if="src && isAbsoluteExternal"
             :src="resolvedSrc"
             :alt="alt"
             :width="width"
@@ -21,7 +20,6 @@
             @error="handleError"
         />
 
-        <!-- Local/static images — NuxtImg with IPX optimization -->
         <NuxtImg
             v-else-if="src"
             :src="resolvedSrc"
@@ -33,6 +31,7 @@
             :quality="quality"
             :format="format"
             :sizes="sizes"
+            :densities="densities"
             :preload="preload"
             class="base-image__img"
             :class="{ 'base-image__img--loaded': !isLoading }"
@@ -40,7 +39,6 @@
             @error="handleError"
         />
 
-        <!-- Error state -->
         <div v-if="hasError" class="base-image__error">
             <slot name="error">
                 <BaseIcon name="image-off" :size="errorIconSize" />
@@ -48,7 +46,6 @@
             </slot>
         </div>
 
-        <!-- Overlay slot -->
         <div v-if="$slots.overlay" class="base-image__overlay">
             <slot name="overlay"></slot>
         </div>
@@ -70,6 +67,7 @@
         lazy: true,
         quality: 80,
         format: 'webp',
+        densities: 'x1 x2',
         showPlaceholder: true,
         aspectRatio: 'auto',
         objectFit: 'cover',
@@ -85,13 +83,9 @@
     const hasError = ref(false);
     const resolvedSrc = computed(() => resolveMediaUrl(props.src));
 
-    // Remote images (API /media/ or http) use plain <img> — IPX can't proxy them reliably
-    const isRemoteImage = computed(() => {
-        const src = resolvedSrc.value;
-        return src.startsWith('/media/') || src.startsWith('http');
-    });
+    // External http(s) URLs skip IPX; /media/ is proxied via the IPX alias in nuxt.config.ts.
+    const isAbsoluteExternal = computed(() => /^https?:\/\//i.test(resolvedSrc.value));
 
-    // Adapt error state to image dimensions
     const toNum = (v: string | number | undefined) =>
         (typeof v === 'string' ? parseInt(v, 10) : v) || 0;
     const isSmall = computed(
@@ -134,7 +128,6 @@
         position: relative;
         overflow: hidden;
 
-        // Aspect ratios
         &--ratio-1\:1 {
             aspect-ratio: 1 / 1;
         }
@@ -151,7 +144,6 @@
             aspect-ratio: 21 / 9;
         }
 
-        // Object fit
         &--fit-cover .base-image__img {
             object-fit: cover;
         }
@@ -172,7 +164,6 @@
             object-fit: scale-down;
         }
 
-        // Rounded variants
         &--rounded-sm {
             border-radius: vars.$border-radius-sm;
         }

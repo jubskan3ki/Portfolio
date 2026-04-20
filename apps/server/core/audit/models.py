@@ -23,13 +23,10 @@ class AuditLog(models.Model):
     """
 
     class Action(models.TextChoices):
-        """Available audit actions."""
-
         CREATE = "create", "Create"
         UPDATE = "update", "Update"
         DELETE = "delete", "Delete"
 
-    # Who made the change
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -39,7 +36,6 @@ class AuditLog(models.Model):
         help_text="User who performed the action",
     )
 
-    # What action was performed
     action = models.CharField(
         max_length=10,
         choices=Action.choices,
@@ -47,7 +43,6 @@ class AuditLog(models.Model):
         help_text="Type of action performed",
     )
 
-    # What was changed
     model_name = models.CharField(
         max_length=100,
         db_index=True,
@@ -63,14 +58,12 @@ class AuditLog(models.Model):
         help_text="String representation of the object",
     )
 
-    # Change details
     changes = models.JSONField(
         default=dict,
         blank=True,
         help_text="Dictionary of field changes (old_value, new_value)",
     )
 
-    # Request context
     ip_address = models.GenericIPAddressField(
         null=True,
         blank=True,
@@ -88,7 +81,6 @@ class AuditLog(models.Model):
         help_text="Correlation ID for request tracing",
     )
 
-    # Timestamp
     timestamp = models.DateTimeField(
         default=timezone.now,
         db_index=True,
@@ -98,8 +90,6 @@ class AuditLog(models.Model):
     objects: AuditLogManager = AuditLogManager()
 
     class Meta:
-        """Model metadata."""
-
         db_table = "audit_logs"
         ordering = ["-timestamp"]
         verbose_name = "Audit Log"
@@ -112,7 +102,6 @@ class AuditLog(models.Model):
         ]
 
     def __str__(self) -> str:
-        """String representation."""
         user_str = self.user.email if self.user else "Anonymous"
         return f"{self.action} {self.model_name}:{self.object_id} by {user_str}"
 

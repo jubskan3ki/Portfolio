@@ -2,9 +2,9 @@
 
 from config.settings.base import DEBUG
 
-# REST FRAMEWORK
-
 REST_FRAMEWORK = {
+    # DecimalField -> JSON number (pas string) — évite le wrning Vue prop type.
+    "COERCE_DECIMAL_TO_STRING": False,
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "utils.security.jwt_cookie_auth.JWTCookieAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -34,6 +34,7 @@ REST_FRAMEWORK = {
         "export": "60/hour",
         "import": "30/hour",
         "web_vitals": "180/minute",
+        "search": "60/minute",
     },
     "DEFAULT_PAGINATION_CLASS": "utils.pagination.APIResponsePagination",
     "EXCEPTION_HANDLER": "utils.exceptions.handlers.custom_exception_handler",
@@ -45,6 +46,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_RENDERER_CLASSES": [
         "utils.renderers.ORJSONRenderer",
+        "utils.renderers.ProblemDetailRenderer",
         *(["rest_framework.renderers.BrowsableAPIRenderer"] if DEBUG else []),
     ],
     "DEFAULT_PARSER_CLASSES": [
@@ -55,8 +57,6 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "NUM_PROXIES": 1,
 }
-
-# DRF SPECTACULAR
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Portfolio API",

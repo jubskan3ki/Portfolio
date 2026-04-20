@@ -1,4 +1,4 @@
 <script setup lang="ts">
-    // Page about fusionnee avec contact — redirection permanente
+    // Redirection permanente: /about fusionnée avec /contact
     navigateTo('/contact', { redirectCode: 301 });
 </script>

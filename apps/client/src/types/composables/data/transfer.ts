@@ -1,5 +1,4 @@
 import type { TransferModule, ExportFormat, JobStatus } from '@/types/api/transfer';
-import type { Ref } from 'vue';
 
 // Re-export base types from api/transfer for consistency
 export type { TransferModule, ExportFormat, JobStatus } from '@/types/api/transfer';
@@ -86,10 +85,4 @@ export interface UseExportOptions {
 
 export interface UseImportOptions {
     onSuccess?: () => void;
-}
-
-// useViewRecording
-
-export interface UseViewRecordingReturn {
-    viewRecorded: Ref<boolean>;
 }

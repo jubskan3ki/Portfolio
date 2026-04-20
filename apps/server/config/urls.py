@@ -11,12 +11,13 @@ API_PREFIX = "api/"
 
 
 def health_check(_request):
-    """Health check endpoint."""
     return JsonResponse({"status": "ok"})
 
 
 urlpatterns = [
     path("", health_check, name="root"),
+    path("health", health_check, name="health"),
+    path("healthz", health_check, name="healthz"),
     path("", include("django_prometheus.urls")),
     path("django-admin/", admin.site.urls),
     path(f"{API_PREFIX}users/", include("core.user.urls")),
@@ -29,6 +30,9 @@ urlpatterns = [
     path(f"{API_PREFIX}stats/", include("core.stats.urls")),
     path(f"{API_PREFIX}webhooks/", include("core.webhooks.urls")),
     path(f"{API_PREFIX}audit/", include("core.audit.urls")),
+    path(f"{API_PREFIX}search/", include("core.search.urls")),
+    path(f"{API_PREFIX}versioning/", include("core.versioning.urls")),
+    path(f"{API_PREFIX}public/status/", include("core.status.urls")),
 ]
 
 if settings.DEBUG:

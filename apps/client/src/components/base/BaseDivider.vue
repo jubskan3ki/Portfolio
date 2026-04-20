@@ -41,7 +41,6 @@
         align-items: center;
         color: vars.$text-secondary;
 
-        /* Horizontal */
         &--horizontal {
             width: 100%;
             flex-direction: row;
@@ -77,7 +76,6 @@
             }
         }
 
-        /* Vertical */
         &--vertical {
             flex-direction: column;
             height: 100%;
@@ -114,7 +112,6 @@
             }
         }
 
-        /* Spacing */
         &--spacing-none {
             margin: 0;
         }
@@ -149,7 +146,6 @@
             }
         }
 
-        /* Label */
         &__label {
             padding: 0 vars.$spacing-md;
             font-weight: vars.$font-weight-medium;
@@ -162,7 +158,6 @@
             text-orientation: mixed;
         }
 
-        /* Without label - no pseudo elements needed when empty */
         &:not(.divider--with-label) {
             &::after {
                 display: none;

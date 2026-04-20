@@ -13,7 +13,6 @@
             position: 'relative',
         }"
     >
-        <!-- Top: label -->
         <span
             :style="{
                 display: 'flex',
@@ -27,7 +26,6 @@
             Compétence · Stack
         </span>
 
-        <!-- Core: logo + name -->
         <div
             :style="{
                 display: 'flex',
@@ -120,7 +118,6 @@
             </div>
         </div>
 
-        <!-- Bottom: identity + description -->
         <div
             :style="{
                 display: 'flex',

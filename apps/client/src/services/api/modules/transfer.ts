@@ -58,7 +58,6 @@ export const transferApi = {
 
     cleanupJobs: (): Promise<CleanupJobsResponse> => httpClient.delete(API_ENDPOINTS.TRANSFER.JOBS_CLEANUP),
 
-    // Methods used by composables
     importWithImages: (module: TransferModule, formData: FormData): Promise<ImportJob> =>
         httpClient.uploadForm(API_ENDPOINTS.TRANSFER.IMPORT_MODULE(module), formData, 'POST'),
 

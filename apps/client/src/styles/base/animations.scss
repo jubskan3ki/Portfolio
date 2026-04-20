@@ -1,4 +1,3 @@
-// animations.scss
 @use '../abstracts/variables' as vars;
 
 @keyframes fade-in {
@@ -136,7 +135,6 @@
     }
 }
 
-// Reduced motion support
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

@@ -6,17 +6,7 @@ import { dayjs } from '@/services/utils/date';
 import { useCalendarGrid } from './useCalendarGrid';
 import { useDateRangeSelection } from './useDateRangeSelection';
 
-import type { DateRange } from '@/types/components/ui';
-import type { Ref } from 'vue';
-
-interface UseDateRangePickerOptions {
-    model: Ref<DateRange>;
-    availableDates: Ref<string[]>;
-    minDays: Ref<number>;
-    maxDays: Ref<number>;
-    disabled: Ref<boolean>;
-    dropdownRef: Readonly<Ref<HTMLElement | null>>;
-}
+import type { UseDateRangePickerOptions } from '@/types/composables/ui';
 
 export function useDateRangePicker(
     { model, availableDates, minDays, maxDays, disabled, dropdownRef }: UseDateRangePickerOptions,

@@ -61,7 +61,6 @@
             </template>
         </DataTable>
 
-        <!-- View message modal -->
         <Teleport to="body">
             <Transition name="fade">
                 <div
@@ -125,7 +124,6 @@
             </Transition>
         </Teleport>
 
-        <!-- Delete modal -->
         <ConfirmDialog
             v-model="deletion!.showModal.value"
             variant="danger"
@@ -138,7 +136,6 @@
             @cancel="deletion?.cancel()"
         />
 
-        <!-- Bulk delete modal -->
         <ConfirmDialog
             v-model="bulkDeletion!.showModal.value"
             variant="danger"

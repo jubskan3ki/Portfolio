@@ -125,6 +125,8 @@ class StackWriteSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "slug",
+            "seo_title",
+            "meta_description",
             "description",
             "logo",
             "category",
@@ -142,6 +144,8 @@ class StackWriteSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
         extra_kwargs = {
             "slug": {"required": False},
+            "seo_title": {"required": False, "allow_blank": True},
+            "meta_description": {"required": False, "allow_blank": True},
             "description": {"required": False, "allow_blank": True},
             "logo": {"required": False},
             "tags": {"required": False, "default": list},

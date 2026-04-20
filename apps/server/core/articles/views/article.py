@@ -43,7 +43,6 @@ class ArticleViewSet(BaseAPIViewSet):
     filterset_class = ArticleFilter
     lookup_field = "slug"
 
-    # Configuration pour SerializerByActionMixin
     serializer_classes = {
         "list": ArticleListSerializer,
         "featured": ArticleListSerializer,

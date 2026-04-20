@@ -72,10 +72,6 @@ export function useHoverPrefetch(defaultDelay?: number): UsePrefetchHoverReturn 
     };
 }
 
-/**
- * Convenience helper for card components: encapsulates the common
- * "prefetch detail on hover" pattern used by ArticleCard, ProjectCard, StackCard.
- */
 export function useCardPrefetch(
     slug: () => string | undefined,
     queryKey: (s: string) => readonly unknown[],

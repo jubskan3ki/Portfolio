@@ -21,29 +21,22 @@ class AuditContextMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
-        # Set audit context before processing
         self._set_context(request)
 
         try:
             return self.get_response(request)
         finally:
-            # Always clear context after request
             clear_audit_context()
 
     def _set_context(self, request: HttpRequest) -> None:
         """Extract and set audit context from request."""
-        # Get user (may be AnonymousUser)
         user = None
         if hasattr(request, "user") and request.user.is_authenticated:
             user = request.user
 
-        # Get IP address
         ip_address = self._get_client_ip(request)
-
-        # Get user agent
         user_agent = request.META.get("HTTP_USER_AGENT", "")
-
-        # Get correlation ID (set by CorrelationIdMiddleware)
+        # correlation_id est pose par CorrelationIdMiddleware (amont).
         correlation_id = getattr(request, "correlation_id", "")
 
         set_audit_context(

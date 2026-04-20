@@ -40,7 +40,6 @@ def cleanup_old_jobs(days: int = 30) -> dict:
                     logger.exception("Erreur suppression fichier export job %s", job.id)
         old_exports.delete()
 
-    # Delete old import jobs
     import_count, _ = ImportJob.objects.filter(created_at__lt=cutoff).delete()
 
     logger.info("Cleanup: %d exports et %d imports supprimes", export_count, import_count)
@@ -113,7 +112,6 @@ def async_import(_self, job_id: str, file_content: bytes, *, update_existing: bo
         return {"status": job.status, "message": "Job deja traite"}
 
     try:
-        # Recreate file from bytes
         file_io = BytesIO(file_content)
         file = InMemoryUploadedFile(
             file=file_io,

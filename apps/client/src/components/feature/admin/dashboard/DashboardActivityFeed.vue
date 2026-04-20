@@ -34,19 +34,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { ADMIN_ROUTES } from '@/config/routes';
 
-    interface Activity {
-        id: number;
-        type: string;
-        text: string;
-        date: Date;
-    }
+    import type { DashboardActivityFeedProps } from '@/types/components/admin';
 
-    interface Props {
-        activities: Activity[];
-        loading?: boolean;
-    }
-
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<DashboardActivityFeedProps>(), {
         loading: false,
     });
 

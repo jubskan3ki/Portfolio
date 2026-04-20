@@ -20,11 +20,9 @@
 <script setup lang="ts">
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    interface Props {
-        tags?: string[];
-    }
+    import type { StackTagsProps } from '@/types/feature/stacks';
 
-    withDefaults(defineProps<Props>(), {
+    withDefaults(defineProps<StackTagsProps>(), {
         tags: () => [],
     });
 </script>

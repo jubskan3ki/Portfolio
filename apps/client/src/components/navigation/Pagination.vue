@@ -263,7 +263,6 @@
             }
         }
 
-        // Sizes
         &--sm {
             .pagination__btn {
                 height: 32px;
@@ -278,7 +277,6 @@
             }
         }
 
-        // Variants
         &--rounded {
             .pagination__btn {
                 border-radius: vars.$border-radius-full;

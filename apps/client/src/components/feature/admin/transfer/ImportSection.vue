@@ -11,7 +11,6 @@
                 Importez des données depuis un fichier JSON, CSV ou Excel. Les données existantes seront mises à jour.
             </p>
 
-            <!-- Module selection -->
             <BaseSelect
                 id="import-module"
                 v-model="importModule"
@@ -20,7 +19,6 @@
                 :options="moduleOptions"
             />
 
-            <!-- File upload -->
             <FileDropZone
                 id="import-file"
                 :file="importFile"
@@ -32,7 +30,6 @@
                 @update:error="fileError = $event"
             />
 
-            <!-- Images upload section -->
             <FilePreviewList
                 :show="!!importModule"
                 :images="images"
@@ -40,7 +37,6 @@
                 @remove-image="removeImage"
             />
 
-            <!-- Import options + button -->
             <ImportProgress
                 :is-importing="isImporting"
                 :can-import="!!importFile && !!importModule"
@@ -66,11 +62,7 @@
     import ImportProgress from './ImportProgress.vue';
 
     import type { ImageItem } from './FilePreviewList.vue';
-
-    interface SelectOption {
-        label: string;
-        value: string;
-    }
+    import type { SelectOption } from '@/types/components/base';
 
     defineProps<{
         moduleOptions: SelectOption[];

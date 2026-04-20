@@ -1,6 +1,5 @@
 <template>
     <div class="blog-page">
-        <!-- Hero -->
         <Hero
             title="Blog"
             description="Articles, tutoriels et réflexions sur le développement web et les technologies modernes."
@@ -19,12 +18,9 @@
             </template>
         </Hero>
 
-        <!-- Content -->
         <Main id="articles" variant="light" size="large">
             <div class="blog-layout">
-                <!-- Main Content -->
                 <div class="blog-main">
-                    <!-- Search Bar -->
                     <div class="search-bar">
                         <div class="search-bar__input-wrapper">
                             <SearchInput
@@ -36,13 +32,16 @@
                         </div>
 
                         <div class="search-bar__actions">
-                            <BaseSelect v-model="currentSort" :options="sortOptions" placeholder="Trier par" />
+                            <BaseSelect
+                                v-model="currentSort"
+                                :options="sortOptions"
+                                placeholder="Trier par"
+                                aria-label="Trier les articles"
+                            />
                         </div>
                     </div>
 
-                    <!-- Content States -->
                     <Transition name="slide-fade" mode="out-in">
-                        <!-- Loading State -->
                         <div v-if="isLoading" key="loader" class="blog-loader">
                             <SkeletonList
                                 :count="6"
@@ -54,7 +53,6 @@
                             />
                         </div>
 
-                        <!-- Error State -->
                         <EmptyState
                             v-else-if="hasError"
                             key="error"
@@ -74,7 +72,6 @@
                             </template>
                         </EmptyState>
 
-                        <!-- Empty State -->
                         <EmptyState
                             v-else-if="!hasArticles"
                             key="empty"
@@ -94,9 +91,11 @@
                             </template>
                         </EmptyState>
 
-                        <!-- Articles Grid -->
-                        <div v-else :key="contentKey" class="blog-content">
-                            <div class="articles-grid">
+                        <div v-else class="blog-content">
+                            <div
+                                class="articles-grid"
+                                :class="{ 'articles-grid--fetching': isFilterFetching }"
+                            >
                                 <ArticleCard
                                     v-for="(article, index) in articles"
                                     :key="article.id"
@@ -106,7 +105,6 @@
                                 />
                             </div>
 
-                            <!-- Pagination -->
                             <Pagination
                                 v-if="totalPages > 1"
                                 :current-page="currentPage"
@@ -118,7 +116,6 @@
                     </Transition>
                 </div>
 
-                <!-- Sidebar -->
                 <aside class="blog-sidebar">
                     <LazyArticlePopular :articles="popularArticles" title="Articles populaires" show-title />
 
@@ -126,6 +123,7 @@
                         v-if="categories?.length"
                         v-model="selectedCategory"
                         :categories="categoriesWithAll"
+                        :max-visible="8"
                         title="Catégories"
                     />
 
@@ -133,6 +131,7 @@
                         v-if="tags?.length"
                         v-model="selectedTags"
                         :tags="tags"
+                        :max-visible="10"
                         title="Tags"
                         show-title
                         display="cloud"
@@ -142,7 +141,6 @@
             </div>
         </Main>
 
-        <!-- CTA -->
         <CTA
             title="Découvrez mes projets"
             description="Explorez mes réalisations et les stacks que j'utilise."
@@ -154,12 +152,11 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, watch, onMounted } from 'vue';
+    import { computed, watch } from 'vue';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseSelect from '@/components/base/BaseSelect.vue';
     import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
-    // ArticlePopular, ArticleCategories, ArticleTags are lazy-loaded via Lazy prefix in template
     import StatCard from '@/components/feature/home/StatCard.vue';
     import EmptyState from '@/components/feedback/EmptyState.vue';
     import Main from '@/components/layouts/Main.vue';
@@ -186,10 +183,8 @@
 
     import type { SelectOption } from '@/types/components/base';
 
-    // SEO
     useBlogSeo();
 
-    // Accessibility
     const { announceLoaded } = useAnnounce();
     const { prefersReducedMotion } = useReducedMotion();
     const { scrollToTop } = useScrollToTop();
@@ -199,7 +194,6 @@
         pagination: { ...filterPresets.blog.pagination, itemsPerPage: 6 },
     });
 
-    // Aliases
     const searchQuery = computed({
         get: () => filters.value.search,
         set: (val: string) => setFilter('search', val),
@@ -217,7 +211,6 @@
         set: (val: string) => setFilter('ordering', val),
     });
 
-    // Sort options
     const sortOptions: SelectOption[] = [
         { value: '-date', label: 'Plus récents' },
         { value: 'date', label: 'Plus anciens' },
@@ -225,22 +218,25 @@
         { value: 'title', label: 'A → Z' },
     ];
 
-    // Queries
-    const { data: articlesData, isLoading, isError: hasError, refetch: refetchArticles } = useArticles(apiFilters);
+    const {
+        data: articlesData,
+        isLoading,
+        isFetching,
+        isError: hasError,
+        refetch: refetchArticles,
+    } = useArticles(apiFilters);
     const { data: categories } = useArticleCategories();
     const { data: tags } = useArticleTags();
     const { data: popularArticlesData } = usePopularArticles(5);
 
-    // Computed
     const articles = computed(() => articlesData.value?.data ?? []);
     const totalArticles = computed(() => articlesData.value?.pagination?.total ?? 0);
     const totalPages = computed(() => articlesData.value?.pagination?.totalPages ?? 1);
     const popularArticles = computed(() => popularArticlesData.value ?? []);
 
-    // Pagination SEO (canonical, prev, next)
     usePaginationSeo({ basePath: '/blog', currentPage, totalPages });
 
-    // ItemList Schema.org pour resultats enrichis
+    // Schema.org ItemList pour rich results
     const articleListItems = computed(() =>
         articles.value.map((a) => ({ name: a.title, url: `/blog/${a.slug}`, image: a.image })),
     );
@@ -250,17 +246,14 @@
         }
     }, { immediate: true });
     const hasArticles = computed(() => (articles.value?.length ?? 0) > 0);
+    const isFilterFetching = computed(() => isFetching.value && hasArticles.value && !isLoading.value);
 
-    const contentKey = computed(() => `${selectedCategory.value ?? 'all'}-${currentPage.value}-${searchQuery.value}`);
-
-    // Hero stats
     const heroStats = computed(() => [
         { value: totalArticles.value, label: 'Articles', icon: 'file-text' },
         { value: categories.value?.length ?? 0, label: 'Catégories', icon: 'folder' },
         { value: tags.value?.length ?? 0, label: 'Tags', icon: 'hash' },
     ]);
 
-    // Empty state messages
     const emptyStateTitle = computed(() =>
         hasActiveFilters.value ? 'Aucun article trouvé' : 'Aucun article disponible',
     );
@@ -278,7 +271,6 @@
         return [{ id: '', slug: '', name: 'Tous', count: totalArticles.value }, ...categories.value];
     });
 
-    // Handlers
     const clearSearch = () => {
         setFilter('search', '');
     };
@@ -296,7 +288,6 @@
         scrollToTop('smooth');
     };
 
-    // Announce loaded data
     watch(
         articles,
         (list) => {
@@ -306,11 +297,6 @@
         },
         { once: true },
     );
-
-    // Scroll to top on mount
-    onMounted(() => {
-        scrollToTop('instant');
-    });
 </script>
 
 <style lang="scss" scoped>
@@ -322,7 +308,6 @@
         min-height: 100vh;
     }
 
-    // Layout
     .blog-layout {
         display: grid;
         grid-template-columns: 1fr 320px;
@@ -344,7 +329,6 @@
         min-width: 0;
     }
 
-    // Sidebar
     .blog-sidebar {
         display: flex;
         flex-direction: column;
@@ -373,7 +357,6 @@
         }
     }
 
-    // Search Bar
     .search-bar {
         position: relative;
         z-index: vars.$z-index-dropdown;
@@ -409,7 +392,6 @@
         }
     }
 
-    // Content
     .blog-loader {
         max-width: 100%;
     }
@@ -418,7 +400,6 @@
         animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    // Empty state
     :deep(.blog-empty-state) {
         max-width: 500px;
         margin: vars.$spacing-xl auto;
@@ -430,14 +411,19 @@
         box-shadow: 0 8px 32px fn.color-alpha(vars.$black, 0.06);
     }
 
-    // Articles Grid
     .articles-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: vars.$spacing-lg;
+        transition: opacity 0.2s ease;
 
         @include mix.responsive(mobile) {
             grid-template-columns: 1fr;
+        }
+
+        &--fetching {
+            opacity: 0.55;
+            pointer-events: none;
         }
 
         &__item {
@@ -447,14 +433,12 @@
         }
     }
 
-    // Pagination
     .blog-pagination {
         margin-top: vars.$spacing-xl;
         padding-top: vars.$spacing-xl;
         border-top: 1px solid fn.color-alpha(vars.$border-color, 0.3);
     }
 
-    // Animations
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -467,7 +451,6 @@
         }
     }
 
-    // Transitions
     .slide-fade-enter-active {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -486,7 +469,6 @@
         transform: translateY(-10px);
     }
 
-    // Reduced motion
     @media (prefers-reduced-motion: reduce) {
         .articles-grid__item {
             animation: none;
@@ -503,7 +485,6 @@
         }
     }
 
-    // Responsive
     @include mix.responsive(tablet) {
         .search-bar {
             margin-bottom: vars.$spacing-md;

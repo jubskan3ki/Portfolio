@@ -1,12 +1,14 @@
 """Filtres django-filter pour le module articles."""
 
 import django_filters
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-from django.db.models import QuerySet
+from django.contrib.postgres.search import SearchQuery, SearchRank
+from django.db.models import F, QuerySet
 
-from utils.filters import CategoryFilterMixin, SearchFilterMixin
+from utils.filters import CategoryFilterMixin, SearchFilterMixin, build_prefix_tsquery
 
 from .models import Article, Category, Tag
+
+SEARCH_CONFIG = "french_unaccent"
 
 
 class ArticleFilter(CategoryFilterMixin, SearchFilterMixin, django_filters.FilterSet):
@@ -18,18 +20,14 @@ class ArticleFilter(CategoryFilterMixin, SearchFilterMixin, django_filters.Filte
 
     search_fields = ["title", "content", "excerpt"]
 
-    # Filtres par categorie
     category = django_filters.CharFilter(method="filter_by_category")
     category_id = django_filters.NumberFilter(field_name="category__id")
 
-    # Filtres par tag
     tag = django_filters.CharFilter(method="filter_by_tag")
     tags = django_filters.CharFilter(method="filter_by_tags")
 
-    # Recherche textuelle
     search = django_filters.CharFilter(method="filter_search")
 
-    # Filtres par date
     published_after = django_filters.DateFilter(
         field_name="published_date",
         lookup_expr="gte",
@@ -39,11 +37,9 @@ class ArticleFilter(CategoryFilterMixin, SearchFilterMixin, django_filters.Filte
         lookup_expr="lte",
     )
 
-    # Filtres booleen
     is_published = django_filters.BooleanFilter()
     is_featured = django_filters.BooleanFilter()
 
-    # Tri
     ordering = django_filters.OrderingFilter(
         fields=(
             ("published_date", "date"),
@@ -69,24 +65,25 @@ class ArticleFilter(CategoryFilterMixin, SearchFilterMixin, django_filters.Filte
         ]
 
     def filter_search(self, queryset: QuerySet, _name: str, value: str) -> QuerySet:
-        """Recherche Full-Text PostgreSQL avec ranking par pertinence.
+        """Recherche Full-Text PostgreSQL avec prefix matching.
 
-        Surcharge le mixin SearchFilterMixin pour utiliser SearchVector/SearchRank
-        au lieu de icontains. Preserve le queryset filtre existant.
-        Fallback sur icontains si le backend n'est pas PostgreSQL (ex: SQLite en tests).
+        Utilise l'index GIN + config french_unaccent + tsquery en mode raw pour
+        activer l'operateur `:*` (ex: `nux:*` matche Nuxt). Fallback sur icontains
+        hors PostgreSQL (tests SQLite).
         """
         if not value or len(value.strip()) < 2:
             return queryset
-        engine = queryset.db
-        if "postgresql" not in self._get_db_engine(engine):
+        if "postgresql" not in self._get_db_engine(queryset.db):
             return super().filter_search(queryset, _name, value)
-        search_vector = (
-            SearchVector("title", weight="A", config="french")
-            + SearchVector("excerpt", weight="B", config="french")
-            + SearchVector("content", weight="C", config="french")
+        raw_tsquery = build_prefix_tsquery(value)
+        if not raw_tsquery:
+            return queryset
+        search_query = SearchQuery(raw_tsquery, config=SEARCH_CONFIG, search_type="raw")
+        return (
+            queryset.annotate(rank=SearchRank(F("search_vector"), search_query))
+            .filter(search_vector=search_query)
+            .order_by("-rank")
         )
-        search_query = SearchQuery(value, config="french")
-        return queryset.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.01).order_by("-rank")
 
     @staticmethod
     def _get_db_engine(db_alias: str) -> str:

@@ -24,18 +24,9 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useTabIndicator } from '@/composables/ui/useTabIndicator';
 
-    interface Tab {
-        key: string;
-        label: string;
-        icon?: string;
-    }
+    import type { SegmentedTabsProps } from '@/types/components/ui';
 
-    interface Props {
-        tabs: Tab[];
-        modelValue: string;
-    }
-
-    const props = defineProps<Props>();
+    const props = defineProps<SegmentedTabsProps>();
 
     defineEmits<{
         'update:modelValue': [value: string];

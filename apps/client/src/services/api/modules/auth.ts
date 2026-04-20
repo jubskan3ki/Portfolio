@@ -18,7 +18,7 @@ import type {
     AuthMessageResponse,
     VerifyCodeResponse,
 } from '@/types/api/auth';
-import type { Session } from '@/types/feature/admin';
+import type { SessionsResponse } from '@/types/feature/admin';
 
 export const authKeys = {
     ...createKeys('auth'),
@@ -49,7 +49,7 @@ export const authApi = {
     confirmResetPassword: (data: ConfirmResetPasswordData): Promise<AuthMessageResponse> =>
         httpClient.post(API_ENDPOINTS.USERS.CONFIRM_RESET_PASSWORD, data),
 
-    getSessions: (): Promise<{ sessions: Session[] }> => httpClient.get(API_ENDPOINTS.USERS.SESSIONS),
+    getSessions: (): Promise<SessionsResponse> => httpClient.get(API_ENDPOINTS.USERS.SESSIONS),
 
     revokeSession: (sessionId: string): Promise<void> =>
         httpClient.delete(`${API_ENDPOINTS.USERS.SESSIONS}?session_id=${sessionId}`),
@@ -61,7 +61,7 @@ export const authApi = {
 };
 
 export function useSessions() {
-    return createRealtimeQuery(authKeys.sessions(), () => authApi.getSessions().then((res) => res.sessions));
+    return createRealtimeQuery(authKeys.sessions(), () => authApi.getSessions());
 }
 
 export function useRevokeSession() {

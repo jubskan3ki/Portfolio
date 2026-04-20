@@ -1,6 +1,5 @@
 <template>
     <div>
-        <!-- Fullscreen loaders -->
         <TransitionGroup name="fade">
             <div
                 v-for="loader in fullscreenLoaders"
@@ -19,7 +18,6 @@
             </div>
         </TransitionGroup>
 
-        <!-- Container loaders -->
         <Teleport v-if="containerLoaders.length" to="body">
             <div
                 v-for="loader in containerLoaders"
@@ -141,7 +139,6 @@
         }
     }
 
-    // Transitions
     .fade-enter-active,
     .fade-leave-active {
         transition: opacity 0.25s ease;

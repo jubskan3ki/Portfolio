@@ -14,28 +14,19 @@ from .metrics import (
 
 
 class PrometheusMetricsMiddleware:
-    """Middleware pour collecter les metriques HTTP pour Prometheus.
-
-    Collecte:
-    - Nombre total de requetes par methode/endpoint/status
-    - Duree des requetes par methode/endpoint
-    - Requetes en cours par methode/endpoint
-    - Exceptions par type/endpoint
-    """
+    """Collecte HTTP metrics: requests_total, duration, in_progress, exceptions."""
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
-        """Traite la requete et collecte les metriques."""
-        # Ne pas mesurer l'endpoint /metrics lui-meme
+        # Ne pas mesurer l'endpoint /metrics lui-meme (evite recursion Prometheus).
         if request.path == "/metrics/":
             return self.get_response(request)
 
         method = request.method
         endpoint = self._get_endpoint(request)
 
-        # Increment in-progress counter
         REQUEST_IN_PROGRESS.labels(method=method, endpoint=endpoint).inc()
 
         start_time = time.perf_counter()
@@ -52,13 +43,10 @@ class PrometheusMetricsMiddleware:
             ).inc()
             raise
         finally:
-            # Calculate duration
             duration = time.perf_counter() - start_time
 
-            # Decrement in-progress counter
             REQUEST_IN_PROGRESS.labels(method=method, endpoint=endpoint).dec()
 
-            # Record metrics (only if no exception or if we have a response)
             if exception_type is None:
                 REQUESTS_TOTAL.labels(
                     method=method,
@@ -74,25 +62,17 @@ class PrometheusMetricsMiddleware:
         return response
 
     def _get_endpoint(self, request: HttpRequest) -> str:
-        """Extrait le pattern d'endpoint depuis la requete.
-
-        Normalise les URLs dynamiques pour eviter une explosion de labels.
-        Ex: /api/articles/123/ -> /api/articles/{id}/
-        """
+        """Normalise ids/uuids/slugs pour eviter l'explosion de labels Prometheus."""
         path = request.path
 
-        # Normalise les IDs numeriques
         import re
 
         path = re.sub(r"/\d+/", "/{id}/", path)
         path = re.sub(r"/\d+$", "/{id}", path)
 
-        # Normalise les UUIDs
         uuid_pattern = r"/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/"
         path = re.sub(uuid_pattern, "/{uuid}/", path, flags=re.IGNORECASE)
 
-        # Normalise les slugs (si dans un pattern connu)
-        # Ex: /api/articles/mon-article/ -> /api/articles/{slug}/
         known_slug_patterns = [
             r"/api/articles/[^/]+/$",
             r"/api/projects/[^/]+/$",

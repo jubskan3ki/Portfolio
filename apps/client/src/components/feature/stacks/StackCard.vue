@@ -10,10 +10,8 @@
         @keydown.enter="$emit('click')"
         @keydown.space.prevent="$emit('click')"
     >
-        <!-- Accent Line -->
         <div class="stack-card__accent" aria-hidden="true"></div>
 
-        <!-- Header: Logo + Name + Category + Level -->
         <header class="stack-card__header">
             <div class="stack-card__logo" :style="logoTransitionStyle">
                 <BaseImage
@@ -39,12 +37,10 @@
             </div>
         </header>
 
-        <!-- Description -->
         <p v-if="stack.description && !compact" class="stack-card__description">
             {{ truncateText(stack.description, descriptionLength) }}
         </p>
 
-        <!-- Tags -->
         <div v-if="displayedTags.length > 0" class="stack-card__tags">
             <span v-for="tag in displayedTags" :key="tag" class="stack-card__tag">
                 {{ tag }}
@@ -54,7 +50,6 @@
             </span>
         </div>
 
-        <!-- Footer: Experience + Action -->
         <footer class="stack-card__footer">
             <span v-if="experienceDisplay" class="stack-card__experience">
                 <BaseIcon name="clock" :size="12" />

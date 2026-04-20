@@ -1,26 +1,22 @@
-// Types for Layout components
-
-// Section
 export type SectionSize = 'tight' | 'default' | 'large';
 export type SectionVariant = 'default' | 'dark' | 'light' | 'primary' | 'gradient' | 'glass';
 export type SectionAnimation = 'fade' | 'slide' | 'scale' | 'none';
 
-// Header
 export interface SocialLink {
     name: string;
     icon: string;
     url: string;
 }
 
-// Footer Contact
 export interface FooterContactProps {
     title?: string;
     email?: string;
     phone?: string;
     address?: string;
+    isAvailable?: boolean;
+    availabilityLabel?: string;
 }
 
-// Footer Contact Item
 export type ContactItemLinkType = 'email' | 'phone' | 'url' | 'none';
 
 export interface FooterContactItemProps {
@@ -30,13 +26,11 @@ export interface FooterContactItemProps {
     linkType?: ContactItemLinkType;
 }
 
-// Footer Social
 export interface FooterSocialProps {
     title?: string;
     links: SocialLink[];
 }
 
-// Admin Layouts
 export interface AdminMenuItem {
     label: string;
     path: string;
@@ -64,4 +58,35 @@ export interface AdminBreadcrumb {
 export interface AdminBreadcrumbProps {
     items?: AdminBreadcrumb[];
     separator?: string;
+}
+
+export interface MainLayoutProps {
+    id?: string;
+    title?: string;
+    subtitle?: string;
+    size?: SectionSize;
+    variant?: SectionVariant;
+    withContainer?: boolean;
+    withGlassBackground?: boolean;
+    glassVariant?: 'primary' | 'secondary' | 'light' | 'dark';
+    showDots?: boolean;
+    glassAnimated?: boolean;
+    bubbleCount?: number;
+    customClass?: string;
+}
+
+export interface DetailPageLayoutProps {
+    sidebarWidth?: string;
+}
+
+export interface SectionProps {
+    id?: string;
+    title?: string;
+    subtitle?: string;
+    size?: SectionSize;
+    variant?: SectionVariant;
+    withContainer?: boolean;
+    animated?: boolean;
+    animationType?: SectionAnimation;
+    customClass?: string;
 }

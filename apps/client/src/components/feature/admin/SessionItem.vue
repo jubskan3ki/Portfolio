@@ -5,22 +5,26 @@
         </div>
 
         <div class="session-item__content">
-            <span class="session-item__title"> {{ browserName }} sur {{ osName }} </span>
+            <span class="session-item__title">{{ deviceLabel }}</span>
             <span class="session-item__details">
-                <template v-if="session.device?.ipAddress">
-                    <span class="session-item__ip">{{ session.device.ipAddress }}</span>
-                    <span class="session-item__separator">-</span>
-                </template>
-                <span class="session-item__time">{{ formattedTime }}</span>
+                <span v-if="session.device?.ipAddress" class="session-item__ip">
+                    {{ session.device.ipAddress }}
+                </span>
+                <span v-if="session.device?.ipAddress" class="session-item__separator">-</span>
+                <span class="session-item__time" :title="absoluteTime">{{ formattedTime }}</span>
             </span>
         </div>
 
-        <span v-if="session.isCurrent" class="session-item__badge"> Actuelle </span>
+        <span v-if="session.isCurrent" class="session-item__badge">
+            <BaseIcon name="check-circle" :size="12" />
+            Session actuelle
+        </span>
 
         <button
             v-else
             class="session-item__revoke"
             :disabled="isRevoking"
+            :aria-label="'Revoquer la session ' + deviceLabel"
             :title="isRevoking ? 'Revocation en cours...' : 'Revoquer cette session'"
             @click="handleRevoke"
         >
@@ -35,69 +39,80 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    import type { Session } from '@/types/feature/admin';
+    import type { SessionItemEmits, SessionItemProps } from '@/types/components/admin';
 
-    interface Props {
-        session: Session;
-        isRevoking?: boolean;
-    }
-
-    interface Emits {
-        (e: 'revoke', sessionId: string): void;
-    }
-
-    const props = withDefaults(defineProps<Props>(), {
+    const props = withDefaults(defineProps<SessionItemProps>(), {
         isRevoking: false,
     });
 
-    const emit = defineEmits<Emits>();
+    const emit = defineEmits<SessionItemEmits>();
 
-    const deviceIcon = computed(() => {
-        return props.session.device?.isMobile ? 'smartphone' : 'monitor';
+    const deviceIcon = computed(() => (props.session.device?.isMobile ? 'smartphone' : 'monitor'));
+
+    const deviceLabel = computed(() => {
+        const browser = props.session.device?.browser;
+        const os = props.session.device?.os;
+        const hasBrowser = browser && browser !== 'Unknown';
+        const hasOs = os && os !== 'Unknown';
+
+        if (hasBrowser && hasOs) {
+            return `${browser} sur ${os}`;
+        }
+        if (hasBrowser) {
+            return browser as string;
+        }
+        if (hasOs) {
+            return os as string;
+        }
+        return 'Appareil inconnu';
     });
 
-    const browserName = computed(() => {
-        return props.session.device?.browser || 'Navigateur inconnu';
-    });
-
-    const osName = computed(() => {
-        return props.session.device?.os || 'Appareil inconnu';
-    });
+    const parseDate = (value: string | undefined) => {
+        if (!value) {
+            return null;
+        }
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
+    };
 
     const formattedTime = computed(() => {
-        const dateStr = props.session.lastActivity;
-        if (!dateStr) {
+        const date = parseDate(props.session.lastActivity);
+        if (!date) {
             return 'Date inconnue';
         }
 
-        try {
-            const date = new Date(dateStr);
-            const now = new Date();
-            const diff = now.getTime() - date.getTime();
-            const minutes = Math.floor(diff / 60000);
-            const hours = Math.floor(diff / 3600000);
-            const days = Math.floor(diff / 86400000);
-
-            if (minutes < 1) {
-                return 'A l\'instant';
-            }
-            if (minutes < 60) {
-                return `Il y a ${minutes} min`;
-            }
-            if (hours < 24) {
-                return `Il y a ${hours}h`;
-            }
-            if (days < 7) {
-                return `Il y a ${days}j`;
-            }
-            return date.toLocaleDateString('fr-FR');
-        } catch {
-            return 'Date inconnue';
+        const diff = Date.now() - date.getTime();
+        if (diff < 0) {
+            return 'A l\'instant';
         }
+
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 1) {
+            return 'A l\'instant';
+        }
+        if (minutes < 60) {
+            return `Il y a ${minutes} min`;
+        }
+
+        const hours = Math.floor(diff / 3600000);
+        if (hours < 24) {
+            return `Il y a ${hours}h`;
+        }
+
+        const days = Math.floor(diff / 86400000);
+        if (days < 7) {
+            return `Il y a ${days}j`;
+        }
+        return date.toLocaleDateString('fr-FR');
+    });
+
+    const absoluteTime = computed(() => {
+        const date = parseDate(props.session.lastActivity);
+        return date ? date.toLocaleString('fr-FR') : '';
     });
 
     const handleRevoke = () => {
-        if (!props.isRevoking && props.session.id) {
+        if (!props.isRevoking && props.session.id && !props.session.isCurrent) {
             emit('revoke', props.session.id);
         }
     };
@@ -169,12 +184,16 @@
         }
 
         &__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             padding: 4px 10px;
             border-radius: vars.$border-radius-full;
             font-weight: vars.$font-weight-medium;
             background-color: func.color-alpha(vars.$success-color, 0.1);
             color: vars.$success-color;
             flex-shrink: 0;
+            white-space: nowrap;
         }
 
         &__revoke {

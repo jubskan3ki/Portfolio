@@ -1,6 +1,5 @@
 <template>
     <div class="history">
-        <!-- Page header -->
         <header class="history__header">
             <div>
                 <h1 class="history__title">Historique</h1>
@@ -17,7 +16,6 @@
         </header>
 
         <div class="history__filters">
-            <!-- Search input -->
             <div class="filter-group filter-group--search">
                 <SearchInput
                     v-model="searchQuery"
@@ -27,14 +25,23 @@
             </div>
 
             <div class="filter-group">
-                <BaseSelect v-model="filterType" placeholder="Type" :options="typeOptions" />
+                <BaseSelect
+                    v-model="filterType"
+                    placeholder="Type"
+                    :options="typeOptions"
+                    aria-label="Filtrer par type"
+                />
             </div>
             <div class="filter-group">
-                <BaseSelect v-model="filterPeriod" placeholder="Période" :options="periodOptions" />
+                <BaseSelect
+                    v-model="filterPeriod"
+                    placeholder="Période"
+                    :options="periodOptions"
+                    aria-label="Filtrer par période"
+                />
             </div>
         </div>
 
-        <!-- Activity list -->
         <div class="history__content">
             <template v-if="isLoading">
                 <div v-for="i in 10" :key="i" class="activity-skeleton">

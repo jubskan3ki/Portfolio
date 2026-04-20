@@ -16,15 +16,12 @@ export type { HttpMethod } from '@/types/services/api';
 const MAX_FETCH_DEPTH = 3;
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-// ETag store: maps endpoint URLs to their last ETag + response body
+// ETag store: URL -> { etag, body } for conditional GET
 const etagStore = new Map<string, { etag: string; data: unknown }>();
 
-// SSR request deduplication: prevents duplicate concurrent GET requests
+// SSR dedup: coalesce concurrent GETs to same URL
 const ssrPendingRequests = new Map<string, Promise<unknown>>();
 
-/**
- * Read the Django CSRF token from the cookie.
- */
 function getCsrfToken(): string | null {
     if (import.meta.server) {
         return null;
@@ -33,11 +30,10 @@ function getCsrfToken(): string | null {
     return match ? decodeURIComponent(match[1] as string) : null;
 }
 
-// Calculate delay for exponential backoff with jitter
 function calculateRetryDelay(attemptNumber: number): number {
     const exponentialDelay = API_RETRY.INITIAL_DELAY * Math.pow(API_RETRY.BACKOFF_MULTIPLIER, attemptNumber);
     const cappedDelay = Math.min(exponentialDelay, API_RETRY.MAX_DELAY);
-    // Add jitter (0-100ms) to prevent thundering herd
+    // Jitter 0-100ms: évite thundering herd sur reconnexion massive
     const jitter = Math.random() * 100;
     return cappedDelay + jitter;
 }
@@ -110,7 +106,6 @@ export async function handleResponse<T>(
     requestConfig: RequestInit,
     transformKeys = true,
 ): Promise<T> {
-    // Run response interceptors sequentially using reduce
     const processedResponse = await interceptors.response.reduce(
         async (responsePromise, interceptor) => interceptor(await responsePromise, requestConfig),
         Promise.resolve(response),
@@ -125,10 +120,9 @@ export async function handleResponse<T>(
             message = data.errors?.[0]?.message || data.detail || data.message || message;
             errorData = data;
         } catch {
-            // Response has no JSON body
+            // no JSON body
         }
 
-        // Run error interceptors sequentially using reduce
         const error = await interceptors.error.reduce(
             async (errorPromise, interceptor) => interceptor(await errorPromise),
             Promise.resolve(createApiError(processedResponse.status, message, errorData)),
@@ -143,7 +137,6 @@ export async function handleResponse<T>(
 
     const jsonData = await processedResponse.json();
 
-    // Transform snake_case keys to camelCase, then decode HTML entities
     if (transformKeys) {
         return decodeHtmlEntities(transformKeysToCamel<T>(jsonData));
     }
@@ -165,7 +158,7 @@ export async function fetchApi<T>(
     }
     const url = buildUrl(endpoint, params);
 
-    // SSR deduplication: reuse in-flight GET requests to avoid duplicate calls
+    // SSR dedup: réutiliser GET en vol
     if (import.meta.server && method === 'GET') {
         const pending = ssrPendingRequests.get(url);
         if (pending) {
@@ -179,12 +172,11 @@ export async function fetchApi<T>(
     };
 
     if (data && method !== 'GET') {
-        // Transform camelCase keys to snake_case for outgoing requests
         const requestData = transformRequest ? transformKeysToSnake(data) : data;
         requestInit.body = JSON.stringify(requestData);
     }
 
-    // Attach CSRF token for state-changing requests
+    // CSRF token Django sur mutations
     if (MUTATION_METHODS.has(method)) {
         const csrfToken = getCsrfToken();
         if (csrfToken) {
@@ -195,7 +187,7 @@ export async function fetchApi<T>(
         }
     }
 
-    // Attach ETag for conditional GET requests
+    // Conditional GET via ETag
     if (method === 'GET') {
         const cached = etagStore.get(url);
         if (cached) {
@@ -208,7 +200,6 @@ export async function fetchApi<T>(
 
     requestInit = await runRequestInterceptors(requestInit, url);
 
-    // Core fetch execution (extracted for SSR dedup wrapping)
     const executeFetch = async (): Promise<T> => {
         try {
             const response = await fetchWithTimeout(url, requestInit);
@@ -221,7 +212,7 @@ export async function fetchApi<T>(
                 });
             }
 
-            // 304 Not Modified — return previously cached data
+            // 304 -> renvoie le cache ETag
             if (response.status === 304) {
                 const cached = etagStore.get(url);
                 if (cached) {
@@ -229,19 +220,16 @@ export async function fetchApi<T>(
                 }
             }
 
-            // Capture ETag before response body is consumed
             const etag = response.headers.get('etag');
 
             const result = await handleResponse<T>(response, requestInit, transformResponse);
 
-            // Store ETag + response for future conditional requests
             if (etag && method === 'GET') {
                 etagStore.set(url, { etag, data: result });
             }
 
             return result;
         } catch (error) {
-            // Network error
             if (error instanceof TypeError && error.message.includes('fetch')) {
                 const networkError: ApiError = {
                     code: 'NETWORK_ERROR',
@@ -250,7 +238,6 @@ export async function fetchApi<T>(
                     timestamp: Date.now(),
                 };
 
-                // Run error interceptors sequentially using reduce
                 const processedError = await interceptors.error.reduce<Promise<ApiError>>(
                     async (errorPromise, interceptor) => interceptor(await errorPromise),
                     Promise.resolve(networkError),
@@ -259,10 +246,9 @@ export async function fetchApi<T>(
                 throw processedError;
             }
 
-            // Retry on server errors / rate limit with exponential backoff
             if (isApiError(error)) {
                 if (retries > 0 && (error.code === 'SERVER_ERROR' || error.code === 'RATE_LIMITED')) {
-                    // For rate limited errors, respect server's retry-after header if present
+                    // Respecter Retry-After pour 429
                     const delay
                         = error.code === 'RATE_LIMITED' && 'retryAfter' in error
                             ? (error.retryAfter || 1) * 1000
@@ -281,7 +267,6 @@ export async function fetchApi<T>(
         }
     };
 
-    // SSR dedup: register promise so concurrent calls reuse it
     if (import.meta.server && method === 'GET') {
         const promise = executeFetch().finally(() => {
             ssrPendingRequests.delete(url);

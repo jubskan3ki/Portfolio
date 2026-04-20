@@ -187,7 +187,6 @@
             transform: scale(1.02);
         }
 
-        /* Shapes */
         &--circle {
             border-radius: vars.$border-radius-full;
         }
@@ -196,15 +195,11 @@
             border-radius: vars.$border-radius-md;
         }
 
-        /* Sizes handled by avatar dimensions */
-
-        /* Border */
         &--border {
             border: 2px solid vars.$white;
             box-shadow: 0 0 0 1px func.color-alpha(vars.$black, 0.08);
         }
 
-        /* Image */
         &__image {
             width: 100%;
             height: 100%;
@@ -216,19 +211,16 @@
             transform: scale(1.05);
         }
 
-        /* Initials */
         &__initials {
             text-transform: uppercase;
             letter-spacing: 0.025em;
         }
 
-        /* Icon */
         &__icon {
             color: vars.$white;
             opacity: 0.8;
         }
 
-        /* Badge */
         &__badge {
             position: absolute;
             top: 0;
@@ -236,7 +228,6 @@
             transform: translate(30%, -30%);
         }
 
-        /* Status */
         &__status {
             position: absolute;
             bottom: 0;

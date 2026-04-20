@@ -2,15 +2,7 @@ import { computed, ref } from 'vue';
 
 import { dayjs } from '@/services/utils/date';
 
-import type { DateRange } from '@/types/components/ui';
-import type { Ref } from 'vue';
-
-interface UseDateRangeSelectionOptions {
-    model: Ref<DateRange>;
-    availableDates: Ref<string[]>;
-    minDays: Ref<number>;
-    maxDays: Ref<number>;
-}
+import type { UseDateRangeSelectionOptions } from '@/types/composables/ui';
 
 export function useDateRangeSelection({ model, availableDates, minDays, maxDays }: UseDateRangeSelectionOptions) {
     const tempStartDate = ref('');

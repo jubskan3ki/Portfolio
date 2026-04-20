@@ -1,23 +1,14 @@
 import { useLocalStorage } from '@vueuse/core';
 import { computed } from 'vue';
 
-import type { SearchResult } from '@/types/config/search';
+import type { HistoryItem, RecordableItem } from '@/types/composables/data';
+
+export type { HistoryItem, RecordableItem };
 
 const QUERY_KEY = 'portfolio.search.history.queries';
 const ITEM_KEY = 'portfolio.search.history.items';
 const MAX_QUERIES = 5;
 const MAX_ITEMS = 5;
-
-// Minimal shape stored for history items — keeps localStorage footprint low
-// and decouples persistence from API schema drift.
-export interface HistoryItem {
-    id: number | string;
-    type: string;
-    title: string;
-    subtitle?: string;
-    icon: string;
-    link: string;
-}
 
 export function useSearchHistory() {
     const queries = useLocalStorage<string[]>(QUERY_KEY, []);
@@ -32,7 +23,7 @@ export function useSearchHistory() {
         queries.value = [trimmed, ...existing].slice(0, MAX_QUERIES);
     }
 
-    function recordItem(result: SearchResult) {
+    function recordItem(result: RecordableItem) {
         const historyItem: HistoryItem = {
             id: result.id,
             type: result.type,

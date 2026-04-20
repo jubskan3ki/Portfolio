@@ -4,19 +4,18 @@
         class="hero"
         :class="[`hero--${variant}`, { 'hero--compact': size === 'compact', 'hero--has-stats': hasStats }]"
     >
-        <!-- Background layers -->
         <SectionBackground :variant="variant" />
 
-        <!-- Main Content -->
         <div class="container">
             <div class="hero__wrapper" :style="parallaxStyle">
-                <!-- Glass Card -->
                 <div class="hero__card">
                     <div class="hero__card-inner">
-                        <!-- Badge -->
+                        <div v-if="$slots.breadcrumb" class="hero__breadcrumb">
+                            <slot name="breadcrumb"></slot>
+                        </div>
+
                         <span v-if="badge" class="hero__badge">{{ badge }}</span>
 
-                        <!-- Logo -->
                         <div v-if="logo" class="hero__logo" :style="logoTransitionStyle">
                             <BaseImage
                                 :src="resolvedLogo"
@@ -28,22 +27,18 @@
                             />
                         </div>
 
-                        <!-- Title -->
                         <h1 class="hero__title" :style="titleTransitionStyle">
                             <slot name="title">{{ title }}</slot>
                         </h1>
 
-                        <!-- Description -->
                         <p v-if="description || $slots.description" class="hero__description">
                             <slot name="description">{{ description }}</slot>
                         </p>
 
-                        <!-- Meta -->
                         <div v-if="hasMeta || $slots.meta" class="hero__meta">
                             <slot name="meta"></slot>
                         </div>
 
-                        <!-- Links -->
                         <div v-if="$slots.links" class="hero__links">
                             <slot name="links"></slot>
                         </div>
@@ -51,13 +46,11 @@
                         <slot></slot>
                     </div>
 
-                    <!-- Decorative floats -->
                     <span class="hero__float hero__float--1"></span>
                     <span class="hero__float hero__float--2"></span>
                     <span class="hero__float hero__float--3"></span>
                 </div>
 
-                <!-- Stats (positioned overlapping) -->
                 <div v-if="$slots.stats" class="hero__stats">
                     <slot name="stats"></slot>
                 </div>
@@ -146,14 +139,12 @@
             padding-bottom: calc(vars.$spacing-xxl + 40px);
         }
 
-        // Wrapper
         &__wrapper {
             position: relative;
             z-index: 1;
             will-change: transform;
         }
 
-        // Glass Card
         &__card {
             position: relative;
             max-width: 800px;
@@ -182,7 +173,12 @@
             z-index: 2;
         }
 
-        // Floating decorative elements
+        &__breadcrumb {
+            display: flex;
+            justify-content: center;
+            margin-bottom: vars.$spacing-md;
+        }
+
         &__float {
             position: absolute;
             border-radius: 50%;
@@ -222,7 +218,6 @@
             }
         }
 
-        // Badge
         &__badge {
             display: inline-block;
             margin-bottom: vars.$spacing-lg;
@@ -233,7 +228,6 @@
             border-radius: vars.$border-radius-full;
         }
 
-        // Logo
         &__logo {
             margin-bottom: vars.$spacing-lg;
 
@@ -246,14 +240,12 @@
             }
         }
 
-        // Title
         &__title {
             margin: 0 0 vars.$spacing-sm;
             font-weight: vars.$font-weight-bold;
             line-height: vars.$line-height-tight;
         }
 
-        // Description
         &__description {
             margin: 0 0 vars.$spacing-lg;
             line-height: vars.$line-height-relaxed;
@@ -261,7 +253,6 @@
             margin-inline: auto;
         }
 
-        // Meta
         &__meta {
             display: flex;
             flex-wrap: wrap;
@@ -270,7 +261,6 @@
             margin-top: vars.$spacing-lg;
         }
 
-        // Links
         &__links {
             display: flex;
             flex-wrap: wrap;
@@ -279,7 +269,6 @@
             margin-top: vars.$spacing-lg;
         }
 
-        // Stats (overlapping position)
         &__stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -296,7 +285,6 @@
             }
         }
 
-        // Compact
         &--compact {
             padding: calc(vars.$navbar-height + vars.$spacing-xl) 0 vars.$spacing-xl;
 
@@ -309,7 +297,6 @@
             }
         }
 
-        // Variants
         &--light {
             @include hero.hero-variant(
                 $background: vars.$bg-secondary,
@@ -387,7 +374,6 @@
         }
     }
 
-    // Floating animations (for dots variants)
     @keyframes float-1 {
         0%,
         100% {

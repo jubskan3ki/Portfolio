@@ -1,22 +1,6 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed, toValue } from 'vue';
 
-import type { MaybeRefOrGetter, Ref, ComputedRef } from 'vue';
-
-export interface UseTabIndicatorOptions {
-    trackRef: Ref<HTMLElement | null>;
-    tabRefs: Ref<Array<HTMLElement | null>>;
-    activeIndex: MaybeRefOrGetter<number>;
-    tabs: MaybeRefOrGetter<unknown[]>;
-    mode?: 'css-vars' | 'inline-style';
-    listenResize?: boolean;
-}
-
-export interface UseTabIndicatorReturn {
-    updateIndicator: () => void;
-    indicatorReady: Ref<boolean>;
-    indicatorStyle: ComputedRef<{ width: string; transform: string }>;
-    setTabRef: (index: number, el: HTMLElement | null) => void;
-}
+import type { UseTabIndicatorOptions, UseTabIndicatorReturn } from '@/types/composables/ui';
 
 export function useTabIndicator(options: UseTabIndicatorOptions): UseTabIndicatorReturn {
     const { trackRef, tabRefs, mode = 'css-vars', listenResize = false } = options;

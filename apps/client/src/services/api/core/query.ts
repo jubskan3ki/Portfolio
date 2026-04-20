@@ -3,10 +3,8 @@ import { computed, unref } from 'vue';
 
 import { CACHE_TIMES } from './cache';
 
-import type { QueryOptions } from '@/types/services/api';
+import type { QueryOptions, QueryPreset } from '@/types/services/api';
 import type { MaybeRef } from 'vue';
-
-type QueryPreset = 'list' | 'detail' | 'static' | 'realtime';
 
 const QUERY_PRESETS: Record<QueryPreset, { staleTime: number; refetchInterval?: number }> = {
     list: { staleTime: CACHE_TIMES.LIST },
