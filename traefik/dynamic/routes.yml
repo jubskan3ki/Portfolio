@@ -27,9 +27,9 @@ http:
                     interval: 30s
 
     routers:
-        # HostRegexp(`.+`) match n'importe quel Host — on est derrière un DNS qui filtre déjà.
+        # Dashboard Traefik : sous-domaine dédié (auto-cert)
         traefik-dashboard:
-            rule: "HostRegexp(`^traefik\\..+$`)"
+            rule: "Host(`traefik.aitaddajuba.fr`)"
             entryPoints: [websecure]
             service: api@internal
             middlewares: [dashboard-auth@file, security-headers@file]
@@ -38,7 +38,7 @@ http:
                 certResolver: letsencrypt
 
         contacts:
-            rule: "PathPrefix(`/api/contacts/`)"
+            rule: "(Host(`aitaddajuba.fr`) || Host(`www.aitaddajuba.fr`)) && PathPrefix(`/api/contacts/`)"
             entryPoints: [websecure]
             service: backend
             middlewares: [contact-ratelimit@file, security-headers@file]
@@ -47,7 +47,7 @@ http:
                 certResolver: letsencrypt
 
         djadmin:
-            rule: "PathPrefix(`/django-admin/`)"
+            rule: "(Host(`aitaddajuba.fr`) || Host(`www.aitaddajuba.fr`)) && PathPrefix(`/django-admin/`)"
             entryPoints: [websecure]
             service: backend
             middlewares: [admin-ratelimit@file, admin-noindex@file, cache-none@file, security-headers@file]
@@ -56,14 +56,14 @@ http:
                 certResolver: letsencrypt
 
         metrics:
-            rule: "Path(`/metrics`)"
+            rule: "(Host(`aitaddajuba.fr`) || Host(`www.aitaddajuba.fr`)) && Path(`/metrics`)"
             entryPoints: [websecure]
             service: backend
             tls:
                 certResolver: letsencrypt
 
         api:
-            rule: "PathPrefix(`/api/`)"
+            rule: "(Host(`aitaddajuba.fr`) || Host(`www.aitaddajuba.fr`)) && PathPrefix(`/api/`)"
             entryPoints: [websecure]
             service: backend
             middlewares: [api-ratelimit@file, security-headers@file, compress@file]
@@ -72,7 +72,7 @@ http:
                 certResolver: letsencrypt
 
         static:
-            rule: "PathPrefix(`/static/`) || PathPrefix(`/media/`)"
+            rule: "(Host(`aitaddajuba.fr`) || Host(`www.aitaddajuba.fr`)) && (PathPrefix(`/static/`) || PathPrefix(`/media/`))"
             entryPoints: [websecure]
             service: static-files
             middlewares: [cache-longterm@file, security-headers@file, compress@file]
@@ -81,7 +81,7 @@ http:
                 certResolver: letsencrypt
 
         nuxt-assets:
-            rule: "PathPrefix(`/_nuxt/`)"
+            rule: "(Host(`aitaddajuba.fr`) || Host(`www.aitaddajuba.fr`)) && PathPrefix(`/_nuxt/`)"
             entryPoints: [websecure]
             service: frontend
             middlewares: [cache-longterm@file, security-headers@file, compress@file]
@@ -90,7 +90,7 @@ http:
                 certResolver: letsencrypt
 
         nuxt-admin:
-            rule: "PathPrefix(`/admin`)"
+            rule: "(Host(`aitaddajuba.fr`) || Host(`www.aitaddajuba.fr`)) && PathPrefix(`/admin`)"
             entryPoints: [websecure]
             service: frontend
             middlewares: [admin-noindex@file, cache-none@file, security-headers@file, compress@file]
@@ -98,8 +98,9 @@ http:
             tls:
                 certResolver: letsencrypt
 
+        # Catch-all Nuxt : apex + www
         nuxt:
-            rule: "HostRegexp(`.+`)"
+            rule: "Host(`aitaddajuba.fr`) || Host(`www.aitaddajuba.fr`)"
             entryPoints: [websecure]
             service: frontend
             middlewares: [security-headers@file, compress@file]
