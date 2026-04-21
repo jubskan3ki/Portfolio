@@ -1,32 +1,14 @@
-# Routes Prometheus alerts to Discord via $DISCORD_WEBHOOK_URL (sops).
 global:
     resolve_timeout: 5m
 
-templates:
-    - /etc/alertmanager/templates/*.tmpl
-
 route:
-    receiver: discord-default
+    receiver: null-receiver
     group_by: [alertname, severity]
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
 
-    routes:
-        # Page severity bypasses grouping delay for fastest response.
-        - matchers:
-              - severity="page"
-          group_wait: 0s
-          repeat_interval: 30m
-          receiver: discord-page
-
-        - matchers:
-              - severity="ticket"
-          repeat_interval: 24h
-          receiver: discord-default
-
 inhibit_rules:
-    # Page mutes the slower-burn ticket alert for the same SLO.
     - source_matchers:
           - severity="page"
       target_matchers:
@@ -34,14 +16,4 @@ inhibit_rules:
       equal: [alertname, slo]
 
 receivers:
-    - name: discord-default
-      webhook_configs:
-          - url: ${DISCORD_WEBHOOK_URL}/slack
-            send_resolved: true
-            max_alerts: 5
-
-    - name: discord-page
-      webhook_configs:
-          - url: ${DISCORD_WEBHOOK_URL}/slack
-            send_resolved: true
-            max_alerts: 3
+    - name: null-receiver
