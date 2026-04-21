@@ -1,6 +1,6 @@
 """Service pour les statistiques de contact."""
 
-from typing import Any
+from typing import Any, cast
 
 from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F
 
@@ -63,5 +63,8 @@ class ContactStatsService:
     @staticmethod
     def _get_popular_subjects() -> list[dict[str, Any]]:
         """Recupere les sujets les plus populaires."""
-        subjects = Contact.objects.values("subject").annotate(count=Count("subject")).order_by("-count")[:5]
+        subjects = cast(
+            list[dict[str, Any]],
+            list(Contact.objects.values("subject").annotate(count=Count("subject")).order_by("-count")[:5]),
+        )
         return [{"subject": item["subject"], "count": item["count"]} for item in subjects]

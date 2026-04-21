@@ -41,7 +41,7 @@ class JWTCookieAuthentication(BaseAuthentication):
                 logger.warning("JWT sans session_id rejete pour user %s", user.pk)
                 return None
 
-            if not SessionManager(user.id).is_session_valid(str(session_id)):
+            if not SessionManager(user.pk).is_session_valid(str(session_id)):
                 logger.info("Session %s invalide/revoquee pour user %s", str(session_id)[:8], user.pk)
                 return None
 

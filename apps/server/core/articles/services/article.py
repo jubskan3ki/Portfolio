@@ -1,6 +1,6 @@
 """Service pour gerer les articles."""
 
-from typing import Any
+from typing import Any, cast
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -282,7 +282,8 @@ class ArticleService(BaseService["Article"]):
         else:
             filter_condition = Q(category=article.category)
 
-        queryset = (
+        queryset = cast(
+            "QuerySet[Article]",
             Article.objects.published_with_related()
             .exclude(id=article.id)
             .filter(filter_condition)
@@ -294,7 +295,7 @@ class ArticleService(BaseService["Article"]):
                 )
             )
             .order_by("-relevance", "-published_date")
-            .distinct()[:limit]
+            .distinct()[:limit],
         )
 
         return list(queryset)

@@ -89,8 +89,10 @@ class StatsService:
         years_of_experience: list[StackExperience] = []
 
         for item in stacks_with_dates:
-            months = (today.year - item["started_date"].year) * 12 + (today.month - item["started_date"].month)
-            months = max(0, months)
+            started_date = item["started_date"]
+            if started_date is None:
+                continue
+            months = max(0, (today.year - started_date.year) * 12 + (today.month - started_date.month))
             years_of_experience.append({"name": item["name"], "years": round(months / 12, 1)})
 
         # Total sur toutes les stacks (pas seulement EXPERIENCE_LIMIT)
@@ -98,7 +100,7 @@ class StatsService:
             started_date__isnull=False,
         ).values_list("started_date", flat=True)
         total_experience_months = sum(
-            max(0, (today.year - sd.year) * 12 + (today.month - sd.month)) for sd in all_started_dates
+            max(0, (today.year - sd.year) * 12 + (today.month - sd.month)) for sd in all_started_dates if sd is not None
         )
 
         return {
