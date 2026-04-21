@@ -326,6 +326,7 @@ security:trivy:image:backend:
     script:
         - trivy image
           --exit-code 1
+          --scanners vuln,misconfig
           --severity HIGH,CRITICAL
           --ignore-unfixed
           --ignorefile .trivyignore
@@ -341,6 +342,7 @@ security:trivy:image:frontend:
     script:
         - trivy image
           --exit-code 1
+          --scanners vuln,misconfig
           --severity HIGH,CRITICAL
           --ignore-unfixed
           --ignorefile .trivyignore
