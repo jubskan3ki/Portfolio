@@ -10,3 +10,5 @@
 
 # Example (remove when no longer needed):
 # CVE-2026-4539  # pygments syntax-highlighting | no fix available yet.  exp=2026-07-01
+
+CVE-2026-28390  # libssl3 HIGH dans gcr.io/distroless/nodejs24-debian12 | attente rebuild upstream Google.  exp=2026-05-21

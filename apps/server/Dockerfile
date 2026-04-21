@@ -23,6 +23,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip-compile --quiet requirements.in -o requirements.txt && \
     pip install --no-cache-dir -r requirements.txt
 
+RUN find /opt/venv/lib/python*/site-packages \
+        -type d \( -name test -o -name tests \) -prune -exec rm -rf {} +
+
 FROM python:${PYTHON_VERSION}-alpine
 ARG VCS_REF
 ARG BUILD_DATE
@@ -64,5 +67,4 @@ USER appuser
 
 EXPOSE 8000
 
-# `bootstrap` validates env, waits for Postgres, runs migrate+create_admin+collectstatic, execs gunicorn.
 CMD ["python", "manage.py", "bootstrap"]

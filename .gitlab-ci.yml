@@ -352,14 +352,15 @@ security:trivy:image:frontend:
 # SBOM (SPDX JSON) via syft, retained 1 year for downstream CVE scanning.
 .sbom_base:
     stage: sbom
-    image:
-        name: anchore/syft:latest
-        entrypoint: [""]
+    image: alpine:latest
     extends: .rules:main_or_develop
     variables:
         SYFT_REGISTRY_AUTH_AUTHORITY: $CI_REGISTRY
         SYFT_REGISTRY_AUTH_USERNAME: $CI_REGISTRY_USER
         SYFT_REGISTRY_AUTH_PASSWORD: $CI_REGISTRY_PASSWORD
+    before_script:
+        - apk add --no-cache curl ca-certificates
+        - curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
 sbom:backend:
     extends: .sbom_base
