@@ -108,7 +108,7 @@
         }
         const start = formatDate(props.startDate);
         const end = props.endDate ? formatDate(props.endDate) : props.currentText;
-        return `${start} — ${end}`;
+        return `${start} | ${end}`;
     });
 
     // Blank lines split paragraphs; single newlines become <br>. Inline markdown rendered per paragraph.

@@ -27,7 +27,7 @@ def _send_reset_password_email_task(self: Any, email: str, context: dict[str, An
     try:
         return send_reset_password_email_sync(email, context)
     except (ConnectionError, OSError) as exc:
-        logger.exception("Erreur transitoire Celery pour %s — retry", email)
+        logger.exception("Erreur transitoire Celery pour %s | retry", email)
         raise self.retry(exc=exc) from exc
     except (ValidationError, ValueError, TypeError):
         logger.exception("Erreur permanente Celery pour %s", email)
@@ -111,7 +111,7 @@ def _send_password_changed_email_task(self: Any, email: str, context: dict[str, 
     try:
         return send_password_changed_email_sync(email, context)
     except (ConnectionError, OSError) as exc:
-        logger.exception("Erreur transitoire Celery password_changed pour %s — retry", email)
+        logger.exception("Erreur transitoire Celery password_changed pour %s | retry", email)
         raise self.retry(exc=exc) from exc
     except (ValidationError, ValueError, TypeError):
         logger.exception("Erreur permanente Celery password_changed pour %s", email)

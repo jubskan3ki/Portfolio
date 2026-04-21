@@ -1,4 +1,4 @@
-# Tracing v3 (otlp, sampleRate) : en flags CLI dans docker-compose.yml — schema IDE bloque ces clés ici.
+# Tracing v3 (otlp, sampleRate) : en flags CLI dans docker-compose.yml | schema IDE bloque ces clés ici.
 global:
     checkNewVersion: false
     sendAnonymousUsage: false

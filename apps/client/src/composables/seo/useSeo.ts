@@ -7,7 +7,7 @@ import type { StackDetail } from '@/types/feature/stacks';
 
 export const SITE_CONFIG: SiteConfig = {
     name: 'Juba Ait-Adda',
-    title: 'Juba Ait-Adda — Dev Fullstack | CDI & Freelance',
+    title: 'Juba Ait-Adda | Dev Fullstack | CDI & Freelance',
     url: 'https://juba-aitadda.dev',
     defaultImage: '/og-image.png',
     locale: 'fr_FR',
@@ -51,10 +51,7 @@ const KNOWS_ABOUT = [
     'DevOps',
 ];
 
-const SAME_AS = [
-    'https://github.com/jubskan3ki',
-    'https://www.linkedin.com/in/juba-aitadda/',
-];
+const SAME_AS = ['https://github.com/jubskan3ki', 'https://www.linkedin.com/in/juba-aitadda/'];
 
 // ISO date YYYY-MM-DD, évaluée au rendu SSR pour garder JobPosting / seeks frais.
 function today(): string {
@@ -106,7 +103,7 @@ export function useSeo(options: SeoOptions) {
 
     const pageUrl = options.url?.startsWith('http') ? options.url : `${SITE_CONFIG.url}${options.url || ''}`;
 
-    const imageAlt = options.imageAlt || `${options.title} — ${SITE_CONFIG.name}`;
+    const imageAlt = options.imageAlt || `${options.title} | ${SITE_CONFIG.name}`;
 
     useSeoMeta({
         title: fullTitle,
@@ -214,7 +211,7 @@ export function useProjectSeo(project: ProjectDetail) {
         title: seoTitle,
         description: seoDescription,
         image: project.image,
-        imageAlt: `${project.title} — projet ${project.category}`,
+        imageAlt: `${project.title} | projet ${project.category}`,
         type: 'website',
         keywords: project.technologies,
         tags: project.technologies,
@@ -282,7 +279,7 @@ export function useStackSeo(stack: StackDetail) {
         title: seoTitle,
         description: seoDescription,
         image: stack.logo,
-        imageAlt: `${stack.name} — compétence technique`,
+        imageAlt: `${stack.name} | compétence technique`,
         type: 'website',
         keywords: stack.tags,
         url: `/stacks/${stack.slug}`,
@@ -440,7 +437,7 @@ export function useHomeSeo() {
 
 export function useContactSeo() {
     useSeo({
-        title: 'Me recruter — Juba Ait-Adda, Dev Fullstack Paris',
+        title: 'Me recruter | Juba Ait-Adda, Dev Fullstack Paris',
         description:
             'Recrutez Juba Ait-Adda, développeur fullstack & DevOps à Paris. Disponible en CDI ou freelance. Réponse sous 48 heures ouvrées.',
         type: 'profile',
@@ -469,7 +466,7 @@ export function useContactSeo() {
         defineWebPage({
             '@type': ['ContactPage', 'AboutPage'],
             '@id': `${contactUrl}/#page`,
-            name: 'Me recruter — Juba Ait-Adda',
+            name: 'Me recruter | Juba Ait-Adda',
             description: 'Développeur fullstack & DevOps à Paris, ouvert CDI et freelance. Contact direct.',
             mainEntity: { '@id': PERSON_ID },
         }),
@@ -496,7 +493,7 @@ export function useContactSeo() {
         {
             '@type': 'JobPosting' as const,
             '@id': `${contactUrl}/#jobposting`,
-            title: 'Développeur Fullstack Nuxt/Django — ouvert CDI & Freelance',
+            title: 'Développeur Fullstack Nuxt/Django | ouvert CDI & Freelance',
             description:
                 'Juba Ait-Adda, développeur fullstack & DevOps à Paris, est ouvert aux missions freelance et aux opportunités CDI. '
                 + 'Stack Nuxt 3, Vue 3, TypeScript, Django, Python, Docker. Remote-first, déplacements Île-de-France.',
@@ -526,7 +523,7 @@ export function useContactSeo() {
 
 export function useExperienceSeo() {
     useSeo({
-        title: 'Mon parcours — Dev Fullstack & DevOps à Paris',
+        title: 'Mon parcours | Dev Fullstack & DevOps à Paris',
         description:
             'Parcours professionnel, formations et projets associatifs de Juba Ait-Adda, développeur fullstack basé à Paris.',
         keywords: ['expérience', 'parcours', 'CV', 'formation', 'emploi', 'développeur fullstack', 'paris'],
@@ -547,7 +544,7 @@ export function useExperienceSeo() {
 
 export function useBlogSeo() {
     useSeo({
-        title: 'Blog — Dev web, DevOps & bonnes pratiques',
+        title: 'Blog | Dev web, DevOps & bonnes pratiques',
         description:
             'Articles techniques sur Nuxt, Vue, Django, Docker, CI/CD et DevOps par Juba Ait-Adda, dev fullstack à Paris. Retours d\'expérience terrain.',
         keywords: ['blog', 'articles', 'nuxt', 'vue', 'django', 'docker', 'devops', 'ci/cd'],
@@ -570,7 +567,7 @@ export function useBlogSeo() {
 
 export function useProjectsSeo() {
     useSeo({
-        title: 'Projets — Portfolio Fullstack Nuxt, Django, Docker',
+        title: 'Projets | Portfolio Fullstack Nuxt, Django, Docker',
         description:
             'Sélection de projets fullstack : applications Nuxt 3, APIs Django, plateformes DevOps. Code source public sur GitHub, démos live.',
         keywords: ['projets', 'portfolio', 'réalisations', 'nuxt 3', 'django', 'docker', 'fullstack', 'github'],
@@ -593,7 +590,7 @@ export function useProjectsSeo() {
 
 export function useStacksSeo() {
     useSeo({
-        title: 'Stacks — Nuxt, Vue, Django, Docker, CI/CD',
+        title: 'Stacks | Nuxt, Vue, Django, Docker, CI/CD',
         description:
             'Mes compétences techniques détaillées : frontend Nuxt/Vue, backend Django/Python, DevOps Docker/Ansible/Grafana/Prometheus.',
         keywords: [

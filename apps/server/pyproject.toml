@@ -82,7 +82,7 @@ select = [
     "E",      # pycodestyle errors
     "F",      # pyflakes
     "W",      # pycodestyle warnings
-    # "I",    # isort — handled by isort directly (avoids ruff/isort conflicts)
+    # "I",    # isort | handled by isort directly (avoids ruff/isort conflicts)
     "UP",     # pyupgrade
     "B",      # flake8-bugbear - bug detection
     "C4",     # flake8-comprehensions
@@ -159,7 +159,7 @@ strict_optional = true
 # Desactive les faux positifs Django
 disable_error_code = ["var-annotated", "misc", "django-manager-missing"]
 
-# Overrides par module — limites django-stubs sur les generics (.objects sur type[T])
+# Overrides par module | limites django-stubs sur les generics (.objects sur type[T])
 [[tool.mypy.overrides]]
 module = ["utils.services", "core.stats.services.stats"]
 disable_error_code = ["attr-defined"]
@@ -179,6 +179,6 @@ exclude = ["**/node_modules", "**/__pycache__", "**/migrations", ".venv", "venv"
 stubPath = "typings"
 pythonVersion = "3.14"
 typeCheckingMode = "basic"
-reportMissingImports = "none"     # packages dans Docker — pas de venv local requis
+reportMissingImports = "none"     # packages dans Docker | pas de venv local requis
 reportMissingModuleSource = "none"
 reportMissingTypeStubs = false

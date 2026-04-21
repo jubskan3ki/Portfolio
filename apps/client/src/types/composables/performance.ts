@@ -2,7 +2,7 @@
 
 import type { Ref } from 'vue';
 
-// usePrefetch — unified prefetch composable
+// usePrefetch | unified prefetch composable
 
 export interface PrefetchOptions {
     strategy: 'hover' | 'idle' | 'visible';

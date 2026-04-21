@@ -206,7 +206,7 @@
             }
         }
 
-        // Hero variant — tuned for dark/gradient hero backgrounds
+        // Hero variant | tuned for dark/gradient hero backgrounds
         &--hero {
             padding: 0;
 

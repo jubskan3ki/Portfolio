@@ -14,17 +14,15 @@
                 </div>
 
                 <div class="header__right">
-                    <ClientOnly>
-                        <ul class="header__menu" role="menubar">
-                            <NavbarItem
-                                v-for="(item, index) in navigationItems"
-                                :key="item.path"
-                                :item="item"
-                                :index="index"
-                                :is-active="isActiveRoute(item.path, route.path)"
-                            />
-                        </ul>
-                    </ClientOnly>
+                    <ul class="header__menu" role="menubar">
+                        <NavbarItem
+                            v-for="(item, index) in navigationItems"
+                            :key="item.path"
+                            :item="item"
+                            :index="index"
+                            :is-active="isActiveRoute(item.path, route.path)"
+                        />
+                    </ul>
                     <MobileMenuToggle :is-active="isMobileMenuOpen" class="header__toggle" @toggle="toggleMobileMenu" />
                 </div>
             </div>
@@ -86,12 +84,13 @@
         &__nav {
             width: 100%;
             background: func.color-alpha(vars.$white, 0.85);
-            transition: all 0.3s ease;
+            transition:
+                background-color 0.3s ease,
+                box-shadow 0.3s ease;
 
             &--scrolled {
                 background: func.color-alpha(vars.$white, 0.9);
                 backdrop-filter: blur(20px) saturate(1.2);
-                will-change: backdrop-filter;
                 box-shadow: 0 4px 24px func.color-alpha(vars.$black, 0.04);
             }
         }
@@ -166,8 +165,10 @@
             flex: 1;
             display: flex;
             justify-content: center;
+            align-items: center;
             max-width: 400px;
             min-width: 0;
+            min-height: 44px;
 
             @include mix.responsive(tablet) {
                 max-width: 280px;

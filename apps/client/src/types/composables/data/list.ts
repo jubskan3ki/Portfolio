@@ -100,7 +100,7 @@ export interface UseInfiniteScrollOptions {
     enabled?: Ref<boolean>;
 }
 
-// useDeferredMatch — resolves raw values against async-loaded items
+// useDeferredMatch | resolves raw values against async-loaded items
 
 export interface UseDeferredMatchOptions<TItem, TRaw = unknown> {
     /** Reactive source of loaded items (e.g. categories, tags from API) */

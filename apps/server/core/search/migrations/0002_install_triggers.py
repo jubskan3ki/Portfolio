@@ -2,7 +2,7 @@
 
 Chaque table a une fonction et un trigger dedies qui calculent le tsvector
 avec des poids A/B/C selon le type de champ (titre > secondaire > tertiaire).
-Couvre bulk_create / bulk_update / raw SQL — zero risque d'out-of-sync.
+Couvre bulk_create / bulk_update / raw SQL | zero risque d'out-of-sync.
 """
 
 from django.db import migrations

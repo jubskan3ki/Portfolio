@@ -131,7 +131,7 @@ class ImportJob(models.Model):
                 {
                     "row": 0,
                     "field": "_truncated",
-                    "message": f"Trop d'erreurs — seules les {self.MAX_STORED_ERRORS} premieres sont affichees.",
+                    "message": f"Trop d'erreurs | seules les {self.MAX_STORED_ERRORS} premieres sont affichees.",
                 }
             )
         self.errors = errors_list

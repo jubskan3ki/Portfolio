@@ -20,16 +20,11 @@
 
             <blockquote v-else-if="block.type === 'blockquote'" class="article-blocks__quote">
                 <SafeHtml tag="p" :html="inline(block.content)" />
-                <cite v-if="block.cite" class="article-blocks__quote-cite"> — {{ block.cite }} </cite>
+                <cite v-if="block.cite" class="article-blocks__quote-cite"> | {{ block.cite }} </cite>
             </blockquote>
 
             <figure v-else-if="block.type === 'image'" class="article-blocks__figure">
-                <BaseImage
-                    :src="block.src"
-                    :alt="block.alt"
-                    object-fit="cover"
-                    class="article-blocks__figure-img"
-                />
+                <BaseImage :src="block.src" :alt="block.alt" object-fit="cover" class="article-blocks__figure-img" />
                 <figcaption v-if="block.caption" class="article-blocks__figure-caption">
                     {{ block.caption }}
                 </figcaption>

@@ -51,5 +51,5 @@ class TestStackQuerySet:
 
         stack = Stack.objects.with_related().first()
 
-        # Should not raise — related fields are prefetched
+        # Should not raise | related fields are prefetched
         assert stack.category is not None

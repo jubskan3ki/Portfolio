@@ -320,7 +320,7 @@
                 await contactApi.markAsRead(String(message.id));
                 message.isRead = true;
             } catch {
-                // Echec silencieux — le marquage comme lu est non-critique
+                // Echec silencieux | le marquage comme lu est non-critique
             }
         }
 

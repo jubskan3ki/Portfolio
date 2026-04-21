@@ -74,7 +74,7 @@ export interface UseFetchEntityReturn<TEntity> {
     fetchData: (id: string | undefined) => Promise<TEntity | null>;
 }
 
-// useForm — high-level composable orchestrating state, mutation, preview & raw values
+// useForm | high-level composable orchestrating state, mutation, preview & raw values
 
 export interface FormContext<TForm extends Record<string, unknown>> {
     setFieldValue: <K extends keyof TForm>(field: K, value: TForm[K]) => void;
@@ -86,7 +86,7 @@ export interface UseFormOptions<TForm extends Record<string, unknown>, TEntity =
     /** Initial form values */
     initialValues: TForm;
 
-    /** Validation function — returns field-level errors */
+    /** Validation function | returns field-level errors */
     validate?: (values: TForm) => Partial<Record<string, string>>;
 
     /** API methods */
@@ -111,7 +111,7 @@ export interface UseFormOptions<TForm extends Record<string, unknown>, TEntity =
     /** Build the payload to submit */
     buildPayload: (form: UnwrapRef<TForm>, ctx: { isEditMode: boolean }) => FormData | TForm;
 
-    /** Entity ID — if provided and truthy, enables edit mode */
+    /** Entity ID | if provided and truthy, enables edit mode */
     id?: MaybeRef<string | undefined>;
 
     /** Error messages */

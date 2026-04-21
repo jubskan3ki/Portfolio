@@ -17,11 +17,14 @@ const stubs = {
     }),
     BaseLink: defineComponent({
         props: ['to'],
-        setup: (p, { slots }) => () => h('a', { href: p.to }, slots.default?.()),
+        setup:
+            (p, { slots }) =>
+            () =>
+                h('a', { href: p.to }, slots.default?.()),
     }),
 };
 
-describe('ContactInfos — rendering driven by site settings (same source as footer)', () => {
+describe('ContactInfos | rendering driven by site settings (same source as footer)', () => {
     it('renders address, email, phone and social links when settings are populated', () => {
         const wrapper = mount(ContactInfos, {
             props: {
@@ -60,7 +63,7 @@ describe('ContactInfos — rendering driven by site settings (same source as foo
     });
 });
 
-describe('useSiteSettings — shared source of truth feeding both footer and contact-infos', () => {
+describe('useSiteSettings | shared source of truth feeding both footer and contact-infos', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
         vi.resetModules();
@@ -69,7 +72,11 @@ describe('useSiteSettings — shared source of truth feeding both footer and con
     it('maps the contact info API response to the shape consumed by footer and contact-infos', async () => {
         vi.stubGlobal(
             'useAsyncData',
-            async (_key: string, handler: () => Promise<unknown>, options: { transform?: (v: unknown) => unknown; default?: () => unknown }) => {
+            async (
+                _key: string,
+                handler: () => Promise<unknown>,
+                options: { transform?: (v: unknown) => unknown; default?: () => unknown },
+            ) => {
                 const raw = (await handler()) ?? options?.default?.();
                 const value = options?.transform ? options.transform(raw) : raw;
                 return {
@@ -111,7 +118,11 @@ describe('useSiteSettings — shared source of truth feeding both footer and con
     it('falls back to the hardcoded defaults when the API returns no data (no empty placeholders)', async () => {
         vi.stubGlobal(
             'useAsyncData',
-            async (_key: string, _handler: () => Promise<unknown>, options: { transform?: (v: unknown) => unknown }) => ({
+            async (
+                _key: string,
+                _handler: () => Promise<unknown>,
+                options: { transform?: (v: unknown) => unknown },
+            ) => ({
                 data: ref(options?.transform ? options.transform(null) : null),
                 refresh: vi.fn(),
                 pending: ref(false),

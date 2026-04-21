@@ -17,7 +17,7 @@ docs/
 backups/
 Data/
 
-# Secrets — NEVER ship these in an image.
+# Secrets | NEVER ship these in an image.
 .env
 .env.*
 !.env.example

@@ -92,7 +92,7 @@
     const displayedTags = computed(() => tagInfo.value.displayed);
     const remainingTagsCount = computed(() => tagInfo.value.remaining);
 
-    // Level configuration — single source of truth
+    // Level configuration | single source of truth
     const LEVEL_CONFIG = [
         { min: 5, label: 'Expert', badge: 'stack-card__level-badge--expert', color: 'level-expert' },
         { min: 4, label: 'Avancé', badge: 'stack-card__level-badge--advanced', color: 'level-advanced' },

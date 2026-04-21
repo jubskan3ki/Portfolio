@@ -41,107 +41,110 @@
                         </div>
                     </div>
 
-                    <Transition name="slide-fade" mode="out-in">
-                        <div v-if="isLoading" key="loader" class="blog-loader">
-                            <SkeletonList
-                                :count="6"
-                                variant="article"
-                                layout="grid"
-                                :columns="2"
-                                show-image
-                                show-description
-                            />
-                        </div>
-
-                        <EmptyState
-                            v-else-if="hasError"
-                            key="error"
-                            icon="alert-circle"
-                            title="Erreur de chargement"
-                            description="Impossible de charger les articles. Veuillez réessayer."
-                            size="lg"
-                            custom-class="blog-empty-state"
-                        >
-                            <template #action>
-                                <BaseButton
-                                    label="Réessayer"
-                                    icon="refresh-cw"
-                                    variant="primary"
-                                    @click="handleRetry"
-                                />
-                            </template>
-                        </EmptyState>
-
-                        <EmptyState
-                            v-else-if="!hasArticles"
-                            key="empty"
-                            icon="file-text"
-                            :title="emptyStateTitle"
-                            :description="emptyStateDescription"
-                            size="lg"
-                            custom-class="blog-empty-state"
-                        >
-                            <template v-if="hasActiveFilters" #action>
-                                <BaseButton
-                                    label="Réinitialiser les filtres"
-                                    icon="x"
-                                    variant="secondary"
-                                    @click="resetFilters"
-                                />
-                            </template>
-                        </EmptyState>
-
-                        <div v-else class="blog-content">
-                            <div
-                                class="articles-grid"
-                                :class="{ 'articles-grid--fetching': isFilterFetching }"
-                            >
-                                <ArticleCard
-                                    v-for="(article, index) in articles"
-                                    :key="article.id"
-                                    :article="article"
-                                    class="articles-grid__item"
-                                    :style="{ '--article-index': prefersReducedMotion ? 0 : index }"
+                    <div class="blog-transition">
+                        <Transition name="slide-fade">
+                            <div v-if="isLoading" key="loader" class="blog-loader">
+                                <SkeletonList
+                                    :count="6"
+                                    variant="article"
+                                    layout="grid"
+                                    :columns="2"
+                                    show-image
+                                    show-description
                                 />
                             </div>
 
-                            <Pagination
-                                v-if="totalPages > 1"
-                                :current-page="currentPage"
-                                :total-pages="totalPages"
-                                class="blog-pagination"
-                                @update:current-page="handlePageChange"
-                            />
-                        </div>
-                    </Transition>
+                            <LazyEmptyState
+                                v-else-if="hasError"
+                                key="error"
+                                icon="alert-circle"
+                                title="Erreur de chargement"
+                                description="Impossible de charger les articles. Veuillez réessayer."
+                                size="lg"
+                                custom-class="blog-empty-state"
+                            >
+                                <template #action>
+                                    <LazyBaseButton
+                                        label="Réessayer"
+                                        icon="refresh-cw"
+                                        variant="primary"
+                                        @click="handleRetry"
+                                    />
+                                </template>
+                            </LazyEmptyState>
+
+                            <LazyEmptyState
+                                v-else-if="!hasArticles"
+                                key="empty"
+                                icon="file-text"
+                                :title="emptyStateTitle"
+                                :description="emptyStateDescription"
+                                size="lg"
+                                custom-class="blog-empty-state"
+                            >
+                                <template v-if="hasActiveFilters" #action>
+                                    <LazyBaseButton
+                                        label="Réinitialiser les filtres"
+                                        icon="x"
+                                        variant="secondary"
+                                        @click="resetFilters"
+                                    />
+                                </template>
+                            </LazyEmptyState>
+
+                            <div v-else class="blog-content">
+                                <div class="articles-grid" :class="{ 'articles-grid--fetching': isFilterFetching }">
+                                    <ArticleCard
+                                        v-for="(article, index) in articles"
+                                        :key="article.id"
+                                        :article="article"
+                                        class="articles-grid__item"
+                                        :style="{ '--article-index': prefersReducedMotion ? 0 : index }"
+                                    />
+                                </div>
+
+                                <LazyPagination
+                                    v-if="totalPages > 1"
+                                    :current-page="currentPage"
+                                    :total-pages="totalPages"
+                                    class="blog-pagination"
+                                    @update:current-page="handlePageChange"
+                                />
+                            </div>
+                        </Transition>
+                    </div>
                 </div>
 
                 <aside class="blog-sidebar">
-                    <LazyArticlePopular :articles="popularArticles" title="Articles populaires" show-title />
+                    <div class="blog-sidebar__slot blog-sidebar__slot--popular">
+                        <LazyArticlePopular :articles="popularArticles" title="Articles populaires" show-title />
+                    </div>
 
-                    <LazyArticleCategories
-                        v-if="categories?.length"
-                        v-model="selectedCategory"
-                        :categories="categoriesWithAll"
-                        :max-visible="8"
-                        title="Catégories"
-                    />
+                    <div v-if="categories?.length" class="blog-sidebar__slot blog-sidebar__slot--categories">
+                        <LazyArticleCategories
+                            v-model="selectedCategory"
+                            :categories="categoriesWithAll"
+                            :max-visible="8"
+                            title="Catégories"
+                        />
+                    </div>
 
-                    <LazyArticleTags
-                        v-if="tags?.length"
-                        v-model="selectedTags"
-                        :tags="tags"
-                        :max-visible="10"
-                        title="Tags"
-                        show-title
-                        display="cloud"
-                        multi-select
-                    />
+                    <div v-if="tags?.length" class="blog-sidebar__slot blog-sidebar__slot--tags">
+                        <LazyArticleTags
+                            v-model="selectedTags"
+                            :tags="tags"
+                            :max-visible="10"
+                            title="Tags"
+                            show-title
+                            display="cloud"
+                            multi-select
+                        />
+                    </div>
                 </aside>
             </div>
         </Main>
 
-        <CTA
+        <LazyCTA
             title="Découvrez mes projets"
             description="Explorez mes réalisations et les stacks que j'utilise."
             variant="secondary"
@@ -154,15 +157,11 @@
 <script setup lang="ts">
     import { computed, watch } from 'vue';
 
-    import BaseButton from '@/components/base/BaseButton.vue';
     import BaseSelect from '@/components/base/BaseSelect.vue';
     import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
     import StatCard from '@/components/feature/home/StatCard.vue';
-    import EmptyState from '@/components/feedback/EmptyState.vue';
     import Main from '@/components/layouts/Main.vue';
     import SkeletonList from '@/components/loaders/SkeletonList.vue';
-    import Pagination from '@/components/navigation/Pagination.vue';
-    import CTA from '@/components/ui/CTA.vue';
     import Hero from '@/components/ui/Hero.vue';
     import SearchInput from '@/components/ui/search/SearchInput.vue';
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
@@ -240,11 +239,15 @@
     const articleListItems = computed(() =>
         articles.value.map((a) => ({ name: a.title, url: `/blog/${a.slug}`, image: a.image })),
     );
-    watch(articleListItems, (items) => {
-        if (items.length) {
-            useItemListSeo({ items: articleListItems });
-        }
-    }, { immediate: true });
+    watch(
+        articleListItems,
+        (items) => {
+            if (items.length) {
+                useItemListSeo({ items: articleListItems });
+            }
+        },
+        { immediate: true },
+    );
     const hasArticles = computed(() => (articles.value?.length ?? 0) > 0);
     const isFilterFetching = computed(() => isFetching.value && hasArticles.value && !isLoading.value);
 
@@ -327,14 +330,25 @@
 
     .blog-main {
         min-width: 0;
-        min-height: 1200px;
+    }
+
+    .blog-transition {
+        position: relative;
+        min-height: 1400px;
+        contain: layout;
 
         @include mix.responsive(tablet) {
-            min-height: 1600px;
+            min-height: 1700px;
         }
 
         @include mix.responsive(mobile) {
-            min-height: 1800px;
+            min-height: 2600px;
+        }
+
+        > .slide-fade-leave-active {
+            position: absolute;
+            inset: 0;
+            width: 100%;
         }
     }
 
@@ -343,16 +357,29 @@
         flex-direction: column;
         gap: vars.$spacing-lg;
 
-        > :deep(*) {
+        &__slot {
             background: fn.color-alpha(vars.$white, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid fn.color-alpha(vars.$border-color, 0.3);
             border-radius: vars.$border-radius-xl;
             box-shadow: 0 4px 16px fn.color-alpha(vars.$black, 0.04);
             transition: box-shadow 0.3s ease;
+            contain: layout paint;
 
             &:hover {
                 box-shadow: 0 6px 24px fn.color-alpha(vars.$black, 0.07);
+            }
+
+            &--popular {
+                min-height: 420px;
+            }
+
+            &--categories {
+                min-height: 260px;
+            }
+
+            &--tags {
+                min-height: 220px;
             }
         }
 
@@ -363,6 +390,17 @@
 
         @include mix.responsive(mobile) {
             grid-template-columns: 1fr;
+
+            .blog-sidebar__slot {
+                &--popular {
+                    min-height: 380px;
+                }
+
+                &--categories,
+                &--tags {
+                    min-height: 180px;
+                }
+            }
         }
     }
 
@@ -426,6 +464,7 @@
         grid-template-columns: repeat(2, 1fr);
         gap: vars.$spacing-lg;
         transition: opacity 0.2s ease;
+        contain: layout paint;
 
         @include mix.responsive(mobile) {
             grid-template-columns: 1fr;
@@ -438,6 +477,7 @@
 
         &__item {
             opacity: 0;
+            will-change: opacity, transform;
             animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             animation-delay: calc(var(--article-index, 0) * 60ms);
         }
@@ -461,26 +501,14 @@
         }
     }
 
-    .slide-fade-enter-active {
-        transition:
-            opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-            transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
+    .slide-fade-enter-active,
     .slide-fade-leave-active {
-        transition:
-            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: opacity 0.25s ease;
     }
 
-    .slide-fade-enter-from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
+    .slide-fade-enter-from,
     .slide-fade-leave-to {
         opacity: 0;
-        transform: translateY(-10px);
     }
 
     @media (prefers-reduced-motion: reduce) {

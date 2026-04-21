@@ -297,7 +297,7 @@
             authStore.setUser(profile);
             await navigateTo(redirectUrl.value, { replace: true });
         } catch {
-            // Not authenticated — stay on login page
+            // Not authenticated | stay on login page
         }
     });
 </script>

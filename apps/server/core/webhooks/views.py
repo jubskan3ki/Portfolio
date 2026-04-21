@@ -59,7 +59,7 @@ class WebhookViewSet(BaseAPIViewSet):
             "webhook_id": webhook.id,
         }
 
-        # Create and send delivery directly to this webhook — bypass dispatch()
+        # Create and send delivery directly to this webhook | bypass dispatch()
         # because "test.ping" is not a real WebhookEventType and for_event()
         # would never match.
         first_event = webhook.events[0] if webhook.events else "article.created"

@@ -51,7 +51,7 @@ export default defineCachedEventHandler(
 
         const feed = {
             version: 'https://jsonfeed.org/version/1.1',
-            title: `${siteName} — Blog`,
+            title: `${siteName} | Blog`,
             description: siteDescription,
             home_page_url: `${siteUrl}/blog`,
             feed_url: `${siteUrl}/feed.json`,

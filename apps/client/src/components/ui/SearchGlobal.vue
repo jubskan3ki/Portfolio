@@ -26,11 +26,7 @@
                     >
                         <div class="search-global__section-head">
                             <span class="search-global__section-title">Récents</span>
-                            <button
-                                type="button"
-                                class="search-global__section-action"
-                                @click="clearHistory"
-                            >
+                            <button type="button" class="search-global__section-action" @click="clearHistory">
                                 Effacer
                             </button>
                         </div>
@@ -145,11 +141,7 @@
         SearchEmptyState,
         SearchFooter,
     } from '@/components/ui/search';
-    import {
-        useGlobalSearch,
-        type SearchResult,
-        type SearchResultType,
-    } from '@/composables/data/useGlobalSearch';
+    import { useGlobalSearch, type SearchResult, type SearchResultType } from '@/composables/data/useGlobalSearch';
     import { useSearchActions, type SearchAction } from '@/composables/data/useSearchActions';
     import { useSearchHistory, type HistoryItem } from '@/composables/data/useSearchHistory';
     import { useClickOutside } from '@/composables/ui/useClickOutside';
@@ -184,13 +176,7 @@
         getSelectedResult,
     } = useGlobalSearch({ mode: props.mode });
 
-    const {
-        queries: recentQueries,
-        items: recentItems,
-        recordQuery,
-        recordItem,
-        clearHistory,
-    } = useSearchHistory();
+    const { queries: recentQueries, items: recentItems, recordQuery, recordItem, clearHistory } = useSearchHistory();
 
     const { actions, run: runActionImperative } = useSearchActions();
 
@@ -294,7 +280,7 @@
         }
     };
 
-    // Open whenever the input is focused — the palette shows recents + actions
+    // Open whenever the input is focused | the palette shows recents + actions
     // when empty, results when not.
     const onFocus = () => {
         isOpen.value = true;
@@ -328,31 +314,26 @@
 
     // Live-region announcement: result count once results settle.
     const announcement = ref('');
-    watch(
-        [isOpen, isLoading, hasResults, totalResults, isEmptyQuery],
-        () => {
-            if (!isOpen.value) {
-                announcement.value = '';
-                return;
+    watch([isOpen, isLoading, hasResults, totalResults, isEmptyQuery], () => {
+        if (!isOpen.value) {
+            announcement.value = '';
+            return;
+        }
+        if (isEmptyQuery.value) {
+            const parts: string[] = [];
+            if (recentQueries.value.length) {
+                parts.push(`${recentQueries.value.length} recherche(s) récente(s)`);
             }
-            if (isEmptyQuery.value) {
-                const parts: string[] = [];
-                if (recentQueries.value.length) {
-                    parts.push(`${recentQueries.value.length} recherche(s) récente(s)`);
-                }
-                parts.push(`${actions.value.length} actions disponibles`);
-                announcement.value = parts.join(', ');
-                return;
-            }
-            if (isLoading.value) {
-                announcement.value = 'Recherche en cours';
-                return;
-            }
-            announcement.value = hasResults.value
-                ? `${totalResults.value} résultat(s) trouvé(s)`
-                : 'Aucun résultat';
-        },
-    );
+            parts.push(`${actions.value.length} actions disponibles`);
+            announcement.value = parts.join(', ');
+            return;
+        }
+        if (isLoading.value) {
+            announcement.value = 'Recherche en cours';
+            return;
+        }
+        announcement.value = hasResults.value ? `${totalResults.value} résultat(s) trouvé(s)` : 'Aucun résultat';
+    });
 
     useClickOutside(containerRef, close);
 
@@ -509,7 +490,9 @@
             font-size: v.$font-size-xs;
             padding: 2px v.$spacing-xs;
             border-radius: v.$border-radius-sm;
-            transition: color v.$transition-fast, background v.$transition-fast;
+            transition:
+                color v.$transition-fast,
+                background v.$transition-fast;
 
             &:hover,
             &:focus-visible {

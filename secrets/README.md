@@ -1,6 +1,6 @@
 # Encrypted secrets
 
-This directory holds `sops`-encrypted secret files — one per deployment env.
+This directory holds `sops`-encrypted secret files | one per deployment env.
 Layout:
 
 ```

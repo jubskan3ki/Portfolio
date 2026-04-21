@@ -44,7 +44,7 @@ class AllowAnonymousCreate(permissions.BasePermission):
 
 
 class ThrottledAnonymousCreate(AllowAnonymousCreate):
-    """AllowAnonymousCreate with IP abuse detection — blocks after threshold."""
+    """AllowAnonymousCreate with IP abuse detection | blocks after threshold."""
 
     ABUSE_THRESHOLD = 20
     BLOCK_DURATION = 86400  # 24h

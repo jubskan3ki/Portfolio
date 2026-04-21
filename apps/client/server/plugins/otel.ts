@@ -18,10 +18,8 @@ export default defineNitroPlugin(async () => {
         const semconv: any = await import('@opentelemetry/semantic-conventions');
 
         const attributes = {
-            [semconv.ATTR_SERVICE_NAME ?? 'service.name']:
-                process.env.OTEL_SERVICE_NAME || 'portfolio-frontend',
-            [semconv.ATTR_SERVICE_VERSION ?? 'service.version']:
-                process.env.DEPLOYMENT_IMAGE_TAG || 'dev',
+            [semconv.ATTR_SERVICE_NAME ?? 'service.name']: process.env.OTEL_SERVICE_NAME || 'portfolio-frontend',
+            [semconv.ATTR_SERVICE_VERSION ?? 'service.version']: process.env.DEPLOYMENT_IMAGE_TAG || 'dev',
             'deployment.environment': process.env.DJANGO_ENV || 'dev',
         };
         // Shim: resourceFromAttributes (v2.x) vs new Resource (v1.x).
@@ -59,6 +57,6 @@ export default defineNitroPlugin(async () => {
         process.on('SIGINT', shutdown);
     } catch (err) {
         // eslint-disable-next-line no-console
-        console.warn('[otel] SDK not available — running uninstrumented.', err);
+        console.warn('[otel] SDK not available | running uninstrumented.', err);
     }
 });

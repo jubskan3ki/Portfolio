@@ -1,10 +1,11 @@
-# Bench (k6) — charge + détection de régression perf
+# Bench (k6) | charge + détection de régression perf
 
 Scénarios :
-- `browse.js` — parcours home → projects → detail, 50 VU 2 min (charge réaliste).
-- `contact.js` — forme `POST /api/contacts/` pendant 30s avec 10 VU (teste le
-  rate-limit contact — doit bloquer après 3 req/min).
-- `sustained.js` — 5 VU pendant 15 min (détecte les fuites mémoire sur la durée).
+
+- `browse.js` | parcours home → projects → detail, 50 VU 2 min (charge réaliste).
+- `contact.js` | forme `POST /api/contacts/` pendant 30s avec 10 VU (teste le
+  rate-limit contact | doit bloquer après 3 req/min).
+- `sustained.js` | 5 VU pendant 15 min (détecte les fuites mémoire sur la durée).
 
 ## Local
 
@@ -31,6 +32,7 @@ ou directement via la datasource Prometheus (métriques `k6_http_req_*`).
 ## Seuils
 
 Tous les scripts ont des `thresholds` k6 qui bloquent si dépassés :
+
 - `http_req_failed < 1%`
 - `http_req_duration p(95) < 500ms`
 - `contact_rate_limited > 10` (prouve que le rate-limit Traefik fonctionne)

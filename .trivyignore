@@ -9,4 +9,4 @@
 # (fix upstream, bump dep, re-evaluate) and bounded in time.
 
 # Example (remove when no longer needed):
-# CVE-2026-4539  # pygments syntax-highlighting — no fix available yet.  exp=2026-07-01
+# CVE-2026-4539  # pygments syntax-highlighting | no fix available yet.  exp=2026-07-01

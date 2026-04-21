@@ -23,7 +23,7 @@ test.describe('colophon page', () => {
         await expect(metricsHeading).toBeVisible();
 
         // Either the metrics rendered (rare on a cold preview) or the fallback
-        // appeared — both are acceptable; assert one of them is present.
+        // appeared | both are acceptable; assert one of them is present.
         const fallback = page.getByText(/ne sont pas disponibles|Chargement des métriques/i);
         const metricCards = page.locator('.colophon-metric');
 

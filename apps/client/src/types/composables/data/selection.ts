@@ -51,7 +51,7 @@ export interface UseBulkDeleteConfirmationReturn<T> {
     execute: () => Promise<BulkDeleteResult>;
 }
 
-// useBulkDelete (composable-level — wraps both deletion flows)
+// useBulkDelete (composable-level | wraps both deletion flows)
 
 export interface UseBulkDeleteOptions<T extends { id: number | string }> {
     deleteFn: (item: T) => Promise<void>;

@@ -18,14 +18,14 @@
                 <div class="metric">
                     <span class="metric-label">Disponibilité 30 j</span>
                     <span class="metric-value">
-                        {{ data.uptime_30d_pct !== null ? data.uptime_30d_pct.toFixed(3) + ' %' : '—' }}
+                        {{ data.uptime_30d_pct !== null ? data.uptime_30d_pct.toFixed(3) + ' %' : '|' }}
                     </span>
                     <span class="metric-target">SLO {{ (data.slo_targets.availability * 100).toFixed(1) }} %</span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">Disponibilité 24 h</span>
                     <span class="metric-value">
-                        {{ data.uptime_1d_pct !== null ? data.uptime_1d_pct.toFixed(3) + ' %' : '—' }}
+                        {{ data.uptime_1d_pct !== null ? data.uptime_1d_pct.toFixed(3) + ' %' : '|' }}
                     </span>
                 </div>
                 <div class="metric">
@@ -34,7 +34,7 @@
                         {{
                             data.latency_p95_seconds !== null
                                 ? (data.latency_p95_seconds * 1000).toFixed(0) + ' ms'
-                                : '—'
+                                : '|'
                         }}
                     </span>
                     <span class="metric-target">
@@ -109,7 +109,7 @@
     });
 
     useSeoMeta({
-        title: 'Status — Portfolio',
+        title: 'Status | Portfolio',
         description: 'Disponibilité et performance en temps réel.',
         robots: 'noindex, nofollow',
     });

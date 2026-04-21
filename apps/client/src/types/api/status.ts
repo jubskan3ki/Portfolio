@@ -1,4 +1,4 @@
-// Public status payload — served by the backend on /api/public/status/
+// Public status payload | served by the backend on /api/public/status/
 
 export interface ServiceStatus {
     name: string;

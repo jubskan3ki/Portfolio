@@ -3,7 +3,7 @@
 from config.settings.base import DEBUG
 
 REST_FRAMEWORK = {
-    # DecimalField -> JSON number (pas string) — évite le wrning Vue prop type.
+    # DecimalField -> JSON number (pas string) | évite le wrning Vue prop type.
     "COERCE_DECIMAL_TO_STRING": False,
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "utils.security.jwt_cookie_auth.JWTCookieAuthentication",

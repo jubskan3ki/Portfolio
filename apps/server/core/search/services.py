@@ -135,7 +135,7 @@ class SearchService:
         if not raw_tsquery:
             return []
         search_query = SearchQuery(raw_tsquery, config=SEARCH_CONFIG_NAME, search_type="raw")
-        # SearchHeadline a besoin d'une tsquery qui match le texte en clair — on en
+        # SearchHeadline a besoin d'une tsquery qui match le texte en clair | on en
         # construit une seconde version `plain` pour conserver le highlighting propre.
         headline_query = SearchQuery(self.query, config=SEARCH_CONFIG_NAME, search_type="plain")
         headline_field = config["headline_field"]

@@ -88,7 +88,7 @@
         }
 
         if (import.meta.dev) {
-            console.warn(`[BaseIcon] Icon "${name}" not found — check src/config/icons.ts`);
+            console.warn(`[BaseIcon] Icon "${name}" not found | check src/config/icons.ts`);
         }
         return fallbackIcon as Component;
     });

@@ -19,7 +19,7 @@ CSRF_TRUSTED_ORIGINS = [
     f"https://{host}" for host in ALLOWED_HOSTS if host not in ["localhost", "127.0.0.1", "backend", "*"]
 ]
 
-# CORS explicit in dev too — surfaces misconfiguration early.
+# CORS explicit in dev too | surfaces misconfiguration early.
 CORS_ALLOW_ALL_ORIGINS = False
 
 _DEV_ORIGINS = [

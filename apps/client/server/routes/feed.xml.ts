@@ -76,7 +76,7 @@ ${categories}
         const feed = `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>${siteUrl}/</id>
-    <title>${escapeXml(siteName)} — Blog</title>
+    <title>${escapeXml(siteName)} | Blog</title>
     <subtitle>${escapeXml(siteDescription)}</subtitle>
     <link rel="self" type="application/atom+xml" href="${siteUrl}/feed.xml"/>
     <link rel="alternate" type="text/html" href="${siteUrl}/blog"/>

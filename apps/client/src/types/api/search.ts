@@ -1,4 +1,4 @@
-// Unified search API types — FTS PostgreSQL multi-entity
+// Unified search API types | FTS PostgreSQL multi-entity
 
 export interface UnifiedSearchItem {
     type: 'article' | 'project' | 'stack' | 'experience';

@@ -47,7 +47,7 @@ export default defineNuxtConfig({
 
     app: {
         head: {
-            title: 'Juba Ait-Adda — Dev Fullstack | CDI & Freelance',
+            title: 'Juba Ait-Adda | Dev Fullstack | CDI & Freelance',
             htmlAttrs: {
                 lang: 'fr',
             },
@@ -82,8 +82,8 @@ export default defineNuxtConfig({
                 { rel: 'mask-icon', href: '/favicon.svg', color: '#1a1a2e' },
                 { rel: 'apple-touch-icon', href: '/logo.png' },
                 { rel: 'preconnect', href: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000' },
-                { rel: 'alternate', type: 'application/atom+xml', title: 'Blog — Atom', href: '/feed.xml' },
-                { rel: 'alternate', type: 'application/feed+json', title: 'Blog — JSON Feed', href: '/feed.json' },
+                { rel: 'alternate', type: 'application/atom+xml', title: 'Blog | Atom', href: '/feed.xml' },
+                { rel: 'alternate', type: 'application/feed+json', title: 'Blog | JSON Feed', href: '/feed.json' },
                 { rel: 'me', href: 'https://github.com/jubskan3ki' },
                 { rel: 'me', href: 'https://www.linkedin.com/in/juba-aitadda/' },
                 { rel: 'author', href: '/humans.txt', type: 'text/plain' },
@@ -392,7 +392,7 @@ export default defineNuxtConfig({
         injectRegister: 'auto',
         strategies: 'generateSW',
         manifest: {
-            name: 'Juba Ait-Adda — Portfolio',
+            name: 'Juba Ait-Adda | Portfolio',
             short_name: 'Juba A.',
             description: 'Portfolio de Juba Ait-Adda, développeur full-stack et DevOps',
             theme_color: '#1a1a2e',
@@ -462,7 +462,7 @@ export default defineNuxtConfig({
         },
     },
 
-    // Security headers — replaces manual headers in routeRules.
+    // Security headers | replaces manual headers in routeRules.
     security: {
         headers: {
             contentSecurityPolicy: false,

@@ -52,7 +52,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "API Availability — 1 day (SLO 99.5%)",
+            "title": "API Availability | 1 day (SLO 99.5%)",
             "type": "stat"
         },
         {
@@ -86,7 +86,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "API Latency p95 — 5m (SLO < 0.3s)",
+            "title": "API Latency p95 | 5m (SLO < 0.3s)",
             "type": "stat"
         },
         {
@@ -120,7 +120,7 @@
                     "refId": "A"
                 }
             ],
-            "title": "Error Budget Burn — 1h (page > 14.4x)",
+            "title": "Error Budget Burn | 1h (page > 14.4x)",
             "type": "stat"
         },
         {
@@ -152,7 +152,7 @@
                 { "expr": "slo:api_availability:ratio_rate1d", "legendFormat": "1d", "refId": "C" },
                 { "expr": "slo:api_availability:ratio_rate3d", "legendFormat": "3d", "refId": "D" }
             ],
-            "title": "Availability — multi-window (SLO 0.995)",
+            "title": "Availability | multi-window (SLO 0.995)",
             "type": "timeseries"
         },
         {
@@ -213,7 +213,7 @@
     "time": { "from": "now-24h", "to": "now" },
     "timepicker": {},
     "timezone": "browser",
-    "title": "SLO — API Availability & Latency",
+    "title": "SLO | API Availability & Latency",
     "uid": "slo-api",
     "version": 1,
     "weekStart": ""

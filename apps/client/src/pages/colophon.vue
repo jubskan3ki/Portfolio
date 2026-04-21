@@ -1,11 +1,6 @@
 <template>
     <div class="colophon-page">
-        <Hero
-            title="Colophon"
-            :description="heroDescription"
-            variant="secondary"
-            badge="meta"
-        />
+        <Hero title="Colophon" :description="heroDescription" variant="secondary" badge="meta" />
 
         <Main variant="default" size="large">
             <section class="colophon-section" aria-labelledby="stack-title">
@@ -92,7 +87,7 @@
     import type { StackGroup } from '@/types/pages/colophon';
 
     const heroDescription
-        = 'La stack, les choix techniques et les métriques de ce portfolio — '
+        = 'La stack, les choix techniques et les métriques de ce portfolio | '
             + 'pour que vous puissiez juger le code avant de juger le CV.';
 
     useSeo({
@@ -170,7 +165,10 @@
         TTFB: { desc: 'Time to First Byte', goodMs: 800, poorMs: 1800, unit: 'ms' },
     };
 
-    interface VitalSummary { name: string; p75: number }
+    interface VitalSummary {
+        name: string;
+        p75: number;
+    }
     const vitals = ref<VitalSummary[] | null>(null);
     const vitalsError = ref(false);
     const vitalsReady = computed(() => vitals.value !== null);
@@ -182,7 +180,7 @@
             if (!res.ok) {
                 throw new Error(`status ${res.status}`);
             }
-            const data = await res.json() as { metrics?: VitalSummary[] };
+            const data = (await res.json()) as { metrics?: VitalSummary[] };
             vitals.value = data.metrics ?? [];
         } catch {
             vitalsError.value = true;
@@ -324,9 +322,15 @@
         background: fn.color-alpha(vars.$white, 0.95);
         border: 1px solid fn.color-alpha(vars.$border-color, 0.4);
 
-        &--good { border-left: 4px solid vars.$success-color; }
-        &--ni   { border-left: 4px solid vars.$warning-color; }
-        &--poor { border-left: 4px solid vars.$danger-color; }
+        &--good {
+            border-left: 4px solid vars.$success-color;
+        }
+        &--ni {
+            border-left: 4px solid vars.$warning-color;
+        }
+        &--poor {
+            border-left: 4px solid vars.$danger-color;
+        }
 
         &__head {
             display: flex;

@@ -154,7 +154,7 @@ export async function fetchApi<T>(
     const { retries = 0, skipRefresh = false, transformResponse = true, transformRequest = true, _depth = 0 } = options;
 
     if (_depth >= MAX_FETCH_DEPTH) {
-        throw createApiError(0, 'Maximum fetch depth exceeded — possible infinite loop');
+        throw createApiError(0, 'Maximum fetch depth exceeded | possible infinite loop');
     }
     const url = buildUrl(endpoint, params);
 

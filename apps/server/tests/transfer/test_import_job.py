@@ -1,4 +1,4 @@
-"""Tests pour ImportJob — plafonnement des erreurs."""
+"""Tests pour ImportJob | plafonnement des erreurs."""
 
 from __future__ import annotations
 

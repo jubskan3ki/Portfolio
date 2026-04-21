@@ -1,4 +1,4 @@
-# .gitignore — Portfolio Monorepo
+# .gitignore | Portfolio Monorepo
 
 # ── OS ───────────────────────────────────────────────────────
 .DS_Store
@@ -26,7 +26,7 @@ core.*
 !.env.example
 !.env.production.example
 
-# Decrypted sops output — only the encrypted *.sops.yaml files are tracked
+# Decrypted sops output | only the encrypted *.sops.yaml files are tracked
 /run/secrets/
 secrets/*.env
 !secrets/*.env.sops.yaml
@@ -38,7 +38,7 @@ secrets/*.env
 age-key.txt
 keys.txt
 
-# Ansible vault files (encrypted or decrypted) — only *.example is tracked
+# Ansible vault files (encrypted or decrypted) | only *.example is tracked
 ansible/group_vars/**/vault.yml
 ansible/group_vars/**/vault.yaml
 !ansible/group_vars/**/vault.yml.example
@@ -159,7 +159,7 @@ monitoring/prometheus/data/
 monitoring/alertmanager/data/
 monitoring/tempo/data/
 
-# Exports JSON locaux (données personnelles — ne jamais push)
+# Exports JSON locaux (données personnelles | ne jamais push)
 /data/*
 !/data/.gitkeep
 

@@ -1,1 +1,1 @@
-"""Extensions des QuerySets Django — reserve pour usage futur."""
+"""Extensions des QuerySets Django | reserve pour usage futur."""

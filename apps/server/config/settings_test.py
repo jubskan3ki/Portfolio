@@ -2,7 +2,7 @@
 
 import os
 
-# django-environ reads env at settings import — must be set first.
+# django-environ reads env at settings import | must be set first.
 os.environ.setdefault("JWT_SECRET_ACCESS_KEY", "test-secret-key-for-testing-only")
 os.environ.setdefault("DJANGO_DEBUG", "True")
 os.environ.setdefault("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
@@ -29,7 +29,7 @@ for _setting_name in dir(base_settings):
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
 
 
-# PostgreSQL (not SQLite) — exercise real extensions (unaccent/pg_trgm), triggers, GIN indexes.
+# PostgreSQL (not SQLite) | exercise real extensions (unaccent/pg_trgm), triggers, GIN indexes.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",

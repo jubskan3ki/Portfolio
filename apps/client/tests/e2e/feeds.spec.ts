@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const SKIP = !process.env.E2E_RUN_BACKEND_TESTS;
 
-test.describe(SKIP ? 'feeds (skipped — set E2E_RUN_BACKEND_TESTS=1)' : 'feeds', () => {
+test.describe(SKIP ? 'feeds (skipped | set E2E_RUN_BACKEND_TESTS=1)' : 'feeds', () => {
     test.skip(SKIP, 'Requires a running backend at NUXT_PUBLIC_API_BASE');
 
     test('/feed.xml returns an Atom feed', async ({ page }) => {

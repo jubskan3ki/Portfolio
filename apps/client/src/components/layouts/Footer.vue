@@ -69,7 +69,7 @@
 
     const summaryTitle = 'Donnez vie à vos idées avec des solutions digitales innovantes';
 
-    // Dynamic site settings (SSR — hydrated in initial HTML)
+    // Dynamic site settings (SSR | hydrated in initial HTML)
     const { settings } = await useSiteSettings();
 
     // Client-only stats

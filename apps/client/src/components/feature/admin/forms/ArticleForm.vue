@@ -111,7 +111,7 @@
                     label="Titre SEO"
                     placeholder="Titre optimisé pour les moteurs de recherche"
                     :maxlength="70"
-                    :hint="`${form.seo_title.length}/70 caractères — utilise le titre si vide`"
+                    :hint="`${form.seo_title.length}/70 caractères | utilise le titre si vide`"
                 />
 
                 <BaseTextarea
@@ -121,7 +121,7 @@
                     placeholder="Résumé affiché dans les résultats de recherche..."
                     :rows="3"
                     :maxlength="160"
-                    :hint="`${form.meta_description.length}/160 caractères — utilise l'extrait si vide`"
+                    :hint="`${form.meta_description.length}/160 caractères | utilise l'extrait si vide`"
                 />
             </div>
         </details>

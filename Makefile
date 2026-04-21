@@ -50,7 +50,7 @@ up-fg: ## Démarre la stack en avant-plan (logs visibles)
 	$(COMPOSE) up --build --remove-orphans
 
 .PHONY: down
-down: ## Arrête la stack (garde les volumes) — inclut tous les profils (dev, monitoring)
+down: ## Arrête la stack (garde les volumes) | inclut tous les profils (dev, monitoring)
 	$(COMPOSE_ALL) down --remove-orphans
 
 .PHONY: restart
@@ -209,7 +209,7 @@ data-import: ## Importe tous les JSON de Data/ via loaddata
 .PHONY: secrets-edit
 secrets-edit: ## Édite secrets/$(ENV).env.sops.yaml via sops
 	@command -v sops >/dev/null || { echo "sops requis (voir secrets/README.md)"; exit 1; }
-	@test -f "secrets/$(ENV).env.sops.yaml" || { echo "Fichier manquant — créer via sops --encrypt"; exit 1; }
+	@test -f "secrets/$(ENV).env.sops.yaml" || { echo "Fichier manquant | créer via sops --encrypt"; exit 1; }
 	sops edit "secrets/$(ENV).env.sops.yaml"
 
 .PHONY: secrets-decrypt
@@ -246,7 +246,7 @@ deploy-zd: ## Deploy zero-downtime (scale+1 → healthy → scale-1). IMAGE_TAG=
 	case "$$rc" in \
 	    0) ;; \
 	    1) echo "[deploy-zd] applying migrations"; $(COMPOSE) exec -T backend python manage.py migrate --noinput ;; \
-	    2) echo "[deploy-zd] destructive migrations detected — deploy refused"; exit 2 ;; \
+	    2) echo "[deploy-zd] destructive migrations detected | deploy refused"; exit 2 ;; \
 	    *) exit $$rc ;; \
 	esac; \
 	$(COMPOSE) pull $$services 2>/dev/null || true; \

@@ -1,4 +1,4 @@
-"""Gestionnaires d'exceptions DRF — format legacy {errors: [...]} + RFC 7807 si Accept le demande."""
+"""Gestionnaires d'exceptions DRF | format legacy {errors: [...]} + RFC 7807 si Accept le demande."""
 
 import logging
 from typing import Any

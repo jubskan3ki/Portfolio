@@ -1,9 +1,9 @@
 """Refuse destructive pending migrations before a deploy swap.
 
 Exit codes:
-  0 — no pending migrations (safe to deploy).
-  1 — pending but non-destructive (apply normally).
-  2 — pending and destructive (block deploy, require manual approval).
+  0 | no pending migrations (safe to deploy).
+  1 | pending but non-destructive (apply normally).
+  2 | pending and destructive (block deploy, require manual approval).
 """
 
 import ast

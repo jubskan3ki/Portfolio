@@ -1,4 +1,4 @@
-"""Public status page backend — aggregates Prometheus + Alertmanager state.
+"""Public status page backend | aggregates Prometheus + Alertmanager state.
 
 Exposed at GET /api/public/status/. Cached 60s to avoid hammering Prometheus
 on every page load (the Nuxt /status page hits this endpoint).

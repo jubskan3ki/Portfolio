@@ -1,4 +1,4 @@
-# Portfolio — Nuxt 3 + Django REST + Docker
+# Portfolio | Nuxt 3 + Django REST + Docker
 
 Portfolio fullstack personnel : **Nuxt 3** (SSR) pour le frontend, **Django REST Framework** pour l'API, **PostgreSQL** pour la base de donnees, le tout orchestre avec **Docker Compose**.
 

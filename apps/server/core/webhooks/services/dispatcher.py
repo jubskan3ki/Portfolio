@@ -34,7 +34,7 @@ def compute_backoff_delay(attempt: int) -> int:
     raw = BACKOFF_BASE_SECONDS * (2 ** (attempt - 1))
     capped = min(raw, BACKOFF_MAX_SECONDS)
     jitter = capped * BACKOFF_JITTER_RATIO
-    # Jitter for retry scheduling, not security — stdlib random is fine.
+    # Jitter for retry scheduling, not security | stdlib random is fine.
     return int(capped + random.uniform(-jitter, jitter))  # noqa: S311
 
 

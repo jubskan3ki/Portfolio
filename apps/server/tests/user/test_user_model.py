@@ -1,4 +1,4 @@
-"""Tests pour le modele User — contrainte unicite superuser."""
+"""Tests pour le modele User | contrainte unicite superuser."""
 
 from __future__ import annotations
 

@@ -36,7 +36,7 @@ class APIResponsePagination(PageNumberPagination):
 
 
 class StandardResultsSetPagination(APIResponsePagination):
-    """DEPRECATED — kept for legacy APIs."""
+    """DEPRECATED | kept for legacy APIs."""
 
     page_size_query_param = "page_size"
 

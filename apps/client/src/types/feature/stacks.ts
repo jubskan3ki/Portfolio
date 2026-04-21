@@ -160,7 +160,7 @@ export interface StackCarouselProps {
     autoplay?: boolean;
 }
 
-// Light entry for StackBadge — minimal fields the caller is expected to pass.
+// Light entry for StackBadge | minimal fields the caller is expected to pass.
 export interface StackBadgeStack {
     id: string | number;
     name: string;
@@ -180,7 +180,7 @@ export interface StackBadgeProps {
     customClass?: string;
 }
 
-// Light entry for StackRelated — the sidebar accepts entries without the canonical `relationship`.
+// Light entry for StackRelated | the sidebar accepts entries without the canonical `relationship`.
 export interface StackRelatedEntry {
     name: string;
     logo: string;

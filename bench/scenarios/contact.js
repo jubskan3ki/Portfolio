@@ -16,7 +16,7 @@ export const options = {
         },
     },
     thresholds: {
-        // Rate limit MUST engage — if not, contact_limit is broken.
+        // Rate limit MUST engage | if not, contact_limit is broken.
         contact_rate_limited: ["count>10"],
         http_req_failed: ["rate<0.9"], // lax, many 429s expected
     },

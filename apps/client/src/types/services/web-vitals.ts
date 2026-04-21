@@ -1,4 +1,4 @@
-// Types for the web-vitals client plugin — payload sent to the backend
+// Types for the web-vitals client plugin | payload sent to the backend
 
 import type {
     CLSMetricWithAttribution,

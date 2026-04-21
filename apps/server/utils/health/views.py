@@ -31,7 +31,7 @@ class HealthCheckView(APIView):
 
 
 class LivenessView(APIView):
-    """k8s liveness — app repond."""
+    """k8s liveness | app repond."""
 
     permission_classes: list[Any] = [AllowAny]
     authentication_classes: list[Any] = []
@@ -42,7 +42,7 @@ class LivenessView(APIView):
 
 
 class ReadinessView(APIView):
-    """k8s readiness — dependances pretes."""
+    """k8s readiness | dependances pretes."""
 
     permission_classes: list[Any] = [AllowAny]
     authentication_classes: list[Any] = []

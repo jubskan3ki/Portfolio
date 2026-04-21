@@ -387,11 +387,11 @@ perf:k6:nightly:
     rules:
         - if: $CI_PIPELINE_SOURCE == "schedule"
     variables:
-        BASE_URL: $K6_BASE_URL  # defined as CI schedule variable (e.g. https://aitaddajuba.fr)
+        BASE_URL: $K6_BASE_URL # defined as CI schedule variable (e.g. https://aitaddajuba.fr)
     script:
         - echo ">> k6 browse scenario against $BASE_URL"
         - k6 run --env BASE_URL=$BASE_URL bench/scenarios/browse.js --summary-export=k6-browse-summary.json
-        - echo ">> k6 sustained (shorter in CI — 5 min)"
+        - echo ">> k6 sustained (shorter in CI | 5 min)"
         - k6 run --env BASE_URL=$BASE_URL --duration 5m bench/scenarios/sustained.js --summary-export=k6-sustained-summary.json
     artifacts:
         when: always
@@ -526,7 +526,7 @@ deploy:rollback:
             ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
                 set -e
                 cd $DEPLOY_PATH
-                test -s .previous-image-tag || { echo 'no .previous-image-tag — nothing to roll back to'; exit 1; }
+                test -s .previous-image-tag || { echo 'no .previous-image-tag | nothing to roll back to'; exit 1; }
                 prev=\$(cat .previous-image-tag)
                 echo 'Rollback to' \$prev
                 make rollback ENV=prod TAG=\$prev

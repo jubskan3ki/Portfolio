@@ -64,7 +64,7 @@
                     "refId": "C"
                 }
             ],
-            "title": "Request Latency — percentiles",
+            "title": "Request Latency | percentiles",
             "type": "timeseries"
         },
         {
@@ -72,7 +72,12 @@
             "fieldConfig": {
                 "defaults": {
                     "color": { "mode": "palette-classic" },
-                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "stacking": { "mode": "normal" } },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "lineWidth": 2,
+                        "stacking": { "mode": "normal" }
+                    },
                     "unit": "percent"
                 }
             },
@@ -125,7 +130,7 @@
     "time": { "from": "now-1h", "to": "now" },
     "timepicker": {},
     "timezone": "browser",
-    "title": "Overview — API RED + Containers",
+    "title": "Overview | API RED + Containers",
     "uid": "overview-red",
     "version": 1,
     "weekStart": ""

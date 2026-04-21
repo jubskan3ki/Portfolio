@@ -6,7 +6,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 
 class MetricsView(View):
-    """GET /metrics/ — format Prometheus."""
+    """GET /metrics/ | format Prometheus."""
 
     def get(self, _request: HttpRequest) -> HttpResponse:
         metrics = generate_latest()

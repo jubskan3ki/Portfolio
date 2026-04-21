@@ -130,7 +130,7 @@ class TestRefreshToken:
             api_client.post(self.URL, {"refresh": "invalid-token-here"}, format="json"),
         )
 
-        # Refresh token is read from cookie, not body — so this should return 401
+        # Refresh token is read from cookie, not body | so this should return 401
         assert response.status_code in [status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED]
 
     def test_refresh_without_token(self, api_client: APIClient) -> None:
@@ -160,5 +160,5 @@ class TestLogout:
             api_client.post(self.URL, {}, format="json"),
         )
 
-        # Logout is graceful — returns 200 even without a token
+        # Logout is graceful | returns 200 even without a token
         assert response.status_code == status.HTTP_200_OK

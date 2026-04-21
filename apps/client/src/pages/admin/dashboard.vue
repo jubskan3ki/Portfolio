@@ -66,10 +66,10 @@
     const authStore = useAuthStore();
     const queryClient = useQueryClient();
 
-    // TanStack Query — overview (stats, charts, activity, quickStats)
+    // TanStack Query | overview (stats, charts, activity, quickStats)
     const { data: dashboardData, isLoading, isRefetching } = useDashboardOverview();
 
-    // TanStack Query — top content
+    // TanStack Query | top content
     const { data: articlesData } = usePopularArticles(5);
     const { data: projectsData } = useFeaturedProjects(5);
     const { data: stacksData } = useFeaturedStacks(5);

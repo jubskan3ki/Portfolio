@@ -14,7 +14,7 @@ coverage.xml
 venv/
 env/
 
-# Secrets — NEVER ship these in an image.
+# Secrets | NEVER ship these in an image.
 .env
 .env.*
 !.env.example
@@ -35,6 +35,6 @@ pyproject.toml
 README.md
 tests/
 
-# Fixtures/dumps — never ship data in images.
+# Fixtures/dumps | never ship data in images.
 Data/
 backups/

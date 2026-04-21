@@ -117,7 +117,7 @@ class Command(BaseCommand):
         try:
             call_command("migrate", no_input=True, verbosity=1)
         except Exception as err:
-            self._log("WARN", f"migrate failed ({err}) — retrying per-app")
+            self._log("WARN", f"migrate failed ({err}) | retrying per-app")
             for app in ("contenttypes", "auth", "admin", "sessions", "user"):
                 try:
                     call_command("migrate", app, no_input=True, verbosity=0)
@@ -129,7 +129,7 @@ class Command(BaseCommand):
     def _create_admin(self) -> None:
         script = SCRIPTS_DIR / "create_admin.py"
         if not script.is_file():
-            self._log("WARN", "scripts/create_admin.py missing — skipping admin setup")
+            self._log("WARN", "scripts/create_admin.py missing | skipping admin setup")
             return
         result = subprocess.run([sys.executable, str(script)], check=False)
         if result.returncode == 0:

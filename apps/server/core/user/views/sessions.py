@@ -37,7 +37,7 @@ class AdminSessionsView(APIView):
         current_fingerprint = generate_fingerprint(request)
         current_session_id = current_fingerprint.fingerprint_hash
 
-        # Expose only safe device fields — never leak refresh_jti or raw UA to the client
+        # Expose only safe device fields | never leak refresh_jti or raw UA to the client
         def public_device(device: dict) -> dict:
             return {
                 "browser": device.get("browser") or "Unknown",
