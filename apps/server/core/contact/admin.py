@@ -37,7 +37,7 @@ class ContactInfoAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("email", "phone", "is_primary")}),
         ("Adresse", {"fields": ("street", "city", "zip_code", "country")}),
-        ("Reseaux sociaux", {"fields": ("linkedin", "github", "twitter", "medium")}),
+        ("Reseaux sociaux", {"fields": ("linkedin", "github", "medium")}),
         ("Disponibilite", {"fields": ("availability_status", "availability_message")}),
         ("Dates", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )

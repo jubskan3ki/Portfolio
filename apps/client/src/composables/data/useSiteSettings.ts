@@ -7,38 +7,36 @@ import type { ContactInfo } from '@/types/feature/contact';
 
 const SITE_SETTINGS_KEY = 'site-settings';
 
-const EMPTY_SETTINGS: SiteSettings = {
-    email: '',
-    phone: '',
-    bio: '',
-    addressCity: '',
-    addressCountry: '',
-    socialGithub: '',
-    socialLinkedin: '',
-    socialTwitter: '',
+export const DEFAULT_SETTINGS: SiteSettings = {
+    email: 'contact@aitaddajuba.fr',
+    phone: '+33 6 95 21 71 97',
+    bio: 'Développeur fullstack et DevOps basé à Paris, spécialisé en Nuxt 3, Vue 3, TypeScript, Django/Python et infrastructure cloud.',
+    addressCity: 'Paris',
+    addressCountry: 'France',
+    socialGithub: 'https://github.com/jubskan3ki',
+    socialLinkedin: 'https://www.linkedin.com/in/juba-aitadda/',
     socialMedium: '',
-    availabilityStatus: 'unavailable',
-    availabilityMessage: '',
-    isAvailable: false,
+    availabilityStatus: 'available',
+    availabilityMessage: 'Ouvert aux opportunités CDI & missions freelance',
+    isAvailable: true,
 };
 
 function toSettings(info: ContactInfo | null): SiteSettings {
     if (!info) {
-        return { ...EMPTY_SETTINGS };
+        return { ...DEFAULT_SETTINGS };
     }
-    const status = info.availability?.status ?? 'unavailable';
+    const status = info.availability?.status ?? DEFAULT_SETTINGS.availabilityStatus;
     return {
-        email: info.email ?? '',
-        phone: info.phone ?? '',
-        bio: info.bio ?? '',
-        addressCity: info.address?.city ?? '',
-        addressCountry: info.address?.country ?? '',
-        socialGithub: info.socialMedia?.github ?? '',
-        socialLinkedin: info.socialMedia?.linkedin ?? '',
-        socialTwitter: info.socialMedia?.twitter ?? '',
-        socialMedium: info.socialMedia?.medium ?? '',
+        email: info.email || DEFAULT_SETTINGS.email,
+        phone: info.phone || DEFAULT_SETTINGS.phone,
+        bio: info.bio || DEFAULT_SETTINGS.bio,
+        addressCity: info.address?.city || DEFAULT_SETTINGS.addressCity,
+        addressCountry: info.address?.country || DEFAULT_SETTINGS.addressCountry,
+        socialGithub: info.socialMedia?.github || DEFAULT_SETTINGS.socialGithub,
+        socialLinkedin: info.socialMedia?.linkedin || DEFAULT_SETTINGS.socialLinkedin,
+        socialMedium: info.socialMedia?.medium || DEFAULT_SETTINGS.socialMedium,
         availabilityStatus: status,
-        availabilityMessage: info.availability?.message ?? '',
+        availabilityMessage: info.availability?.message || DEFAULT_SETTINGS.availabilityMessage,
         isAvailable: status === 'available',
     };
 }
@@ -53,7 +51,7 @@ export async function useSiteSettings() {
         },
     );
 
-    const settings = computed<SiteSettings>(() => data.value ?? { ...EMPTY_SETTINGS });
+    const settings = computed<SiteSettings>(() => data.value ?? { ...DEFAULT_SETTINGS });
 
     return { settings, refresh, pending, error };
 }

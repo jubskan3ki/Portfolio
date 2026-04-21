@@ -20,7 +20,7 @@ class UserAdmin(BaseUserAdmin):
         (None, {"fields": ("email", "password")}),
         (_("Informations personnelles"), {"fields": ("first_name", "last_name")}),
         (_("Profil"), {"fields": ("phone_number", "bio", "avatar", "position")}),
-        (_("Contacts publics"), {"fields": ("public_email", "linkedin", "github", "twitter")}),
+        (_("Contacts publics"), {"fields": ("public_email", "linkedin", "github")}),
         (
             _("Permissions"),
             {

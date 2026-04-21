@@ -37,7 +37,6 @@ class AdminProfileSerializer(serializers.ModelSerializer):
             "public_email",
             "linkedin",
             "github",
-            "twitter",
             "date_joined",
             "updated_at",
         ]
@@ -61,7 +60,6 @@ class AdminUpdateProfileSerializer(serializers.ModelSerializer):
             "public_email",
             "linkedin",
             "github",
-            "twitter",
         ]
 
     def validate_avatar(self, value):

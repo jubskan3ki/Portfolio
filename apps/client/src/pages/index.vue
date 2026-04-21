@@ -189,15 +189,16 @@
     import HeroSection from '@/components/feature/home/HeroSection.vue';
     import Section from '@/components/layouts/Section.vue';
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
+    import { useSiteSettings } from '@/composables/data/useSiteSettings';
     import { useViewportTrigger } from '@/composables/performance/useViewportTrigger';
     import { useHomeSeo } from '@/composables/seo/useSeo';
     import { useResponsive } from '@/composables/ui/useResponsive';
     import { ROUTES } from '@/config/routes';
     import { useRecentArticles } from '@/services/api/modules/articles';
-    import { contactApi } from '@/services/api/modules/contact';
     import { useProfessionalExperiences } from '@/services/api/modules/experiences';
     import { stacksApi } from '@/services/api/modules/stacks';
 
+    import type { ContactSocialLink } from '@/types/feature/contact';
     import type { HeroStack } from '@/types/feature/home';
     import type { Stack } from '@/types/feature/stacks';
 
@@ -336,26 +337,7 @@
         },
     );
 
-    const { data: contactData } = await useAsyncData(
-        'contact-home',
-        () => contactApi.getInfo(),
-        {
-            default: () => null,
-            transform: (info) => {
-                if (!info) {
-                    return null;
-                }
-                return {
-                    bio: info.bio ?? '',
-                    email: info.email,
-                    phone: info.phone,
-                    city: info.address?.city ?? 'Paris, France',
-                    linkedin: info.socialMedia?.linkedin ?? '',
-                    github: info.socialMedia?.github ?? '',
-                };
-            },
-        },
-    );
+    const { settings } = await useSiteSettings();
 
     const {
         targetRef: experiencesTargetRef,
@@ -382,30 +364,23 @@
 
     const articles = computed(() => articlesData.value ?? []);
 
-    const heroBio = computed(() => contactData.value?.bio ?? '');
+    const heroBio = computed(() => settings.value.bio);
 
-    const contactAddress = computed(() => contactData.value?.city ?? 'Paris, France');
-    const contactEmail = computed(() => contactData.value?.email ?? 'contact@aitaddajuba.fr');
-    const contactPhone = computed(() => contactData.value?.phone ?? '+33 6 95 21 71 97');
+    const contactAddress = computed(() =>
+        [settings.value.addressCity, settings.value.addressCountry].filter(Boolean).join(', '),
+    );
+    const contactEmail = computed(() => settings.value.email);
+    const contactPhone = computed(() => settings.value.phone);
 
-    const defaultSocialLinks = [
-        { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
-        { name: 'GitHub', icon: 'github', url: 'https://github.com/jubskan3ki' },
-    ];
-
-    const socialMediaLinks = computed(() => {
-        const d = contactData.value;
-        if (!d) {
-            return defaultSocialLinks;
+    const socialMediaLinks = computed<ContactSocialLink[]>(() => {
+        const links: ContactSocialLink[] = [];
+        if (settings.value.socialLinkedin) {
+            links.push({ name: 'LinkedIn', icon: 'linkedin', url: settings.value.socialLinkedin });
         }
-        const links = [];
-        if (d.linkedin) {
-            links.push({ name: 'LinkedIn', icon: 'linkedin', url: d.linkedin });
+        if (settings.value.socialGithub) {
+            links.push({ name: 'GitHub', icon: 'github', url: settings.value.socialGithub });
         }
-        if (d.github) {
-            links.push({ name: 'GitHub', icon: 'github', url: d.github });
-        }
-        return links.length ? links : defaultSocialLinks;
+        return links;
     });
 </script>
 

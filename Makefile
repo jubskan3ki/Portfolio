@@ -24,9 +24,10 @@ else
     COMPOSE_OVERLAY := -f docker-compose.yml -f docker-compose.dev.yml
     COMPOSE_ENV_FLAG :=
 endif
-COMPOSE      := $(COMPOSE_BIN) $(COMPOSE_ENV_FLAG) $(COMPOSE_OVERLAY)
-COMPOSE_DEV  := $(COMPOSE_BIN) -f docker-compose.yml -f docker-compose.dev.yml --profile dev
-COMPOSE_EXEC := $(COMPOSE) exec
+COMPOSE          := $(COMPOSE_BIN) $(COMPOSE_ENV_FLAG) $(COMPOSE_OVERLAY)
+COMPOSE_ALL      := $(COMPOSE) --profile dev --profile monitoring
+COMPOSE_DEV      := $(COMPOSE_BIN) -f docker-compose.yml -f docker-compose.dev.yml --profile dev
+COMPOSE_EXEC     := $(COMPOSE) exec
 
 ##@ Help
 
@@ -49,8 +50,8 @@ up-fg: ## Démarre la stack en avant-plan (logs visibles)
 	$(COMPOSE) up --build --remove-orphans
 
 .PHONY: down
-down: ## Arrête la stack (garde les volumes)
-	$(COMPOSE) down
+down: ## Arrête la stack (garde les volumes) — inclut tous les profils (dev, monitoring)
+	$(COMPOSE_ALL) down --remove-orphans
 
 .PHONY: restart
 restart: ## Redémarre tous les services (ou SVC=<name>)
@@ -377,8 +378,8 @@ seo-lighthouse: ## Audit Lighthouse SEO. URL=https://juba-aitadda.dev/contact ma
 clean: ## Arrête la stack. VOLUMES=1 supprime aussi les volumes (DANGER)
 	@if [ "$(VOLUMES)" = "1" ]; then \
 	    read -p "Supprimer DB + uploads + certs ? (tapez 'oui') " ok && [ "$$ok" = "oui" ] || exit 1; \
-	    $(COMPOSE) down -v; \
-	else $(COMPOSE) down; fi
+	    $(COMPOSE_ALL) down -v --remove-orphans; \
+	else $(COMPOSE_ALL) down --remove-orphans; fi
 
 .PHONY: clean-cache
 clean-cache: ## Vide caches Docker build + pip + pnpm

@@ -39,7 +39,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     public_email = models.EmailField(_("email public"), blank=True, null=True)
     linkedin = models.URLField(_("LinkedIn"), blank=True, null=True)
     github = models.URLField(_("GitHub"), blank=True, null=True)
-    twitter = models.URLField(_("Twitter"), blank=True, null=True)
 
     is_active = models.BooleanField(_("actif"), default=True)
     is_staff = models.BooleanField(_("statut staff"), default=False)

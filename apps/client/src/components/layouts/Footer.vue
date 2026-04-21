@@ -93,9 +93,6 @@
         if (settings.value.socialLinkedin) {
             links.push({ name: 'LinkedIn', icon: 'linkedin', url: settings.value.socialLinkedin });
         }
-        if (settings.value.socialTwitter) {
-            links.push({ name: 'Twitter', icon: 'twitter', url: settings.value.socialTwitter });
-        }
         if (settings.value.socialMedium) {
             links.push({ name: 'Medium', icon: 'medium', url: settings.value.socialMedium });
         }

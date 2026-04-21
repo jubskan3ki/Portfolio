@@ -98,6 +98,7 @@
 
     const heroRef = ref<HTMLElement | null>(null);
     const scrollY = ref(0);
+    const isHeroVisible = ref(true);
     const { prefersReducedMotion } = useReducedMotion();
 
     const parallaxStyle = computed(() => {
@@ -107,20 +108,44 @@
         return { transform: `translateY(${scrollY.value * props.parallaxIntensity}px)` };
     });
 
+    let rafId = 0;
+    const updateScrollY = () => {
+        rafId = 0;
+        scrollY.value = window.scrollY;
+    };
     const handleScroll = () => {
-        if (heroRef.value && heroRef.value.getBoundingClientRect().bottom > 0) {
-            scrollY.value = window.scrollY;
+        if (!isHeroVisible.value || rafId !== 0) {
+            return;
         }
+        rafId = requestAnimationFrame(updateScrollY);
     };
 
+    let observer: IntersectionObserver | null = null;
+
     onMounted(() => {
-        if (!prefersReducedMotion.value && props.parallaxIntensity > 0) {
-            window.addEventListener('scroll', handleScroll, { passive: true });
+        if (prefersReducedMotion.value || props.parallaxIntensity === 0 || !heroRef.value) {
+            return;
         }
+
+        observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    isHeroVisible.value = entry.isIntersecting;
+                }
+            },
+            { rootMargin: '0px' },
+        );
+        observer.observe(heroRef.value);
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
     });
 
     onUnmounted(() => {
         window.removeEventListener('scroll', handleScroll);
+        if (rafId !== 0) {
+            cancelAnimationFrame(rafId);
+        }
+        observer?.disconnect();
     });
 </script>
 
@@ -137,6 +162,10 @@
 
         &--has-stats {
             padding-bottom: calc(vars.$spacing-xxl + 40px);
+
+            @include mix.responsive(mobile) {
+                padding-bottom: vars.$spacing-xl;
+            }
         }
 
         &__wrapper {
@@ -282,6 +311,8 @@
                 grid-template-columns: 1fr;
                 gap: vars.$spacing-sm;
                 max-width: 300px;
+                margin-top: vars.$spacing-md;
+                transform: none;
             }
         }
 
@@ -290,6 +321,10 @@
 
             &.hero--has-stats {
                 padding-bottom: calc(vars.$spacing-xl + 30px);
+
+                @include mix.responsive(mobile) {
+                    padding-bottom: vars.$spacing-lg;
+                }
             }
 
             .hero__card {

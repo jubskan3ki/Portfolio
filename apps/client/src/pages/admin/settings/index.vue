@@ -107,16 +107,6 @@
                             <BaseIcon name="github" :size="16" />
                         </template>
                     </BaseInput>
-                    <BaseInput
-                        v-model="profileForm.twitter"
-                        label="Twitter / X"
-                        type="url"
-                        placeholder="https://twitter.com/..."
-                    >
-                        <template #icon-left>
-                            <BaseIcon name="twitter" :size="16" />
-                        </template>
-                    </BaseInput>
 
                     <div class="form-actions">
                         <BaseButton type="submit" variant="primary" :loading="isUpdatingProfile">
@@ -355,7 +345,6 @@
         publicEmail: '',
         linkedin: '',
         github: '',
-        twitter: '',
     });
 
     const passwordForm = reactive({
@@ -471,7 +460,6 @@
                 publicEmail: profileForm.publicEmail,
                 linkedin: profileForm.linkedin,
                 github: profileForm.github,
-                twitter: profileForm.twitter,
             },
             {
                 onSuccess: () => showMessage(profileMessage, 'success', 'Profil mis a jour'),
@@ -521,7 +509,6 @@
             profileForm.publicEmail = authStore.user.publicEmail || '';
             profileForm.linkedin = authStore.user.linkedin || '';
             profileForm.github = authStore.user.github || '';
-            profileForm.twitter = authStore.user.twitter || '';
         }
     };
 

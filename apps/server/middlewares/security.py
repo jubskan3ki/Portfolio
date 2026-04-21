@@ -24,7 +24,7 @@ BLOCKED_USER_AGENTS: set[str] = getattr(settings, "BLOCKED_USER_AGENTS", {"BadBo
 BLOCKED_METHODS: set[str] = getattr(settings, "BLOCKED_METHODS", {"TRACE", "TRACK"})
 
 DEFAULT_SUSPICIOUS_PATTERNS = [
-    r"(?i)../../",
+    r"(?i)\.\./\.\./",
     r"(?i)select.+from.+where",
     r"(?i)union\s+select",
     r"(?i)eval\s*\(",
@@ -161,7 +161,7 @@ class SecurityMiddleware(MiddlewareMixin):
             for key, value in data.items():
                 if isinstance(key, str) and self._is_suspicious(key):
                     return True
-                if isinstance(value, (dict, list)):
+                if isinstance(value, dict | list):
                     if self._check_json(value, depth + 1):
                         return True
                 elif isinstance(value, str) and self._is_suspicious(value):
@@ -169,7 +169,7 @@ class SecurityMiddleware(MiddlewareMixin):
 
         elif isinstance(data, list):
             for item in data:
-                if isinstance(item, (dict, list)):
+                if isinstance(item, dict | list):
                     if self._check_json(item, depth + 1):
                         return True
                 elif isinstance(item, str) and self._is_suspicious(item):

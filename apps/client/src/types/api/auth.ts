@@ -17,7 +17,6 @@ export interface UserProfile {
     publicEmail?: string;
     linkedin?: string;
     github?: string;
-    twitter?: string;
     dateJoined?: string;
     updatedAt?: string;
 }
@@ -37,7 +36,6 @@ export interface UpdateProfileData {
     publicEmail?: string;
     linkedin?: string;
     github?: string;
-    twitter?: string;
 }
 
 export interface ChangePasswordData {

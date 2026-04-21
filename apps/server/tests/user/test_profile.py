@@ -89,6 +89,22 @@ class TestUpdateProfile:
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
+    def test_update_profile_social_urls(self, authenticated_client: APIClient) -> None:
+        """PUT linkedin + github URLs n'est pas flag comme suspicious par le middleware security."""
+        payload = {
+            "linkedin": "https://www.linkedin.com/in/juba-aitadda/",
+            "github": "https://github.com/jubskan3ki",
+        }
+        response = cast(
+            Response,
+            authenticated_client.put(self.URL, payload, format="json"),
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = cast(dict[str, Any], response.data)
+        assert data["linkedin"] == payload["linkedin"]
+        assert data["github"] == payload["github"]
+
 
 @pytest.mark.django_db
 class TestPasswordReset:

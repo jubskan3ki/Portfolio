@@ -1,6 +1,6 @@
 <template>
     <div class="base-image" :class="containerClasses">
-        <div v-if="isLoading && showPlaceholder" class="base-image__placeholder">
+        <div v-if="hasValidSrc && isLoading && showPlaceholder" class="base-image__placeholder">
             <slot name="placeholder">
                 <div class="base-image__skeleton"></div>
             </slot>
@@ -8,7 +8,7 @@
 
         <!-- External absolute URLs bypass IPX proxying -->
         <img
-            v-if="src && isAbsoluteExternal"
+            v-if="hasValidSrc && isAbsoluteExternal"
             :src="resolvedSrc"
             :alt="alt"
             :width="width"
@@ -21,7 +21,7 @@
         />
 
         <NuxtImg
-            v-else-if="src"
+            v-else-if="hasValidSrc"
             :src="resolvedSrc"
             :alt="alt"
             :width="width"
@@ -39,10 +39,9 @@
             @error="handleError"
         />
 
-        <div v-if="hasError" class="base-image__error">
+        <div v-if="!hasValidSrc || hasError" class="base-image__error">
             <slot name="error">
                 <BaseIcon name="image-off" :size="errorIconSize" />
-                <span v-if="showErrorText" class="base-image__error-text">Image non disponible</span>
             </slot>
         </div>
 
@@ -53,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed } from 'vue';
+    import { ref, computed, watch, onBeforeUnmount } from 'vue';
 
     import { resolveMediaUrl } from '@/services/utils/helpers';
 
@@ -79,12 +78,54 @@
         error: [event: string | Event];
     }>();
 
-    const isLoading = ref(true);
+    const LOAD_TIMEOUT_MS = 5000;
+
+    const hasValidSrc = computed(() => typeof props.src === 'string' && props.src.trim().length > 0);
+    const isLoading = ref(false);
     const hasError = ref(false);
     const resolvedSrc = computed(() => resolveMediaUrl(props.src));
 
     // External http(s) URLs skip IPX; /media/ is proxied via the IPX alias in nuxt.config.ts.
     const isAbsoluteExternal = computed(() => /^https?:\/\//i.test(resolvedSrc.value));
+
+    let loadTimer: ReturnType<typeof setTimeout> | null = null;
+    const clearLoadTimer = () => {
+        if (loadTimer !== null) {
+            clearTimeout(loadTimer);
+            loadTimer = null;
+        }
+    };
+    // Safety net: some network stacks never fire load/error (stalled request,
+    // service worker bug, offline with cached HTML). Fall back after 5s.
+    const armLoadTimer = () => {
+        clearLoadTimer();
+        if (!hasValidSrc.value) {
+            return;
+        }
+        loadTimer = setTimeout(() => {
+            if (isLoading.value) {
+                isLoading.value = false;
+                hasError.value = true;
+                emit('error', 'timeout');
+            }
+        }, LOAD_TIMEOUT_MS);
+    };
+
+    watch(
+        () => props.src,
+        () => {
+            hasError.value = false;
+            isLoading.value = hasValidSrc.value;
+            if (hasValidSrc.value) {
+                armLoadTimer();
+            } else {
+                clearLoadTimer();
+            }
+        },
+        { immediate: true },
+    );
+
+    onBeforeUnmount(clearLoadTimer);
 
     const toNum = (v: string | number | undefined) =>
         (typeof v === 'string' ? parseInt(v, 10) : v) || 0;
@@ -93,7 +134,6 @@
             || (toNum(props.height) > 0 && toNum(props.height) < 80),
     );
     const errorIconSize = computed(() => (isSmall.value ? 18 : 32));
-    const showErrorText = computed(() => !isSmall.value);
 
     const containerClasses = computed(() => [
         `base-image--ratio-${props.aspectRatio}`,
@@ -109,12 +149,14 @@
     ]);
 
     const handleLoad = (event: Event) => {
+        clearLoadTimer();
         isLoading.value = false;
         hasError.value = false;
         emit('load', event);
     };
 
     const handleError = (event: string | Event) => {
+        clearLoadTimer();
         isLoading.value = false;
         hasError.value = true;
         emit('error', event);
@@ -199,9 +241,9 @@
         }
 
         &__skeleton {
-            background: linear-gradient(90deg, vars.$gray-light 25%, vars.$white-dark 50%, vars.$gray-light 75%);
-            background-size: 200% 100%;
+            background: vars.$gray-light;
             animation: skeleton-pulse 1.5s ease-in-out infinite;
+            will-change: opacity;
         }
 
         &__error {
@@ -228,12 +270,13 @@
     }
 
     @keyframes skeleton-pulse {
-        0% {
-            background-position: 200% 0;
+        0%,
+        100% {
+            opacity: 1;
         }
 
-        100% {
-            background-position: -200% 0;
+        50% {
+            opacity: 0.5;
         }
     }
 </style>

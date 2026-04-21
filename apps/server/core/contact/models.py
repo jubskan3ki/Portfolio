@@ -96,7 +96,6 @@ class ContactInfo(models.Model):
     country = models.CharField(max_length=100, blank=True)
     linkedin = models.URLField(blank=True)
     github = models.URLField(blank=True)
-    twitter = models.URLField(blank=True)
     medium = models.URLField(blank=True)
     availability_status = models.CharField(
         max_length=20,

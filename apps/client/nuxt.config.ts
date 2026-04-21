@@ -81,10 +81,6 @@ export default defineNuxtConfig({
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
                 { rel: 'mask-icon', href: '/favicon.svg', color: '#1a1a2e' },
                 { rel: 'apple-touch-icon', href: '/logo.png' },
-                { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-                { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-                { rel: 'dns-prefetch', href: 'https://fonts.googleapis.com' },
-                { rel: 'dns-prefetch', href: 'https://fonts.gstatic.com' },
                 { rel: 'preconnect', href: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000' },
                 { rel: 'alternate', type: 'application/atom+xml', title: 'Blog — Atom', href: '/feed.xml' },
                 { rel: 'alternate', type: 'application/feed+json', title: 'Blog — JSON Feed', href: '/feed.json' },
@@ -326,6 +322,7 @@ export default defineNuxtConfig({
                 weights: [400, 700],
                 display: 'swap',
                 subsets: ['latin'],
+                preload: true,
             },
             {
                 name: 'Fira Code',

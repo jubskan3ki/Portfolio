@@ -60,7 +60,7 @@ http:
                     - text/event-stream
                 minResponseBodyBytes: 256
 
-        # usersFile généré au boot par traefik-auth-init depuis $DASHBOARD_BASIC_AUTH.
+        # htpasswd committé en clair dans traefik/auth/
         dashboard-auth:
             basicAuth:
                 usersFile: /etc/traefik/auth/htpasswd

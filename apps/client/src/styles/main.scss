@@ -167,10 +167,10 @@ body {
 }
 
 %skeleton-base {
-    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-    background-size: 200% 100%;
+    background: #e5e7eb;
     animation: skeleton-pulse 1.5s ease-in-out infinite;
     border-radius: vars.$border-radius-md;
+    will-change: opacity;
 }
 
 .skeleton {
@@ -178,12 +178,13 @@ body {
 }
 
 @keyframes skeleton-pulse {
-    0% {
-        background-position: 200% 0;
+    0%,
+    100% {
+        opacity: 1;
     }
 
-    100% {
-        background-position: -200% 0;
+    50% {
+        opacity: 0.5;
     }
 }
 

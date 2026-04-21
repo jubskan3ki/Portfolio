@@ -1,6 +1,10 @@
 services:
     backend:
-        command: python manage.py runserver 0.0.0.0:8000
+        user: root
+        command:
+            - sh
+            - -c
+            - "python manage.py bootstrap --no-serve && exec python manage.py runserver 0.0.0.0:8000"
         ports:
             - "${SERVER_PORT:-8000}:8000"
         volumes:
@@ -17,7 +21,7 @@ services:
             start_period: 90s
 
     celery:
-        # Drop otel wrapper in dev: otel-collector is monitoring-profile only, SDK spams UNAVAILABLE otherwise.
+        user: root
         command: >
             celery -A config worker
             --loglevel=${CELERY_LOG_LEVEL:-INFO}

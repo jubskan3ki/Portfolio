@@ -327,6 +327,15 @@
 
     .blog-main {
         min-width: 0;
+        min-height: 1200px;
+
+        @include mix.responsive(tablet) {
+            min-height: 1600px;
+        }
+
+        @include mix.responsive(mobile) {
+            min-height: 1800px;
+        }
     }
 
     .blog-sidebar {
@@ -394,6 +403,7 @@
 
     .blog-loader {
         max-width: 100%;
+        contain: layout paint;
     }
 
     .blog-content {
@@ -452,11 +462,15 @@
     }
 
     .slide-fade-enter-active {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition:
+            opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .slide-fade-leave-active {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition:
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .slide-fade-enter-from {

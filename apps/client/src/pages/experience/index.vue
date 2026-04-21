@@ -488,11 +488,15 @@
     }
 
     .slide-fade-enter-active {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition:
+            opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .slide-fade-leave-active {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition:
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .slide-fade-enter-from {
@@ -506,11 +510,15 @@
     }
 
     .fade-up-enter-active {
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        transition:
+            opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .fade-up-leave-active {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition:
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .fade-up-enter-from {

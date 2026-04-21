@@ -256,21 +256,6 @@ services:
             timeout: 5s
             start_period: 30s
 
-    # Écrit $DASHBOARD_BASIC_AUTH dans un volume partagé avant que Traefik démarre.
-    # Traefik étant scratch-based (pas de shell), on ne peut pas le faire dans son CMD.
-    traefik-auth-init:
-        image: alpine:3.20
-        container_name: traefik-auth-init
-        command:
-            - sh
-            - -c
-            - 'printf "%s\n" "$$DASHBOARD_BASIC_AUTH" > /auth/htpasswd && chmod 644 /auth/htpasswd'
-        environment:
-            DASHBOARD_BASIC_AUTH: ${DASHBOARD_BASIC_AUTH:?generate via htpasswd -nbB admin PASSWORD}
-        volumes:
-            - traefik_auth:/auth
-        restart: "no"
-
     traefik:
         image: traefik:v3.5
         container_name: traefik
@@ -290,11 +275,8 @@ services:
         volumes:
             - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
             - ./traefik/dynamic:/etc/traefik/dynamic:ro
-            - traefik_auth:/etc/traefik/auth:ro
+            - ./traefik/auth:/etc/traefik/auth:ro
             - letsencrypt_acme:/letsencrypt
-        depends_on:
-            traefik-auth-init:
-                condition: service_completed_successfully
         networks:
             - portfolio_net
         restart: unless-stopped
@@ -571,7 +553,6 @@ volumes:
     letsencrypt_acme:
     alertmanager_data:
     tempo_data:
-    traefik_auth:
 
 networks:
     portfolio_net:

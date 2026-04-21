@@ -41,7 +41,6 @@ export interface ContactInfo {
     socialMedia: {
         linkedin: string;
         github: string;
-        twitter: string;
         medium: string;
     };
     availability: {
@@ -103,7 +102,6 @@ export interface ContactInfoCreateData {
     socialMedia?: {
         linkedin?: string;
         github?: string;
-        twitter?: string;
         medium?: string;
     };
     availability?: {

@@ -23,7 +23,6 @@ export interface SiteSettings {
     addressCountry: string;
     socialGithub: string;
     socialLinkedin: string;
-    socialTwitter: string;
     socialMedium: string;
     availabilityStatus: ContactAvailabilityStatus;
     availabilityMessage: string;

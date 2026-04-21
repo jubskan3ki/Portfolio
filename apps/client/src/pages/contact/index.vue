@@ -26,7 +26,7 @@
                         <p class="about-section__job">{{ jobTitle }}</p>
                         <div class="about-section__links">
                             <a
-                                v-for="link in socialLinks"
+                                v-for="link in profileSocialLinks"
                                 :key="link.name"
                                 :href="link.url"
                                 target="_blank"
@@ -104,10 +104,12 @@
     import ContactInfos from '@/components/feature/contact/ContactInfos.vue';
     import Section from '@/components/layouts/Section.vue';
     import Hero from '@/components/ui/Hero.vue';
+    import { useSiteSettings } from '@/composables/data/useSiteSettings';
     import { useContactFaqSeo } from '@/composables/seo/useContactFaqSeo';
     import { useContactSeo, SITE_CONFIG } from '@/composables/seo/useSeo';
     import { useScrollToTop } from '@/composables/ui/useScrollToTop';
-    import { useContactInfo } from '@/services/api/modules/contact';
+
+    import type { ContactSocialLink } from '@/types/feature/contact';
 
     useContactSeo();
     const { items: faqItems } = useContactFaqSeo();
@@ -117,36 +119,37 @@
     const name = author.name;
     const jobTitle = author.jobTitle;
 
-    const socialLinks = [
-        { name: 'GitHub', icon: 'github', url: 'https://github.com/jubskan3ki' },
-        { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
-    ];
+    const { settings } = await useSiteSettings();
 
-    const { data: contactInfo } = useContactInfo();
-
-    const contactAddress = computed(() => contactInfo.value?.address?.city ?? 'Paris, France');
-    const contactEmail = computed(() => contactInfo.value?.email ?? 'contact@aitaddajuba.fr');
-    const contactPhone = computed(() => contactInfo.value?.phone ?? '+33 6 95 21 71 97');
-
-    const socialMediaLinks = computed(() => {
-        if (contactInfo.value?.socialMedia) {
-            const social = contactInfo.value.socialMedia;
-            const links = [];
-            if (social.linkedin) {
-                links.push({ name: 'LinkedIn', icon: 'linkedin', url: social.linkedin });
-            }
-            if (social.github) {
-                links.push({ name: 'GitHub', icon: 'github', url: social.github });
-            }
-            if (social.medium) {
-                links.push({ name: 'Medium', icon: 'medium', url: social.medium });
-            }
-            return links;
+    const profileSocialLinks = computed<ContactSocialLink[]>(() => {
+        const links: ContactSocialLink[] = [];
+        if (settings.value.socialGithub) {
+            links.push({ name: 'GitHub', icon: 'github', url: settings.value.socialGithub });
         }
-        return [
-            { name: 'LinkedIn', icon: 'linkedin', url: 'https://www.linkedin.com/in/juba-aitadda/' },
-            { name: 'GitHub', icon: 'github', url: 'https://github.com/jubskan3ki' },
-        ];
+        if (settings.value.socialLinkedin) {
+            links.push({ name: 'LinkedIn', icon: 'linkedin', url: settings.value.socialLinkedin });
+        }
+        return links;
+    });
+
+    const contactAddress = computed(() =>
+        [settings.value.addressCity, settings.value.addressCountry].filter(Boolean).join(', '),
+    );
+    const contactEmail = computed(() => settings.value.email);
+    const contactPhone = computed(() => settings.value.phone);
+
+    const socialMediaLinks = computed<ContactSocialLink[]>(() => {
+        const links: ContactSocialLink[] = [];
+        if (settings.value.socialLinkedin) {
+            links.push({ name: 'LinkedIn', icon: 'linkedin', url: settings.value.socialLinkedin });
+        }
+        if (settings.value.socialGithub) {
+            links.push({ name: 'GitHub', icon: 'github', url: settings.value.socialGithub });
+        }
+        if (settings.value.socialMedium) {
+            links.push({ name: 'Medium', icon: 'medium', url: settings.value.socialMedium });
+        }
+        return links;
     });
 </script>
 

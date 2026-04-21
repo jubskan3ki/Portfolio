@@ -11,7 +11,6 @@ export const SITE_CONFIG: SiteConfig = {
     url: 'https://juba-aitadda.dev',
     defaultImage: '/og-image.png',
     locale: 'fr_FR',
-    twitterHandle: '@juba_aitadda',
     author: {
         name: 'Juba Ait-Adda',
         givenName: 'Juba',
@@ -55,7 +54,6 @@ const KNOWS_ABOUT = [
 const SAME_AS = [
     'https://github.com/jubskan3ki',
     'https://www.linkedin.com/in/juba-aitadda/',
-    'https://x.com/juba_aitadda',
 ];
 
 // ISO date YYYY-MM-DD, évaluée au rendu SSR pour garder JobPosting / seeks frais.
@@ -129,8 +127,6 @@ export function useSeo(options: SeoOptions) {
         twitterDescription: options.description,
         twitterImage: imageUrl,
         twitterImageAlt: imageAlt,
-        twitterCreator: SITE_CONFIG.twitterHandle,
-        twitterSite: SITE_CONFIG.twitterHandle,
         ...(options.publishedTime && { articlePublishedTime: options.publishedTime }),
         ...(options.modifiedTime && { articleModifiedTime: options.modifiedTime }),
         ...(options.author && { articleAuthor: [options.author] }),

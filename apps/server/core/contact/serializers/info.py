@@ -37,7 +37,6 @@ class ContactInfoSerializer(serializers.ModelSerializer):
             "country",
             "linkedin",
             "github",
-            "twitter",
             "medium",
             "availability_status",
             "availability_message",
@@ -50,7 +49,6 @@ class ContactInfoSerializer(serializers.ModelSerializer):
             "country": {"write_only": True, "required": False, "allow_blank": True},
             "linkedin": {"write_only": True, "required": False, "allow_blank": True},
             "github": {"write_only": True, "required": False, "allow_blank": True},
-            "twitter": {"write_only": True, "required": False, "allow_blank": True},
             "medium": {"write_only": True, "required": False, "allow_blank": True},
             "availability_status": {"write_only": True, "required": False},
             "availability_message": {"write_only": True, "required": False, "allow_blank": True},
@@ -70,13 +68,12 @@ class ContactInfoSerializer(serializers.ModelSerializer):
 
     def get_socialMedia(self, obj: ContactInfo) -> dict[str, str | None] | None:
         """Construit l'objet de medias sociaux."""
-        if not (obj.linkedin or obj.github or obj.twitter or obj.medium):
+        if not (obj.linkedin or obj.github or obj.medium):
             return None
 
         return {
             "linkedin": obj.linkedin or None,
             "github": obj.github or None,
-            "twitter": obj.twitter or None,
             "medium": obj.medium or None,
         }
 
@@ -114,7 +111,7 @@ class ContactInfoSerializer(serializers.ModelSerializer):
 
             social = data.pop("socialMedia", None)
             if isinstance(social, dict):
-                for key in ("linkedin", "github", "twitter", "medium"):
+                for key in ("linkedin", "github", "medium"):
                     if key in social:
                         data[key] = social.get(key) or ""
 

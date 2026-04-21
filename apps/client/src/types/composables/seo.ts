@@ -26,7 +26,6 @@ export interface SiteConfig {
     url: string;
     defaultImage: string;
     locale: string;
-    twitterHandle: string;
     author: {
         name: string;
         givenName: string;
