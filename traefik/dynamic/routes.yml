@@ -26,12 +26,42 @@ http:
                     path: /healthz
                     interval: 30s
 
+        grafana:
+            loadBalancer:
+                servers:
+                    - url: "http://grafana:3000"
+
+        prometheus:
+            loadBalancer:
+                servers:
+                    - url: "http://prometheus:9090"
+
     routers:
         # Dashboard Traefik : sous-domaine dédié (auto-cert)
         traefik-dashboard:
             rule: "Host(`traefik.aitaddajuba.fr`)"
             entryPoints: [websecure]
             service: api@internal
+            middlewares: [dashboard-auth@file, security-headers@file]
+            priority: 200
+            tls:
+                certResolver: letsencrypt
+
+        # Grafana : auth gérée par Grafana lui-même (admin / ADMIN_PASSWORD)
+        grafana:
+            rule: "Host(`grafana.aitaddajuba.fr`)"
+            entryPoints: [websecure]
+            service: grafana
+            middlewares: [security-headers@file, compress@file]
+            priority: 200
+            tls:
+                certResolver: letsencrypt
+
+        # Prometheus : pas d'auth native, on impose BasicAuth (même que dashboard Traefik)
+        prometheus:
+            rule: "Host(`prometheus.aitaddajuba.fr`)"
+            entryPoints: [websecure]
+            service: prometheus
             middlewares: [dashboard-auth@file, security-headers@file]
             priority: 200
             tls:
