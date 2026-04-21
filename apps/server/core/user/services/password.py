@@ -2,7 +2,6 @@
 
 import hmac
 import logging
-import random
 import secrets
 import time
 from typing import Any
@@ -38,7 +37,7 @@ class PasswordService:
     def _ensure_min_response_time(start_time: float) -> None:
         """Assure un temps de reponse minimum avec jitter pour eviter les timing attacks."""
         elapsed = time.time() - start_time
-        jitter = random.uniform(0, 0.5)  # noqa: S311
+        jitter = secrets.randbelow(500) / 1000.0
         target = MIN_RESPONSE_TIME + jitter
         if elapsed < target:
             time.sleep(target - elapsed)

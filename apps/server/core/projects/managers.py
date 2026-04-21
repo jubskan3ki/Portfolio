@@ -23,11 +23,20 @@ class ProjectQuerySet(models.QuerySet):
         return self.with_related().filter(status__name__iexact=name)
 
 
-class ProjectManager(models.Manager.from_queryset(ProjectQuerySet)):
+class ProjectManager(models.Manager):
     """Manager pour les projets avec select_related par defaut."""
 
     def get_queryset(self) -> ProjectQuerySet:
-        return super().get_queryset().select_related("category", "status")
+        return ProjectQuerySet(self.model, using=self._db).select_related("category", "status")
+
+    def with_related(self) -> ProjectQuerySet:
+        return self.get_queryset().with_related()
+
+    def by_category(self, slug: str) -> ProjectQuerySet:
+        return self.get_queryset().by_category(slug)
+
+    def by_status(self, name: str) -> ProjectQuerySet:
+        return self.get_queryset().by_status(name)
 
 
 class ProjectCategoryManager(WithItemCountMixin, models.Manager):

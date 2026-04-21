@@ -13,7 +13,7 @@ from .resource import StackResourceSerializer
 class RelatedStackSerializer(serializers.ModelSerializer):
     """Serializer pour les stacks associees (version legere)."""
 
-    category = serializers.StringRelatedField()
+    category: serializers.StringRelatedField = serializers.StringRelatedField()
     relationship = serializers.SerializerMethodField()
 
     class Meta:
@@ -29,7 +29,7 @@ class RelatedStackSerializer(serializers.ModelSerializer):
 class StackListSerializer(serializers.ModelSerializer):
     """Serializer pour la liste des stacks (version allegee)."""
 
-    category = serializers.StringRelatedField()
+    category: serializers.StringRelatedField = serializers.StringRelatedField()
     experience = serializers.SerializerMethodField()
 
     class Meta:
@@ -56,7 +56,7 @@ class StackListSerializer(serializers.ModelSerializer):
 class StackDetailSerializer(serializers.ModelSerializer):
     """Serializer pour les details d'une stack (lecture seule)."""
 
-    category = serializers.StringRelatedField()
+    category: serializers.StringRelatedField = serializers.StringRelatedField()
     resources = StackResourceSerializer(many=True, read_only=True)
     related_stacks = serializers.SerializerMethodField()
     experience = serializers.SerializerMethodField()

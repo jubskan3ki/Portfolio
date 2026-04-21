@@ -13,9 +13,11 @@ from ..services.article import ArticleService
 class ArticleWriteSerializer(serializers.ModelSerializer):
     """Serialiseur pour la creation et mise a jour des articles."""
 
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, required=False)
-    content = JSONBlockListField(required=False, default=list)
+    category: serializers.PrimaryKeyRelatedField = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+    tags: serializers.PrimaryKeyRelatedField = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), many=True, required=False
+    )
+    content: JSONBlockListField = JSONBlockListField(required=False, default=list)
 
     class Meta:
         model = Article
@@ -71,8 +73,8 @@ class ArticleWriteSerializer(serializers.ModelSerializer):
 class _ArticleReadFieldsMixin(serializers.Serializer):
     """Champs de lecture communs aux serialiseurs liste et detail."""
 
-    category = serializers.StringRelatedField()
-    tags = serializers.SerializerMethodField()
+    category: serializers.StringRelatedField = serializers.StringRelatedField()
+    tags: serializers.SerializerMethodField = serializers.SerializerMethodField()
     date = serializers.DateTimeField(source="published_date")
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
     seoTitle = serializers.CharField(source="seo_title", read_only=True)

@@ -146,20 +146,22 @@ class StatsService:
     ) -> list[dict[str, Any]]:
         """Collecte les activites created/updated d'un modele."""
         items = (
-            model.objects.select_related(None)
+            model._default_manager.select_related(None)
             .only("id", title_field, "created_at", "updated_at")
             .order_by("-updated_at")[:limit]
         )
         activities = []
         for item in items:
-            is_new = item.created_at.date() == item.updated_at.date() if item.created_at and item.updated_at else True
+            created_at = getattr(item, "created_at", None)
+            updated_at = getattr(item, "updated_at", None)
+            is_new = created_at.date() == updated_at.date() if created_at and updated_at else True
             activities.append(
                 {
-                    "id": item.id,
+                    "id": item.pk,
                     "type": type_name,
                     "action": "created" if is_new else "updated",
                     "title": getattr(item, title_field),
-                    "timestamp": item.updated_at,
+                    "timestamp": updated_at,
                     "module": module,
                 }
             )

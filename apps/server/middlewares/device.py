@@ -11,22 +11,12 @@ logger = logging.getLogger("security")
 
 
 def get_session_id_from_request(request: Any) -> str | None:
-    """Recupere l'ID de session depuis le fingerprint du JWT.
-
-    Le fingerprint est stocke dans le token lors du login et sert
-    d'identifiant unique de session par appareil/navigateur.
-
-    Args:
-        request: Objet request Django.
-
-    Returns:
-        Le fingerprint hash ou None.
-    """
+    """Recupere l'ID de session depuis les claims du JWT."""
     auth = getattr(request, "auth", None)
     if auth:
-        fingerprint = auth.get("fingerprint")
-        if fingerprint:
-            return str(fingerprint)
+        session_id = auth.get("session_id")
+        if session_id:
+            return str(session_id)
     return None
 
 
@@ -35,13 +25,11 @@ class DeviceTrackingMiddleware(MiddlewareMixin):
 
     def process_request(self, request: Any) -> None:
         """Extrait les informations de l'appareil et gere la session."""
-        # Extraire les informations de l'appareil
         fingerprint = generate_fingerprint(request)
         device_info: dict[str, Any] = extract_device_info(request)
         request.device_info = device_info
         request.fingerprint = fingerprint
 
-        # Gerer la session si l'utilisateur est authentifie
         if not self._is_authenticated(request):
             return
 
@@ -49,10 +37,10 @@ class DeviceTrackingMiddleware(MiddlewareMixin):
         if not session_manager:
             return
 
-        # Use fingerprint hash as session ID (consistent with login)
-        session_id = fingerprint.fingerprint_hash
+        session_id = get_session_id_from_request(request)
+        if not session_id:
+            return
 
-        # Update session activity
         session_manager.update_activity(session_id)
 
         request.session_manager = session_manager

@@ -1,6 +1,7 @@
 """Vues pour l'authentification des administrateurs."""
 
 import logging
+import uuid
 from typing import Any, cast
 
 from django.conf import settings
@@ -52,14 +53,14 @@ class AdminLoginView(APIView):
         serializer.is_valid(raise_exception=True)
         data = cast(dict[str, Any], serializer.validated_data)
 
-        # Generate fingerprint first to include in JWT
         fingerprint = generate_fingerprint(request)
+        session_id = uuid.uuid4().hex
 
         try:
             auth_result = AdminService.login_user(
                 email=data["email"],
                 password=data["password"],
-                fingerprint_hash=fingerprint.fingerprint_hash,
+                session_id=session_id,
             )
         except PermissionDenied as e:
             return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
@@ -73,13 +74,12 @@ class AdminLoginView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         else:
-            # Create session in SessionManager with refresh token JTI for revocation
             refresh_token = RefreshToken(auth_result["refresh"])
             refresh_jti = str(refresh_token.get("jti", ""))
 
             session_manager = SessionManager(auth_result["user"].id)
             session_manager.add_session(
-                fingerprint.fingerprint_hash,
+                session_id,
                 {
                     "browser": fingerprint.browser,
                     "os": fingerprint.os,
@@ -116,20 +116,21 @@ class AdminLogoutView(APIView):
         """Traite une demande de deconnexion admin."""
         refresh_token = get_refresh_token_from_cookie(request)
         user_id = None
+        session_id = None
 
         if refresh_token:
             try:
                 token = RefreshToken(refresh_token)
                 user_id = token.get("user_id")
+                session_id = token.get("session_id")
                 if hasattr(token, "blacklist"):
                     token.blacklist()
             except (TokenError, ValueError, TypeError):
                 pass
 
-        if user_id:
-            fingerprint = generate_fingerprint(request)
+        if user_id and session_id:
             session_manager = SessionManager(user_id)
-            session_manager.remove_session(fingerprint.fingerprint_hash)
+            session_manager.remove_session(session_id)
 
         response = Response({"detail": "Deconnexion reussie."}, status=status.HTTP_200_OK)
         return clear_auth_cookies(response)
@@ -159,21 +160,17 @@ class AdminRefreshView(APIView):
         try:
             refresh_token = RefreshToken(refresh_token_str)
 
-            # Validate fingerprint matches the one in refresh token
-            token_fingerprint = refresh_token.get("fingerprint")
-            if token_fingerprint:
-                current_fingerprint = generate_fingerprint(request)
-                if current_fingerprint.fingerprint_hash != token_fingerprint:
-                    logger.warning(
-                        "Fingerprint mismatch during refresh: expected %s, got %s",
-                        token_fingerprint[:8],
-                        current_fingerprint.fingerprint_hash[:8],
-                    )
-                    response = Response(
-                        {"detail": "Session invalide"},
-                        status=status.HTTP_401_UNAUTHORIZED,
-                    )
-                    return clear_auth_cookies(response)
+            token_session_id = refresh_token.get("session_id")
+            token_user_id = refresh_token.get("user_id")
+
+            if not token_session_id or not token_user_id:
+                response = Response({"detail": "Session invalide"}, status=status.HTTP_401_UNAUTHORIZED)
+                return clear_auth_cookies(response)
+
+            if not SessionManager(token_user_id).is_session_valid(str(token_session_id)):
+                logger.info("Refresh refuse: session %s revoquee", str(token_session_id)[:8])
+                response = Response({"detail": "Session revoquee"}, status=status.HTTP_401_UNAUTHORIZED)
+                return clear_auth_cookies(response)
 
             new_access_token = str(refresh_token.access_token)
             new_refresh_token = None
@@ -194,10 +191,9 @@ class AdminRefreshView(APIView):
                 user = User.objects.get(id=user_id)
                 new_refresh = RefreshToken.for_user(user)
 
-                # Preserve fingerprint in new refresh token
-                if token_fingerprint:
-                    new_refresh["fingerprint"] = token_fingerprint
-                    new_refresh.access_token["fingerprint"] = token_fingerprint
+                if token_session_id:
+                    new_refresh["session_id"] = token_session_id
+                    new_refresh.access_token["session_id"] = token_session_id
 
                 new_refresh_token = str(new_refresh)
 

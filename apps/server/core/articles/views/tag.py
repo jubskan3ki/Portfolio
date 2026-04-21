@@ -46,13 +46,32 @@ class TagViewSet(BaseAPIViewSet):
         - list/retrieve: annote published_count et view_count_sum.
         - Public: exclut les tags sans article publie (published_count > 0).
         - list: tri par view_count_sum DESC, puis published_count DESC, puis name.
+        - Query params ?category=<slug>&search=<str>: restreint le comptage aux
+          articles qui matchent ces filtres, puis exclut les tags qui tombent a
+          count=0 (le frontend n'affiche que des options encore pertinentes).
         """
         qs = super().get_queryset()
         if self.action in ("list", "retrieve"):
             now = timezone.now()
             published_filter = Q(articles__is_published=True, articles__published_date__lte=now)
+
+            if self.action == "list":
+                category = self.request.query_params.get("category")
+                if category:
+                    category_filter = Q(articles__category__slug=category)
+                    if category.isdigit():
+                        category_filter |= Q(articles__category_id=int(category))
+                    published_filter &= category_filter
+                search = self.request.query_params.get("search")
+                if search:
+                    published_filter &= (
+                        Q(articles__title__icontains=search)
+                        | Q(articles__excerpt__icontains=search)
+                        | Q(articles__content__icontains=search)
+                    )
+
             qs = qs.annotate(
-                published_count=Count("articles", filter=published_filter),
+                published_count=Count("articles", filter=published_filter, distinct=True),
                 view_count_sum=Coalesce(
                     Sum("articles__view_count", filter=published_filter),
                     0,

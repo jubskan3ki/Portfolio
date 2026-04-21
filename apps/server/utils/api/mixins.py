@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast
 from django.db.models import Model, QuerySet
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
-from rest_framework.serializers import Serializer
+from rest_framework.serializers import BaseSerializer, Serializer
 
 if TYPE_CHECKING:
     from rest_framework.request import Request
@@ -66,9 +66,11 @@ class SlugOrPkLookupMixin:
     lookup_field: str = "slug"
     lookup_url_kwarg: str | None = None
     kwargs: dict[str, str]
-    request: Request
 
     if TYPE_CHECKING:
+        # Widened to Any to avoid MRO clashes with django.views.View.request (HttpRequest)
+        # when this mixin is combined with a DRF ViewSet that exposes rest_framework.Request.
+        request: Any
 
         def get_queryset(self) -> QuerySet[Any]: ...
         def filter_queryset(self, queryset: QuerySet[Any]) -> QuerySet[Any]: ...
@@ -108,9 +110,10 @@ class AdminWritePermissionMixin:
 class LoggingMixin:
     """Logs automatiques sur create/update/destroy."""
 
-    request: Request
+    if TYPE_CHECKING:
+        request: Any
 
-    def perform_create(self, serializer: Serializer) -> None:
+    def perform_create(self, serializer: BaseSerializer[Any]) -> None:
         instance = serializer.save()
         logger.info(
             "[CREATE] %s id=%s by user=%s",
@@ -119,7 +122,7 @@ class LoggingMixin:
             getattr(self.request.user, "id", "anonymous"),
         )
 
-    def perform_update(self, serializer: Serializer) -> None:
+    def perform_update(self, serializer: BaseSerializer[Any]) -> None:
         instance = serializer.save()
         logger.info(
             "[UPDATE] %s id=%s by user=%s",

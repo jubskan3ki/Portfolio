@@ -3,10 +3,6 @@
         <div class="session-list__header">
             <div>
                 <h3 class="session-list__title">Sessions actives</h3>
-                <p v-if="lockEnabled" class="session-list__hint">
-                    <BaseIcon name="shield" :size="12" />
-                    Verrouillage fingerprint actif
-                </p>
             </div>
             <BaseButton
                 v-if="otherSessionsCount > 0"
@@ -58,7 +54,6 @@
     const { success: showSuccess, error: showError } = useAlert();
 
     const sessions = computed(() => sessionsData.value?.sessions ?? []);
-    const lockEnabled = computed(() => sessionsData.value?.fingerprintLockEnabled ?? false);
     const otherSessionsCount = computed(() => sessions.value.filter((s) => !s.isCurrent).length);
     const revokingSessionId = ref<string | null>(null);
 

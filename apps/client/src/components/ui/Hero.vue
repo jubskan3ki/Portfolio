@@ -1,13 +1,12 @@
 <template>
     <section
-        ref="heroRef"
         class="hero"
         :class="[`hero--${variant}`, { 'hero--compact': size === 'compact', 'hero--has-stats': hasStats }]"
     >
         <SectionBackground :variant="variant" />
 
         <div class="container">
-            <div class="hero__wrapper" :style="parallaxStyle">
+            <div class="hero__wrapper">
                 <div class="hero__card">
                     <div class="hero__card-inner">
                         <div v-if="$slots.breadcrumb" class="hero__breadcrumb">
@@ -60,10 +59,9 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, onMounted, onUnmounted, useSlots } from 'vue';
+    import { computed, useSlots } from 'vue';
 
     import SectionBackground from '@/components/ui/SectionBackground.vue';
-    import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
     import { resolveMediaUrl } from '@/services/utils/helpers';
 
     import type { HeroProps } from '@/types/components/ui';
@@ -95,58 +93,6 @@
     const logoTransitionStyle = computed(() =>
         props.transitionKey ? { viewTransitionName: `hero-media-${props.transitionKey}` } : undefined,
     );
-
-    const heroRef = ref<HTMLElement | null>(null);
-    const scrollY = ref(0);
-    const isHeroVisible = ref(true);
-    const { prefersReducedMotion } = useReducedMotion();
-
-    const parallaxStyle = computed(() => {
-        if (prefersReducedMotion.value || props.parallaxIntensity === 0) {
-            return {};
-        }
-        return { transform: `translateY(${scrollY.value * props.parallaxIntensity}px)` };
-    });
-
-    let rafId = 0;
-    const updateScrollY = () => {
-        rafId = 0;
-        scrollY.value = window.scrollY;
-    };
-    const handleScroll = () => {
-        if (!isHeroVisible.value || rafId !== 0) {
-            return;
-        }
-        rafId = requestAnimationFrame(updateScrollY);
-    };
-
-    let observer: IntersectionObserver | null = null;
-
-    onMounted(() => {
-        if (prefersReducedMotion.value || props.parallaxIntensity === 0 || !heroRef.value) {
-            return;
-        }
-
-        observer = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    isHeroVisible.value = entry.isIntersecting;
-                }
-            },
-            { rootMargin: '0px' },
-        );
-        observer.observe(heroRef.value);
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-    });
-
-    onUnmounted(() => {
-        window.removeEventListener('scroll', handleScroll);
-        if (rafId !== 0) {
-            cancelAnimationFrame(rafId);
-        }
-        observer?.disconnect();
-    });
 </script>
 
 <style lang="scss" scoped>
@@ -171,7 +117,6 @@
         &__wrapper {
             position: relative;
             z-index: 1;
-            will-change: transform;
         }
 
         &__card {

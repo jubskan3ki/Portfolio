@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from django.db.models import Model
 from django.db.models.signals import post_save
+
+if TYPE_CHECKING:
+    from core.user.models import User as AppUser
 
 from core.audit.signals import IGNORED_FIELDS, _serialize_value, get_audit_context
 from core.versioning.models import Version
@@ -51,7 +54,7 @@ def _snapshot(sender, instance: Model, created, **kwargs) -> None:
             object_id=object_id,
             version_number=_next_version_number(model_name, object_id),
             snapshot=_build_snapshot(instance),
-            created_by=context["user"],
+            created_by=cast("AppUser | None", context["user"]),
         )
     except Exception:
         logger.exception("Failed to create version snapshot for %s", instance)

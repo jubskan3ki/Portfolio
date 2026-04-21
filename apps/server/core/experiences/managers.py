@@ -23,11 +23,20 @@ class ExperienceQuerySet(models.QuerySet):
         return self.with_related().filter(type__name__iexact=type_name)
 
 
-class ExperienceManager(models.Manager.from_queryset(ExperienceQuerySet)):
+class ExperienceManager(models.Manager):
     """Manager pour les experiences avec select_related par defaut."""
 
     def get_queryset(self) -> ExperienceQuerySet:
-        return super().get_queryset().select_related("type")
+        return ExperienceQuerySet(self.model, using=self._db).select_related("type")
+
+    def with_related(self) -> ExperienceQuerySet:
+        return self.get_queryset().with_related()
+
+    def current(self) -> ExperienceQuerySet:
+        return self.get_queryset().current()
+
+    def by_type(self, type_name: str) -> ExperienceQuerySet:
+        return self.get_queryset().by_type(type_name)
 
 
 class ExperienceTypeManager(WithItemCountMixin, models.Manager):

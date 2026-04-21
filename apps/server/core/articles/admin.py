@@ -27,7 +27,7 @@ class CategoryAdmin(admin.ModelAdmin):
     @admin.display(description="Nombre d'articles")
     def get_article_count(self, obj: Category) -> int:
         """Nombre d'articles dans cette categorie."""
-        return obj.published_article_count  # type: ignore[attr-defined]
+        return getattr(obj, "published_article_count", 0)
 
 
 @admin.register(Tag)
@@ -48,7 +48,7 @@ class TagAdmin(admin.ModelAdmin):
     @admin.display(description="Nombre d'articles")
     def get_article_count(self, obj: Tag) -> int:
         """Nombre d'articles avec ce tag."""
-        return obj.published_article_count  # type: ignore[attr-defined]
+        return getattr(obj, "published_article_count", 0)
 
 
 @admin.register(Article)

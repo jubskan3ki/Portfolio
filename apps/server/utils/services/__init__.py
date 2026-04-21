@@ -65,7 +65,7 @@ class BaseService(Generic[T]):
     @classmethod
     def _get_base_queryset(cls) -> QuerySet[T]:
         """Queryset pour les listes (select_related)."""
-        return cls.model.objects.all()
+        return cls.model._default_manager.all()
 
     @classmethod
     def _get_detail_queryset(cls) -> QuerySet[T]:
@@ -118,7 +118,7 @@ class BaseService(Generic[T]):
         Returns:
             L'instance creee.
         """
-        instance = cls.model.objects.create(**data)
+        instance = cls.model._default_manager.create(**data)
         cls._get_logger().info("%s cree: id=%s", cls.entity_name, instance.pk)
         return instance
 
@@ -161,7 +161,7 @@ class BaseService(Generic[T]):
     @classmethod
     def exists(cls, slug: str) -> bool:
         """Verifie si une instance avec ce slug existe."""
-        return cls.model.objects.filter(slug=slug).exists()
+        return cls.model._default_manager.filter(slug=slug).exists()
 
 
 def increment_view_count(instance: models.Model, field_name: str = "view_count") -> None:
@@ -174,7 +174,7 @@ def increment_view_count(instance: models.Model, field_name: str = "view_count")
         field_name: Nom du champ a incrementer.
     """
     model_class: type[models.Model] = instance.__class__
-    model_class.objects.filter(pk=instance.pk).update(**{field_name: F(field_name) + 1})
+    model_class._default_manager.filter(pk=instance.pk).update(**{field_name: F(field_name) + 1})
 
 
 __all__ = ["BaseService", "apply_update", "increment_view_count"]

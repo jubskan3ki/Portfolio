@@ -55,7 +55,7 @@ class ExperienceWriteSerializer(serializers.ModelSerializer):
 class ExperienceSerializer(serializers.ModelSerializer):
     """Serializer pour les experiences professionnelles."""
 
-    type = serializers.StringRelatedField()
+    type: serializers.StringRelatedField = serializers.StringRelatedField()
     startDate = serializers.DateField(source="start_date")
     endDate = serializers.DateField(source="end_date", required=False, allow_null=True)
     isCurrent = serializers.BooleanField(source="is_current", read_only=True)

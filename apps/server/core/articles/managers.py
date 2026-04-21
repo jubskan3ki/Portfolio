@@ -31,7 +31,20 @@ class CategoryQuerySet(models.QuerySet):
         return self.order_by("name")
 
 
-CategoryManager = models.Manager.from_queryset(CategoryQuerySet)
+class CategoryManager(models.Manager):
+    """Manager pour les categories d'articles."""
+
+    def get_queryset(self) -> CategoryQuerySet:
+        return CategoryQuerySet(self.model, using=self._db)
+
+    def with_article_count(self) -> CategoryQuerySet:
+        return self.get_queryset().with_article_count()
+
+    def non_empty(self) -> CategoryQuerySet:
+        return self.get_queryset().non_empty()
+
+    def ordered_by_name(self) -> CategoryQuerySet:
+        return self.get_queryset().ordered_by_name()
 
 
 class TagQuerySet(models.QuerySet):
@@ -70,7 +83,23 @@ class TagQuerySet(models.QuerySet):
         return self.order_by("name")
 
 
-TagManager = models.Manager.from_queryset(TagQuerySet)
+class TagManager(models.Manager):
+    """Manager pour les tags d'articles."""
+
+    def get_queryset(self) -> TagQuerySet:
+        return TagQuerySet(self.model, using=self._db)
+
+    def with_article_count(self) -> TagQuerySet:
+        return self.get_queryset().with_article_count()
+
+    def with_view_count_sum(self) -> TagQuerySet:
+        return self.get_queryset().with_view_count_sum()
+
+    def non_empty(self) -> TagQuerySet:
+        return self.get_queryset().non_empty()
+
+    def ordered_by_name(self) -> TagQuerySet:
+        return self.get_queryset().ordered_by_name()
 
 
 class ArticleQuerySet(models.QuerySet):
@@ -169,4 +198,41 @@ class ArticleQuerySet(models.QuerySet):
         )
 
 
-ArticleManager = models.Manager.from_queryset(ArticleQuerySet)
+class ArticleManager(models.Manager):
+    """Manager pour les articles avec QuerySet personnalise."""
+
+    def get_queryset(self) -> ArticleQuerySet:
+        return ArticleQuerySet(self.model, using=self._db)
+
+    def select_with_related(self) -> ArticleQuerySet:
+        return self.get_queryset().select_with_related()
+
+    def published(self) -> ArticleQuerySet:
+        return self.get_queryset().published()
+
+    def published_with_related(self) -> ArticleQuerySet:
+        return self.get_queryset().published_with_related()
+
+    def featured(self) -> ArticleQuerySet:
+        return self.get_queryset().featured()
+
+    def popular(self, limit: int = 5) -> ArticleQuerySet:
+        return self.get_queryset().popular(limit)
+
+    def recent(self, limit: int = 5) -> ArticleQuerySet:
+        return self.get_queryset().recent(limit)
+
+    def by_category(self, category_slug: str) -> ArticleQuerySet:
+        return self.get_queryset().by_category(category_slug)
+
+    def by_tag(self, tag_name: str) -> ArticleQuerySet:
+        return self.get_queryset().by_tag(tag_name)
+
+    def search(self, query: str) -> ArticleQuerySet:
+        return self.get_queryset().search(query)
+
+    def full_text_search(self, query: str, language: str = "french") -> ArticleQuerySet:
+        return self.get_queryset().full_text_search(query, language)
+
+    def similar_to(self, title: str, threshold: float = 0.3) -> ArticleQuerySet:
+        return self.get_queryset().similar_to(title, threshold)

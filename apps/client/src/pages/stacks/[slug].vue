@@ -7,18 +7,9 @@
         </div>
 
         <template v-else-if="currentStack">
-            <Hero
-                :title="currentStack.name"
-                :transition-key="currentStack.slug"
-                variant="dark"
-                has-meta
-            >
+            <Hero :title="currentStack.name" :transition-key="currentStack.slug" variant="dark" has-meta>
                 <template v-if="breadcrumbItems.length > 1" #breadcrumb>
-                    <Breadcrumb
-                        :items="breadcrumbItems"
-                        variant="hero"
-                        separator="chevron"
-                    />
+                    <Breadcrumb :items="breadcrumbItems" variant="hero" separator="chevron" />
                 </template>
                 <template #meta>
                     <div class="hero__meta-item">
@@ -240,7 +231,8 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { useQueryClient } from '@tanstack/vue-query';
+    import { computed, ref, unref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
@@ -262,7 +254,14 @@
     import { useBreadcrumbSeo } from '@/composables/seo/useBreadcrumbSeo';
     import { useStackSeo } from '@/composables/seo/useSeo';
     import { ROUTES } from '@/config/routes';
-    import { useStack, useFeaturedStacks, useStackProjects, useStackArticles } from '@/services/api/modules/stacks';
+    import {
+        stackKeys,
+        stacksApi,
+        useStack,
+        useFeaturedStacks,
+        useStackProjects,
+        useStackArticles,
+    } from '@/services/api/modules/stacks';
 
     import type { BreadcrumbSeoItem } from '@/types/composables/seo';
     import type { StackResourceType } from '@/types/feature/stacks';
@@ -270,6 +269,38 @@
     const router = useRouter();
 
     const { slug } = useDetailSlug(ROUTES.STACKS.path);
+
+    // SSR-prefetch detail + sidebars (kills CLS on first paint).
+    const queryClient = useQueryClient();
+    await useAsyncData(
+        () => `stack-${unref(slug)}`,
+        async () => {
+            const slugValue = unref(slug);
+            if (!slugValue) {
+                return true;
+            }
+            await Promise.all([
+                queryClient.prefetchQuery({
+                    queryKey: stackKeys.detail(slugValue),
+                    queryFn: () => stacksApi.getBySlug(slugValue),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: stackKeys.featured(5),
+                    queryFn: () => stacksApi.getFeatured(5),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: stackKeys.projects(slugValue),
+                    queryFn: () => stacksApi.getProjects(slugValue),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: stackKeys.articles(slugValue),
+                    queryFn: () => stacksApi.getArticles(slugValue),
+                }),
+            ]);
+            return true;
+        },
+        { watch: [slug] },
+    );
 
     const { data: currentStack, isLoading, isError, error } = useStack(slug);
     const { data: featuredStacks } = useFeaturedStacks(5);

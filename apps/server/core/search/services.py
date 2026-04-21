@@ -5,13 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from django.contrib.postgres.search import (
-    SearchHeadline,
-    SearchQuery,
-    SearchRank,
-)
+from django.contrib.postgres.search import SearchHeadline, SearchQuery, SearchRank
 from django.db import connection
-from django.db.models import F, Q, QuerySet
+from django.db.models import F, Model, Q, QuerySet
 
 from core.articles.models import Article
 from core.experiences.models import Experience
@@ -116,8 +112,8 @@ class SearchService:
             return self._search_postgres(type_name, config, queryset)
         return self._search_fallback(type_name, config, queryset)
 
-    def _get_base_queryset(self, type_name: str, model: type) -> QuerySet:
-        queryset = model.objects.all()
+    def _get_base_queryset(self, type_name: str, model: type[Model]) -> QuerySet:
+        queryset = model._default_manager.all()
         if type_name == "articles" and not (self.user and getattr(self.user, "is_staff", False)):
             queryset = queryset.filter(is_published=True)
         return queryset

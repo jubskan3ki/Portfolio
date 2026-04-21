@@ -19,7 +19,8 @@ class ORJSONRenderer(BaseRenderer):
     format = "json"
     charset = None  # orjson retourne bytes
 
-    def render(self, data, accepted_media_type=None, renderer_context=None):  # noqa: ARG002
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        del accepted_media_type, renderer_context
         if data is None:
             return b""
         return orjson.dumps(

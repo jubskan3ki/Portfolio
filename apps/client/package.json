@@ -15,8 +15,8 @@
         "lint": "eslint src/",
         "lint:fix": "eslint src/ --fix",
         "lint:css": "stylelint \"src/**/*.{css,scss,vue}\"",
-        "format": "prettier --write \"src/**/*.{js,ts,vue,json,md}\"",
-        "format:css": "prettier --write \"src/**/*.scss\"",
+        "format": "prettier --write \"**/*.{json,md,yaml,yml}\" --ignore-unknown",
+        "format:css": "stylelint --fix \"src/**/*.{css,scss,vue}\"",
         "type-check": "vue-tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest",
@@ -51,6 +51,7 @@
         "web-vitals": "^5.1.0"
     },
     "devDependencies": {
+        "@axe-core/playwright": "^4.11.2",
         "@nuxt/eslint": "^1.15.2",
         "@nuxt/image": "^2.0.0",
         "@nuxtjs/seo": "^3.4.0",

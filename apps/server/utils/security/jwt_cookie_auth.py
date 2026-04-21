@@ -7,30 +7,21 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
-from utils.security.fingerprint import generate_fingerprint
+from utils.security.sessions import SessionManager
 
 logger = logging.getLogger("security")
 
 
 class JWTCookieAuthentication(BaseAuthentication):
-    """
-    Custom authentication class that reads JWT from HTTPOnly cookies.
+    """Authentification JWT via cookie HTTPOnly pour DRF.
 
-    This allows DRF to authenticate requests using cookies instead of
-    the Authorization header, which is more secure for browser-based apps.
-    Includes device fingerprint validation to prevent token theft.
+    Rejette le token si la session associee (claim `session_id`) n'existe
+    plus dans le SessionManager, afin qu'une revocation cote admin deconnecte
+    immediatement l'appareil concerne.
     """
 
     def authenticate(self, request):
-        """
-        Authenticate the request using JWT from cookie.
-
-        Returns a tuple of (user, token) if authentication succeeds,
-        or None if no cookie is present or token is invalid.
-
-        Validates that the request fingerprint matches the one stored in the token
-        to prevent session hijacking across different browsers/devices.
-        """
+        """Authentifie la requete en lisant le JWT depuis le cookie."""
         cookie_name = getattr(settings, "AUTH_COOKIE_ACCESS", "access_token")
         raw_token = request.COOKIES.get(cookie_name)
 
@@ -45,30 +36,22 @@ class JWTCookieAuthentication(BaseAuthentication):
             if not user or not user.is_authenticated:
                 return None
 
-            # Validate fingerprint if present in token
-            token_fingerprint = validated_token.get("fingerprint")
-            if token_fingerprint:
-                current_fingerprint = generate_fingerprint(request)
-                if current_fingerprint.fingerprint_hash != token_fingerprint:
-                    logger.warning(
-                        "Fingerprint mismatch for user %s: expected %s, got %s",
-                        user.pk,
-                        token_fingerprint[:8],
-                        current_fingerprint.fingerprint_hash[:8],
-                    )
-                    return None
+            session_id = validated_token.get("session_id")
+            if not session_id:
+                logger.warning("JWT sans session_id rejete pour user %s", user.pk)
+                return None
+
+            if not SessionManager(user.id).is_session_valid(str(session_id)):
+                logger.info("Session %s invalide/revoquee pour user %s", str(session_id)[:8], user.pk)
+                return None
 
             return (user, validated_token)
 
         except (InvalidToken, TokenError):
-            # Token invalid or expired - return None to allow refresh flow
             return None
         except (AttributeError, TypeError, ValueError):
             return None
 
     def authenticate_header(self, _request):
-        """
-        Return a string to be used as the value of the WWW-Authenticate
-        header in a 401 response.
-        """
+        """En-tete WWW-Authenticate pour les reponses 401."""
         return 'Bearer realm="api"'

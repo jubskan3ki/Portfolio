@@ -1,6 +1,7 @@
 """Views pour la gestion des jobs."""
 
 from datetime import timedelta
+from typing import TYPE_CHECKING, cast
 
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -11,6 +12,9 @@ from rest_framework.response import Response
 
 from ..models import ExportJob, ImportJob
 from ..serializers import ExportJobSerializer, ImportJobSerializer
+
+if TYPE_CHECKING:
+    from core.user.models import User as AppUser
 
 
 class JobViewSet(viewsets.ViewSet):
@@ -24,8 +28,8 @@ class JobViewSet(viewsets.ViewSet):
     )
     def list(self, request: Request) -> Response:
         """Liste tous les jobs de l'utilisateur."""
-        export_jobs = ExportJob.objects.filter(user=request.user).order_by("-created_at")[:20]
-        import_jobs = ImportJob.objects.filter(user=request.user).order_by("-created_at")[:20]
+        export_jobs = ExportJob.objects.filter(user=cast("AppUser", request.user)).order_by("-created_at")[:20]
+        import_jobs = ImportJob.objects.filter(user=cast("AppUser", request.user)).order_by("-created_at")[:20]
 
         return Response(
             {
@@ -41,7 +45,7 @@ class JobViewSet(viewsets.ViewSet):
     def export_detail(self, request: Request, job_id: str) -> Response:
         """Detail d'un job d'export."""
         try:
-            job = ExportJob.objects.get(id=job_id, user=request.user)
+            job = ExportJob.objects.get(id=job_id, user=cast("AppUser", request.user))
             return Response(ExportJobSerializer(job, context={"request": request}).data)
         except ExportJob.DoesNotExist:
             return Response(
@@ -56,7 +60,7 @@ class JobViewSet(viewsets.ViewSet):
     def import_detail(self, request: Request, job_id: str) -> Response:
         """Detail d'un job d'import."""
         try:
-            job = ImportJob.objects.get(id=job_id, user=request.user)
+            job = ImportJob.objects.get(id=job_id, user=cast("AppUser", request.user))
             return Response(ImportJobSerializer(job).data)
         except ImportJob.DoesNotExist:
             return Response(
@@ -74,12 +78,12 @@ class JobViewSet(viewsets.ViewSet):
         cutoff = timezone.now() - timedelta(days=7)
 
         export_deleted, _ = ExportJob.objects.filter(
-            user=request.user,
+            user=cast("AppUser", request.user),
             created_at__lt=cutoff,
         ).delete()
 
         import_deleted, _ = ImportJob.objects.filter(
-            user=request.user,
+            user=cast("AppUser", request.user),
             created_at__lt=cutoff,
         ).delete()
 

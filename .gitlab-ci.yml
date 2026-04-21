@@ -151,6 +151,7 @@ test:backend:unit:
               POSTGRES_PASSWORD: test_password
     variables:
         DB_HOST: test-db
+        TEST_DB_HOST: test-db
         DB_PORT: "5432"
         DB_NAME: test_portfolio
         DB_USER: test_user
@@ -160,6 +161,7 @@ test:backend:unit:
         ALLOWED_HOSTS: "*"
         DJANGO_DEBUG: "false"
         CELERY_TASK_ALWAYS_EAGER: "true"
+        POSTGRES_HOST_AUTH_METHOD: trust
     before_script:
         - apt-get update -qq && apt-get install -y -qq --no-install-recommends gcc libffi-dev libjpeg-dev zlib1g-dev
         - pip install --cache-dir $PIP_CACHE_DIR --quiet -r apps/server/requirements.txt
@@ -301,18 +303,22 @@ build:frontend:
               - apps/client/**/*
               - docker-compose.yml
 
-security:trivy:image:backend:
+.trivy_image_base:
     stage: build
     image:
         name: ghcr.io/aquasecurity/trivy:latest
         entrypoint: [""]
-    needs:
-        - job: build:backend
-    extends: .rules:all
     variables:
         TRIVY_NO_PROGRESS: "true"
+        TRIVY_USERNAME: $CI_REGISTRY_USER
+        TRIVY_PASSWORD: $CI_REGISTRY_PASSWORD
     before_script:
         - trivy --version
+
+security:trivy:image:backend:
+    extends: .trivy_image_base
+    needs:
+        - job: build:backend
     script:
         - trivy image
           --exit-code 1
@@ -325,17 +331,9 @@ security:trivy:image:backend:
         - if: $CI_COMMIT_BRANCH == "develop"
 
 security:trivy:image:frontend:
-    stage: build
-    image:
-        name: ghcr.io/aquasecurity/trivy:latest
-        entrypoint: [""]
+    extends: .trivy_image_base
     needs:
         - job: build:frontend
-    extends: .rules:all
-    variables:
-        TRIVY_NO_PROGRESS: "true"
-    before_script:
-        - trivy --version
     script:
         - trivy image
           --exit-code 1
@@ -354,13 +352,16 @@ security:trivy:image:frontend:
         name: anchore/syft:latest
         entrypoint: [""]
     extends: .rules:main_or_develop
+    variables:
+        SYFT_REGISTRY_AUTH_AUTHORITY: $CI_REGISTRY
+        SYFT_REGISTRY_AUTH_USERNAME: $CI_REGISTRY_USER
+        SYFT_REGISTRY_AUTH_PASSWORD: $CI_REGISTRY_PASSWORD
 
 sbom:backend:
     extends: .sbom_base
     needs:
         - job: build:backend
     script:
-        - echo "$CI_REGISTRY_PASSWORD" | syft login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY" || true
         - syft "$BACKEND_IMAGE:$IMAGE_TAG" -o spdx-json=sbom-backend.spdx.json
     artifacts:
         paths:
@@ -372,7 +373,6 @@ sbom:frontend:
     needs:
         - job: build:frontend
     script:
-        - echo "$CI_REGISTRY_PASSWORD" | syft login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY" || true
         - syft "$FRONTEND_IMAGE:$IMAGE_TAG" -o spdx-json=sbom-frontend.spdx.json
     artifacts:
         paths:
@@ -461,8 +461,6 @@ deploy:production:
                 fi
                 echo '$IMAGE_TAG' > .current-image-tag
             "
-        # Decrypt prod secrets locally with sops, scp to VPS tmpfs.
-        - apk add --no-cache gnupg
         - wget -q https://github.com/getsops/sops/releases/download/v3.9.1/sops-v3.9.1.linux.amd64 -O /usr/local/bin/sops
         - chmod +x /usr/local/bin/sops
         - mkdir -p ~/.config/sops/age
@@ -498,7 +496,7 @@ deploy:smoke-test:
                 cd $DEPLOY_PATH
                 for i in \$(seq 1 30); do
                     make healthcheck ENV=prod 2>&1 | tee /tmp/hc.log
-                    grep -qE 'HTTPS.*: 200' /tmp/hc.log && break
+                    grep -qiE 'https?://.*: 200' /tmp/hc.log && break
                     sleep 3
                 done
             "

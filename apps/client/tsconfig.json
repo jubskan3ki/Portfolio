@@ -13,7 +13,7 @@
             "#build": ["./.nuxt"],
             "#build/*": ["./.nuxt/*"]
         },
-        "types": ["node", "vite/client"]
+        "types": ["node"]
     },
     "include": [
         ".nuxt/nuxt.d.ts",

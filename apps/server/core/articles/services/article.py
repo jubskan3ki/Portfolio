@@ -169,12 +169,12 @@ class ArticleService(BaseService["Article"]):
         return article
 
     @classmethod
-    def get_by_id(cls, pk: int, *, published_only: bool = True) -> Article:  # type: ignore[override]
+    def get_by_id(cls, obj_id: int, *, published_only: bool = True) -> Article:
         """Recupere un article par son ID."""
-        return cls._get_by(id=pk, published_only=published_only)
+        return cls._get_by(id=obj_id, published_only=published_only)
 
     @classmethod
-    def get_by_slug(cls, slug: str, *, published_only: bool = True) -> Article:  # type: ignore[override]
+    def get_by_slug(cls, slug: str, *, published_only: bool = True) -> Article:
         """Recupere un article par son slug."""
         return cls._get_by(slug=slug, published_only=published_only)
 
@@ -206,9 +206,9 @@ class ArticleService(BaseService["Article"]):
 
     @classmethod
     @transaction.atomic
-    def update(cls, pk: int, data: dict[str, Any], *, partial: bool = False) -> Article:  # type: ignore[override]
+    def update(cls, obj_id: int, data: dict[str, Any], *, partial: bool = False) -> Article:
         """Met a jour un article avec gestion auto de la date de publication."""
-        article = cls.get_by_id(pk, published_only=False)
+        article = cls.get_by_id(obj_id, published_only=False)
         tags_data = data.pop("tags", None)
 
         is_published = data.get("is_published", article.is_published)

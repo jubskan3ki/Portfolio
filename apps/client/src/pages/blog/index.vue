@@ -155,7 +155,8 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, watch } from 'vue';
+    import { useQueryClient } from '@tanstack/vue-query';
+    import { computed, unref, watch } from 'vue';
 
     import BaseSelect from '@/components/base/BaseSelect.vue';
     import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
@@ -174,6 +175,8 @@
     import { filterPresets } from '@/config/filterPresets';
     import { ROUTES } from '@/config/routes';
     import {
+        articleKeys,
+        articlesApi,
         useArticles,
         useArticleCategories,
         useArticleTags,
@@ -191,6 +194,34 @@
     const { filters, apiFilters, currentPage, hasActiveFilters, reset, setFilter, setPage } = useFilters({
         ...filterPresets.blog,
         pagination: { ...filterPresets.blog.pagination, itemsPerPage: 6 },
+    });
+
+    // SSR-prefetch the data so the skeleton never shows on first paint (kills CLS).
+    const queryClient = useQueryClient();
+    await useAsyncData('blog-prefetch', async () => {
+        const initialTagsFilters = {
+            category: filters.value.category || undefined,
+            search: filters.value.search || undefined,
+        };
+        await Promise.all([
+            queryClient.prefetchQuery({
+                queryKey: articleKeys.list(unref(apiFilters)),
+                queryFn: () => articlesApi.getAll(unref(apiFilters)),
+            }),
+            queryClient.prefetchQuery({
+                queryKey: articleKeys.categories(),
+                queryFn: articlesApi.getCategories,
+            }),
+            queryClient.prefetchQuery({
+                queryKey: articleKeys.tags(initialTagsFilters),
+                queryFn: () => articlesApi.getTags(initialTagsFilters),
+            }),
+            queryClient.prefetchQuery({
+                queryKey: articleKeys.popular(5),
+                queryFn: () => articlesApi.getPopular(5),
+            }),
+        ]);
+        return true;
     });
 
     const searchQuery = computed({
@@ -217,6 +248,13 @@
         { value: 'title', label: 'A → Z' },
     ];
 
+    // Tags filtres par category+search (mais pas tags!): on n'enleve jamais les
+    // tags deja selectionnes, sinon l'utilisateur ne pourrait plus les deselectionner.
+    const tagsFilters = computed(() => ({
+        category: filters.value.category || undefined,
+        search: filters.value.search || undefined,
+    }));
+
     const {
         data: articlesData,
         isLoading,
@@ -225,7 +263,7 @@
         refetch: refetchArticles,
     } = useArticles(apiFilters);
     const { data: categories } = useArticleCategories();
-    const { data: tags } = useArticleTags();
+    const { data: tags } = useArticleTags(tagsFilters);
     const { data: popularArticlesData } = usePopularArticles(5);
 
     const articles = computed(() => articlesData.value?.data ?? []);

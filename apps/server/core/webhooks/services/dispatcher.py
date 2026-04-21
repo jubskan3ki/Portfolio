@@ -2,7 +2,7 @@
 
 import json
 import logging
-import random
+import secrets
 import time
 import uuid
 from datetime import timedelta
@@ -34,8 +34,9 @@ def compute_backoff_delay(attempt: int) -> int:
     raw = BACKOFF_BASE_SECONDS * (2 ** (attempt - 1))
     capped = min(raw, BACKOFF_MAX_SECONDS)
     jitter = capped * BACKOFF_JITTER_RATIO
-    # Jitter for retry scheduling, not security | stdlib random is fine.
-    return int(capped + random.uniform(-jitter, jitter))  # noqa: S311
+    # Jitter for retry scheduling, not security | use secrets for deterministic-seeded float range.
+    jitter_offset = (secrets.randbelow(2000) - 1000) / 1000.0 * jitter
+    return int(capped + jitter_offset)
 
 
 class WebhookDispatcher:

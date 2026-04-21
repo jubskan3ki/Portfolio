@@ -8,11 +8,7 @@ import pytest
 from django.http import HttpResponse
 from django.test import override_settings
 
-from middlewares.query_stats import (
-    N_PLUS_ONE_THRESHOLD,
-    QueryStatsMiddleware,
-    _fingerprint,
-)
+from middlewares.query_stats import N_PLUS_ONE_THRESHOLD, QueryStatsMiddleware, _fingerprint
 
 
 def _make_request(method: str = "GET", path: str = "/test/"):
@@ -41,10 +37,8 @@ class TestFingerprint:
 
 class TestNPlusOneDetector:
     def test_detects_repeated_pattern(self) -> None:
-        queries = [
-            {"sql": f"SELECT * FROM articles WHERE id = {i}", "time": "0.001"}  # noqa: S608
-            for i in range(N_PLUS_ONE_THRESHOLD + 2)
-        ]
+        sql_template = "SELECT * FROM articles WHERE id = %s"
+        queries = [{"sql": sql_template, "time": "0.001"} for _ in range(N_PLUS_ONE_THRESHOLD + 2)]
         result = QueryStatsMiddleware._detect_n_plus_one(queries)
         assert len(result) == 1
 

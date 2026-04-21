@@ -181,6 +181,7 @@
 </template>
 
 <script setup lang="ts">
+    import { useQueryClient } from '@tanstack/vue-query';
     import { computed, ref, watch, onMounted, nextTick } from 'vue';
     import { useRouter } from 'vue-router';
 
@@ -206,7 +207,7 @@
     import { useStacksSeo } from '@/composables/seo/useSeo';
     import { filterPresets } from '@/config/filterPresets';
     import { ROUTES } from '@/config/routes';
-    import { useStacks, useStackCategories, useStackStats } from '@/services/api/modules/stacks';
+    import { stackKeys, stacksApi, useStacks, useStackCategories, useStackStats } from '@/services/api/modules/stacks';
 
     useStacksSeo();
 
@@ -216,6 +217,26 @@
     const { prefersReducedMotion } = useReducedMotion();
 
     const { filters, setFilter } = useFilters(filterPresets.stacks);
+
+    // SSR-prefetch to kill CLS on first paint.
+    const queryClient = useQueryClient();
+    await useAsyncData('stacks-prefetch', async () => {
+        await Promise.all([
+            queryClient.prefetchQuery({
+                queryKey: stackKeys.list({ limit: 100 }),
+                queryFn: () => stacksApi.getAll({ limit: 100 }),
+            }),
+            queryClient.prefetchQuery({
+                queryKey: stackKeys.categories(),
+                queryFn: stacksApi.getCategories,
+            }),
+            queryClient.prefetchQuery({
+                queryKey: stackKeys.stats(),
+                queryFn: stacksApi.getStats,
+            }),
+        ]);
+        return true;
+    });
 
     const {
         data: stacksData,
@@ -278,11 +299,15 @@
     const stackListItems = computed(() =>
         (allStacks.value ?? []).map((s) => ({ name: s.name, url: `/stacks/${s.slug}`, image: s.logo })),
     );
-    watch(stackListItems, (items) => {
-        if (items.length) {
-            useItemListSeo({ items: stackListItems });
-        }
-    }, { immediate: true });
+    watch(
+        stackListItems,
+        (items) => {
+            if (items.length) {
+                useItemListSeo({ items: stackListItems });
+            }
+        },
+        { immediate: true },
+    );
 
     const navigateToStack = (slug: string) => {
         router.push(`${ROUTES.STACKS.path}/${slug}`);

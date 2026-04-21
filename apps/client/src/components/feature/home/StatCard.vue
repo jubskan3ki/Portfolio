@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
@@ -80,33 +80,9 @@
     };
 
     const cardRef = ref<HTMLElement | null>(null);
-    let observer: IntersectionObserver | null = null;
 
     onMounted(() => {
-        const el = cardRef.value ?? document.querySelector('.stat-card');
-        if (!el) {
-            return;
-        }
-
-        observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        startCount();
-                        observer?.disconnect();
-                        observer = null;
-                    }
-                });
-            },
-            { threshold: 0.5 },
-        );
-
-        observer.observe(el);
-    });
-
-    onBeforeUnmount(() => {
-        observer?.disconnect();
-        observer = null;
+        startCount();
     });
 
     defineExpose({ cardRef });

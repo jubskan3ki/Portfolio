@@ -38,12 +38,12 @@ class AuditLogAdmin(admin.ModelAdmin):
     date_hierarchy = "timestamp"
     ordering = ["-timestamp"]
 
+    @admin.display(description="# fields")
     def changes_count(self, obj: AuditLog) -> int:
         """Nombre de champs modifies (pour list_display)."""
         return len(obj.changes or {})
 
-    changes_count.short_description = "# fields"
-
+    @admin.display(description="Changes (before / after)")
     def changes_pretty(self, obj: AuditLog) -> SafeString:
         """Rend les changements en HTML diff lisible (avant | apres)."""
         if not obj.changes:
@@ -68,8 +68,6 @@ class AuditLogAdmin(admin.ModelAdmin):
             )
         rows.append("</table>")
         return format_html("".join(rows))
-
-    changes_pretty.short_description = "Changes (before / after)"
 
     def has_add_permission(self, _request):
         """Prevent manual creation of audit logs."""

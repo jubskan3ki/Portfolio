@@ -1,5 +1,7 @@
 """Admin pour le module webhooks."""
 
+from typing import ClassVar
+
 from django.contrib import admin
 
 from .models import Webhook, WebhookDelivery
@@ -29,7 +31,7 @@ class WebhookAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     ]
-    filter_horizontal: list[str] = []
+    filter_horizontal: ClassVar[list[str]] = []
 
     @admin.display(description="Taux de succes")
     def success_rate(self, obj: Webhook) -> str:

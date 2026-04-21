@@ -135,7 +135,8 @@
 </template>
 
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { useQueryClient } from '@tanstack/vue-query';
+    import { computed, unref } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseMultiSelect from '@/components/base/BaseMultiSelect.vue';
@@ -154,7 +155,13 @@
     import { useProjectsSeo } from '@/composables/seo/useSeo';
     import { filterPresets } from '@/config/filterPresets';
     import { ROUTES } from '@/config/routes';
-    import { useInfiniteProjects, useProjectCategories, useProjectStats } from '@/services/api/modules/projects';
+    import {
+        projectKeys,
+        projectsApi,
+        useInfiniteProjects,
+        useProjectCategories,
+        useProjectStats,
+    } from '@/services/api/modules/projects';
 
     import type { SelectOption } from '@/types/components/base';
     import type { Project, ProjectCategory } from '@/types/feature/project';
@@ -188,6 +195,28 @@
         ordering: debouncedFilters.value.ordering,
     }));
 
+    // SSR-prefetch to kill CLS (skeleton→content shift) on first paint.
+    const queryClient = useQueryClient();
+    await useAsyncData('projects-prefetch', async () => {
+        const filters = unref(apiFilters);
+        await Promise.all([
+            queryClient.prefetchInfiniteQuery({
+                queryKey: projectKeys.infinite(filters),
+                queryFn: () => projectsApi.getAll({ ...filters, page: 1, limit: 9 }),
+                initialPageParam: 1,
+            }),
+            queryClient.prefetchQuery({
+                queryKey: projectKeys.categories(),
+                queryFn: projectsApi.getCategories,
+            }),
+            queryClient.prefetchQuery({
+                queryKey: projectKeys.stats(),
+                queryFn: projectsApi.getStats,
+            }),
+        ]);
+        return true;
+    });
+
     const {
         data: projectsData,
         isLoading,
@@ -216,11 +245,15 @@
     const projectListItems = computed(() =>
         allProjects.value.map((p) => ({ name: p.title, url: `/projects/${p.slug}`, image: p.image })),
     );
-    watch(projectListItems, (items) => {
-        if (items.length) {
-            useItemListSeo({ items: projectListItems });
-        }
-    }, { immediate: true });
+    watch(
+        projectListItems,
+        (items) => {
+            if (items.length) {
+                useItemListSeo({ items: projectListItems });
+            }
+        },
+        { immediate: true },
+    );
 
     const categoryOptions = computed<SelectOption[]>(() => {
         const cats = (categoriesData.value?.data ?? []) as ProjectCategory[];

@@ -1,7 +1,9 @@
 """Endpoint unifie de recherche full-text."""
 
 from dataclasses import asdict
+from typing import Any, cast
 
+from django.db.models import QuerySet
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
 from rest_framework.permissions import AllowAny
@@ -100,7 +102,7 @@ class SearchView(APIView):
         results = [asdict(r) for r in service.run()]
 
         paginator = self.pagination_class()
-        page = paginator.paginate_queryset(results, request, view=self)
+        page: list[dict[str, Any]] | None = paginator.paginate_queryset(cast(QuerySet, results), request, view=self)
         if page is None:
             return Response({"data": results, "pagination": {}})
         return paginator.get_paginated_response(page)

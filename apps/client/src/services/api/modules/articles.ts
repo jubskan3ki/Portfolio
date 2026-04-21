@@ -38,7 +38,7 @@ export const articleKeys = {
     byTag: (name: string) => ['articles', 'by-tag', name] as const,
     related: (slug: string) => ['articles', 'related', slug] as const,
     categories: () => ['articles', 'categories'] as const,
-    tags: () => ['articles', 'tags'] as const,
+    tags: (filters?: { category?: string; search?: string }) => ['articles', 'tags', filters ?? {}] as const,
 };
 
 export const articlesApi = {
@@ -130,7 +130,16 @@ export const articlesApi = {
 
     deleteCategory: (slug: string): Promise<void> => httpClient.delete(API_ENDPOINTS.ARTICLES.CATEGORY_DETAIL(slug)),
 
-    getTags: (): Promise<Tag[]> => httpClient.get(API_ENDPOINTS.ARTICLES.TAGS),
+    getTags: (filters?: { category?: string; search?: string }): Promise<Tag[]> => {
+        const params: Record<string, unknown> = {};
+        if (filters?.category) {
+            params.category = filters.category;
+        }
+        if (filters?.search) {
+            params.search = filters.search;
+        }
+        return httpClient.get(API_ENDPOINTS.ARTICLES.TAGS, params);
+    },
 
     getTag: (name: string): Promise<Tag> => httpClient.get(API_ENDPOINTS.ARTICLES.TAG_DETAIL(name)),
 
@@ -188,10 +197,14 @@ export function useArticleCategories() {
     });
 }
 
-export function useArticleTags() {
-    return createStaticQuery(articleKeys.tags(), articlesApi.getTags, {
-        select: (data: Tag[] | { data: Tag[] }) => (Array.isArray(data) ? data : data.data),
-    });
+export function useArticleTags(filters?: MaybeRef<{ category?: string; search?: string } | undefined>) {
+    return createStaticQuery(
+        computed(() => articleKeys.tags(unref(filters))),
+        () => articlesApi.getTags(unref(filters)),
+        {
+            select: (data: Tag[] | { data: Tag[] }) => (Array.isArray(data) ? data : data.data),
+        },
+    );
 }
 
 export function useRelatedArticles(slug: MaybeRef<string>) {

@@ -7,18 +7,9 @@
         </div>
 
         <template v-else-if="currentProject">
-            <Hero
-                :title="currentProject.title"
-                :transition-key="currentProject.slug"
-                variant="primary"
-                has-meta
-            >
+            <Hero :title="currentProject.title" :transition-key="currentProject.slug" variant="primary" has-meta>
                 <template v-if="breadcrumbItems.length > 1" #breadcrumb>
-                    <Breadcrumb
-                        :items="breadcrumbItems"
-                        variant="hero"
-                        separator="chevron"
-                    />
+                    <Breadcrumb :items="breadcrumbItems" variant="hero" separator="chevron" />
                 </template>
                 <template #meta>
                     <div class="hero__meta-item">
@@ -226,7 +217,8 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { useQueryClient } from '@tanstack/vue-query';
+    import { computed, ref, unref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
@@ -246,14 +238,48 @@
     import { useBreadcrumbSeo } from '@/composables/seo/useBreadcrumbSeo';
     import { useProjectSeo } from '@/composables/seo/useSeo';
     import { ROUTES } from '@/config/routes';
-    import { useProject, useFeaturedProjects, useRecordProjectView } from '@/services/api/modules/projects';
-    import { useFeaturedStacks } from '@/services/api/modules/stacks';
+    import {
+        projectKeys,
+        projectsApi,
+        useProject,
+        useFeaturedProjects,
+        useRecordProjectView,
+    } from '@/services/api/modules/projects';
+    import { stackKeys, stacksApi, useFeaturedStacks } from '@/services/api/modules/stacks';
 
     import type { BreadcrumbSeoItem } from '@/types/composables/seo';
 
     const router = useRouter();
 
     const { slug } = useDetailSlug(ROUTES.PROJECTS.path);
+
+    // SSR-prefetch detail + sidebars (kills CLS on first paint).
+    const queryClient = useQueryClient();
+    await useAsyncData(
+        () => `project-${unref(slug)}`,
+        async () => {
+            const slugValue = unref(slug);
+            if (!slugValue) {
+                return true;
+            }
+            await Promise.all([
+                queryClient.prefetchQuery({
+                    queryKey: projectKeys.detail(slugValue),
+                    queryFn: () => projectsApi.getBySlug(slugValue),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: projectKeys.featured(),
+                    queryFn: () => projectsApi.getFeatured(4),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: stackKeys.featured(100),
+                    queryFn: () => stacksApi.getFeatured(100),
+                }),
+            ]);
+            return true;
+        },
+        { watch: [slug] },
+    );
 
     const { data: currentProject, isLoading, isError, error } = useProject(slug);
     const { data: featuredProjects } = useFeaturedProjects(4);

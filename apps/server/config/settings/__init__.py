@@ -2,21 +2,31 @@
 
 import importlib
 import os
+from types import ModuleType
 
-from config.settings.base import *  # noqa: F403
-from config.settings.cache import *  # noqa: F403
-from config.settings.celery_conf import *  # noqa: F403
-from config.settings.database import *  # noqa: F403
-from config.settings.email import *  # noqa: F403
-from config.settings.jwt import *  # noqa: F403
-from config.settings.logging_conf import *  # noqa: F403
-from config.settings.rest_framework import *  # noqa: F403
-from config.settings.security import *  # noqa: F403
+_BASE_MODULES = (
+    "config.settings.base",
+    "config.settings.cache",
+    "config.settings.celery_conf",
+    "config.settings.database",
+    "config.settings.email",
+    "config.settings.jwt",
+    "config.settings.logging_conf",
+    "config.settings.rest_framework",
+    "config.settings.security",
+)
+
+for _mod_name in _BASE_MODULES:
+    _mod = importlib.import_module(_mod_name)
+    for _name in dir(_mod):
+        if not _name.startswith("_") and _name.isupper():
+            globals()[_name] = getattr(_mod, _name)
 
 _DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev").lower()
 if _DJANGO_ENV not in {"dev", "staging", "prod"}:
     raise RuntimeError(f"DJANGO_ENV={_DJANGO_ENV!r} is not valid. Expected one of: dev, staging, prod.")
 
+_env_overrides: ModuleType | None
 try:
     _env_overrides = importlib.import_module(f"config.settings.envs.{_DJANGO_ENV}")
 except ModuleNotFoundError:

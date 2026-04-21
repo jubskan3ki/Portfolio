@@ -115,7 +115,7 @@ class CategoryFilter(django_filters.FilterSet):
         self,
         queryset: QuerySet,
         _name: str,
-        value: bool,  # noqa: FBT001
+        value: object,
     ) -> QuerySet:
         """Filtre les categories ayant des articles publies."""
         if value:
@@ -137,7 +137,7 @@ class TagFilter(django_filters.FilterSet):
         self,
         queryset: QuerySet,
         _name: str,
-        value: bool,  # noqa: FBT001
+        value: object,
     ) -> QuerySet:
         """Filtre les tags ayant des articles publies."""
         if value:

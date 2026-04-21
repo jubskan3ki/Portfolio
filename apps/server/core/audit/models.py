@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
 from django.db import models
@@ -12,6 +12,8 @@ from .managers import AuditLogManager
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser
+
+    from core.user.models import User as AppUser
 
 
 class AuditLog(models.Model):
@@ -141,7 +143,7 @@ class AuditLog(models.Model):
             object_id=str(object_id),
             object_repr=object_repr[:255] if object_repr else "",
             changes=changes or {},
-            user=user,
+            user=cast("AppUser | None", user),
             ip_address=ip_address,
             user_agent=user_agent[:512] if user_agent else "",
             correlation_id=correlation_id[:64] if correlation_id else "",

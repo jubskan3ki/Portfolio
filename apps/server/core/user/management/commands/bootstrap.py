@@ -51,7 +51,7 @@ RUNTIME_DIRS = (
 DB_WAIT_MAX_ATTEMPTS = 30
 DB_WAIT_INTERVAL_SECONDS = 2
 
-MINIMAL_OPENAPI = '{"swagger":"2.0","info":{"title":"Portfolio API","version":"v1"},' '"paths":{},"definitions":{}}'
+MINIMAL_OPENAPI = '{"swagger":"2.0","info":{"title":"Portfolio API","version":"v1"},"paths":{},"definitions":{}}'
 
 
 class Command(BaseCommand):
@@ -193,8 +193,11 @@ class Command(BaseCommand):
         )
 
         self._log("INFO", f"exec {' '.join(argv)}")
-        # Bootstrap entrypoint: argv is built from trusted constants + env vars only.
-        os.execvp(argv[0], argv)  # noqa: S606
+        # Bootstrap entrypoint: resolve the binary via PATH, then exec with absolute path.
+        resolved = self._which(argv[0])
+        if resolved is None:
+            raise CommandError(f"Executable not found on PATH: {argv[0]}")
+        os.execv(resolved, argv)
 
     @staticmethod
     def _which(executable: str) -> str | None:

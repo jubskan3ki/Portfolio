@@ -1,6 +1,7 @@
 """Champs de serialisation personnalises reutilisables."""
 
 import json
+from collections.abc import Callable
 from typing import Any
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -13,6 +14,17 @@ class JSONBlockListField(serializers.JSONField):
 
     Accepte une chaine JSON ou une liste Python. Rejette les non-listes.
     """
+
+    def __init__(
+        self,
+        *args: Any,
+        default: list[Any] | Callable[[], list[Any]] | Any = serializers.empty,
+        **kwargs: Any,
+    ) -> None:
+        # DRF's JSONField stub narrows `default` to Mapping but the field happily accepts lists.
+        if default is not serializers.empty:
+            kwargs["default"] = default
+        super().__init__(*args, **kwargs)
 
     def to_internal_value(self, data: Any) -> list[Any]:
         if isinstance(data, str):

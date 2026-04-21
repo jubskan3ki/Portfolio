@@ -20,6 +20,9 @@ os.environ.setdefault("DB_HOST", "postgres-db")
 os.environ.setdefault("DB_PORT", "5432")
 
 from config import settings as base_settings
+from config.settings.base import INSTALLED_APPS as _BASE_INSTALLED_APPS
+from config.settings.base import MIDDLEWARE as _BASE_MIDDLEWARE
+from config.settings.rest_framework import REST_FRAMEWORK as _BASE_REST_FRAMEWORK
 
 for _setting_name in dir(base_settings):
     if _setting_name.isupper():
@@ -43,7 +46,7 @@ DATABASES = {
 }
 
 # High rates effectively disable throttling; views still reference keys so they must exist.
-REST_FRAMEWORK = dict(base_settings.REST_FRAMEWORK)
+REST_FRAMEWORK = dict(_BASE_REST_FRAMEWORK)
 REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "anon": "10000/minute",
@@ -69,8 +72,8 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
-MIDDLEWARE = [m for m in base_settings.MIDDLEWARE if "csrf" not in m.lower() and "debug_toolbar" not in m.lower()]
-INSTALLED_APPS = [app for app in base_settings.INSTALLED_APPS if app != "debug_toolbar"]
+MIDDLEWARE = [m for m in _BASE_MIDDLEWARE if "csrf" not in m.lower() and "debug_toolbar" not in m.lower()]
+INSTALLED_APPS = [app for app in _BASE_INSTALLED_APPS if app != "debug_toolbar"]
 
 CACHES = {
     "default": {

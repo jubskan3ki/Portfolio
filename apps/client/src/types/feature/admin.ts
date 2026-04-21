@@ -144,5 +144,4 @@ export interface SessionsResponse {
     sessions: Session[];
     count: number;
     currentSessionId?: string;
-    fingerprintLockEnabled?: boolean;
 }

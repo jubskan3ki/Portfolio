@@ -146,7 +146,7 @@ class Stack(AutoSlugMixin, models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     search_vector = SearchVectorField(null=True, editable=False)
 
-    related_stacks_m2m = models.ManyToManyField(
+    related_stacks_m2m: models.ManyToManyField = models.ManyToManyField(
         "self",
         through="StackRelationship",
         symmetrical=False,

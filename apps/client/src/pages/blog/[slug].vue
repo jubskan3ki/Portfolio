@@ -22,18 +22,9 @@
         </div>
 
         <template v-else-if="currentArticle">
-            <Hero
-                :title="currentArticle.title"
-                :transition-key="currentArticle.slug"
-                variant="secondary"
-                has-meta
-            >
+            <Hero :title="currentArticle.title" :transition-key="currentArticle.slug" variant="secondary" has-meta>
                 <template v-if="breadcrumbItems.length > 1" #breadcrumb>
-                    <Breadcrumb
-                        :items="breadcrumbItems"
-                        variant="hero"
-                        separator="chevron"
-                    />
+                    <Breadcrumb :items="breadcrumbItems" variant="hero" separator="chevron" />
                 </template>
                 <template #meta>
                     <div class="hero__meta-item">
@@ -180,7 +171,8 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { useQueryClient } from '@tanstack/vue-query';
+    import { computed, ref, unref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import ArticleBlockRenderer from '@/components/feature/blog/ArticleBlockRenderer.vue';
@@ -205,12 +197,14 @@
     import { useTableOfContents } from '@/composables/ui/useTableOfContents';
     import { ROUTES } from '@/config/routes';
     import {
+        articleKeys,
+        articlesApi,
         useArticle,
         usePopularArticles,
         useRelatedArticles,
         useRecordArticleView,
     } from '@/services/api/modules/articles';
-    import { useFeaturedStacks } from '@/services/api/modules/stacks';
+    import { stackKeys, stacksApi, useFeaturedStacks } from '@/services/api/modules/stacks';
     import { normalizeContent } from '@/services/utils/contentParser';
 
     import type { BreadcrumbSeoItem } from '@/types/composables/seo';
@@ -218,6 +212,38 @@
     const router = useRouter();
 
     const { slug } = useDetailSlug(ROUTES.BLOG.path);
+
+    // SSR-prefetch detail + sidebars (kills CLS on first paint).
+    const queryClient = useQueryClient();
+    await useAsyncData(
+        () => `article-${unref(slug)}`,
+        async () => {
+            const slugValue = unref(slug);
+            if (!slugValue) {
+                return true;
+            }
+            await Promise.all([
+                queryClient.prefetchQuery({
+                    queryKey: articleKeys.detail(slugValue),
+                    queryFn: () => articlesApi.getBySlug(slugValue),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: articleKeys.popular(3),
+                    queryFn: () => articlesApi.getPopular(3),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: articleKeys.related(slugValue),
+                    queryFn: () => articlesApi.getRelated(slugValue),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: stackKeys.featured(100),
+                    queryFn: () => stacksApi.getFeatured(100),
+                }),
+            ]);
+            return true;
+        },
+        { watch: [slug] },
+    );
 
     const { data: currentArticle, isLoading, isError, error } = useArticle(slug);
     const { data: popularArticles } = usePopularArticles(3);
@@ -242,9 +268,7 @@
         if (!tags.length || !stacks.length) {
             return [];
         }
-        return stacks.filter((s) =>
-            tags.some((tag) => s.name.toLowerCase() === tag.toLowerCase()),
-        );
+        return stacks.filter((s) => tags.some((tag) => s.name.toLowerCase() === tag.toLowerCase()));
     });
 
     const { mutate: recordView } = useRecordArticleView();
@@ -607,7 +631,9 @@
             background: fn.color-alpha(vars.$primary-color, 0.06);
             border-radius: vars.$border-radius-full;
             text-decoration: none;
-            transition: background 0.2s ease, color 0.2s ease;
+            transition:
+                background 0.2s ease,
+                color 0.2s ease;
 
             &:hover {
                 background: fn.color-alpha(vars.$primary-color, 0.14);

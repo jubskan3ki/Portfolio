@@ -1,6 +1,7 @@
 """Modele utilisateur personnalise."""
 
 from datetime import timedelta
+from typing import ClassVar
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -46,8 +47,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(_("date inscription"), default=timezone.now)
     updated_at = models.DateTimeField(_("derniere mise a jour"), auto_now=True)
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS: list[str] = []
+    USERNAME_FIELD: ClassVar[str] = "email"
+    REQUIRED_FIELDS: ClassVar[list[str]] = []
 
     objects = UserManager()
 

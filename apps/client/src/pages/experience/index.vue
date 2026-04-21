@@ -128,6 +128,7 @@
 </template>
 
 <script setup lang="ts">
+    import { useQueryClient } from '@tanstack/vue-query';
     import { computed, watch, onMounted } from 'vue';
 
     import BaseButton from '@/components/base/BaseButton.vue';
@@ -150,12 +151,14 @@
     import { filterPresets } from '@/config/filterPresets';
     import { ROUTES } from '@/config/routes';
     import {
+        experienceKeys,
+        experiencesApi,
         useExperiences,
         useExperiencesByType,
         useExperienceTypes,
         useExperienceStats,
     } from '@/services/api/modules/experiences';
-    import { useFeaturedStacks } from '@/services/api/modules/stacks';
+    import { stackKeys, stacksApi, useFeaturedStacks } from '@/services/api/modules/stacks';
 
     import type { ExperienceType } from '@/types/feature/experience';
 
@@ -166,6 +169,30 @@
     const { prefersReducedMotion } = useReducedMotion();
 
     const { filters, setFilter } = useFilters(filterPresets.experiences);
+
+    // SSR-prefetch to kill CLS on first paint.
+    const queryClient = useQueryClient();
+    await useAsyncData('experience-prefetch', async () => {
+        await Promise.all([
+            queryClient.prefetchQuery({
+                queryKey: experienceKeys.list({ limit: 100 }),
+                queryFn: () => experiencesApi.getAll({ limit: 100 }),
+            }),
+            queryClient.prefetchQuery({
+                queryKey: experienceKeys.types(),
+                queryFn: experiencesApi.getTypes,
+            }),
+            queryClient.prefetchQuery({
+                queryKey: experienceKeys.stats(),
+                queryFn: experiencesApi.getStats,
+            }),
+            queryClient.prefetchQuery({
+                queryKey: stackKeys.featured(100),
+                queryFn: () => stacksApi.getFeatured(100),
+            }),
+        ]);
+        return true;
+    });
 
     // limit=100 contourne la pagination pour filtrer côté client
     const { data: allExperiencesResponse, isLoading: allExperiencesLoading } = useExperiences({ limit: 100 });

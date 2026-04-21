@@ -2,7 +2,7 @@
 
 import ipaddress
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
@@ -68,7 +68,7 @@ def validate_url(value):
 
 def validate_date_format(value, format_str="%Y-%m-%d"):
     try:
-        datetime.strptime(value, format_str)  # noqa: DTZ007
+        datetime.strptime(value, format_str).replace(tzinfo=UTC)
     except ValueError as exc:
         raise ValidationError(f"La date doit etre au format {format_str}.") from exc
 

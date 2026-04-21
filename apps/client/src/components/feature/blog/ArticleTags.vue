@@ -27,12 +27,7 @@
             </button>
         </div>
 
-        <button
-            v-if="canToggle"
-            class="article-tags__toggle"
-            type="button"
-            @click="showAll = !showAll"
-        >
+        <button v-if="canToggle" class="article-tags__toggle" type="button" @click="showAll = !showAll">
             {{ showAll ? 'Voir moins' : `Voir plus (${hiddenCount})` }}
         </button>
     </div>
@@ -111,9 +106,7 @@
 
     const showAll = ref(false);
 
-    const canToggle = computed(
-        () => props.maxVisible > 0 && filteredTags.value.length > props.maxVisible,
-    );
+    const canToggle = computed(() => props.maxVisible > 0 && filteredTags.value.length > props.maxVisible);
 
     const hiddenCount = computed(() => Math.max(0, filteredTags.value.length - props.maxVisible));
 
@@ -241,6 +234,17 @@
                 .article-tags__count {
                     color: vars.$white;
                     background: vars.$primary-color;
+                }
+
+                &:hover {
+                    color: vars.$white;
+                    background: vars.$primary-color;
+                    border-color: vars.$primary-color;
+
+                    .article-tags__count {
+                        color: vars.$primary-color;
+                        background: vars.$white;
+                    }
                 }
             }
         }

@@ -8,13 +8,22 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from utils.security import SessionManager, generate_fingerprint
+from utils.security import SessionManager
 
 from ..docs import SESSION_LIST_RESPONSES, SESSION_REVOKE_RESPONSES
 from ..services.token import TokenBlacklistService
 from ..throttles import SessionThrottle
 
 logger = logging.getLogger(__name__)
+
+
+def _current_session_id(request) -> str | None:
+    """Extrait l'identifiant de session du JWT courant."""
+    auth = getattr(request, "auth", None)
+    if not auth:
+        return None
+    value = auth.get("session_id")
+    return str(value) if value else None
 
 
 class AdminSessionsView(APIView):
@@ -34,8 +43,7 @@ class AdminSessionsView(APIView):
         session_manager = SessionManager(request.user.id)
         sessions = session_manager.get_sessions()
 
-        current_fingerprint = generate_fingerprint(request)
-        current_session_id = current_fingerprint.fingerprint_hash
+        current_session_id = _current_session_id(request)
 
         # Expose only safe device fields | never leak refresh_jti or raw UA to the client
         def public_device(device: dict) -> dict:
@@ -66,7 +74,6 @@ class AdminSessionsView(APIView):
                 "sessions": formatted_sessions,
                 "count": len(formatted_sessions),
                 "current_session_id": current_session_id,
-                "fingerprint_lock_enabled": True,
             },
             status=status.HTTP_200_OK,
         )
@@ -83,9 +90,7 @@ class AdminSessionsView(APIView):
         session_id = request.query_params.get("session_id")
         revoke_all = request.query_params.get("all", "false").lower() == "true"
 
-        # Get current session to preserve it if revoking all
-        current_fingerprint = generate_fingerprint(request)
-        current_session_id = current_fingerprint.fingerprint_hash
+        current_session_id = _current_session_id(request)
 
         if revoke_all:
             revoked_sessions = session_manager.revoke_all_sessions(except_session_id=current_session_id)

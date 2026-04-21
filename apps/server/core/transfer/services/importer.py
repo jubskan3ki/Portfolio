@@ -213,7 +213,7 @@ class ImporterService:
             user=user,
             module=module,
             status=ImportJob.Status.PENDING,
-            original_filename=file.name,
+            original_filename=filename,
             file_format=file_format,
         )
 

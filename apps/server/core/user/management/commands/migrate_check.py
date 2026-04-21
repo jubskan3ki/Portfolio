@@ -40,7 +40,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("no pending migrations"))
             sys.exit(0)
 
-        destructive = []
+        destructive: list[tuple[str, str, str]] = []
         for app_label, migration_name in pending:
             path = self._migration_path(app_label, migration_name)
             if path is None:

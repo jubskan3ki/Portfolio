@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 
@@ -14,13 +12,6 @@ from utils.upload import make_upload_to
 from utils.validators import validate_image_upload
 
 from .managers import ArticleManager, CategoryManager, TagManager
-
-if TYPE_CHECKING:
-    from django.db.models import QuerySet
-
-    # Type alias for related managers
-    RelatedManager = QuerySet
-
 
 article_image_upload_to = make_upload_to("article", "title", fallback="article")
 
@@ -37,7 +28,6 @@ class Category(AutoSlugMixin, models.Model):
     published_count: int
 
     objects: CategoryManager = CategoryManager()
-    articles: RelatedManager[Article]
 
     class Meta:
         verbose_name = "Categorie"
@@ -72,7 +62,6 @@ class Tag(models.Model):
     view_count_sum: int | None
 
     objects: TagManager = TagManager()
-    articles: RelatedManager[Article]
 
     class Meta:
         verbose_name = "Tag"

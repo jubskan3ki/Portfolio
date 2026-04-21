@@ -89,7 +89,13 @@ export default defineNuxtPlugin((nuxtApp) => {
                             return false;
                         }
                         const key = query.queryKey;
-                        const criticalPrefixes = ['stacks'];
+                        const criticalPrefixes = [
+                            'stacks',
+                            'articles',
+                            'projects',
+                            'experiences',
+                            'site-settings',
+                        ];
                         return typeof key[0] === 'string' && criticalPrefixes.includes(key[0]);
                     },
                 });

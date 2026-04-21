@@ -1,5 +1,5 @@
 export default defineNuxtPlugin(() => {
-    if (typeof window === 'undefined' || import.meta.env.DEV) {
+    if (typeof window === 'undefined' || import.meta.dev) {
         return;
     }
 

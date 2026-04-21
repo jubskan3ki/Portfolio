@@ -18,4 +18,6 @@ class AuditConfig(AppConfig):
         if "migrate" in sys.argv or "makemigrations" in sys.argv:
             return
 
-        from core.audit import signals  # noqa: F401
+        from core.audit import signals
+
+        _ = signals

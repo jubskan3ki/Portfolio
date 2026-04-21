@@ -36,7 +36,16 @@ load-plugins = ["pylint_django"]
 django-settings-module = "config.settings"
 ignore = ["migrations", "venv", ".venv", "__pycache__"]
 jobs = 0
-init-hook = "import sys; sys.path.insert(0, '.')"
+extension-pkg-allow-list = ["orjson"]
+init-hook = """
+import sys
+from pathlib import Path
+_here = Path.cwd()
+for _p in (_here, *_here.parents):
+    if (_p / 'manage.py').exists():
+        sys.path.insert(0, str(_p))
+        break
+"""
 
 [tool.pylint.messages_control]
 disable = [
@@ -49,6 +58,11 @@ disable = [
     "fixme",
     "redefined-outer-name",
     "wrong-import-position",
+    "line-too-long",
+    "import-outside-toplevel",
+    "protected-access",
+    "broad-exception-caught",
+    "invalid-name",
 ]
 
 [tool.pylint.format]
@@ -133,6 +147,7 @@ known-third-party = ["django", "rest_framework", "celery"]
 "manage.py" = ["E402"]  # Django manage.py pattern
 "core/articles/managers.py" = ["F401"]  # TYPE_CHECKING imports used in string annotations
 "core/stats/managers.py" = ["F401"]  # TYPE_CHECKING imports used in Manager generic
+"core/user/management/commands/bootstrap.py" = ["S606"]  # os.execv intentionnel : container entrypoint (PID 1 = gunicorn)
 
 # MyPy - Typage statique
 
@@ -155,18 +170,6 @@ warn_return_any = false
 warn_unreachable = true
 warn_unused_ignores = false
 strict_optional = true
-
-# Desactive les faux positifs Django
-disable_error_code = ["var-annotated", "misc", "django-manager-missing"]
-
-# Overrides par module | limites django-stubs sur les generics (.objects sur type[T])
-[[tool.mypy.overrides]]
-module = ["utils.services", "core.stats.services.stats"]
-disable_error_code = ["attr-defined"]
-
-[[tool.mypy.overrides]]
-module = ["core.articles.serializers.article"]
-disable_error_code = ["arg-type"]
 
 [tool.django-stubs]
 django_settings_module = "config.settings"

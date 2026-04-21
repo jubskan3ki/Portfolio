@@ -15,4 +15,6 @@ class VersioningConfig(AppConfig):
     def ready(self) -> None:
         if "migrate" in sys.argv or "makemigrations" in sys.argv:
             return
-        from core.versioning import signals  # noqa: F401
+        from core.versioning import signals
+
+        _ = signals

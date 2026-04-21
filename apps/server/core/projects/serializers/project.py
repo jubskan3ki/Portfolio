@@ -72,8 +72,8 @@ class ProjectWriteSerializer(serializers.ModelSerializer[Project]):
 class ProjectListSerializer(serializers.ModelSerializer[Project]):
     """Serializer pour la liste des projets (version allegee)."""
 
-    category = serializers.StringRelatedField()
-    status = serializers.StringRelatedField()
+    category: serializers.StringRelatedField = serializers.StringRelatedField()
+    status: serializers.StringRelatedField = serializers.StringRelatedField()
     views = serializers.IntegerField(source="view_count", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
 
@@ -97,8 +97,8 @@ class ProjectListSerializer(serializers.ModelSerializer[Project]):
 class ProjectDetailSerializer(serializers.ModelSerializer[Project]):
     """Serializer pour les details d'un projet."""
 
-    category = serializers.StringRelatedField()
-    status = serializers.StringRelatedField()
+    category: serializers.StringRelatedField = serializers.StringRelatedField()
+    status: serializers.StringRelatedField = serializers.StringRelatedField()
     views = serializers.IntegerField(source="view_count", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
     seoTitle = serializers.CharField(source="seo_title", read_only=True)

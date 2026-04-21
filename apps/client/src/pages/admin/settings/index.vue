@@ -86,6 +86,23 @@
                         placeholder="+33 6 00 00 00 00"
                     />
 
+                    <BaseDivider label="Localisation" spacing="lg" />
+                    <div class="form-grid">
+                        <BaseInput v-model="profileForm.city" label="Ville" placeholder="Paris" />
+                        <BaseInput v-model="profileForm.country" label="Pays" placeholder="France" />
+                    </div>
+
+                    <BaseDivider label="Disponibilite" spacing="lg" />
+                    <div class="availability-row">
+                        <BaseSwitch v-model="profileForm.isAvailable" label="Disponible pour de nouveaux projets" />
+                    </div>
+                    <BaseInput
+                        v-model="profileForm.availabilityMessage"
+                        label="Texte affiche dans le footer"
+                        placeholder="Disponible pour de nouveaux projets"
+                        hint="Laisser vide pour utiliser le texte par defaut selon le statut."
+                    />
+
                     <BaseDivider label="Reseaux sociaux" spacing="lg" />
                     <BaseInput
                         v-model="profileForm.linkedin"
@@ -211,81 +228,8 @@
                 </form>
             </div>
 
-            <div class="admin-card admin-card--full">
-                <div class="admin-card__header">
-                    <h2 class="admin-card__title">Contact public &amp; disponibilite</h2>
-                    <small>Ces informations s'affichent dans le footer du site public.</small>
-                </div>
-                <form @submit.prevent="saveSiteSettings">
-                    <div class="form-grid">
-                        <BaseInput
-                            v-model="siteForm.email"
-                            label="Email public"
-                            type="email"
-                            placeholder="contact@exemple.com"
-                            required
-                        />
-                        <BaseInput
-                            v-model="siteForm.phone"
-                            label="Telephone public"
-                            type="tel"
-                            placeholder="+33 6 00 00 00 00"
-                        />
-                    </div>
-
-                    <BaseDivider label="Adresse" spacing="lg" />
-                    <div class="form-grid">
-                        <BaseInput v-model="siteForm.city" label="Ville" placeholder="Paris" />
-                        <BaseInput v-model="siteForm.country" label="Pays" placeholder="France" />
-                    </div>
-
-                    <BaseDivider label="Disponibilite" spacing="lg" />
-                    <div class="availability-row">
-                        <BaseSwitch v-model="siteForm.isAvailable" label="Disponible pour de nouveaux projets" />
-                    </div>
-                    <BaseInput
-                        v-model="siteForm.availabilityMessage"
-                        label="Texte affiche dans le footer"
-                        placeholder="Disponible pour de nouveaux projets"
-                        hint="Laisser vide pour utiliser le texte par defaut selon le statut."
-                    />
-
-                    <div class="form-actions">
-                        <BaseButton type="submit" variant="primary" :loading="isSavingSite">
-                            <template #icon-left>
-                                <BaseIcon name="save" :size="16" />
-                            </template>
-                            {{ isSavingSite ? 'Enregistrement...' : 'Enregistrer' }}
-                        </BaseButton>
-                        <Transition name="fade">
-                            <Badge
-                                v-if="siteMessage"
-                                :variant="siteMessage.type === 'success' ? 'success' : 'danger'"
-                                :icon="siteMessage.type === 'success' ? 'check' : 'x'"
-                            >
-                                {{ siteMessage.text }}
-                            </Badge>
-                        </Transition>
-                    </div>
-                </form>
-            </div>
-
             <div class="admin-card">
                 <SessionList />
-
-                <div class="fingerprint-lock">
-                    <div class="fingerprint-lock__icon">
-                        <BaseIcon name="shield" :size="18" />
-                    </div>
-                    <div class="fingerprint-lock__body">
-                        <div class="fingerprint-lock__title">Verrouillage par fingerprint</div>
-                        <p class="fingerprint-lock__text">
-                            Chaque session est liee a l'empreinte de votre navigateur. Un token utilise depuis un
-                            autre appareil est automatiquement rejete.
-                        </p>
-                    </div>
-                    <Badge variant="success" icon="check">Actif</Badge>
-                </div>
             </div>
         </div>
     </div>
@@ -333,7 +277,6 @@
     // Messages
     const profileMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
     const passwordMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
-    const siteMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
 
     // Forms
     const profileForm = reactive({
@@ -345,7 +288,13 @@
         publicEmail: '',
         linkedin: '',
         github: '',
+        city: '',
+        country: '',
+        isAvailable: true,
+        availabilityMessage: '',
     });
+
+    const contactInfoId = ref<number | undefined>(undefined);
 
     const passwordForm = reactive({
         currentPassword: '',
@@ -353,20 +302,9 @@
         confirmPassword: '',
     });
 
-    const siteForm = reactive({
-        id: undefined as number | undefined,
-        email: '',
-        phone: '',
-        city: '',
-        country: '',
-        isAvailable: true,
-        availabilityMessage: '',
-    });
-
-    // Contact info query + upsert mutation
+    // Contact info query + upsert mutation (pilote le footer public)
     const { data: contactInfo } = useContactInfo();
     const contactInfoMutation = useContactInfoUpsert();
-    const isSavingSite = contactInfoMutation.isPending;
 
     const passwordStrengthValue = computed(() => {
         const password = passwordForm.newPassword;
@@ -449,23 +387,41 @@
         });
     };
 
-    const updateProfile = () => {
-        updateProfileMutation.mutate(
-            {
-                firstName: profileForm.firstName,
-                lastName: profileForm.lastName,
-                position: profileForm.position,
-                bio: profileForm.bio,
-                phoneNumber: profileForm.phoneNumber,
-                publicEmail: profileForm.publicEmail,
-                linkedin: profileForm.linkedin,
-                github: profileForm.github,
-            },
-            {
-                onSuccess: () => showMessage(profileMessage, 'success', 'Profil mis a jour'),
-                onError: () => showMessage(profileMessage, 'error', 'Erreur lors de la mise a jour'),
-            },
-        );
+    const updateProfile = async () => {
+        try {
+            await Promise.all([
+                updateProfileMutation.mutateAsync({
+                    firstName: profileForm.firstName,
+                    lastName: profileForm.lastName,
+                    position: profileForm.position,
+                    bio: profileForm.bio,
+                    phoneNumber: profileForm.phoneNumber,
+                    publicEmail: profileForm.publicEmail,
+                    linkedin: profileForm.linkedin,
+                    github: profileForm.github,
+                }),
+                contactInfoMutation
+                    .mutateAsync({
+                        id: contactInfoId.value,
+                        email: profileForm.publicEmail,
+                        phone: profileForm.phoneNumber,
+                        address: {
+                            city: profileForm.city,
+                            country: profileForm.country,
+                        },
+                        availability: {
+                            status: profileForm.isAvailable ? 'available' : 'unavailable',
+                            message: profileForm.availabilityMessage,
+                        },
+                    })
+                    .then((updated) => {
+                        contactInfoId.value = updated.id;
+                    }),
+            ]);
+            showMessage(profileMessage, 'success', 'Profil mis a jour');
+        } catch {
+            showMessage(profileMessage, 'error', 'Erreur lors de la mise a jour');
+        }
     };
 
     const changePassword = async () => {
@@ -512,50 +468,23 @@
         }
     };
 
-    const initSiteForm = () => {
+    const initContactInfo = () => {
         const info = contactInfo.value;
         if (!info) {
             return;
         }
-        siteForm.id = info.id;
-        siteForm.email = info.email || '';
-        siteForm.phone = info.phone || '';
-        siteForm.city = info.address?.city || '';
-        siteForm.country = info.address?.country || '';
-        siteForm.isAvailable = info.availability?.status === 'available';
-        siteForm.availabilityMessage = info.availability?.message || '';
+        contactInfoId.value = info.id;
+        profileForm.city = info.address?.city || profileForm.city;
+        profileForm.country = info.address?.country || profileForm.country;
+        profileForm.isAvailable = info.availability?.status !== 'unavailable';
+        profileForm.availabilityMessage = info.availability?.message || '';
     };
 
-    watch(contactInfo, () => initSiteForm(), { immediate: true });
-
-    const saveSiteSettings = () => {
-        contactInfoMutation.mutate(
-            {
-                id: siteForm.id,
-                email: siteForm.email,
-                phone: siteForm.phone,
-                address: {
-                    city: siteForm.city,
-                    country: siteForm.country,
-                },
-                availability: {
-                    status: siteForm.isAvailable ? 'available' : 'unavailable',
-                    message: siteForm.availabilityMessage,
-                },
-            },
-            {
-                onSuccess: (updated) => {
-                    siteForm.id = updated.id;
-                    showMessage(siteMessage, 'success', 'Informations enregistrees');
-                },
-                onError: () => showMessage(siteMessage, 'error', 'Erreur lors de l\'enregistrement'),
-            },
-        );
-    };
+    watch(contactInfo, () => initContactInfo(), { immediate: true });
 
     onMounted(() => {
         initForm();
-        initSiteForm();
+        initContactInfo();
     });
 </script>
 
@@ -725,40 +654,6 @@
     :deep(.password-strength-bar) {
         margin-top: calc(-1 * vars.$spacing-xs);
         margin-bottom: vars.$spacing-xs;
-    }
-
-    /* Fingerprint lock info */
-    .fingerprint-lock {
-        display: flex;
-        align-items: flex-start;
-        gap: vars.$spacing-sm;
-        margin-top: vars.$spacing-lg;
-        padding: vars.$spacing-md;
-        background-color: func.color-alpha(vars.$primary-color, 0.04);
-        border: 1px solid func.color-alpha(vars.$primary-color, 0.12);
-        border-radius: vars.$border-radius-md;
-
-        &__icon {
-            color: vars.$primary-color;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        &__body {
-            flex: 1;
-            min-width: 0;
-        }
-
-        &__title {
-            font-weight: vars.$font-weight-semibold;
-            margin-bottom: 2px;
-        }
-
-        &__text {
-            color: vars.$text-muted;
-            font-size: 13px;
-            margin: 0;
-        }
     }
 
     /* Transitions */

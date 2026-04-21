@@ -21,13 +21,13 @@ class AdminService:
     """Service pour l'authentification des administrateurs."""
 
     @staticmethod
-    def login_user(email: str, password: str, fingerprint_hash: str | None = None) -> dict[str, Any]:
+    def login_user(email: str, password: str, session_id: str | None = None) -> dict[str, Any]:
         """Authentifie un admin et retourne ses tokens JWT.
 
         Args:
             email: Email de l'utilisateur
             password: Mot de passe
-            fingerprint_hash: Hash du fingerprint de l'appareil pour la validation de session
+            session_id: Identifiant unique de la session (propage dans le JWT)
 
         Returns:
             Dictionnaire contenant les tokens et l'utilisateur
@@ -48,10 +48,9 @@ class AdminService:
 
         refresh = RefreshToken.for_user(user)
 
-        # Store fingerprint in JWT for session validation
-        if fingerprint_hash:
-            refresh["fingerprint"] = fingerprint_hash
-            refresh.access_token["fingerprint"] = fingerprint_hash
+        if session_id:
+            refresh["session_id"] = session_id
+            refresh.access_token["session_id"] = session_id
 
         logger.info("Connexion reussie pour %s", email)
 

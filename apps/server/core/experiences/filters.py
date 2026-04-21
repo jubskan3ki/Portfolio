@@ -67,7 +67,7 @@ class ExperienceFilter(SearchFilterMixin, django_filters.FilterSet):
         self,
         queryset: QuerySet,
         _name: str,
-        value: bool,  # noqa: FBT001
+        value: object,
     ) -> QuerySet:
         """Filtre les experiences en cours."""
         if value:

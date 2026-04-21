@@ -146,8 +146,9 @@ def _serialize_value(value: object) -> str | int | float | bool | None:
     return str(value)
 
 
-def _store_old_values(sender: type[Model], instance: Model, **kwargs: object) -> None:  # noqa: ARG001
+def _store_old_values(sender: type[Model], instance: Model, **kwargs: object) -> None:
     """Store old values before save for comparison."""
+    del kwargs
     if not _should_audit(instance):
         return
 
@@ -166,8 +167,9 @@ def _store_old_values(sender: type[Model], instance: Model, **kwargs: object) ->
         setattr(instance, audit_attr, {})
 
 
-def _log_save(sender: type[Model], instance: Model, created: bool, **kwargs: object) -> None:  # noqa: ARG001, FBT001
+def _log_save(sender: type[Model], instance: Model, *, created: bool, **kwargs: object) -> None:
     """Log create/update operations."""
+    del sender, kwargs
     if not _should_audit(instance):
         return
 
@@ -229,8 +231,9 @@ def _log_save(sender: type[Model], instance: Model, created: bool, **kwargs: obj
             )
 
 
-def _log_delete(sender: type[Model], instance: Model, **kwargs: object) -> None:  # noqa: ARG001
+def _log_delete(sender: type[Model], instance: Model, **kwargs: object) -> None:
     """Log delete operations."""
+    del sender, kwargs
     if not _should_audit(instance):
         return
 

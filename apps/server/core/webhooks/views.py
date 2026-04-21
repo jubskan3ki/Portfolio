@@ -1,7 +1,7 @@
 """Vues pour le module webhooks."""
 
 import uuid
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from rest_framework import permissions, status
 from rest_framework.decorators import action
@@ -18,6 +18,9 @@ from .serializers import (
 )
 from .services import WebhookDispatcher
 from .throttles import WebhooksThrottle
+
+if TYPE_CHECKING:
+    from core.user.models import User as AppUser
 
 
 class WebhookViewSet(BaseAPIViewSet):
@@ -39,7 +42,7 @@ class WebhookViewSet(BaseAPIViewSet):
 
     def _get_base_queryset(self):
         """Retourne les webhooks de l'utilisateur courant."""
-        return Webhook.objects.filter(created_by=self.request.user)
+        return Webhook.objects.filter(created_by=cast("AppUser", self.request.user))
 
     @action(detail=False, methods=["get"])
     def event_types(self, _request: Request) -> Response:
@@ -108,7 +111,9 @@ class WebhookDeliveryViewSet(ReadOnlyAPIViewSet):
 
     def get_queryset(self):
         """Retourne les livraisons des webhooks de l'utilisateur."""
-        return WebhookDelivery.objects.select_related("webhook").filter(webhook__created_by=self.request.user)
+        return WebhookDelivery.objects.select_related("webhook").filter(
+            webhook__created_by=cast("AppUser", self.request.user)
+        )
 
     @action(detail=True, methods=["post"])
     def retry(self, _request: Request, **_kwargs: Any) -> Response:
