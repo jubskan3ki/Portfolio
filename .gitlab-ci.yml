@@ -81,6 +81,8 @@ variables:
         - docker:dind
     variables:
         DOCKER_BUILDKIT: "1"
+        DOCKER_TLS_CERTDIR: ""
+        DOCKER_HOST: tcp://docker:2375
     before_script:
         - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
@@ -264,7 +266,7 @@ security:trivy:fs:
         CONTEXT: ""
     script:
         - BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-        - docker buildx create --use --name portfolio-builder || docker buildx use portfolio-builder
+        - docker buildx create --use --name portfolio-builder --driver docker-container --bootstrap
         - |
             TAGS="-t $IMAGE:$IMAGE_TAG -t $IMAGE:$CI_COMMIT_REF_SLUG"
             if [ "$CI_COMMIT_BRANCH" = "main" ]; then
