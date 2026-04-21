@@ -224,7 +224,9 @@ security:frontend:audit:
 
 security:gitleaks:
     stage: security
-    image: zricethezav/gitleaks:latest
+    image:
+        name: zricethezav/gitleaks:latest
+        entrypoint: [""]
     extends: .rules:all
     script:
         - gitleaks detect --source . --verbose --no-git --redact

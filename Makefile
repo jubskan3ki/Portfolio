@@ -341,12 +341,20 @@ bench-local: ## k6 contre la stack locale (valide perf avant push). SCENARIO=bro
 	docker run --rm -i --network host -v $(PWD)/bench:/bench \
 	    -e BASE_URL=$${BASE_URL:-http://localhost:80} grafana/k6:latest run /$$f
 
-.PHONY: bench-staging
-bench-staging: ## k6 contre le VPS staging (perf réelle incluant DNS/TLS/RTT)
+PROD_DOMAIN      ?= aitaddajuba.fr
+
+.PHONY: bench-prod
+bench-prod: ## k6 contre https://$(PROD_DOMAIN) (override: BASE_URL=<url>)
 	@s="$${SCENARIO:-browse}"; f="bench/scenarios/$$s.js"; \
 	[ -f "$$f" ] || { echo "Scénario introuvable: $$f"; exit 1; }; \
-	docker run --rm -i -v $(PWD)/bench:/bench \
-	    -e BASE_URL=$${BASE_URL:-https://staging.$(DOMAIN)} grafana/k6:latest run /$$f
+	url=$${BASE_URL:-https://$(PROD_DOMAIN)}; \
+	printf "Probe %s ... " "$$url"; \
+	code=$$(curl -sS -o /dev/null -w "%{http_code}" --max-time 5 "$$url/" 2>/dev/null || echo "KO"); \
+	case "$$code" in \
+	    2*|3*) echo "OK ($$code)" ;; \
+	    *) echo "KO ($$code) | URL inatteignable en <5s — bench annulé"; exit 1 ;; \
+	esac; \
+	docker run --rm -i -v $(PWD)/bench:/bench -e BASE_URL="$$url" grafana/k6:latest run /$$f
 
 .PHONY: status-check
 status-check: ## Teste /api/public/status/ (agrégation Prometheus + Alertmanager)
@@ -359,12 +367,15 @@ seo-build: ## Type-check + build client (vérifie que les changements SEO compil
 	cd $(CLIENT_DIR) && $(PNPM) type-check && $(PNPM) build
 
 .PHONY: seo-ssr-check
-seo-ssr-check: ## Curl les pages publiques + grep meta/JSON-LD (dev server requis sur :3000)
+seo-ssr-check: ## Curl les pages publiques + extrait meta/JSON-LD (dev server requis sur :3000)
 	@for p in / /contact /blog /projects /stacks /experience; do \
 	    printf "\n\033[1;33m--- %s ---\033[0m\n" "$$p"; \
-	    curl -fsS "http://localhost:3000$$p" \
-	        | grep -iE 'og:title|og:description|canonical|JobPosting|FAQPage|"@type"' \
-	        | head -20 || echo "(page injoignable)"; \
+	    body=$$(curl -fsS "http://localhost:3000$$p" 2>/dev/null) || { echo "  (page injoignable)"; continue; }; \
+	    echo "$$body" | tr '<' '\n' | grep -iE '^(meta|link rel="canonical"|title)' \
+	        | grep -iE 'og:|twitter:|name="description"|canonical|^title' \
+	        | sed 's/>.*//;s/^/  /' | head -12; \
+	    echo "$$body" | grep -oE '"@type"[[:space:]]*:[[:space:]]*"[^"]+"' | sort -u \
+	        | sed -E 's/.*"([^"]+)"$$/  JSON-LD @type=\1/' || true; \
 	done
 
 .PHONY: seo-lighthouse
