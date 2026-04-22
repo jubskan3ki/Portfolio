@@ -251,6 +251,14 @@ deploy-zd: ## Deploy zero-downtime (scale+1 → healthy → scale-1). IMAGE_TAG=
 	esac; \
 	$(COMPOSE) pull $$services 2>/dev/null || true; \
 	for s in $$services; do \
+	    for c in $$($(COMPOSE) ps -a -q $$s); do \
+	        state=$$(docker inspect -f '{{.State.Status}}' $$c 2>/dev/null || echo gone); \
+	        health=$$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' $$c 2>/dev/null || echo none); \
+	        case "$$state:$$health" in \
+	            running:healthy|running:none|running:starting) ;; \
+	            *) echo "[deploy-zd] nettoyage stale $$s: $$c (state=$$state health=$$health)"; docker rm -f $$c >/dev/null ;; \
+	        esac; \
+	    done; \
 	    cur=$$($(COMPOSE) ps --filter status=running -q $$s | wc -l); [ $$cur -lt 1 ] && cur=1; tgt=$$((cur + 1)); \
 	    echo "[deploy-zd] $$s: $$cur → $$tgt"; \
 	    $(COMPOSE) up -d --no-deps --no-recreate --scale $$s=$$tgt $$s; \
@@ -260,8 +268,8 @@ deploy-zd: ## Deploy zero-downtime (scale+1 → healthy → scale-1). IMAGE_TAG=
 	    done; \
 	    if [ $$w -ge $$poll_max ]; then \
 	        echo "[deploy-zd] timeout after $${poll_max}s | état des conteneurs $$s :"; \
-	        $(COMPOSE) ps $$s; \
-	        for c in $$($(COMPOSE) ps --filter status=running -q $$s); do \
+	        $(COMPOSE) ps -a $$s; \
+	        for c in $$($(COMPOSE) ps -a -q $$s); do \
 	            echo "--- logs $$c (tail 50) ---"; docker logs --tail 50 $$c 2>&1 || true; \
 	        done; \
 	        exit 1; \
