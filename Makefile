@@ -239,9 +239,9 @@ secrets-validate: ## Vérifie que les envs sops ont les mêmes clés que .env.ex
 .PHONY: deploy-zd
 deploy-zd: ## Deploy zero-downtime (scale+1 → healthy → scale-1). IMAGE_TAG=<sha>
 	@set -eu; \
-	services="$${SERVICES:-backend frontend}"; poll_max="$${HEALTH_POLL_MAX:-60}"; \
+	services="$${SERVICES:-backend frontend}"; poll_max="$${HEALTH_POLL_MAX:-240}"; \
 	export IMAGE_TAG="$${IMAGE_TAG:-$$(git rev-parse --short HEAD)}"; \
-	echo "[deploy-zd] IMAGE_TAG=$$IMAGE_TAG services=$$services"; \
+	echo "[deploy-zd] IMAGE_TAG=$$IMAGE_TAG services=$$services poll_max=$${poll_max}s"; \
 	rc=0; $(COMPOSE) exec -T backend python manage.py migrate_check || rc=$$?; \
 	case "$$rc" in \
 	    0) ;; \
@@ -255,10 +255,17 @@ deploy-zd: ## Deploy zero-downtime (scale+1 → healthy → scale-1). IMAGE_TAG=
 	    echo "[deploy-zd] $$s: $$cur → $$tgt"; \
 	    $(COMPOSE) up -d --no-deps --no-recreate --scale $$s=$$tgt $$s; \
 	    w=0; while [ $$w -lt $$poll_max ]; do \
-	        h=$$($(COMPOSE) ps --filter status=running -q $$s | xargs -r -I{} docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' {} | grep -c healthy || true); \
+	        h=$$($(COMPOSE) ps --filter status=running -q $$s | xargs -r -I{} docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' {} | grep -cx healthy || true); \
 	        [ "$$h" -ge "$$tgt" ] && break; sleep 2; w=$$((w+2)); \
 	    done; \
-	    [ $$w -ge $$poll_max ] && { echo "[deploy-zd] timeout"; exit 1; }; \
+	    if [ $$w -ge $$poll_max ]; then \
+	        echo "[deploy-zd] timeout after $${poll_max}s | état des conteneurs $$s :"; \
+	        $(COMPOSE) ps $$s; \
+	        for c in $$($(COMPOSE) ps --filter status=running -q $$s); do \
+	            echo "--- logs $$c (tail 50) ---"; docker logs --tail 50 $$c 2>&1 || true; \
+	        done; \
+	        exit 1; \
+	    fi; \
 	    $(COMPOSE) up -d --no-deps --scale $$s=$$cur $$s; \
 	done; echo "[deploy-zd] done"
 
