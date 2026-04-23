@@ -522,10 +522,10 @@ deploy:rollback:
     rules:
         - if: $CI_COMMIT_BRANCH == "main"
           when: manual
+          allow_failure: true
     needs:
         - job: deploy:production
           optional: true
-    allow_failure: false
     script:
         - |
             ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
