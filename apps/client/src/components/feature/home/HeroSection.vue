@@ -1,5 +1,5 @@
 <template>
-    <section class="hero-section">
+    <section ref="heroRef" class="hero-section" :class="{ 'hero-section--paused': animationsPaused }">
         <!-- Background layers (SectionBackground from design system) -->
         <SectionBackground variant="light" />
 
@@ -58,7 +58,6 @@
                                 size="small"
                                 class="hero-badge"
                                 :class="`hero-badge--${index + 1}`"
-                                :style="{ animationDelay: `${index * 0.3}s` }"
                             />
                         </div>
                     </div>
@@ -69,6 +68,8 @@
 </template>
 
 <script setup lang="ts">
+    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import StackBadge from '@/components/feature/stacks/StackBadge.vue';
@@ -89,9 +90,32 @@
     // Accessibility - used via CSS media query prefers-reduced-motion
     const { prefersReducedMotion: _prefersReducedMotion } = useReducedMotion();
 
-    // Typing effect
+    // Pause infinite animations + typing effect when hero leaves the viewport
+    const heroRef = ref<HTMLElement | null>(null);
+    const animationsPaused = ref(false);
+    const typingEnabled = computed(() => !animationsPaused.value);
+    let observer: IntersectionObserver | null = null;
+
+    // Typing effect (paused when hero is offscreen)
     const typingTexts = ['React.ts', 'Vue.ts', 'Nest.ts', 'Go', 'Flutter', 'Django'];
-    const { currentText: currentTypingText, isPaused } = useTypingEffect(typingTexts);
+    const { currentText: currentTypingText, isPaused } = useTypingEffect(typingTexts, {
+        enabled: typingEnabled,
+    });
+
+    onMounted(() => {
+        if (!heroRef.value || typeof IntersectionObserver === 'undefined') {
+            return;
+        }
+        observer = new IntersectionObserver(
+            ([entry]) => {
+                animationsPaused.value = !entry?.isIntersecting;
+            },
+            { rootMargin: '0px', threshold: 0 },
+        );
+        observer.observe(heroRef.value);
+    });
+
+    onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <style lang="scss" scoped>
@@ -104,6 +128,11 @@
         padding: calc(vars.$navbar-height + vars.$spacing-xl) 0 calc(vars.$spacing-xl + 120px);
         overflow: hidden;
         background: vars.$bg-secondary;
+
+        &--paused,
+        &--paused * {
+            animation-play-state: paused !important;
+        }
     }
 
     .hero-wrapper {
@@ -260,9 +289,7 @@
         overflow: hidden;
         z-index: 2;
         will-change: transform;
-        animation:
-            hero-float 7s ease-in-out infinite alternate,
-            morphing 15s ease-in-out infinite;
+        animation: hero-float 7s ease-in-out infinite alternate;
 
         box-shadow:
             0 20px 40px fn.color-alpha(vars.$primary-color, 0.15),
@@ -272,9 +299,7 @@
         @include mix.responsive(mobile) {
             width: 220px;
             height: 220px;
-            animation:
-                hero-float-mobile 8s ease-in-out infinite alternate,
-                morphing 15s ease-in-out infinite;
+            animation: hero-float-mobile 8s ease-in-out infinite alternate;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -340,27 +365,32 @@
         &--1 {
             top: 5%;
             left: 0;
+            animation-delay: 0s;
         }
 
         &--2 {
             top: 10%;
             right: 5%;
+            animation-delay: 0.3s;
         }
 
         &--3 {
             bottom: 15%;
             right: 0;
+            animation-delay: 0.6s;
         }
 
         &--4 {
             bottom: 5%;
             left: 10%;
+            animation-delay: 0.9s;
         }
 
         &--5 {
             top: 50%;
             left: -5%;
             transform: translateY(-50%);
+            animation-delay: 1.2s;
         }
     }
 
@@ -418,49 +448,22 @@
     @keyframes hero-shape-morph {
         0% {
             transform: translate(-45%, -55%) scale(1) rotate(0deg);
-            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
         }
 
         25% {
             transform: translate(-48%, -52%) scale(1.05) rotate(6deg);
-            border-radius: 40% 60% 70% 30% / 50% 60% 30% 50%;
         }
 
         50% {
             transform: translate(-42%, -58%) scale(0.97) rotate(-4deg);
-            border-radius: 50% 50% 40% 60% / 30% 60% 40% 70%;
         }
 
         75% {
             transform: translate(-47%, -53%) scale(1.03) rotate(5deg);
-            border-radius: 30% 70% 50% 50% / 60% 40% 55% 45%;
         }
 
         100% {
             transform: translate(-45%, -55%) scale(1) rotate(0deg);
-            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-        }
-    }
-
-    @keyframes morphing {
-        0% {
-            border-radius: 30% 70% 70% 30%;
-        }
-
-        25% {
-            border-radius: 58% 42% 75% 25%;
-        }
-
-        50% {
-            border-radius: 50% 50% 33% 67%;
-        }
-
-        75% {
-            border-radius: 33% 67% 58% 42%;
-        }
-
-        100% {
-            border-radius: 30% 70% 70% 30%;
         }
     }
 </style>

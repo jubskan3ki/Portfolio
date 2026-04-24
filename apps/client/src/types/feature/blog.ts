@@ -54,6 +54,13 @@ export type ContentBlock
         | ListBlock
         | TableBlock;
 
+export type InlineNode
+    = | { type: 'text'; content: string }
+        | { type: 'strong'; children: InlineNode[] }
+        | { type: 'em'; children: InlineNode[] }
+        | { type: 'code'; content: string }
+        | { type: 'link'; url: string; children: InlineNode[] };
+
 export interface ArticlesResponse {
     data: Article[];
     pagination: PaginationData;
@@ -122,6 +129,7 @@ export interface ArticleCardProps {
     customClass?: string;
     showTags?: boolean;
     maxTags?: number;
+    eager?: boolean;
 }
 
 export interface ArticleCarouselProps {

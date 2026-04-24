@@ -32,6 +32,7 @@ export interface ButtonProps {
     params?: Record<string, string | number>;
     target?: LinkTarget;
     ariaLabel?: string;
+    prefetch?: boolean;
 }
 
 // BaseInput
@@ -320,11 +321,8 @@ export interface BaseContentCardProps {
     description?: string;
     tags?: string[];
     maxTags?: number;
-    /**
-     * When set, emits matching `view-transition-name` on the card's image
-     * and title so navigations to the detail page morph them into place.
-     */
     transitionKey?: string;
+    eager?: boolean;
 }
 
 // BaseTextarea

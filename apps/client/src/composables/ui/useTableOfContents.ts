@@ -1,4 +1,4 @@
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import { slugify } from '@/services/utils/string';
 
@@ -23,32 +23,44 @@ export function useTableOfContents(blocks: Ref<ContentBlock[] | undefined>) {
     });
 
     let observer: IntersectionObserver | null = null;
+    let pendingFrame: number | null = null;
 
-    function setupObserver() {
+    function teardown() {
         if (observer) {
             observer.disconnect();
+            observer = null;
         }
-        if (!headings.value.length) {
+    }
+
+    function setupObserver() {
+        teardown();
+        if (!headings.value.length || typeof IntersectionObserver === 'undefined') {
             return;
         }
 
-        observer = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (entry.isIntersecting) {
-                        activeId.value = entry.target.id;
-                    }
-                }
-            },
-            { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 },
-        );
-
-        for (const heading of headings.value) {
-            const el = document.getElementById(heading.id);
-            if (el) {
-                observer.observe(el);
-            }
+        if (pendingFrame !== null) {
+            cancelAnimationFrame(pendingFrame);
         }
+        pendingFrame = requestAnimationFrame(() => {
+            pendingFrame = null;
+            observer = new IntersectionObserver(
+                (entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting) {
+                            activeId.value = entry.target.id;
+                        }
+                    }
+                },
+                { rootMargin: '-80px 0px -60% 0px', threshold: 0.1 },
+            );
+
+            for (const heading of headings.value) {
+                const el = document.getElementById(heading.id);
+                if (el) {
+                    observer.observe(el);
+                }
+            }
+        });
     }
 
     onMounted(() => {
@@ -56,9 +68,10 @@ export function useTableOfContents(blocks: Ref<ContentBlock[] | undefined>) {
     });
 
     onBeforeUnmount(() => {
-        if (observer) {
-            observer.disconnect();
+        if (pendingFrame !== null) {
+            cancelAnimationFrame(pendingFrame);
         }
+        teardown();
     });
 
     return { headings, activeId };

@@ -143,6 +143,7 @@
             'base-image--rounded-md': props.rounded === 'md' || props.rounded === true,
             'base-image--rounded-lg': props.rounded === 'lg',
             'base-image--rounded-full': props.rounded === 'full',
+            'base-image--lazy': props.lazy,
             'base-image--loading': isLoading.value,
             'base-image--error': hasError.value,
         },
@@ -226,12 +227,16 @@
             width: 100%;
             height: 100%;
             display: block;
-            opacity: 0;
-            transition: opacity vars.$transition-base;
+            opacity: 1;
 
             &--loaded {
                 opacity: 1;
             }
+        }
+
+        &--loading.base-image--lazy &__img {
+            opacity: 0;
+            transition: opacity vars.$transition-base;
         }
 
         &__placeholder,

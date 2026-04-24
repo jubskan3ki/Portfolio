@@ -1,5 +1,5 @@
 import { useEventListener } from '@vueuse/core';
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import type { Ref } from 'vue';
 
@@ -7,49 +7,93 @@ export function useReadingProgress(containerRef: Ref<HTMLElement | null>) {
     const progress = ref(0);
     const isVisible = ref(false);
 
-    function updateProgress() {
+    let topDoc = 0;
+    let height = 1;
+    let resizeObs: ResizeObserver | null = null;
+    let visibilityObs: IntersectionObserver | null = null;
+    let rafId: number | null = null;
+
+    function measure() {
         const el = containerRef.value;
         if (!el) {
             return;
         }
-
         const rect = el.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
+        topDoc = rect.top + window.scrollY;
+        height = Math.max(1, rect.height);
+    }
 
-        isVisible.value = rect.top < windowHeight;
-
-        if (rect.top >= windowHeight) {
-            progress.value = 0;
-            return;
+    function update() {
+        const winH = window.innerHeight;
+        const scrolled = window.scrollY + winH - topDoc;
+        let pct = (scrolled / height) * 100;
+        if (pct < 0) {
+            pct = 0;
+        } else if (pct > 100) {
+            pct = 100;
         }
-
-        const totalHeight = rect.height;
-        const scrolled = windowHeight - rect.top;
-        const pct = Math.min(100, Math.max(0, (scrolled / totalHeight) * 100));
         progress.value = pct;
     }
 
-    let rafId: number | null = null;
     function onScroll() {
-        if (rafId) {
+        if (rafId !== null) {
             return;
         }
         rafId = requestAnimationFrame(() => {
-            updateProgress();
             rafId = null;
+            update();
         });
     }
 
-    useEventListener(window, 'scroll', onScroll, { passive: true });
-
     onMounted(() => {
-        updateProgress();
+        const el = containerRef.value;
+        if (!el) {
+            // Defer until ref is set.
+            watch(containerRef, (val) => {
+                if (val) {
+                    bind(val);
+                }
+            }, { once: true });
+            return;
+        }
+        bind(el);
     });
 
+    function bind(el: HTMLElement) {
+        measure();
+        update();
+
+        if (typeof ResizeObserver !== 'undefined') {
+            resizeObs = new ResizeObserver(() => {
+                measure();
+                update();
+            });
+            resizeObs.observe(el);
+        }
+
+        if (typeof IntersectionObserver !== 'undefined') {
+            visibilityObs = new IntersectionObserver(
+                (entries) => {
+                    for (const entry of entries) {
+                        isVisible.value = entry.isIntersecting || entry.boundingClientRect.top < 0;
+                    }
+                },
+                { threshold: 0, rootMargin: '0px 0px 0px 0px' },
+            );
+            visibilityObs.observe(el);
+        } else {
+            isVisible.value = true;
+        }
+    }
+
+    useEventListener(typeof window !== 'undefined' ? window : null, 'scroll', onScroll, { passive: true });
+
     onBeforeUnmount(() => {
-        if (rafId) {
+        if (rafId !== null) {
             cancelAnimationFrame(rafId);
         }
+        resizeObs?.disconnect();
+        visibilityObs?.disconnect();
     });
 
     return { progress, isVisible };

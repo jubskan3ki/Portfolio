@@ -40,6 +40,7 @@
                                     :src="currentProject.image"
                                     :alt="currentProject.title"
                                     :lazy="false"
+                                    preload
                                     object-fit="cover"
                                     width="600"
                                     height="400"
@@ -70,7 +71,6 @@
                                     v-for="(feature, index) in currentProject.features"
                                     :key="feature"
                                     class="feature-item"
-                                    :style="{ animationDelay: `${index * 0.05}s` }"
                                 >
                                     <span class="feature-item__number">{{ String(index + 1).padStart(2, '0') }}</span>
                                     <div class="feature-item__content">
@@ -89,55 +89,30 @@
                                 Stack technique
                             </h3>
                             <div class="tech-grid">
-                                <template v-for="tech in resolvedTechnologies" :key="tech.name">
-                                    <NuxtLink
+                                <component
+                                    :is="tech.slug ? NuxtLink : 'div'"
+                                    v-for="tech in resolvedTechnologies"
+                                    :key="tech.name"
+                                    :to="tech.slug ? `/stacks/${tech.slug}` : undefined"
+                                    class="tech-item"
+                                    :class="{ 'tech-item--linked': tech.slug }"
+                                >
+                                    <StackLogo
+                                        :stack="{
+                                            name: tech.name,
+                                            logo: tech.logo ? resolveMediaUrl(tech.logo) : undefined,
+                                        }"
+                                        size="md"
+                                        class="tech-item__logo"
+                                    />
+                                    <span class="tech-item__name">{{ tech.name }}</span>
+                                    <BaseIcon
                                         v-if="tech.slug"
-                                        :to="`/stacks/${tech.slug}`"
-                                        class="tech-item tech-item--linked"
-                                    >
-                                        <div class="tech-item__logo">
-                                            <BaseImage
-                                                v-if="tech.logo"
-                                                :src="tech.logo"
-                                                :alt="tech.name"
-                                                :width="36"
-                                                :height="36"
-                                                :show-placeholder="false"
-                                                class="tech-item__img"
-                                            />
-                                            <span
-                                                v-else
-                                                class="tech-item__letter"
-                                                :style="{ backgroundColor: tech.color }"
-                                            >
-                                                {{ tech.name.charAt(0).toUpperCase() }}
-                                            </span>
-                                        </div>
-                                        <span class="tech-item__name">{{ tech.name }}</span>
-                                        <BaseIcon name="arrow-right" :size="12" class="tech-item__arrow" />
-                                    </NuxtLink>
-                                    <div v-else class="tech-item">
-                                        <div class="tech-item__logo">
-                                            <BaseImage
-                                                v-if="tech.logo"
-                                                :src="tech.logo"
-                                                :alt="tech.name"
-                                                :width="36"
-                                                :height="36"
-                                                :show-placeholder="false"
-                                                class="tech-item__img"
-                                            />
-                                            <span
-                                                v-else
-                                                class="tech-item__letter"
-                                                :style="{ backgroundColor: tech.color }"
-                                            >
-                                                {{ tech.name.charAt(0).toUpperCase() }}
-                                            </span>
-                                        </div>
-                                        <span class="tech-item__name">{{ tech.name }}</span>
-                                    </div>
-                                </template>
+                                        name="arrow-right"
+                                        :size="12"
+                                        class="tech-item__arrow"
+                                    />
+                                </component>
                             </div>
                         </div>
 
@@ -218,11 +193,13 @@
 
 <script setup lang="ts">
     import { useQueryClient } from '@tanstack/vue-query';
-    import { computed, ref, unref, watch } from 'vue';
+    import { computed, resolveComponent, unref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
+    import BaseImage from '@/components/base/BaseImage.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
     import ProjectCard from '@/components/feature/projects/ProjectCard.vue';
+    import StackLogo from '@/components/feature/stacks/StackLogo.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
     import Main from '@/components/layouts/Main.vue';
@@ -245,15 +222,18 @@
         useFeaturedProjects,
         useRecordProjectView,
     } from '@/services/api/modules/projects';
-    import { stackKeys, stacksApi, useFeaturedStacks } from '@/services/api/modules/stacks';
+    import { useFeaturedStacks } from '@/services/api/modules/stacks';
+    import { resolveMediaUrl } from '@/services/utils/helpers';
 
     import type { BreadcrumbSeoItem } from '@/types/composables/seo';
+
+    const NuxtLink = resolveComponent('NuxtLink');
 
     const router = useRouter();
 
     const { slug } = useDetailSlug(ROUTES.PROJECTS.path);
 
-    // SSR-prefetch detail + sidebars (kills CLS on first paint).
+    // shrink the SSR payload and unblock LCP on the text paragraph.
     const queryClient = useQueryClient();
     await useAsyncData(
         () => `project-${unref(slug)}`,
@@ -271,10 +251,6 @@
                     queryKey: projectKeys.featured(),
                     queryFn: () => projectsApi.getFeatured(4),
                 }),
-                queryClient.prefetchQuery({
-                    queryKey: stackKeys.featured(100),
-                    queryFn: () => stacksApi.getFeatured(100),
-                }),
             ]);
             return true;
         },
@@ -283,32 +259,53 @@
 
     const { data: currentProject, isLoading, isError, error } = useProject(slug);
     const { data: featuredProjects } = useFeaturedProjects(4);
-    const { data: allStacks } = useFeaturedStacks(100);
+    const { data: allStacks } = useFeaturedStacks(100, {
+        enabled: computed(() => import.meta.client),
+    });
 
     const { mutate: recordView } = useRecordProjectView();
     useViewRecording(currentProject, recordView);
 
     const { announceNavigation } = useAnnounce();
 
-    const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
-
+    // SEO side effects (JSON-LD schema, meta tags) are driven by the watch.
     watch(
         currentProject,
         (project) => {
             if (project) {
                 useProjectSeo(project);
-                const { items } = useBreadcrumbSeo({
+                useBreadcrumbSeo({
                     meta: {
                         title: project.title,
                         category: project.category || undefined,
                     },
                 });
-                breadcrumbItems.value = items.value;
                 announceNavigation(`Projet: ${project.title}`);
             }
         },
         { immediate: true },
     );
+
+    // Template-side breadcrumb: pure computed from currentProject, avoids the
+    // ref+watch roundtrip and is ready at first SSR paint (no slot flash).
+    const breadcrumbItems = computed<BreadcrumbSeoItem[]>(() => {
+        const project = currentProject.value;
+        const crumbs: BreadcrumbSeoItem[] = [
+            { label: 'Accueil', to: '/' },
+            { label: 'Projets', to: '/projects' },
+        ];
+        if (!project) {
+            return crumbs;
+        }
+        if (project.category) {
+            crumbs.push({
+                label: project.category,
+                to: `/projects?category=${encodeURIComponent(project.category)}`,
+            });
+        }
+        crumbs.push({ label: project.title, to: `/projects/${project.slug}` });
+        return crumbs;
+    });
 
     watch(isError, (hasError) => {
         if (hasError) {
@@ -337,13 +334,20 @@
         return `hsl(${hue}, 55%, 45%)`;
     };
 
+    // Indexe les stacks par nom (O(1) lookup au lieu de O(N) par find).
+    const stacksByName = computed(() => {
+        const map = new Map<string, { logo?: string; slug?: string }>();
+        (allStacks.value ?? []).forEach((s) => map.set(s.name.toLowerCase(), s));
+        return map;
+    });
+
     // Résout chaque tech en stack (logo, slug) pour maillage interne
     const resolvedTechnologies = computed(() => {
         const techs = currentProject.value?.technologies ?? [];
-        const stacks = allStacks.value ?? [];
+        const map = stacksByName.value;
 
         return techs.map((techName: string) => {
-            const match = stacks.find((s) => s.name.toLowerCase() === techName.toLowerCase());
+            const match = map.get(techName.toLowerCase());
             return {
                 name: techName,
                 logo: match?.logo || '',
@@ -402,6 +406,8 @@
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-xl;
         box-shadow: 0 4px 24px fn.color-alpha(vars.$black, 0.06);
+        min-height: 168px;
+        contain: layout paint;
 
         @include mix.responsive(mobile) {
             flex-direction: column;
@@ -453,6 +459,8 @@
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-xl;
         box-shadow: 0 4px 24px fn.color-alpha(vars.$black, 0.06);
+        min-height: 120px;
+        contain: layout paint;
 
         @include mix.responsive(mobile) {
             padding: vars.$spacing-lg;
@@ -487,6 +495,8 @@
         display: flex;
         flex-direction: column;
         gap: 0;
+        animation: features-fade-in 0.35s ease-out both;
+        will-change: opacity, transform;
     }
 
     .feature-item {
@@ -495,8 +505,6 @@
         gap: vars.$spacing-md;
         padding: vars.$spacing-md 0;
         border-bottom: 1px solid fn.color-alpha(vars.$border-color, 0.12);
-        transition: all vars.$transition-base;
-        animation: feature-fade-in 0.35s ease-out both;
 
         &:last-child {
             border-bottom: none;
@@ -509,9 +517,11 @@
 
         &:hover {
             .feature-item__number {
-                background: vars.$primary-color;
                 color: vars.$white;
-                border-color: vars.$primary-color;
+
+                &::before {
+                    opacity: 1;
+                }
             }
 
             .feature-item__check {
@@ -525,6 +535,8 @@
         }
 
         &__number {
+            position: relative;
+            isolation: isolate;
             flex-shrink: 0;
             display: flex;
             align-items: center;
@@ -537,7 +549,18 @@
             color: vars.$primary-color;
             font-size: vars.$font-size-xs;
             font-weight: vars.$font-weight-semibold;
-            transition: all vars.$transition-base;
+
+            &::before {
+                content: '';
+                position: absolute;
+                inset: -1.5px;
+                border-radius: inherit;
+                background: vars.$primary-color;
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                z-index: -1;
+                pointer-events: none;
+            }
         }
 
         &__content {
@@ -555,14 +578,16 @@
             color: vars.$primary-color;
             opacity: 0;
             transform: translateX(-4px);
-            transition: all vars.$transition-base;
+            transition:
+                opacity 0.2s ease,
+                transform 0.2s ease;
         }
     }
 
-    @keyframes feature-fade-in {
+    @keyframes features-fade-in {
         from {
             opacity: 0;
-            transform: translateY(4px);
+            transform: translateY(6px);
         }
 
         to {
@@ -601,6 +626,9 @@
     }
 
     .tech-item {
+        --tech-hover-bg: #{fn.color-alpha(vars.$border-color, 0.04)};
+        --tech-hover-border: transparent;
+
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -611,15 +639,32 @@
         border-radius: vars.$border-radius-md;
         text-decoration: none;
         position: relative;
-        transition: all 0.2s ease;
+        isolation: isolate;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: var(--tech-hover-bg);
+            border: 1px solid var(--tech-hover-border);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        &:hover::before {
+            opacity: 1;
+        }
 
         &--linked {
+            --tech-hover-bg: #{fn.color-alpha(vars.$primary-color, 0.04)};
+            --tech-hover-border: #{fn.color-alpha(vars.$primary-color, 0.2)};
+
             cursor: pointer;
 
             &:hover {
-                background: fn.color-alpha(vars.$primary-color, 0.04);
-                border-color: fn.color-alpha(vars.$primary-color, 0.2);
-
                 .tech-item__arrow {
                     opacity: 1;
                 }
@@ -630,38 +675,9 @@
             }
         }
 
-        &:not(&--linked):hover {
-            background: fn.color-alpha(vars.$border-color, 0.04);
-        }
-
         &__logo {
-            width: 40px;
-            height: 40px;
-            border-radius: vars.$border-radius-sm;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: fn.color-alpha(vars.$border-color, 0.06);
-        }
-
-        &__img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 5px;
-        }
-
-        &__letter {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: vars.$font-weight-semibold;
-            font-size: vars.$font-size-sm;
-            color: vars.$white;
-            border-radius: vars.$border-radius-sm;
+            // Le composant StackLogo gère dimensions/bg/letter lui-même.
+            // Ce wrapper class existe pour cible override contextuelle si besoin.
         }
 
         &__name {
@@ -671,7 +687,6 @@
             text-align: center;
             @include mix.truncate(1);
             max-width: 100%;
-            transition: color 0.2s ease;
         }
 
         &__arrow {
@@ -690,6 +705,8 @@
         gap: vars.$spacing-xxs;
 
         &__item {
+            position: relative;
+            isolation: isolate;
             display: flex;
             align-items: center;
             gap: vars.$spacing-sm;
@@ -701,12 +718,26 @@
             text-decoration: none;
             font-size: vars.$font-size-sm;
             font-weight: vars.$font-weight-medium;
-            transition: all 0.2s ease;
+
+            &::before {
+                content: '';
+                position: absolute;
+                inset: -1px;
+                border-radius: inherit;
+                background: fn.color-alpha(vars.$primary-color, 0.08);
+                border: 1px solid fn.color-alpha(vars.$primary-color, 0.15);
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                z-index: -1;
+                pointer-events: none;
+            }
 
             &:hover {
-                background: fn.color-alpha(vars.$primary-color, 0.08);
-                border-color: fn.color-alpha(vars.$primary-color, 0.15);
                 color: vars.$primary-color;
+
+                &::before {
+                    opacity: 1;
+                }
             }
         }
     }

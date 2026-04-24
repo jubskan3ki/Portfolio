@@ -18,6 +18,7 @@ export interface ExpertiseCardProps {
     variant?: HomeVariant;
     animateOnScroll?: boolean;
     to?: string;
+    prefetch?: boolean;
 }
 
 export interface StatCardProps {

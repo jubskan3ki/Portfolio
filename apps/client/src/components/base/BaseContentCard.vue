@@ -8,6 +8,7 @@
                 aspect-ratio="16:9"
                 object-fit="cover"
                 :quality="85"
+                :lazy="!eager"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 class="content-card__image"
             >
@@ -72,6 +73,7 @@
         tags: () => [],
         maxTags: 3,
         transitionKey: '',
+        eager: false,
     });
 
     const NuxtLink = resolveComponent('NuxtLink');
@@ -110,14 +112,14 @@
             border-color 0.25s ease;
 
         &:hover {
-            transform: translateY(-4px);
-            border-color: fn.color-alpha(vars.$primary-color, 0.3);
+            transform: translateY(-2px);
+            border-color: fn.color-alpha(vars.$primary-color, 0.22);
             box-shadow:
-                0 12px 24px fn.color-alpha(vars.$black, 0.08),
-                0 4px 8px fn.color-alpha(vars.$black, 0.04);
+                0 6px 14px fn.color-alpha(vars.$black, 0.05),
+                0 2px 4px fn.color-alpha(vars.$black, 0.03);
 
             .content-card__image :deep(.base-image__img) {
-                transform: scale(1.03);
+                transform: scale(1.02);
             }
 
             .content-card__title {
@@ -125,7 +127,7 @@
             }
 
             .content-card__arrow {
-                transform: translateX(4px);
+                transform: translateX(3px);
                 opacity: 1;
             }
         }

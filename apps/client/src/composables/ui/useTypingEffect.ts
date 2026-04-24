@@ -1,9 +1,9 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import type { UseTypingEffectOptions, UseTypingEffectReturn } from '@/types/composables/ui';
 
 export function useTypingEffect(texts: string[], options: UseTypingEffectOptions = {}): UseTypingEffectReturn {
-    const { typeSpeed = 150, deleteSpeed = 50, pauseMs = 2000, startDelay = 300 } = options;
+    const { typeSpeed = 150, deleteSpeed = 50, pauseMs = 2000, startDelay = 300, enabled } = options;
 
     const currentText = ref('');
     const isPaused = ref(false);
@@ -11,8 +11,20 @@ export function useTypingEffect(texts: string[], options: UseTypingEffectOptions
     let currentIndex = 0;
     let isDeleting = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let running = false;
+
+    const clear = () => {
+        if (timer) {
+            clearTimeout(timer);
+            timer = null;
+        }
+    };
 
     const tick = () => {
+        if (enabled && !enabled.value) {
+            running = false;
+            return;
+        }
         const fullText = texts[currentIndex] ?? '';
         let nextDelay: number;
 
@@ -39,19 +51,40 @@ export function useTypingEffect(texts: string[], options: UseTypingEffectOptions
         timer = setTimeout(tick, nextDelay);
     };
 
+    const start = () => {
+        if (running) {
+            return;
+        }
+        running = true;
+        tick();
+    };
+
     onMounted(() => {
+        const boot = () => {
+            if (enabled && !enabled.value) {
+                return;
+            }
+            start();
+        };
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => tick());
+            requestIdleCallback(() => boot());
         } else {
-            setTimeout(() => tick(), startDelay);
+            setTimeout(boot, startDelay);
         }
     });
 
-    onBeforeUnmount(() => {
-        if (timer) {
-            clearTimeout(timer);
-        }
-    });
+    if (enabled) {
+        watch(enabled, (active) => {
+            if (active) {
+                start();
+            } else {
+                clear();
+                running = false;
+            }
+        });
+    }
+
+    onBeforeUnmount(clear);
 
     return { currentText, isPaused };
 }

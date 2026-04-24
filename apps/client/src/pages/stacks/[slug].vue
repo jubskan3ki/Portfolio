@@ -55,24 +55,12 @@
                 <DetailPageLayout>
                     <template #main>
                         <div class="stack-identity">
-                            <div
+                            <StackLogo
+                                :stack="currentStack"
+                                size="xl"
+                                :transition-name="`hero-media-${currentStack.slug}`"
                                 class="stack-identity__logo-wrapper"
-                                :style="{ viewTransitionName: `hero-media-${currentStack.slug}` }"
-                            >
-                                <BaseImage
-                                    v-if="currentStack.logo"
-                                    :src="currentStack.logo"
-                                    :alt="currentStack.name"
-                                    :width="80"
-                                    :height="80"
-                                    :lazy="false"
-                                    :show-placeholder="false"
-                                    class="stack-identity__logo"
-                                />
-                                <div v-else class="stack-identity__logo-fallback">
-                                    {{ currentStack.name.charAt(0).toUpperCase() }}
-                                </div>
-                            </div>
+                            />
                             <div class="stack-identity__content">
                                 <h2 class="stack-identity__name">{{ currentStack.name }}</h2>
                                 <p class="stack-identity__description">{{ currentStack.description }}</p>
@@ -238,6 +226,7 @@
     import BaseLink from '@/components/base/BaseLink.vue';
     import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
     import ProjectCard from '@/components/feature/projects/ProjectCard.vue';
+    import StackLogo from '@/components/feature/stacks/StackLogo.vue';
     import StackTags from '@/components/feature/stacks/StackTags.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
@@ -436,43 +425,12 @@
 
         &__logo-wrapper {
             flex-shrink: 0;
-            width: 96px;
-            height: 96px;
-            border-radius: vars.$border-radius-xl;
-            background: fn.color-alpha(vars.$primary-color, 0.06);
-            border: 1px solid fn.color-alpha(vars.$primary-color, 0.12);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
 
             @include mix.responsive(mobile) {
                 width: 80px;
                 height: 80px;
+                font-size: vars.$font-size-3xl;
             }
-        }
-
-        &__logo {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: vars.$spacing-sm;
-        }
-
-        &__logo-fallback {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: vars.$font-size-4xl;
-            font-weight: vars.$font-weight-bold;
-            color: vars.$primary-color;
-            background: linear-gradient(
-                135deg,
-                fn.color-alpha(vars.$primary-color, 0.08),
-                fn.color-alpha(vars.$secondary-color, 0.08)
-            );
         }
 
         &__content {

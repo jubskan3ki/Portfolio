@@ -1,24 +1,26 @@
 <template>
-    <div ref="pageRef" class="home-page" :class="{ 'home-page--ready': pageReady }">
-        <div class="home-page__orb home-page__orb--primary"></div>
-        <div class="home-page__orb home-page__orb--secondary"></div>
+    <div class="home-page" :class="{ 'home-page--ready': pageReady }">
+        <ClientOnly>
+            <div class="home-page__orb home-page__orb--primary" aria-hidden="true"></div>
+            <div class="home-page__orb home-page__orb--secondary" aria-hidden="true"></div>
 
-        <div class="home-page__shapes">
-            <span
-                v-for="shape in shapes"
-                :key="shape.id"
-                :ref="(el) => setShapeRef(el as HTMLElement, shape.id)"
-                class="home-page__shape"
-                :class="`home-page__shape--${shape.type}`"
-                :style="{
-                    left: shape.x + '%',
-                    top: shape.y + '%',
-                    width: shape.size + 'px',
-                    height: shape.size + 'px',
-                    opacity: shape.opacity,
-                }"
-            ></span>
-        </div>
+            <div v-if="enableShapes" class="home-page__shapes" aria-hidden="true">
+                <span
+                    v-for="shape in shapes"
+                    :key="shape.id"
+                    :ref="(el) => setShapeRef(el as HTMLElement, shape.id)"
+                    class="home-page__shape"
+                    :class="`home-page__shape--${shape.type}`"
+                    :style="{
+                        left: shape.x + '%',
+                        top: shape.y + '%',
+                        width: shape.size + 'px',
+                        height: shape.size + 'px',
+                        opacity: shape.opacity,
+                    }"
+                ></span>
+            </div>
+        </ClientOnly>
 
         <HeroSection :featured-stacks="featuredStacks" :bio="heroBio" />
 
@@ -32,6 +34,7 @@
                         color="#673c5c"
                         variant="light"
                         to="/stacks?category=Frontend"
+                        :prefetch="false"
                     />
                     <ExpertiseCard
                         title="DevOps"
@@ -40,6 +43,7 @@
                         color="#ff2453"
                         variant="primary"
                         to="/stacks?category=DevOps"
+                        :prefetch="false"
                     />
                     <ExpertiseCard
                         title="Back-end"
@@ -48,6 +52,7 @@
                         color="#43889d"
                         variant="dark"
                         to="/stacks?category=Backend"
+                        :prefetch="false"
                     />
                     <ExpertiseCard
                         title="Mobile"
@@ -56,6 +61,7 @@
                         color="#ac72a0"
                         variant="secondary"
                         to="/stacks?category=Mobile"
+                        :prefetch="false"
                     />
                 </div>
             </div>
@@ -71,10 +77,15 @@
         >
             <div ref="experiencesTargetRef" class="container">
                 <div class="project-timeline">
-                    <LazyExperienceTimeline :experiences="professionalExperiences" :limit="3" compact />
+                    <LazyExperienceTimeline
+                        :hydrate-on-visible="{ rootMargin: '300px' }"
+                        :experiences="professionalExperiences"
+                        :limit="3"
+                        compact
+                    />
 
                     <div class="section-actions">
-                        <BaseButton :to="ROUTES.EXPERIENCE" variant="outline">
+                        <BaseButton :to="ROUTES.EXPERIENCE" variant="outline" :prefetch="false">
                             <BaseIcon name="grid" size="sm" class="mr-xs" />
                             Voir mon parcours complet
                         </BaseButton>
@@ -92,10 +103,14 @@
             variant="light"
         >
             <div class="container">
-                <LazyProjectCarousel :limit="5" autoplay />
+                <LazyProjectCarousel
+                    :hydrate-on-visible="{ rootMargin: '300px' }"
+                    :limit="5"
+                    autoplay
+                />
 
                 <div class="section-actions">
-                    <BaseButton :to="ROUTES.PROJECTS" variant="primary">
+                    <BaseButton :to="ROUTES.PROJECTS" variant="primary" :prefetch="false">
                         <BaseIcon name="grid" size="sm" class="mr-xs" />
                         Explorer tous mes projets
                     </BaseButton>
@@ -112,6 +127,7 @@
         >
             <div class="container">
                 <LazyStackCarousel
+                    :hydrate-on-visible="{ rootMargin: '300px' }"
                     :limit="10"
                     autoplay
                     :slides-per-view="6"
@@ -119,7 +135,7 @@
                 />
 
                 <div class="section-actions">
-                    <BaseButton :to="ROUTES.STACKS" variant="outline">
+                    <BaseButton :to="ROUTES.STACKS" variant="outline" :prefetch="false">
                         <BaseIcon name="layers" size="sm" class="mr-xs" />
                         Découvrir tous mes stacks
                     </BaseButton>
@@ -137,6 +153,7 @@
         >
             <div ref="articlesTargetRef" class="container">
                 <LazyArticleCarousel
+                    :hydrate-on-visible="{ rootMargin: '300px' }"
                     :articles="articles"
                     :limit="4"
                     autoplay
@@ -146,7 +163,7 @@
                 />
 
                 <div class="section-actions">
-                    <BaseButton :to="ROUTES.BLOG" variant="primary">
+                    <BaseButton :to="ROUTES.BLOG" variant="primary" :prefetch="false">
                         <BaseIcon name="book-open" size="sm" class="mr-xs" />
                         Lire tous mes articles
                     </BaseButton>
@@ -162,10 +179,14 @@
                 </div>
                 <div class="contact-wrapper">
                     <div class="contact-wrapper__form">
-                        <LazyContactForm form-id="contact-form-home" />
+                        <LazyContactForm
+                            :hydrate-on-visible="{ rootMargin: '200px' }"
+                            form-id="contact-form-home"
+                        />
                     </div>
                     <div class="contact-wrapper__info">
                         <LazyContactInfos
+                            :hydrate-on-visible="{ rootMargin: '200px' }"
                             title="Mes coordonnées"
                             subtitle="Discutons de vos besoins et objectifs"
                             :address="contactAddress"
@@ -221,10 +242,10 @@
     const { isMobile } = useResponsive();
 
     const shouldDisableParallax = computed(() => prefersReducedMotion.value || isMobile.value);
+    const enableShapes = computed(() => !shouldDisableParallax.value);
 
     const pageReady = ref(false);
 
-    const pageRef = ref<HTMLElement | null>(null);
     const shapeRefs = ref<Map<number, HTMLElement>>(new Map());
 
     const shapes = [
@@ -233,58 +254,80 @@
         { id: 3, type: 'blob-2', size: 70, x: 15, y: 85, depth: 45, opacity: 0.12 },
     ];
 
+    interface ShapeRender { el: HTMLElement; depth: number }
+    let shapeRender: ShapeRender[] = [];
+
     const setShapeRef = (el: HTMLElement | null, id: number) => {
         if (el) {
             shapeRefs.value.set(id, el);
         }
     };
 
+    const rebuildShapeRender = () => {
+        shapeRender = shapes
+            .map((s) => {
+                const el = shapeRefs.value.get(s.id);
+                return el ? { el, depth: s.depth } : null;
+            })
+            .filter((v): v is ShapeRender => v !== null);
+    };
+
     let targetX = 0;
     let targetY = 0;
     let currentX = 0;
     let currentY = 0;
-    let animationId: number;
+    let animationId = 0;
+    let viewportW = 0;
+    let viewportH = 0;
+
+    const updateViewport = () => {
+        viewportW = window.innerWidth;
+        viewportH = window.innerHeight;
+    };
 
     const onMouseMove = (e: MouseEvent) => {
-        if (!pageRef.value || shouldDisableParallax.value) {
+        if (viewportW === 0) {
             return;
         }
-        const { width, height } = pageRef.value.getBoundingClientRect();
-        targetX = (e.clientX / width - 0.5) * 2;
-        targetY = (e.clientY / height - 0.5) * 2;
+        targetX = (e.clientX / viewportW - 0.5) * 2;
+        targetY = (e.clientY / viewportH - 0.5) * 2;
     };
 
     const animate = () => {
-        if (shouldDisableParallax.value) {
-            return;
-        }
+        const dx = targetX - currentX;
+        const dy = targetY - currentY;
 
-        currentX += (targetX - currentX) * 0.05;
-        currentY += (targetY - currentY) * 0.05;
-
-        shapeRefs.value.forEach((el, id) => {
-            const shape = shapes.find((s) => s.id === id);
-            if (shape) {
-                const x = currentX * shape.depth;
-                const y = currentY * shape.depth;
-                el.style.transform = `translate(${x}px, ${y}px)`;
+        if (Math.abs(dx) > 0.0005 || Math.abs(dy) > 0.0005) {
+            currentX += dx * 0.05;
+            currentY += dy * 0.05;
+            for (const { el, depth } of shapeRender) {
+                el.style.transform = `translate3d(${currentX * depth}px, ${currentY * depth}px, 0)`;
             }
-        });
+        }
 
         animationId = requestAnimationFrame(animate);
     };
 
     const startParallax = () => {
-        if (!shouldDisableParallax.value) {
-            window.addEventListener('mousemove', onMouseMove);
-            animationId = requestAnimationFrame(animate);
+        if (shouldDisableParallax.value) {
+            return;
         }
+        rebuildShapeRender();
+        if (!shapeRender.length) {
+            return;
+        }
+        updateViewport();
+        window.addEventListener('mousemove', onMouseMove, { passive: true });
+        window.addEventListener('resize', updateViewport, { passive: true });
+        animationId = requestAnimationFrame(animate);
     };
 
     const stopParallax = () => {
         window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('resize', updateViewport);
         if (animationId) {
             cancelAnimationFrame(animationId);
+            animationId = 0;
         }
     };
 
@@ -297,16 +340,14 @@
     };
 
     onMounted(() => {
+        const boot = () => {
+            pageReady.value = true;
+            startParallax();
+        };
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                pageReady.value = true;
-                startParallax();
-            });
+            requestIdleCallback(boot, { timeout: 1500 });
         } else {
-            setTimeout(() => {
-                pageReady.value = true;
-                startParallax();
-            }, 300);
+            setTimeout(boot, 300);
         }
         document.addEventListener('visibilitychange', handleVisibilityChange);
     });
@@ -324,10 +365,11 @@
         { id: 5, name: 'Go', logo: '', level: 70 },
     ];
 
-    const { data: heroStacks } = await useAsyncData(
+    const { data: heroStacks } = useAsyncData(
         'hero-stacks',
         () => stacksApi.getFeatured(10),
         {
+            lazy: true,
             default: () => [] as HeroStack[],
             transform: (stacks: Stack[]) =>
                 stacks
@@ -337,19 +379,19 @@
         },
     );
 
-    const { settings } = await useSiteSettings();
+    const { settings } = await useSiteSettings({ lazy: true });
 
     const {
         targetRef: experiencesTargetRef,
         enabled: experiencesEnabled,
-    } = useViewportTrigger({ rootMargin: '300px' });
+    } = useViewportTrigger({ rootMargin: '300px', ssrEager: true });
     void experiencesTargetRef;
     const { data: experiencesData } = useProfessionalExperiences({ enabled: experiencesEnabled });
 
     const {
         targetRef: articlesTargetRef,
         enabled: articlesEnabled,
-    } = useViewportTrigger({ rootMargin: '300px' });
+    } = useViewportTrigger({ rootMargin: '300px', ssrEager: true });
     void articlesTargetRef;
     const { data: articlesData } = useRecentArticles(4, { enabled: articlesEnabled });
 

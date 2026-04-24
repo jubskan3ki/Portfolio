@@ -95,12 +95,20 @@
             gap: vars.$spacing-sm;
             padding: vars.$spacing-xs;
             text-decoration: none;
+            border: 1px solid transparent;
             border-radius: vars.$border-radius-md;
-            transition: all 0.2s ease;
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
 
             &:hover {
-                background: fn.color-alpha(vars.$primary-color, 0.04);
+                background: fn.color-alpha(vars.$primary-color, 0.06);
+                border-color: fn.color-alpha(vars.$primary-color, 0.18);
                 text-decoration: none;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 6px fn.color-alpha(vars.$primary-color, 0.06);
 
                 .popular-articles__name {
                     color: vars.$primary-color;
@@ -108,6 +116,32 @@
 
                 .popular-articles__img {
                     transform: scale(1.05);
+                }
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+
+            &:focus {
+                outline: none;
+            }
+
+            &:focus-visible {
+                outline: 2px solid fn.color-alpha(vars.$primary-color, 0.5);
+                outline-offset: 2px;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                transition: none;
+
+                &:hover,
+                &:active {
+                    transform: none;
+
+                    .popular-articles__img {
+                        transform: none;
+                    }
                 }
             }
         }

@@ -191,6 +191,7 @@ export interface UseTypingEffectOptions {
     deleteSpeed?: number;
     pauseMs?: number;
     startDelay?: number;
+    enabled?: Ref<boolean>;
 }
 
 export interface UseTypingEffectReturn {

@@ -275,6 +275,7 @@ export default defineNuxtConfig({
                             ) {
                                 return 'vendor-core';
                             }
+                            if (id.includes('lucide-vue-next')) return;
                             return 'vendor-lib';
                         }
                     },

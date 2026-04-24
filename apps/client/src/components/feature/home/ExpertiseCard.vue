@@ -3,6 +3,7 @@
         :is="props.to ? NuxtLink : 'div'"
         ref="cardRef"
         :to="props.to || undefined"
+        :prefetch="props.to && props.prefetch === false ? false : undefined"
         class="expertise-card"
         :class="[`expertise-card--${variant}`, { 'expertise-card--no-motion': prefersReducedMotion }]"
         tabindex="0"
@@ -49,6 +50,7 @@
         variant: 'light',
         animateOnScroll: false,
         to: undefined,
+        prefetch: undefined,
     });
 
     const NuxtLink = resolveComponent('NuxtLink');
@@ -60,30 +62,38 @@
     const mouseX = ref(0.5);
     const mouseY = ref(0.5);
 
+    let cachedRect: DOMRect | null = null;
+
+    const resolveEl = (): HTMLElement | null => {
+        if (!cardRef.value) {
+            return null;
+        }
+        const el = (cardRef.value as ComponentPublicInstance)?.$el ?? cardRef.value;
+        return el instanceof HTMLElement ? el : null;
+    };
+
     const onMouseEnter = () => {
         if (prefersReducedMotion.value) {
             return;
         }
         isHovering.value = true;
+        const el = resolveEl();
+        cachedRect = el ? el.getBoundingClientRect() : null;
     };
 
     const onMouseLeave = () => {
         isHovering.value = false;
         mouseX.value = 0.5;
         mouseY.value = 0.5;
+        cachedRect = null;
     };
 
     const onMouseMove = (e: MouseEvent) => {
-        if (prefersReducedMotion.value || !cardRef.value) {
+        if (prefersReducedMotion.value || !cachedRect) {
             return;
         }
-        const el = (cardRef.value as ComponentPublicInstance)?.$el ?? cardRef.value;
-        if (!(el instanceof HTMLElement)) {
-            return;
-        }
-        const rect = el.getBoundingClientRect();
-        mouseX.value = (e.clientX - rect.left) / rect.width;
-        mouseY.value = (e.clientY - rect.top) / rect.height;
+        mouseX.value = (e.clientX - cachedRect.left) / cachedRect.width;
+        mouseY.value = (e.clientY - cachedRect.top) / cachedRect.height;
     };
 
     const getGradientColors = computed(() => {

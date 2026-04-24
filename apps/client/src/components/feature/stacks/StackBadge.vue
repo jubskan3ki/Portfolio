@@ -8,23 +8,7 @@
         @keydown.enter="handleClick"
         @keydown.space.prevent="handleClick"
     >
-        <div class="stack-badge__icon" :style="iconStyle">
-            <BaseImage
-                v-if="stack.logo"
-                :src="stack.logo"
-                :alt="`${stack.name} icon`"
-                :width="iconDimension"
-                :height="iconDimension"
-                :show-placeholder="false"
-                class="stack-badge__image"
-            />
-            <div v-else-if="stack.color" class="stack-badge__letter" :style="{ backgroundColor: stack.color }">
-                {{ getFirstLetter(stack.name) }}
-            </div>
-            <div v-else class="stack-badge__letter stack-badge__letter--default">
-                {{ getFirstLetter(stack.name) }}
-            </div>
-        </div>
+        <StackLogo :stack="stack" :size="logoSize" class="stack-badge__icon" />
 
         <div v-if="showName" class="stack-badge__name">
             {{ stack.name }}
@@ -39,6 +23,8 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
+    import StackLogo from '@/components/feature/stacks/StackLogo.vue';
+
     import type { StackBadgeProps } from '@/types/feature/stacks';
 
     const props = withDefaults(defineProps<StackBadgeProps>(), {
@@ -51,74 +37,33 @@
 
     const emit = defineEmits(['click']);
 
-    // Gérer le clic
     const handleClick = () => {
         if (props.clickable) {
             emit('click', props.stack);
         }
     };
 
-    // Extraire la première lettre du nom
-    const getFirstLetter = (name: string) => {
-        return name.charAt(0).toUpperCase();
-    };
+    // Mapping des tailles StackBadge → StackLogo.
+    const LOGO_SIZE_MAP = {
+        small: 'sm',
+        medium: 'md',
+        large: 'lg',
+    } as const;
 
-    // Dimension de l'icône selon la taille
-    const ICON_DIMENSION_MAP: Record<string, number> = {
-        small: 42,
-        medium: 48,
-        large: 64,
-    };
+    const logoSize = computed(() => LOGO_SIZE_MAP[props.size] ?? 'md');
 
-    const iconDimension = computed(() => ICON_DIMENSION_MAP[props.size] || 48);
+    const levelStyle = computed(() => ({
+        backgroundColor: props.stack.color ? `${props.stack.color}33` : 'var(--gray-light)',
+    }));
 
-    // Style pour l'icône
-    const iconStyle = computed(() => {
-        if (props.stack.color && !props.stack.logo && !props.stack.icon) {
-            return {
-                backgroundColor: props.stack.color,
-                color: getContrastColor(props.stack.color),
-            };
-        }
-        return {};
-    });
-
-    // Style pour la barre de niveau
-    const levelStyle = computed(() => {
-        return {
-            backgroundColor: props.stack.color
-                ? `${props.stack.color}33` // Ajouter transparence
-                : 'var(--gray-light)',
-        };
-    });
-
-    // Style pour la barre de niveau remplie
     const levelBarStyle = computed(() => {
         const level = props.stack.level || 0;
-        const width = Math.min(Math.max(level, 0), 5) * 20; // 0-5 -> 0-100%
-
+        const width = Math.min(Math.max(level, 0), 5) * 20;
         return {
             width: `${width}%`,
             backgroundColor: props.stack.color || 'var(--primary-color)',
         };
     });
-
-    // Calculer la couleur de contraste pour le texte
-    const getContrastColor = (hexColor: string) => {
-        // Supprimer le # si présent
-        const color = hexColor.charAt(0) === '#' ? hexColor.substring(1, 7) : hexColor;
-
-        // Convertir en RGB
-        const r = parseInt(color.substring(0, 2), 16) || 0; // Rouge
-        const g = parseInt(color.substring(2, 4), 16) || 0; // Vert
-        const b = parseInt(color.substring(4, 6), 16) || 0; // Bleu
-
-        // Calculer la luminosité
-        const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-
-        // Retourner noir ou blanc selon la luminosité
-        return yiq >= 128 ? '#000000' : '#ffffff';
-    };
 </script>
 
 <style lang="scss" scoped>
@@ -145,18 +90,18 @@
             }
         }
 
-        /* Tailles */
+        /* Dimensions icon = StackLogo size. Le reste (name, level) s'adapte. */
         &--small {
-            .stack-badge__icon {
-                width: 42px;
-                height: 42px;
-            }
-
             .stack-badge__name {
-                background-color: vars.$white;
+                background: func.color-alpha(vars.$white, 0.95);
+                color: vars.$primary-color;
+                border: 1px solid func.color-alpha(vars.$primary-color, 0.15);
                 border-radius: vars.$border-radius-md;
-                box-shadow: vars.$box-shadow;
-                padding: vars.$spacing-xxs;
+                padding: 4px 10px;
+                font-size: 11px;
+                font-weight: vars.$font-weight-semibold;
+                letter-spacing: 0.02em;
+                box-shadow: 0 2px 6px func.color-alpha(vars.$black, 0.06);
             }
 
             .stack-badge__level {
@@ -165,11 +110,6 @@
         }
 
         &--medium {
-            .stack-badge__icon {
-                width: 48px;
-                height: 48px;
-            }
-
             .stack-badge__name {
                 margin-top: vars.$spacing-xxs;
             }
@@ -181,11 +121,6 @@
         }
 
         &--large {
-            .stack-badge__icon {
-                width: 64px;
-                height: 64px;
-            }
-
             .stack-badge__name {
                 margin-top: vars.$spacing-xs;
             }
@@ -193,36 +128,6 @@
             .stack-badge__level {
                 height: 5px;
                 margin-top: vars.$spacing-xs;
-            }
-        }
-
-        &__icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: vars.$border-radius-md;
-            overflow: hidden;
-            background-color: vars.$white-dark;
-        }
-
-        &__image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 4px;
-        }
-
-        &__letter {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            color: vars.$white;
-
-            &--default {
-                background-color: vars.$primary-color;
             }
         }
 

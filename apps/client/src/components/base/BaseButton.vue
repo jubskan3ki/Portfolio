@@ -123,7 +123,14 @@
     });
 
     const componentProps = computed(() => {
-        if (isInternalLink.value || isExternalLink.value) {
+        if (isInternalLink.value) {
+            return {
+                ...linkProps.value,
+                'aria-label': effectiveAriaLabel.value,
+                ...(props.prefetch === false ? { prefetch: false } : {}),
+            };
+        }
+        if (isExternalLink.value) {
             return {
                 ...linkProps.value,
                 'aria-label': effectiveAriaLabel.value,

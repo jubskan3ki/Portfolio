@@ -42,105 +42,92 @@
                     </div>
 
                     <div class="blog-transition">
-                        <Transition name="slide-fade">
-                            <div v-if="isLoading" key="loader" class="blog-loader">
-                                <SkeletonList
-                                    :count="6"
-                                    variant="article"
-                                    layout="grid"
-                                    :columns="2"
-                                    show-image
-                                    show-description
+                        <div v-if="isLoading" class="blog-loader">
+                            <SkeletonList
+                                :count="6"
+                                variant="article"
+                                layout="grid"
+                                :columns="2"
+                                show-image
+                                show-description
+                                show-footer
+                            />
+                        </div>
+
+                        <LazyEmptyState
+                            v-else-if="hasError"
+                            icon="alert-circle"
+                            title="Erreur de chargement"
+                            description="Impossible de charger les articles. Veuillez réessayer."
+                            size="lg"
+                            custom-class="blog-empty-state"
+                        >
+                            <template #action>
+                                <LazyBaseButton
+                                    label="Réessayer"
+                                    icon="refresh-cw"
+                                    variant="primary"
+                                    @click="handleRetry"
+                                />
+                            </template>
+                        </LazyEmptyState>
+
+                        <LazyEmptyState
+                            v-else-if="!hasArticles"
+                            icon="file-text"
+                            :title="emptyStateTitle"
+                            :description="emptyStateDescription"
+                            size="lg"
+                            custom-class="blog-empty-state"
+                        >
+                            <template v-if="hasActiveFilters" #action>
+                                <LazyBaseButton
+                                    label="Réinitialiser les filtres"
+                                    icon="x"
+                                    variant="secondary"
+                                    @click="resetFilters"
+                                />
+                            </template>
+                        </LazyEmptyState>
+
+                        <div v-else class="blog-content">
+                            <div
+                                class="articles-grid"
+                                :class="{ 'articles-grid--fetching': isFilterFetching }"
+                                @mouseover.passive="handleCardHover"
+                                @mouseout.passive="handleCardLeave"
+                                @focusin="handleCardHover"
+                                @focusout="handleCardLeave"
+                            >
+                                <ArticleCard
+                                    v-for="(article, index) in articles"
+                                    :key="article.id"
+                                    :article="article"
+                                    :eager="index < 2"
+                                    class="articles-grid__item"
+                                    :style="{ '--article-index': prefersReducedMotion ? 0 : index }"
                                 />
                             </div>
 
-                            <LazyEmptyState
-                                v-else-if="hasError"
-                                key="error"
-                                icon="alert-circle"
-                                title="Erreur de chargement"
-                                description="Impossible de charger les articles. Veuillez réessayer."
-                                size="lg"
-                                custom-class="blog-empty-state"
-                            >
-                                <template #action>
-                                    <LazyBaseButton
-                                        label="Réessayer"
-                                        icon="refresh-cw"
-                                        variant="primary"
-                                        @click="handleRetry"
-                                    />
-                                </template>
-                            </LazyEmptyState>
-
-                            <LazyEmptyState
-                                v-else-if="!hasArticles"
-                                key="empty"
-                                icon="file-text"
-                                :title="emptyStateTitle"
-                                :description="emptyStateDescription"
-                                size="lg"
-                                custom-class="blog-empty-state"
-                            >
-                                <template v-if="hasActiveFilters" #action>
-                                    <LazyBaseButton
-                                        label="Réinitialiser les filtres"
-                                        icon="x"
-                                        variant="secondary"
-                                        @click="resetFilters"
-                                    />
-                                </template>
-                            </LazyEmptyState>
-
-                            <div v-else class="blog-content">
-                                <div class="articles-grid" :class="{ 'articles-grid--fetching': isFilterFetching }">
-                                    <ArticleCard
-                                        v-for="(article, index) in articles"
-                                        :key="article.id"
-                                        :article="article"
-                                        class="articles-grid__item"
-                                        :style="{ '--article-index': prefersReducedMotion ? 0 : index }"
-                                    />
-                                </div>
-
-                                <LazyPagination
-                                    v-if="totalPages > 1"
-                                    :current-page="currentPage"
-                                    :total-pages="totalPages"
-                                    class="blog-pagination"
-                                    @update:current-page="handlePageChange"
-                                />
-                            </div>
-                        </Transition>
+                            <LazyPagination
+                                v-if="totalPages > 1"
+                                :current-page="currentPage"
+                                :total-pages="totalPages"
+                                class="blog-pagination"
+                                @update:current-page="handlePageChange"
+                            />
+                        </div>
                     </div>
                 </div>
 
-                <aside class="blog-sidebar">
-                    <div class="blog-sidebar__slot blog-sidebar__slot--popular">
-                        <LazyArticlePopular :articles="popularArticles" title="Articles populaires" show-title />
-                    </div>
-
-                    <div v-if="categories?.length" class="blog-sidebar__slot blog-sidebar__slot--categories">
-                        <LazyArticleCategories
-                            v-model="selectedCategory"
-                            :categories="categoriesWithAll"
-                            :max-visible="8"
-                            title="Catégories"
-                        />
-                    </div>
-
-                    <div v-if="tags?.length" class="blog-sidebar__slot blog-sidebar__slot--tags">
-                        <LazyArticleTags
-                            v-model="selectedTags"
-                            :tags="tags"
-                            :max-visible="10"
-                            title="Tags"
-                            show-title
-                            display="cloud"
-                            multi-select
-                        />
-                    </div>
-                </aside>
+                <LazyBlogSidebar
+                    v-model:selected-category="selectedCategory"
+                    v-model:selected-tags="selectedTags"
+                    :popular-articles="popularArticles"
+                    :categories="categories ?? []"
+                    :tags="tags ?? []"
+                    :total-articles="totalArticles"
+                />
             </div>
         </Main>
 
@@ -174,6 +161,7 @@
     import { useScrollToTop } from '@/composables/ui/useScrollToTop';
     import { filterPresets } from '@/config/filterPresets';
     import { ROUTES } from '@/config/routes';
+    import { queryKeys } from '@/services/api/modules';
     import {
         articleKeys,
         articlesApi,
@@ -196,33 +184,40 @@
         pagination: { ...filterPresets.blog.pagination, itemsPerPage: 6 },
     });
 
-    // SSR-prefetch the data so the skeleton never shows on first paint (kills CLS).
+    // SSR-prefetch des données critiques above-fold : articles (grid) + categories + tags
+    // (utilisés par heroStats). `popular` n'est consommé que par BlogSidebar (lazy, hors
+    // viewport initial), donc sorti du path SSR bloquant — gain d'1 round-trip API.
+    // `getCachedData` réutilise le payload SSR + cache Nuxt sur nav client.
     const queryClient = useQueryClient();
-    await useAsyncData('blog-prefetch', async () => {
-        const initialTagsFilters = {
-            category: filters.value.category || undefined,
-            search: filters.value.search || undefined,
-        };
-        await Promise.all([
-            queryClient.prefetchQuery({
-                queryKey: articleKeys.list(unref(apiFilters)),
-                queryFn: () => articlesApi.getAll(unref(apiFilters)),
-            }),
-            queryClient.prefetchQuery({
-                queryKey: articleKeys.categories(),
-                queryFn: articlesApi.getCategories,
-            }),
-            queryClient.prefetchQuery({
-                queryKey: articleKeys.tags(initialTagsFilters),
-                queryFn: () => articlesApi.getTags(initialTagsFilters),
-            }),
-            queryClient.prefetchQuery({
-                queryKey: articleKeys.popular(5),
-                queryFn: () => articlesApi.getPopular(5),
-            }),
-        ]);
-        return true;
-    });
+    await useAsyncData(
+        'blog-prefetch',
+        async () => {
+            const initialTagsFilters = {
+                category: filters.value.category || undefined,
+                search: filters.value.search || undefined,
+            };
+            await Promise.all([
+                queryClient.prefetchQuery({
+                    queryKey: articleKeys.list(unref(apiFilters)),
+                    queryFn: () => articlesApi.getAll(unref(apiFilters)),
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: articleKeys.categories(),
+                    queryFn: articlesApi.getCategories,
+                }),
+                queryClient.prefetchQuery({
+                    queryKey: articleKeys.tags(initialTagsFilters),
+                    queryFn: () => articlesApi.getTags(initialTagsFilters),
+                }),
+            ]);
+            return true;
+        },
+        {
+            getCachedData: (key, nuxtApp) =>
+                (nuxtApp.payload.data[key] as boolean | undefined)
+                ?? (nuxtApp.static.data[key] as boolean | undefined),
+        },
+    );
 
     const searchQuery = computed({
         get: () => filters.value.search,
@@ -273,19 +268,13 @@
 
     usePaginationSeo({ basePath: '/blog', currentPage, totalPages });
 
-    // Schema.org ItemList pour rich results
+    // Schema.org ItemList pour rich results (SSR-only : basé sur les articles prefetch).
+    // Pas besoin de watch — le JSON-LD reflète la liste initiale, les filtres client
+    // ne modifient pas l'URL canonique et n'ont donc pas besoin de re-émettre le schema.
     const articleListItems = computed(() =>
         articles.value.map((a) => ({ name: a.title, url: `/blog/${a.slug}`, image: a.image })),
     );
-    watch(
-        articleListItems,
-        (items) => {
-            if (items.length) {
-                useItemListSeo({ items: articleListItems });
-            }
-        },
-        { immediate: true },
-    );
+    useItemListSeo({ items: articleListItems });
     const hasArticles = computed(() => (articles.value?.length ?? 0) > 0);
     const isFilterFetching = computed(() => isFetching.value && hasArticles.value && !isLoading.value);
 
@@ -305,13 +294,6 @@
             : 'Les articles seront ajoutés prochainement.',
     );
 
-    const categoriesWithAll = computed(() => {
-        if (!categories.value?.length) {
-            return [];
-        }
-        return [{ id: '', slug: '', name: 'Tous', count: totalArticles.value }, ...categories.value];
-    });
-
     const clearSearch = () => {
         setFilter('search', '');
     };
@@ -327,6 +309,43 @@
     const handlePageChange = (page: number) => {
         setPage(page);
         scrollToTop('smooth');
+    };
+
+    // Prefetch délégué : 1 listener partagé pour les 6 cartes (vs 6 instances de useCardPrefetch).
+    // Delay 120 ms : si l'utilisateur traverse la grille à la souris, on ne spamme pas 6 fetches.
+    // Ça reste très court devant un clic intentionnel (> 200 ms).
+    const PREFETCH_HOVER_DELAY = 120;
+    const prefetchedSlugs = new Set<string>();
+    const prefetchTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+    const handleCardHover = (event: MouseEvent | FocusEvent) => {
+        const card = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-slug]');
+        const slug = card?.dataset.slug;
+        if (!slug || prefetchedSlugs.has(slug) || prefetchTimers.has(slug)) {
+            return;
+        }
+        const timer = setTimeout(() => {
+            prefetchTimers.delete(slug);
+            prefetchedSlugs.add(slug);
+            queryClient.prefetchQuery({
+                queryKey: queryKeys.articles.detail(slug),
+                queryFn: () => articlesApi.getBySlug(slug),
+            });
+        }, PREFETCH_HOVER_DELAY);
+        prefetchTimers.set(slug, timer);
+    };
+
+    const handleCardLeave = (event: MouseEvent | FocusEvent) => {
+        const card = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-slug]');
+        const slug = card?.dataset.slug;
+        if (!slug) {
+            return;
+        }
+        const timer = prefetchTimers.get(slug);
+        if (timer) {
+            clearTimeout(timer);
+            prefetchTimers.delete(slug);
+        }
     };
 
     watch(
@@ -351,13 +370,13 @@
 
     .blog-layout {
         display: grid;
-        grid-template-columns: 1fr 320px;
+        grid-template-columns: 1fr 380px;
         gap: vars.$spacing-xl;
         max-width: 1400px;
         margin: 0 auto;
 
         @include mix.responsive(desktop) {
-            grid-template-columns: 1fr 280px;
+            grid-template-columns: 1fr 340px;
             gap: vars.$spacing-lg;
         }
 
@@ -372,73 +391,15 @@
 
     .blog-transition {
         position: relative;
-        min-height: 1400px;
+        min-height: 1800px;
         contain: layout;
 
         @include mix.responsive(tablet) {
-            min-height: 1700px;
+            min-height: 2100px;
         }
 
         @include mix.responsive(mobile) {
-            min-height: 2600px;
-        }
-
-        > .slide-fade-leave-active {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-        }
-    }
-
-    .blog-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: vars.$spacing-lg;
-
-        &__slot {
-            background: fn.color-alpha(vars.$white, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid fn.color-alpha(vars.$border-color, 0.3);
-            border-radius: vars.$border-radius-xl;
-            box-shadow: 0 4px 16px fn.color-alpha(vars.$black, 0.04);
-            transition: box-shadow 0.3s ease;
-            contain: layout paint;
-
-            &:hover {
-                box-shadow: 0 6px 24px fn.color-alpha(vars.$black, 0.07);
-            }
-
-            &--popular {
-                min-height: 420px;
-            }
-
-            &--categories {
-                min-height: 260px;
-            }
-
-            &--tags {
-                min-height: 220px;
-            }
-        }
-
-        @include mix.responsive(tablet) {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        @include mix.responsive(mobile) {
-            grid-template-columns: 1fr;
-
-            .blog-sidebar__slot {
-                &--popular {
-                    min-height: 380px;
-                }
-
-                &--categories,
-                &--tags {
-                    min-height: 180px;
-                }
-            }
+            min-height: 2900px;
         }
     }
 
@@ -450,8 +411,7 @@
         gap: vars.$spacing-md;
         margin-bottom: vars.$spacing-lg;
         padding: vars.$spacing-md;
-        background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(12px);
+        background: fn.color-alpha(vars.$white, 0.97);
         border: 1px solid fn.color-alpha(vars.$border-color, 0.3);
         border-radius: vars.$border-radius-xl;
         box-shadow: 0 2px 8px fn.color-alpha(vars.$black, 0.03);
@@ -483,7 +443,7 @@
     }
 
     .blog-content {
-        animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: blogFadeIn 0.3s ease-out;
     }
 
     :deep(.blog-empty-state) {
@@ -501,8 +461,8 @@
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: vars.$spacing-lg;
-        transition: opacity 0.2s ease;
-        contain: layout paint;
+        // `contain: layout` seulement : `paint` clippait le shadow/translateY au hover.
+        contain: layout;
 
         @include mix.responsive(mobile) {
             grid-template-columns: 1fr;
@@ -513,11 +473,15 @@
             pointer-events: none;
         }
 
+        // Cascade limitée : 0 / 40 / 80 ms puis immédiat. Évite qu'une page
+        // de 6+ cartes reste "non-stable" jusqu'à 500 ms.
         &__item {
             opacity: 0;
-            will-change: opacity, transform;
-            animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            animation-delay: calc(var(--article-index, 0) * 60ms);
+            will-change: opacity;
+            animation: blogFadeIn 0.3s ease-out forwards;
+            animation-delay: calc(min(var(--article-index, 0), 2) * 40ms);
+            // Pas de `paint` ici non plus : sinon hover shadow coupé.
+            contain: layout;
         }
     }
 
@@ -525,28 +489,18 @@
         margin-top: vars.$spacing-xl;
         padding-top: vars.$spacing-xl;
         border-top: 1px solid fn.color-alpha(vars.$border-color, 0.3);
+        content-visibility: auto;
+        contain-intrinsic-size: auto 80px;
     }
 
-    @keyframes fadeInUp {
+    @keyframes blogFadeIn {
         from {
             opacity: 0;
-            transform: translateY(20px);
         }
 
         to {
             opacity: 1;
-            transform: translateY(0);
         }
-    }
-
-    .slide-fade-enter-active,
-    .slide-fade-leave-active {
-        transition: opacity 0.25s ease;
-    }
-
-    .slide-fade-enter-from,
-    .slide-fade-leave-to {
-        opacity: 0;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -557,11 +511,6 @@
 
         .blog-content {
             animation: none;
-        }
-
-        .slide-fade-enter-active,
-        .slide-fade-leave-active {
-            transition: none;
         }
     }
 

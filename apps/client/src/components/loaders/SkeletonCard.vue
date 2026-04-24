@@ -17,6 +17,11 @@
                 </div>
             </div>
 
+            <div v-if="variant === 'article'" class="skeleton-card__article-meta">
+                <Skeleton type="text" width="60px" height="12px" />
+                <Skeleton type="text" width="50px" height="12px" />
+            </div>
+
             <Skeleton type="text" width="90%" :height="titleHeight" class="skeleton-card__title" />
 
             <div v-if="showDescription" class="skeleton-card__description">
@@ -122,17 +127,33 @@
             margin-top: v.$spacing-xs;
         }
 
+        &__article-meta {
+            display: flex;
+            align-items: center;
+            gap: v.$spacing-sm;
+            margin-bottom: v.$spacing-xs;
+        }
+
         &__footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: v.$spacing-sm;
+            margin-top: auto;
             padding-top: v.$spacing-sm;
             border-top: 1px solid fn.color-alpha(v.$border-color, 0.3);
         }
 
-        &--article .skeleton-card__image {
-            aspect-ratio: 16 / 10;
+        &--article {
+            display: flex;
+            flex-direction: column;
+
+            .skeleton-card__image {
+                aspect-ratio: 16 / 10;
+            }
+
+            .skeleton-card__content {
+                flex: 1;
+            }
         }
 
         &--project .skeleton-card__image {

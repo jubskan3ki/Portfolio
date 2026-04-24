@@ -86,6 +86,9 @@
         position: relative;
         padding: vars.$spacing-xxl 0;
         overflow: hidden;
+        // Skip layout/paint + pause infinite float/bubble animations when offscreen.
+        content-visibility: auto;
+        contain-intrinsic-size: auto 600px;
 
         // Background
         &__bg {
@@ -148,6 +151,11 @@
             pointer-events: none;
             transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 
+            @media (prefers-reduced-motion: reduce),
+                (hover: none) and (pointer: coarse) {
+                animation: none !important;
+            }
+
             &--1 {
                 top: -20px;
                 right: 10%;
@@ -208,6 +216,8 @@
 
         // Buttons
         &__btn {
+            position: relative;
+            isolation: isolate;
             display: inline-flex;
             align-items: center;
             gap: vars.$spacing-xs;
@@ -215,7 +225,7 @@
             font-weight: vars.$font-weight-semibold;
             text-decoration: none;
             border-radius: vars.$border-radius-lg;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
 
             @include mix.responsive(mobile) {
                 width: 100%;
@@ -226,8 +236,12 @@
                 transition: transform 0.3s ease;
             }
 
-            &:hover svg {
-                transform: translateX(3px);
+            &:hover {
+                transform: translateY(-1px);
+
+                svg {
+                    transform: translateX(3px);
+                }
             }
 
             &--secondary {
@@ -247,7 +261,8 @@
             border-radius: 50%;
             pointer-events: none;
 
-            @media (prefers-reduced-motion: reduce) {
+            @media (prefers-reduced-motion: reduce),
+                (hover: none) and (pointer: coarse) {
                 animation: none !important;
             }
 

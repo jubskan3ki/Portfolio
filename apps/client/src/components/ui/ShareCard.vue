@@ -78,12 +78,33 @@
             font-size: vars.$font-size-sm;
             font-weight: vars.$font-weight-medium;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
 
             &:hover {
-                background: fn.color-alpha(vars.$primary-color, 0.08);
-                border-color: fn.color-alpha(vars.$primary-color, 0.15);
+                background: fn.color-alpha(vars.$primary-color, 0.1);
+                border-color: fn.color-alpha(vars.$primary-color, 0.2);
                 color: vars.$primary-color;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 6px fn.color-alpha(vars.$primary-color, 0.08);
+            }
+
+            &:active {
+                transform: translateY(0);
+                box-shadow: 0 1px 3px fn.color-alpha(vars.$primary-color, 0.06);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                transition: none;
+
+                &:hover,
+                &:active {
+                    transform: none;
+                }
             }
         }
     }

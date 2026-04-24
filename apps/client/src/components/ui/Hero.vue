@@ -124,10 +124,11 @@
             max-width: 800px;
             margin: 0 auto;
             padding: vars.$spacing-xxl vars.$spacing-xl;
-            backdrop-filter: blur(16px);
+            backdrop-filter: blur(8px);
             border-radius: vars.$border-radius-xl;
             text-align: center;
             transition: transform 0.4s ease;
+            contain: layout paint;
 
             @include mix.responsive(mobile) {
                 padding: vars.$spacing-xl vars.$spacing-lg;
@@ -160,6 +161,10 @@
             transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 
             @media (prefers-reduced-motion: reduce) {
+                animation: none !important;
+            }
+
+            @media (hover: none) and (pointer: coarse) {
                 animation: none !important;
             }
 

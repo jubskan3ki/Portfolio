@@ -3,7 +3,7 @@
         <div
             v-if="progressVisible"
             class="reading-progress"
-            :style="{ width: `${progress}%` }"
+            :style="{ transform: `scaleX(${progress / 100})` }"
             role="progressbar"
             :aria-valuenow="Math.round(progress)"
             aria-valuemin="0"
@@ -103,7 +103,7 @@
                         <div v-if="resolvedStacks.length" class="sidebar-card">
                             <h3 class="sidebar-card__heading">
                                 <BaseIcon name="layers" :size="16" class="sidebar-card__heading-icon" />
-                                Technologies
+                                Stacks
                             </h3>
                             <div class="article-stacks">
                                 <NuxtLink
@@ -126,14 +126,23 @@
                             </div>
                         </div>
 
-                        <ShareCard :title="currentArticle.title" />
+                        <LazyShareCard :title="currentArticle.title" :hydrate-on-visible="{ rootMargin: '200px' }" />
 
                         <div v-if="popularArticles?.length" class="sidebar-card sidebar-card--flush">
-                            <PopularArticles :articles="popularArticles" show-title />
+                            <LazyArticlePopular
+                                :articles="popularArticles"
+                                show-title
+                                :hydrate-on-visible="{ rootMargin: '200px' }"
+                            />
                         </div>
 
                         <div v-if="currentArticle.tags?.length" class="sidebar-card sidebar-card--flush">
-                            <ArticleTags :tags="currentArticle.tags" display="simple" show-title />
+                            <LazyArticleTags
+                                :tags="currentArticle.tags"
+                                display="simple"
+                                show-title
+                                :hydrate-on-visible="{ rootMargin: '200px' }"
+                            />
                         </div>
                     </template>
                 </DetailPageLayout>
@@ -147,25 +156,33 @@
                     </h2>
                 </template>
                 <div class="related-grid">
-                    <ArticleCard v-for="article in displayedRelatedArticles" :key="article.id" :article="article" />
+                    <LazyArticleCard
+                        v-for="article in displayedRelatedArticles"
+                        :key="article.id"
+                        :article="article"
+                        :hydrate-on-visible="{ rootMargin: '300px' }"
+                    />
                 </div>
             </Section>
 
-            <CTA
-                key="article-cta"
-                title="Vous avez un projet ?"
-                description="Discutons de vos besoins et voyons comment je peux vous aider."
-                variant="secondary"
-                :primary-button="{
-                    label: 'Me contacter',
-                    to: ROUTES.CONTACT.path,
-                    icon: 'mail',
-                }"
-                :secondary-button="{
-                    label: 'Tous les articles',
-                    to: ROUTES.BLOG.path,
-                }"
-            />
+            <div class="article-cta-wrapper">
+                <LazyCTA
+                    key="article-cta"
+                    title="Vous avez un projet ?"
+                    description="Discutons de vos besoins et voyons comment je peux vous aider."
+                    variant="secondary"
+                    :primary-button="{
+                        label: 'Me contacter',
+                        to: ROUTES.CONTACT.path,
+                        icon: 'mail',
+                    }"
+                    :secondary-button="{
+                        label: 'Tous les articles',
+                        to: ROUTES.BLOG.path,
+                    }"
+                    :hydrate-on-visible="{ rootMargin: '300px' }"
+                />
+            </div>
         </template>
     </div>
 </template>
@@ -176,18 +193,15 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import ArticleBlockRenderer from '@/components/feature/blog/ArticleBlockRenderer.vue';
-    import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
-    import PopularArticles from '@/components/feature/blog/ArticlePopular.vue';
-    import ArticleTags from '@/components/feature/blog/ArticleTags.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
     import Main from '@/components/layouts/Main.vue';
     import Section from '@/components/layouts/Section.vue';
     import LoadingState from '@/components/loaders/LoadingState.vue';
     import Breadcrumb from '@/components/navigation/Breadcrumb.vue';
-    import CTA from '@/components/ui/CTA.vue';
     import Hero from '@/components/ui/Hero.vue';
-    import ShareCard from '@/components/ui/ShareCard.vue';
+    // Below-fold components (CTA, ShareCard, ArticlePopular, ArticleTags, ArticleCard)
+    // sont chargés via auto-import Nuxt en Lazy* + hydrate-on-visible (voir <template>).
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
     import { useDetailSlug } from '@/composables/data/useDetailSlug';
     import { useViewRecording } from '@/composables/data/useViewRecording';
@@ -278,23 +292,44 @@
 
     const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
 
+    // SEO + Schema.org enregistrés UNE SEULE FOIS (helpers unhead empilent sinon).
+    // Flag local = ne tourne qu'au premier article non-null (vs `once` qui fire
+    // au premier tick même si article est encore `null`).
+    let seoRegistered = false;
     watch(
         currentArticle,
         (article) => {
-            if (article) {
-                useArticleSeo(article);
-                const { items } = useBreadcrumbSeo({
-                    meta: {
-                        title: article.title,
-                        category: article.category,
-                    },
-                });
-                breadcrumbItems.value = items.value;
-                announceNavigation(`Article: ${article.title}`);
+            if (!article || seoRegistered) {
+                return;
             }
+            seoRegistered = true;
+            useArticleSeo(article);
+            const { items } = useBreadcrumbSeo({
+                meta: {
+                    title: article.title,
+                    category: article.category,
+                },
+            });
+            breadcrumbItems.value = items.value;
         },
         { immediate: true },
     );
+
+    // Annonce a11y : client only, inutile de faire du DOM en SSR.
+    if (import.meta.client) {
+        let announced = false;
+        watch(
+            currentArticle,
+            (article) => {
+                if (!article || announced) {
+                    return;
+                }
+                announced = true;
+                announceNavigation(`Article: ${article.title}`);
+            },
+            { immediate: true },
+        );
+    }
 
     watch(isError, (hasError) => {
         if (hasError) {
@@ -359,10 +394,14 @@
         position: fixed;
         top: 0;
         left: 0;
+        // Largeur fixée à 100vw + scaleX : animation composite-only, pas de reflow/paint.
+        width: 100vw;
         height: 3px;
         background: linear-gradient(90deg, vars.$primary-color, vars.$secondary-color);
         z-index: vars.$z-index-fixed;
-        transition: width 150ms linear;
+        transform-origin: left center;
+        will-change: transform;
+        transition: transform 150ms linear;
 
         @media (prefers-reduced-motion: reduce) {
             transition: none;
@@ -379,7 +418,13 @@
 
     .detail-card {
         background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(20px);
+        // Blur coûteux en composite : réduit à 8px, désactivé sur mobile (opaque).
+        backdrop-filter: blur(8px);
+
+        @include mix.responsive(mobile) {
+            backdrop-filter: none;
+            background: vars.$white;
+        }
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-xl;
@@ -398,7 +443,13 @@
         gap: 0;
         margin-bottom: vars.$spacing-xl;
         background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(20px);
+        // Blur coûteux en composite : réduit à 8px, désactivé sur mobile (opaque).
+        backdrop-filter: blur(8px);
+
+        @include mix.responsive(mobile) {
+            backdrop-filter: none;
+            background: vars.$white;
+        }
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-xl;
         overflow: hidden;
@@ -484,7 +535,13 @@
 
     .sidebar-card {
         background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(20px);
+        // Blur coûteux en composite : réduit à 8px, désactivé sur mobile (opaque).
+        backdrop-filter: blur(8px);
+
+        @include mix.responsive(mobile) {
+            backdrop-filter: none;
+            background: vars.$white;
+        }
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-lg;
@@ -515,7 +572,13 @@
 
     .toc-card {
         background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(20px);
+        // Blur coûteux en composite : réduit à 8px, désactivé sur mobile (opaque).
+        backdrop-filter: blur(8px);
+
+        @include mix.responsive(mobile) {
+            backdrop-filter: none;
+            background: vars.$white;
+        }
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-xl;
         overflow: hidden;
@@ -551,6 +614,8 @@
 
         &__track {
             padding: vars.$spacing-sm vars.$spacing-lg vars.$spacing-lg;
+            // Évite les sauts quand le sommaire est rempli après hydratation.
+            min-height: 120px;
         }
 
         &__list {
@@ -629,22 +694,39 @@
             font-size: vars.$font-size-sm;
             color: vars.$text-secondary;
             background: fn.color-alpha(vars.$primary-color, 0.06);
+            border: 1px solid transparent;
             border-radius: vars.$border-radius-full;
             text-decoration: none;
             transition:
                 background 0.2s ease,
-                color 0.2s ease;
+                border-color 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
 
             &:hover {
-                background: fn.color-alpha(vars.$primary-color, 0.14);
+                background: fn.color-alpha(vars.$primary-color, 0.1);
+                border-color: fn.color-alpha(vars.$primary-color, 0.2);
                 color: vars.$primary-color;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 6px fn.color-alpha(vars.$primary-color, 0.08);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                transition: none;
+
+                &:hover,
+                &:active {
+                    transform: none;
+                }
             }
         }
 
         &__logo {
-            width: 20px;
-            height: 20px;
-            object-fit: contain;
             flex-shrink: 0;
         }
     }
@@ -653,5 +735,14 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: vars.$spacing-lg;
+        // Skip rendering + isolate layout tant que hors viewport (grosse économie main-thread).
+        content-visibility: auto;
+        contain-intrinsic-size: 1px 400px;
+    }
+
+    .article-cta-wrapper {
+        // Même optimisation que .related-grid : le CTA est le dernier bloc de la page.
+        content-visibility: auto;
+        contain-intrinsic-size: 1px 300px;
     }
 </style>

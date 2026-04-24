@@ -10,7 +10,9 @@
         :tags="article.tags"
         :max-tags="maxTags"
         :transition-key="article.slug"
-        v-bind="prefetchHandlers"
+        :eager="eager"
+        :data-slug="article.slug"
+        :prefetch="false"
         :class="customClass"
     >
         <template #before-title>
@@ -43,9 +45,6 @@
 
     import BaseContentCard from '@/components/base/BaseContentCard.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
-    import { useCardPrefetch } from '@/composables/performance/usePrefetch';
-    import { queryKeys } from '@/services/api/modules';
-    import { articlesApi } from '@/services/api/modules/articles';
     import { formatDateShort } from '@/services/utils/date';
     import { formatViews, truncateText } from '@/services/utils/helpers';
 
@@ -58,16 +57,13 @@
         customClass: '',
         showTags: true,
         maxTags: 3,
+        eager: false,
     });
 
     const articleLink = computed(() => (props.article.slug ? `/blog/${props.article.slug}` : ''));
 
-    // Prefetch on hover
-    const prefetchHandlers = useCardPrefetch(
-        () => props.article.slug,
-        (s) => queryKeys.articles.detail(s),
-        (s) => articlesApi.getBySlug(s),
-    );
+    // Prefetch handlers moved to parent: a single delegated listener on the grid covers
+    // all cards (6 cards × 6 instances of useCardPrefetch was wasteful hydration).
 
     const formattedDate = computed(() => formatDateShort(props.article.date));
     const truncatedExcerpt = computed(() => truncateText(props.article.excerpt || '', props.excerptLength));

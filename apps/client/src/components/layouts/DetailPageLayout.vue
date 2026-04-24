@@ -40,6 +40,7 @@
             display: flex;
             flex-direction: column;
             gap: vars.$spacing-lg;
+            contain: layout;
         }
 
         &__sidebar {
@@ -50,10 +51,13 @@
             position: sticky;
             top: calc(vars.$header-height + vars.$spacing-lg);
             align-self: start;
+            min-height: 320px;
+            contain: layout;
 
             @include mix.responsive(tablet) {
                 position: static;
                 order: -1;
+                min-height: 0;
             }
         }
     }

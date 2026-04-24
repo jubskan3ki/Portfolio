@@ -1,25 +1,36 @@
 <template>
     <div class="article-blocks">
         <template v-for="(block, index) in blocks" :key="`block-${index}`">
-            <SafeHtml
-                v-if="block.type === 'paragraph'"
-                tag="p"
-                class="article-blocks__paragraph"
-                :html="inline(block.content)"
-            />
+            <p v-if="block.type === 'paragraph'" class="article-blocks__paragraph">
+                <InlineMarkdown :text="block.content" />
+            </p>
 
-            <component
-                :is="'h' + block.level"
-                v-else-if="block.type === 'heading'"
+            <h2
+                v-else-if="block.type === 'heading' && block.level === 2"
                 :id="slugify(block.content)"
-                class="article-blocks__heading"
-                :class="`article-blocks__heading--h${block.level}`"
+                class="article-blocks__heading article-blocks__heading--h2"
             >
-                <SafeHtml :html="inline(block.content)" />
-            </component>
+                <InlineMarkdown :text="block.content" />
+            </h2>
+            <h3
+                v-else-if="block.type === 'heading' && block.level === 3"
+                :id="slugify(block.content)"
+                class="article-blocks__heading article-blocks__heading--h3"
+            >
+                <InlineMarkdown :text="block.content" />
+            </h3>
+            <h4
+                v-else-if="block.type === 'heading' && block.level === 4"
+                :id="slugify(block.content)"
+                class="article-blocks__heading article-blocks__heading--h4"
+            >
+                <InlineMarkdown :text="block.content" />
+            </h4>
 
             <blockquote v-else-if="block.type === 'blockquote'" class="article-blocks__quote">
-                <SafeHtml tag="p" :html="inline(block.content)" />
+                <p>
+                    <InlineMarkdown :text="block.content" />
+                </p>
                 <cite v-if="block.cite" class="article-blocks__quote-cite"> | {{ block.cite }} </cite>
             </blockquote>
 
@@ -32,35 +43,31 @@
 
             <pre v-else-if="block.type === 'code'" class="article-blocks__code"><code>{{ block.content }}</code></pre>
 
-            <component :is="block.ordered ? 'ol' : 'ul'" v-else-if="block.type === 'list'" class="article-blocks__list">
-                <SafeHtml
-                    v-for="(item, liIndex) in block.items"
-                    :key="`li-${index}-${liIndex}`"
-                    tag="li"
-                    :html="inline(item)"
-                />
-            </component>
+            <ol v-else-if="block.type === 'list' && block.ordered" class="article-blocks__list">
+                <li v-for="(item, liIndex) in block.items" :key="`li-${index}-${liIndex}`">
+                    <InlineMarkdown :text="item" />
+                </li>
+            </ol>
+            <ul v-else-if="block.type === 'list'" class="article-blocks__list">
+                <li v-for="(item, liIndex) in block.items" :key="`li-${index}-${liIndex}`">
+                    <InlineMarkdown :text="item" />
+                </li>
+            </ul>
 
             <div v-else-if="block.type === 'table'" class="article-blocks__table-wrapper">
                 <table class="article-blocks__table">
                     <thead>
                         <tr>
-                            <SafeHtml
-                                v-for="(header, hIdx) in block.headers"
-                                :key="`th-${index}-${hIdx}`"
-                                tag="th"
-                                :html="inline(header)"
-                            />
+                            <th v-for="(header, hIdx) in block.headers" :key="`th-${index}-${hIdx}`">
+                                <InlineMarkdown :text="header" />
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(row, rIdx) in block.rows" :key="`tr-${index}-${rIdx}`">
-                            <SafeHtml
-                                v-for="(cell, cIdx) in row"
-                                :key="`td-${index}-${rIdx}-${cIdx}`"
-                                tag="td"
-                                :html="inline(cell)"
-                            />
+                            <td v-for="(cell, cIdx) in row" :key="`td-${index}-${rIdx}-${cIdx}`">
+                                <InlineMarkdown :text="cell" />
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -70,8 +77,7 @@
 </template>
 
 <script setup lang="ts">
-    import SafeHtml from '@/components/base/SafeHtml.vue';
-    import { renderInlineMarkdown } from '@/services/utils/contentParser';
+    import InlineMarkdown from '@/components/base/InlineMarkdown.vue';
     import { slugify } from '@/services/utils/string';
 
     import type { ContentBlock } from '@/types/feature/blog';
@@ -79,8 +85,6 @@
     defineProps<{
         blocks: ContentBlock[];
     }>();
-
-    const inline = (text: string | undefined) => renderInlineMarkdown(text ?? '');
 </script>
 
 <style lang="scss" scoped>

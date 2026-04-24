@@ -190,18 +190,54 @@
         }
 
         &__link {
+            display: inline-flex;
+            align-items: center;
             padding: vars.$spacing-xxs vars.$spacing-sm;
             font-size: vars.$font-size-xs;
             font-weight: vars.$font-weight-medium;
             color: vars.$text-secondary;
             background: vars.$bg-secondary;
+            border: 1px solid transparent;
             border-radius: vars.$border-radius-full;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
 
             &:hover {
                 color: vars.$primary-color;
-                background: fn.color-alpha(vars.$primary-color, 0.08);
+                background: fn.color-alpha(vars.$primary-color, 0.1);
+                border-color: fn.color-alpha(vars.$primary-color, 0.2);
+                transform: translateY(-1px);
+                box-shadow: 0 2px 6px fn.color-alpha(vars.$primary-color, 0.08);
+                // Override .link:hover { text-decoration: underline } de BaseLink.
+                text-decoration: none;
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+
+            // Retire l'outline focus par défaut du navigateur (remplacé par bordure + :focus-visible).
+            &:focus {
+                outline: none;
+            }
+
+            &:focus-visible {
+                outline: 2px solid fn.color-alpha(vars.$primary-color, 0.5);
+                outline-offset: 2px;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                transition: none;
+
+                &:hover,
+                &:active {
+                    transform: none;
+                }
             }
         }
 
@@ -217,12 +253,32 @@
             border: 1px solid transparent;
             border-radius: vars.$border-radius-full;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
 
             &:hover:not(&--active) {
                 color: vars.$primary-color;
                 border-color: fn.color-alpha(vars.$primary-color, 0.2);
-                background: fn.color-alpha(vars.$primary-color, 0.04);
+                background: fn.color-alpha(vars.$primary-color, 0.08);
+                transform: translateY(-1px);
+                box-shadow: 0 2px 6px fn.color-alpha(vars.$primary-color, 0.08);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                transition: none;
+
+                &:hover,
+                &:active {
+                    transform: none;
+                }
             }
 
             &--active {

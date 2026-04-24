@@ -308,7 +308,7 @@
     .stack-card__level-badge {
         flex-shrink: 0;
         padding: vars.$spacing-xxs vars.$spacing-sm;
-        font-size: 10px;
+        font-size: vars.$font-size-xs;
         font-weight: vars.$font-weight-bold;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -356,7 +356,7 @@
 
     .stack-card__tag {
         padding: vars.$spacing-xxxs vars.$spacing-xs;
-        font-size: 11px;
+        font-size: vars.$font-size-xs;
         font-weight: vars.$font-weight-medium;
         color: vars.$text-secondary;
         background: vars.$bg-secondary;
@@ -446,7 +446,7 @@
 
         .stack-card__level-badge {
             padding: 3px vars.$spacing-xs;
-            font-size: 9px;
+            font-size: vars.$font-size-xs;
         }
     }
 </style>

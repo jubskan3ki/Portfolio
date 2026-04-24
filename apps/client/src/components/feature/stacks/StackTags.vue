@@ -59,18 +59,40 @@
         }
 
         &__item {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: vars.$spacing-xxs;
             padding: vars.$spacing-xxs vars.$spacing-sm;
             background: fn.color-alpha(vars.$primary-color, 0.06);
+            border: 1px solid transparent;
             border-radius: vars.$border-radius-full;
             color: vars.$primary-color;
             font-weight: vars.$font-weight-medium;
-            transition: all 0.2s ease;
+            cursor: default;
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
 
             &:hover {
                 background: fn.color-alpha(vars.$primary-color, 0.12);
+                border-color: fn.color-alpha(vars.$primary-color, 0.22);
+                transform: translateY(-1px);
+                box-shadow: 0 2px 6px fn.color-alpha(vars.$primary-color, 0.08);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                transition: none;
+
+                &:hover,
+                &:active {
+                    transform: none;
+                }
             }
         }
     }

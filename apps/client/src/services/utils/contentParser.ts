@@ -1,4 +1,4 @@
-import type { ContentBlock } from '@/types/feature/blog';
+import type { ContentBlock, InlineNode } from '@/types/feature/blog';
 
 export function decodeHtmlEntities(text: string): string {
     return text
@@ -33,6 +33,84 @@ function isSafeUrl(url: string): boolean {
     } catch {
         return false;
     }
+}
+
+// Parse inline markdown en AST : rendu côté Vue via VNodes (pas de v-html).
+export function parseInlineMarkdown(text: string): InlineNode[] {
+    return parseInline(decodeHtmlEntities(text));
+}
+
+function parseInline(text: string): InlineNode[] {
+    const nodes: InlineNode[] = [];
+    let buffer = '';
+    let i = 0;
+
+    const flush = () => {
+        if (buffer.length > 0) {
+            nodes.push({ type: 'text', content: buffer });
+            buffer = '';
+        }
+    };
+
+    while (i < text.length) {
+        const ch = text[i];
+
+        // **bold**
+        if (ch === '*' && text[i + 1] === '*') {
+            const end = text.indexOf('**', i + 2);
+            if (end !== -1 && end > i + 2) {
+                flush();
+                nodes.push({ type: 'strong', children: parseInline(text.slice(i + 2, end)) });
+                i = end + 2;
+                continue;
+            }
+        }
+
+        // `code`
+        if (ch === '`') {
+            const end = text.indexOf('`', i + 1);
+            if (end !== -1 && end > i + 1) {
+                flush();
+                nodes.push({ type: 'code', content: text.slice(i + 1, end) });
+                i = end + 1;
+                continue;
+            }
+        }
+
+        // *italic* — après **bold** pour ne pas matcher une seule étoile dans **.
+        if (ch === '*') {
+            const end = text.indexOf('*', i + 1);
+            if (end !== -1 && end > i + 1 && text[end + 1] !== '*') {
+                flush();
+                nodes.push({ type: 'em', children: parseInline(text.slice(i + 1, end)) });
+                i = end + 1;
+                continue;
+            }
+        }
+
+        // [label](url)
+        if (ch === '[') {
+            const linkMatch = text.slice(i).match(/^\[([^\]]+)\]\(([^)]+)\)/);
+            if (linkMatch) {
+                const [full, label, url] = linkMatch as unknown as [string, string, string];
+                flush();
+                if (isSafeUrl(url)) {
+                    nodes.push({ type: 'link', url, children: parseInline(label) });
+                } else {
+                    // URL bloquée : on garde le label en tant que texte brut.
+                    nodes.push({ type: 'text', content: label });
+                }
+                i += full.length;
+                continue;
+            }
+        }
+
+        buffer += ch;
+        i++;
+    }
+
+    flush();
+    return nodes;
 }
 
 // Inline md: **bold**, *italic*, `code`, [text](url safe-protocol)
@@ -215,13 +293,18 @@ function hasMarkdownSyntax(text: string): boolean {
     );
 }
 
-// Accepte: string md brut, string JSON, ContentBlock[] (avec md potentiellement imbriqué)
-export function normalizeContent(content: unknown): ContentBlock[] {
+// Cache par identité : évite de re-parser le markdown à chaque tick réactif tant
+// que le contenu source (string ou array) est le même objet.
+const normalizeCache = new WeakMap<object, ContentBlock[]>();
+const normalizeStringCache = new Map<string, ContentBlock[]>();
+const NORMALIZE_STRING_CACHE_MAX = 8;
+
+function normalizeContentUncached(content: unknown): ContentBlock[] {
     if (typeof content === 'string') {
         try {
             const parsed = JSON.parse(content);
             if (Array.isArray(parsed)) {
-                return normalizeContent(parsed);
+                return normalizeContentUncached(parsed);
             }
         } catch {
             // pas JSON -> md brut
@@ -258,6 +341,38 @@ export function normalizeContent(content: unknown): ContentBlock[] {
     }
 
     return result;
+}
+
+export function normalizeContent(content: unknown): ContentBlock[] {
+    if (content && typeof content === 'object') {
+        const key = content as object;
+        const hit = normalizeCache.get(key);
+        if (hit) {
+            return hit;
+        }
+        const out = normalizeContentUncached(content);
+        normalizeCache.set(key, out);
+        return out;
+    }
+
+    if (typeof content === 'string') {
+        const hit = normalizeStringCache.get(content);
+        if (hit) {
+            return hit;
+        }
+        const out = normalizeContentUncached(content);
+        // Borne la taille du cache string (LRU basique: drop oldest entry).
+        if (normalizeStringCache.size >= NORMALIZE_STRING_CACHE_MAX) {
+            const first = normalizeStringCache.keys().next().value;
+            if (first !== undefined) {
+                normalizeStringCache.delete(first);
+            }
+        }
+        normalizeStringCache.set(content, out);
+        return out;
+    }
+
+    return normalizeContentUncached(content);
 }
 
 export function parseJsonContent(content: unknown): string {

@@ -1,6 +1,7 @@
 <template>
     <component
         :is="lucideComponent"
+        v-if="lucideComponent"
         v-bind="$attrs"
         :size="numericSize"
         :stroke-width="strokeWidth"
@@ -12,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, type Component, type CSSProperties } from 'vue';
+    import { computed, defineAsyncComponent, type Component, type CSSProperties } from 'vue';
 
     import { ICON_ALIASES, ICON_REGISTRY } from '@/config/icons';
 
@@ -68,29 +69,47 @@
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join('');
 
-    const fallbackIcon = ICON_REGISTRY['Info'] ?? Object.values(ICON_REGISTRY)[0];
+    const asyncCache = new Map<string, Component>();
 
-    const lucideComponent = computed<Component>(() => {
-        const { name } = props;
-
+    const resolveKey = (name: string): string | null => {
         const aliasKey = ICON_ALIASES[name];
         if (aliasKey && aliasKey in ICON_REGISTRY) {
-            return ICON_REGISTRY[aliasKey] as Component;
+            return aliasKey;
         }
-
-        const pascalName = toPascalCase(name);
-        if (pascalName in ICON_REGISTRY) {
-            return ICON_REGISTRY[pascalName] as Component;
+        const pascal = toPascalCase(name);
+        if (pascal in ICON_REGISTRY) {
+            return pascal;
         }
-
         if (name in ICON_REGISTRY) {
-            return ICON_REGISTRY[name] as Component;
+            return name;
+        }
+        return null;
+    };
+
+    const getAsyncIcon = (key: string): Component | null => {
+        const cached = asyncCache.get(key);
+        if (cached) {
+            return cached;
+        }
+        const loader = ICON_REGISTRY[key];
+        if (!loader) {
+            return null;
+        }
+        const comp = defineAsyncComponent(loader);
+        asyncCache.set(key, comp);
+        return comp;
+    };
+
+    const lucideComponent = computed<Component | null>(() => {
+        const key = resolveKey(props.name);
+        if (key) {
+            return getAsyncIcon(key);
         }
 
         if (import.meta.dev) {
-            console.warn(`[BaseIcon] Icon "${name}" not found | check src/config/icons.ts`);
+            console.warn(`[BaseIcon] Icon "${props.name}" not found | check src/config/icons.ts`);
         }
-        return fallbackIcon as Component;
+        return getAsyncIcon('Info');
     });
 
     const iconStyle = computed<CSSProperties>(() => ({
