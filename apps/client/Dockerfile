@@ -35,7 +35,7 @@ ENV NODE_ENV=development \
 EXPOSE 80
 CMD ["bun", "run", "dev", "--host", "0.0.0.0", "--port", "80"]
 
-FROM oven/bun:${BUN_VERSION}-alpine AS builder
+FROM node:${NODE_VERSION}-alpine AS builder
 
 ARG NUXT_API_BASE_SERVER=http://backend:8000
 ARG NUXT_PUBLIC_API_BASE=http://localhost:8000
@@ -47,7 +47,7 @@ RUN apk upgrade --no-cache --available && \
     rm -rf /var/cache/apk/*
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package.json /app/bun.lock ./
+COPY --from=deps /app/package.json ./
 
 COPY nuxt.config.ts tsconfig.json ./
 COPY app.vue error.vue ./
@@ -64,8 +64,8 @@ ENV NODE_ENV=production \
 
 RUN --mount=type=cache,target=/app/.nuxt \
     --mount=type=cache,target=/app/node_modules/.cache \
-    bunx nuxt prepare \
- && (timeout -s TERM -k 10 600 bunx nuxt build; true) \
+    node ./node_modules/nuxt/bin/nuxt.mjs prepare \
+ && node ./node_modules/nuxt/bin/nuxt.mjs build \
  && test -f .output/server/index.mjs
 
 FROM gcr.io/distroless/nodejs${NODE_VERSION}-debian12:nonroot AS runner
