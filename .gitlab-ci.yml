@@ -520,13 +520,15 @@ deploy:production:
         - |
             ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
                 set -e
+                echo '$CI_JOB_TOKEN' | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
                 cd $DEPLOY_PATH
                 git fetch origin main
                 git reset --hard $CI_COMMIT_SHA
                 export IMAGE_TAG=$IMAGE_TAG
+                export CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE
                 export SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
-                make deploy-zd ENV=prod IMAGE_TAG=$IMAGE_TAG SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
-                make status ENV=prod SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
+                make deploy-zd ENV=prod IMAGE_TAG=$IMAGE_TAG CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
+                make status ENV=prod CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
             "
 
 deploy:smoke-test:
@@ -543,9 +545,10 @@ deploy:smoke-test:
             echo ">> Smoke test: wait for services to be healthy..."
             ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
                 cd $DEPLOY_PATH
+                export CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE
                 export SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
                 for i in \$(seq 1 30); do
-                    make healthcheck ENV=prod SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets 2>&1 | tee /tmp/hc.log
+                    make healthcheck ENV=prod CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets 2>&1 | tee /tmp/hc.log
                     grep -qiE 'https?://.*: 200' /tmp/hc.log && break
                     sleep 3
                 done
@@ -573,11 +576,13 @@ deploy:rollback:
         - |
             ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
                 set -e
+                echo '$CI_JOB_TOKEN' | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
                 cd $DEPLOY_PATH
+                export CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE
                 export SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
                 test -s .previous-image-tag || { echo 'no .previous-image-tag | nothing to roll back to'; exit 1; }
                 prev=\$(cat .previous-image-tag)
                 echo 'Rollback to' \$prev
-                make rollback ENV=prod TAG=\$prev SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
-                make healthcheck ENV=prod SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
+                make rollback ENV=prod TAG=\$prev CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
+                make healthcheck ENV=prod CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE SECRETS_RUNTIME_DIR=$DEPLOY_PATH/secrets
             "
