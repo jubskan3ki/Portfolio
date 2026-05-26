@@ -32,11 +32,12 @@ function findEntryCss(): string | false {
     return false;
 }
 
+const DEFER_CSS_BOOTSTRAP = '<script>document.querySelectorAll(\'link[data-defer-css]\').forEach(function(l){l.rel=\'stylesheet\';});</script>';
+
 export default defineNitroPlugin((nitroApp) => {
     nitroApp.hooks.hook('render:response', (response) => {
         if (typeof response.body !== 'string') return;
 
-        // Lazy-load from disk on first request, then cached.
         if (entryCssCache === null) {
             entryCssCache = findEntryCss();
         }
@@ -45,10 +46,17 @@ export default defineNitroPlugin((nitroApp) => {
             response.body = response.body.replace(ENTRY_CSS_LINK_RE, `<style>${entryCssCache}</style>`);
         }
 
-        response.body = response.body.replace(
-            NON_ENTRY_CSS_RE,
-            '<link rel="preload" href="$1" as="style" $2 onload="this.rel=\'stylesheet\'">' +
-                '<noscript><link rel="stylesheet" href="$1" $2></noscript>',
-        );
+        let replaced = false;
+        response.body = response.body.replace(NON_ENTRY_CSS_RE, (_match, href: string, attrs: string) => {
+            replaced = true;
+            return (
+                `<link rel="preload" href="${href}" as="style" ${attrs} data-defer-css>`
+                + `<noscript><link rel="stylesheet" href="${href}" ${attrs}></noscript>`
+            );
+        });
+
+        if (replaced) {
+            response.body = response.body.replace('</head>', `${DEFER_CSS_BOOTSTRAP}</head>`);
+        }
     });
 });

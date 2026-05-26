@@ -205,6 +205,13 @@ export default defineNuxtConfig({
         server: process.env.NODE_ENV === 'development',
         client: process.env.NODE_ENV === 'development',
     },
+    hooks: {
+        close: (nuxt) => {
+            if (!nuxt.options.dev) {
+                setTimeout(() => process.exit(0), 100);
+            }
+        },
+    },
 
     devServer: {
         host: 'localhost',
@@ -389,10 +396,12 @@ export default defineNuxtConfig({
         provider: 'ipx',
         quality: 80,
         format: ['avif', 'webp', 'png', 'jpg'],
+        // En prod, /media/ est servi par nginx-static (Django ne sert pas les
+        // fichiers media quand DEBUG=false). En dev, Django les sert directement.
         alias: {
-            '/media': `${process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000'}/media`,
+            '/media': `${process.env.NUXT_IMAGE_MEDIA_BASE || process.env.NUXT_API_BASE_SERVER || 'http://localhost:8000'}/media`,
         },
-        domains: ['localhost', 'backend'],
+        domains: ['localhost', 'backend', 'nginx-static', 'aitaddajuba.fr'],
         screens: {
             xs: 320,
             sm: 640,
@@ -509,13 +518,8 @@ export default defineNuxtConfig({
         },
     },
 
-    // Security headers | replaces manual headers in routeRules.
     security: {
         headers: {
-            // CSP disabled in dev (HMR/devtools rely on eval and inline injections);
-            // enforced in prod with a lenient policy. Nuxt emits hydration payload as
-            // inline <script>, hence 'unsafe-inline' on script-src. Tighten to
-            // nonce-based later by setting `security.nonce: true` above.
             contentSecurityPolicy:
                 process.env.NODE_ENV === 'development'
                     ? false
@@ -523,9 +527,10 @@ export default defineNuxtConfig({
                             'base-uri': ['\'self\''],
                             'default-src': ['\'self\''],
                             'script-src': ['\'self\'', '\'unsafe-inline\''],
-                            'style-src': ['\'self\'', '\'unsafe-inline\''],
+                            'script-src-attr': ['\'none\''],
+                            'style-src': ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com'],
                             'img-src': ['\'self\'', 'data:', 'blob:', 'https:'],
-                            'font-src': ['\'self\'', 'data:'],
+                            'font-src': ['\'self\'', 'data:', 'https://fonts.gstatic.com'],
                             'connect-src': ['\'self\'', 'https:'],
                             'frame-src': ['\'self\''],
                             'frame-ancestors': ['\'none\''],
