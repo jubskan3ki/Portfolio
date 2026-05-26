@@ -69,7 +69,6 @@ export default defineNuxtConfig({
                 },
                 { name: 'author', content: 'Juba Ait-Adda' },
                 { name: 'publisher', content: 'Juba Ait-Adda' },
-                { name: 'google-site-verification', content: 'q4wxKu9JSOg0DLhCDJIu-bbPW_Hz_hGXipe2ePrvNEQ' },
                 { name: 'theme-color', content: '#1a1a2e' },
                 { name: 'color-scheme', content: 'light dark' },
                 { name: 'format-detection', content: 'telephone=no' },
@@ -149,6 +148,7 @@ export default defineNuxtConfig({
         apiBaseServer: process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
         public: {
             apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
+            googleSiteVerification: process.env.NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
             webVitalsSampleRate:
                 process.env.NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE
                 || (process.env.NODE_ENV === 'development' ? '0' : '0.2'),

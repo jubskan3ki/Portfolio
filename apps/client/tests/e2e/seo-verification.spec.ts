@@ -1,12 +1,12 @@
 import { expect, test } from './fixtures';
 
-const EXPECTED_TOKEN = 'q4wxKu9JSOg0DLhCDJIu-bbPW_Hz_hGXipe2ePrvNEQ';
+const EXPECTED_TOKEN = process.env.NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? '';
 
-// 404 path is intentionally tested to guarantee the verification meta is global,
-// not scoped to a layout that 404 might bypass.
 const ROUTES = ['/', '/blog', '/projects', '/stacks', '/this-route-does-not-exist-404'];
 
 test.describe('google search console verification meta', () => {
+    test.skip(!EXPECTED_TOKEN, 'NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION not set — verification meta is opt-in');
+
     for (const route of ROUTES) {
         test(`is present on ${route}`, async ({ page }) => {
             await page.goto(route, { waitUntil: 'domcontentloaded' });
