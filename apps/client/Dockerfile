@@ -54,6 +54,7 @@ COPY app.vue error.vue ./
 COPY src ./src
 COPY public ./public
 COPY server ./server
+COPY scripts ./scripts
 
 ENV NODE_ENV=production \
     NITRO_PRESET=node-server \
@@ -65,8 +66,7 @@ ENV NODE_ENV=production \
 RUN --mount=type=cache,target=/app/.nuxt \
     --mount=type=cache,target=/app/node_modules/.cache \
     node ./node_modules/nuxt/bin/nuxt.mjs prepare \
- && node ./node_modules/nuxt/bin/nuxt.mjs build \
- && test -f .output/server/index.mjs
+ && node ./scripts/build.mjs
 
 FROM gcr.io/distroless/nodejs${NODE_VERSION}-debian12:nonroot AS runner
 
