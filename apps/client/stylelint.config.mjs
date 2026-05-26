@@ -26,6 +26,9 @@ export default {
         'declaration-block-no-redundant-longhand-properties': null,
 
         'scss/no-global-function-names': null,
+        'scss/operator-no-newline-after': null,
+        'scss/operator-no-newline-before': null,
+        'scss/operator-no-unspaced': null,
         'scss/at-rule-no-unknown': [
             true,
             {
