@@ -152,7 +152,7 @@
                             </div>
                         </div>
 
-                        <ShareCard :title="currentProject.title" />
+                        <LazyShareCard :title="currentProject.title" hydrate-on-visible />
                     </template>
                 </DetailPageLayout>
             </Main>
@@ -204,7 +204,7 @@
 
 <script setup lang="ts">
     import { useQueryClient } from '@tanstack/vue-query';
-    import { computed, resolveComponent, unref, watch } from 'vue';
+    import { computed, onMounted, ref, resolveComponent, unref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseImage from '@/components/base/BaseImage.vue';
@@ -216,7 +216,6 @@
     import LoadingState from '@/components/loaders/LoadingState.vue';
     import Breadcrumb from '@/components/navigation/Breadcrumb.vue';
     import Hero from '@/components/ui/Hero.vue';
-    import ShareCard from '@/components/ui/ShareCard.vue';
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
     import { useDetailSlug } from '@/composables/data/useDetailSlug';
     import { useViewRecording } from '@/composables/data/useViewRecording';
@@ -282,8 +281,20 @@
 
     const { data: currentProject, isLoading, error } = useProject(slug);
     const { data: featuredProjects } = useFeaturedProjects(4);
+
+    // Stacks list is only needed to wire tech-name → /stacks/<slug> deep links in the sidebar
+    // (below the fold). Defer the 100-row fetch to idle so it doesn't compete with hydration.
+    const stacksFetchEnabled = ref(false);
+    onMounted(() => {
+        const trigger = () => { stacksFetchEnabled.value = true; };
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(trigger, { timeout: 2000 });
+        } else {
+            setTimeout(trigger, 1500);
+        }
+    });
     const { data: allStacks } = useFeaturedStacks(100, {
-        enabled: computed(() => import.meta.client),
+        enabled: computed(() => import.meta.client && stacksFetchEnabled.value),
     });
 
     const { mutate: recordView } = useRecordProjectView();
@@ -721,6 +732,9 @@
             text-decoration: none;
             font-size: vars.$font-size-sm;
             font-weight: vars.$font-weight-medium;
+            // BaseLink declares `transition: color` on .link — override here so the only animated
+            // property is the composited ::before opacity below, avoiding a paint pass on hover.
+            transition: none;
 
             &::before {
                 content: '';
@@ -730,6 +744,7 @@
                 background: fn.color-alpha(vars.$primary-color, 0.08);
                 border: 1px solid fn.color-alpha(vars.$primary-color, 0.15);
                 opacity: 0;
+                will-change: opacity;
                 transition: opacity 0.2s ease;
                 z-index: -1;
                 pointer-events: none;

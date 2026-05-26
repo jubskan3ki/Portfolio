@@ -77,12 +77,17 @@
         >
             <div ref="experiencesTargetRef" class="container">
                 <div class="project-timeline">
-                    <LazyExperienceTimeline
-                        :hydrate-on-visible="{ rootMargin: '300px' }"
-                        :experiences="professionalExperiences"
-                        :limit="3"
-                        compact
-                    />
+                    <ClientOnly>
+                        <LazyExperienceTimeline
+                            :hydrate-on-visible="{ rootMargin: '300px' }"
+                            :experiences="professionalExperiences"
+                            :limit="3"
+                            compact
+                        />
+                        <template #fallback>
+                            <div class="home-section-placeholder" style="min-height: 420px" />
+                        </template>
+                    </ClientOnly>
 
                     <div class="section-actions">
                         <BaseButton :to="ROUTES.EXPERIENCE" variant="outline" :prefetch="false">
@@ -103,11 +108,16 @@
             variant="light"
         >
             <div class="container">
-                <LazyProjectCarousel
-                    :hydrate-on-visible="{ rootMargin: '300px' }"
-                    :limit="5"
-                    autoplay
-                />
+                <ClientOnly>
+                    <LazyProjectCarousel
+                        :hydrate-on-visible="{ rootMargin: '300px' }"
+                        :limit="5"
+                        autoplay
+                    />
+                    <template #fallback>
+                        <div class="home-section-placeholder" style="min-height: 420px" />
+                    </template>
+                </ClientOnly>
 
                 <div class="section-actions">
                     <BaseButton :to="ROUTES.PROJECTS" variant="primary" :prefetch="false">
@@ -126,13 +136,18 @@
             :animated="!shouldDisableParallax"
         >
             <div class="container">
-                <LazyStackCarousel
-                    :hydrate-on-visible="{ rootMargin: '300px' }"
-                    :limit="10"
-                    autoplay
-                    :slides-per-view="6"
-                    show-level
-                />
+                <ClientOnly>
+                    <LazyStackCarousel
+                        :hydrate-on-visible="{ rootMargin: '300px' }"
+                        :limit="10"
+                        autoplay
+                        :slides-per-view="6"
+                        show-level
+                    />
+                    <template #fallback>
+                        <div class="home-section-placeholder" style="min-height: 280px" />
+                    </template>
+                </ClientOnly>
 
                 <div class="section-actions">
                     <BaseButton :to="ROUTES.STACKS" variant="outline" :prefetch="false">
@@ -152,15 +167,20 @@
             variant="light"
         >
             <div ref="articlesTargetRef" class="container">
-                <LazyArticleCarousel
-                    :hydrate-on-visible="{ rootMargin: '300px' }"
-                    :articles="articles"
-                    :limit="4"
-                    autoplay
-                    :autoplay-speed="6000"
-                    show-stats
-                    show-dots
-                />
+                <ClientOnly>
+                    <LazyArticleCarousel
+                        :hydrate-on-visible="{ rootMargin: '300px' }"
+                        :articles="articles"
+                        :limit="4"
+                        autoplay
+                        :autoplay-speed="6000"
+                        show-stats
+                        show-dots
+                    />
+                    <template #fallback>
+                        <div class="home-section-placeholder" style="min-height: 420px" />
+                    </template>
+                </ClientOnly>
 
                 <div class="section-actions">
                     <BaseButton :to="ROUTES.BLOG" variant="primary" :prefetch="false">
@@ -179,21 +199,31 @@
                 </div>
                 <div class="contact-wrapper">
                     <div class="contact-wrapper__form">
-                        <LazyContactForm
-                            :hydrate-on-visible="{ rootMargin: '200px' }"
-                            form-id="contact-form-home"
-                        />
+                        <ClientOnly>
+                            <LazyContactForm
+                                :hydrate-on-visible="{ rootMargin: '200px' }"
+                                form-id="contact-form-home"
+                            />
+                            <template #fallback>
+                                <div class="home-section-placeholder" style="min-height: 580px" />
+                            </template>
+                        </ClientOnly>
                     </div>
                     <div class="contact-wrapper__info">
-                        <LazyContactInfos
-                            :hydrate-on-visible="{ rootMargin: '200px' }"
-                            title="Mes coordonnées"
-                            subtitle="Discutons de vos besoins et objectifs"
-                            :address="contactAddress"
-                            :email="contactEmail"
-                            :phone="contactPhone"
-                            :social-links="socialMediaLinks"
-                        />
+                        <ClientOnly>
+                            <LazyContactInfos
+                                :hydrate-on-visible="{ rootMargin: '200px' }"
+                                title="Mes coordonnées"
+                                subtitle="Discutons de vos besoins et objectifs"
+                                :address="contactAddress"
+                                :email="contactEmail"
+                                :phone="contactPhone"
+                                :social-links="socialMediaLinks"
+                            />
+                            <template #fallback>
+                                <div class="home-section-placeholder" style="min-height: 480px" />
+                            </template>
+                        </ClientOnly>
                     </div>
                 </div>
             </div>
@@ -224,19 +254,9 @@
     import type { Stack } from '@/types/feature/stacks';
 
     useHomeSeo();
-
-    // Preload LCP hero image via IPX processed URL
-    useHead({
-        link: [
-            {
-                rel: 'preload',
-                as: 'image',
-                type: 'image/webp',
-                href: '/_ipx/f_webp&q_75&s_280x280/images/profile.jpg',
-                fetchpriority: 'high',
-            },
-        ],
-    });
+    // LCP image preload is emitted by NuxtImg (preload prop on HeroSection) with the
+    // correct imagesrcset/imagesizes — manual <link rel=preload> for a single density
+    // mis-targeted retina viewports and forced a re-download of the 560px variant.
 
     const { prefersReducedMotion } = useReducedMotion();
     const { isMobile } = useResponsive();

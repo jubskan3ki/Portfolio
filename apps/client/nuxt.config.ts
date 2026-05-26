@@ -2,14 +2,18 @@ import { fileURLToPath } from 'node:url';
 import { defineNuxtConfig } from 'nuxt/config';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-// Avoid emitting a self-referencing preconnect when the API shares the site origin (e.g. proxied under /api).
 const SITE_URL = process.env.NUXT_PUBLIC_SITE_URL || 'https://juba-aitadda.dev';
-const API_BASE = process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000';
+const API_BASE = process.env.NUXT_PUBLIC_API_BASE || '';
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
 const apiPreconnectHref = (() => {
+    if (!/^https?:\/\//i.test(API_BASE)) return null;
     try {
-        return new URL(SITE_URL).origin === new URL(API_BASE).origin ? null : API_BASE;
+        const apiUrl = new URL(API_BASE);
+        if (new URL(SITE_URL).origin === apiUrl.origin) return null;
+        if (LOOPBACK_HOSTS.has(apiUrl.hostname.replace(/^\[|]$/g, ''))) return null;
+        return apiUrl.origin;
     } catch {
-        return API_BASE;
+        return null;
     }
 })();
 
@@ -180,11 +184,12 @@ export default defineNuxtConfig({
         '/stacks': { swr: 300 },
         '/stacks/**': { swr: 600 },
         '/experience': { swr: 600 },
-        '/contact': { swr: 3600 },
+        '/contact': { prerender: true },
+        '/legal': { prerender: true },
+        '/privacy': { prerender: true },
+        '/terms': { prerender: true },
+        '/offline': { prerender: true },
         '/status': { headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
-        '/legal': { swr: 86400 },
-        '/privacy': { swr: 86400 },
-        '/terms': { swr: 86400 },
         '/admin/**': {
             ssr: true,
             headers: {
@@ -305,13 +310,12 @@ export default defineNuxtConfig({
             reportCompressedSize: false,
             rollupOptions: {
                 output: {
-                    experimentalMinChunkSize: 30_000,
                     manualChunks: (id) => {
                         if (!id.includes('node_modules')) return;
 
                         // Admin-only / heavy lazy deps — keep isolated so the home doesn't pull them.
                         if (id.includes('chart.js')) return 'chartjs';
-                        if (id.includes('/dayjs/')) return 'vendor-dayjs';
+                        if (id.includes('/dayjs/') && !id.includes('/dayjs/plugin/')) return 'vendor-dayjs';
                         if (id.includes('/@tanstack/')) return 'vendor-query';
 
                         // Deferred via dynamic import in plugins — let Rollup split by entry.

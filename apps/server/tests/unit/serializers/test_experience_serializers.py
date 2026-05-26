@@ -35,7 +35,11 @@ class TestExperienceWriteSerializer:
         assert s.is_valid(), s.errors
 
     def test_end_date_before_start_date_rejected(self) -> None:
-        """Date de fin anterieure a la date de debut rejetee."""
+        """Date de fin anterieure a la date de debut rejetee.
+
+        Note: les erreurs sont renvoyees sur les cles snake_case (canoniques DB)
+        meme si l'input utilise les alias camelCase legacy.
+        """
         exp_type = ExperienceTypeFactory()
         s = ExperienceWriteSerializer(
             data=self._valid_data(
@@ -45,7 +49,7 @@ class TestExperienceWriteSerializer:
             )
         )
         assert not s.is_valid()
-        assert "endDate" in s.errors
+        assert "end_date" in s.errors
 
     def test_future_start_date_rejected(self) -> None:
         """Date de debut dans le futur rejetee."""
@@ -53,7 +57,7 @@ class TestExperienceWriteSerializer:
         future = (timezone.now().date() + timedelta(days=30)).isoformat()
         s = ExperienceWriteSerializer(data=self._valid_data(exp_type.id, startDate=future))
         assert not s.is_valid()
-        assert "startDate" in s.errors
+        assert "start_date" in s.errors
 
     def test_today_start_date_accepted(self) -> None:
         """Date de debut aujourd'hui acceptee."""

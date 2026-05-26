@@ -1,8 +1,11 @@
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { computed, ref } from 'vue';
 
 import { dayjs } from '@/services/utils/date';
 
 import type { UseDateRangeSelectionOptions } from '@/types/composables/ui';
+
+dayjs.extend(isSameOrAfter);
 
 export function useDateRangeSelection({ model, availableDates, minDays, maxDays }: UseDateRangeSelectionOptions) {
     const tempStartDate = ref('');

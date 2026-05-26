@@ -10,6 +10,7 @@ let entryCssCache: string | false | null = null;
 
 function findEntryCss(): string | false {
     const searchDirs = [
+        resolve(process.cwd(), 'public', '_nuxt'),
         resolve(process.cwd(), '.output', 'public', '_nuxt'),
         resolve(process.cwd(), 'dist', '_nuxt'),
         resolve(process.cwd(), '_nuxt'),

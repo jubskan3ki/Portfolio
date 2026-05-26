@@ -107,6 +107,16 @@ dev-reset: ## Purge node_modules + cache Nuxt (sans toucher DB)
 	-docker volume rm $$(docker volume ls -q | grep -E '_(frontend_node_modules|frontend_nuxt_cache)$$') 2>/dev/null
 	@echo ">> Prochain 'make dev' fera un bun install propre"
 
+.PHONY: clean-host
+clean-host: ## Purge .nuxt/.output/cache hote (utile quand Docker les a write en root)
+	@echo ">> Nettoyage des artefacts Nuxt (peut demander sudo si root-owned)"
+	@if [ -w "$(CLIENT_DIR)/.nuxt" ] || ! [ -e "$(CLIENT_DIR)/.nuxt" ]; then \
+		rm -rf "$(CLIENT_DIR)/.nuxt" "$(CLIENT_DIR)/.output" "$(CLIENT_DIR)/node_modules/.cache"; \
+	else \
+		sudo rm -rf "$(CLIENT_DIR)/.nuxt" "$(CLIENT_DIR)/.output" "$(CLIENT_DIR)/node_modules/.cache"; \
+	fi
+	@echo ">> OK"
+
 .PHONY: shell
 shell: ## Shell interactif. SVC=backend (défaut) | db | frontend | redis
 	@svc="$${SVC:-backend}"; \

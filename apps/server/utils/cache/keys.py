@@ -1,6 +1,14 @@
 """Cache key patterns and TTLs."""
 
+import re
 from typing import Any
+
+_UNSAFE_KEY_CHARS = re.compile(r"[\s\x00-\x1f\x7f]")
+
+
+def _sanitize_part(part: Any) -> str:
+    """Remplace les caracteres interdits (espaces, controle) par '_'."""
+    return _UNSAFE_KEY_CHARS.sub("_", str(part))
 
 
 class CacheKeys:
@@ -100,5 +108,5 @@ class CacheKeys:
 
     @classmethod
     def make_key(cls, *parts: Any) -> str:
-        parts_str = ":".join(str(p) for p in parts)
+        parts_str = ":".join(_sanitize_part(p) for p in parts)
         return f"{cls.PREFIX}:{cls.VERSION}:{parts_str}"

@@ -4,6 +4,7 @@ from typing import Any
 
 from rest_framework import serializers
 
+from utils.serializers.fields import RelativeMediaFileField
 from utils.validators import validate_string_list
 
 from ..models import Stack, StackCategory, StackRelationship
@@ -14,6 +15,7 @@ class RelatedStackSerializer(serializers.ModelSerializer):
     """Serializer pour les stacks associees (version legere)."""
 
     category: serializers.StringRelatedField = serializers.StringRelatedField()
+    logo = RelativeMediaFileField(read_only=True)
     relationship = serializers.SerializerMethodField()
 
     class Meta:
@@ -30,6 +32,7 @@ class StackListSerializer(serializers.ModelSerializer):
     """Serializer pour la liste des stacks (version allegee)."""
 
     category: serializers.StringRelatedField = serializers.StringRelatedField()
+    logo = RelativeMediaFileField(read_only=True)
     experience = serializers.SerializerMethodField()
 
     class Meta:
@@ -57,6 +60,7 @@ class StackDetailSerializer(serializers.ModelSerializer):
     """Serializer pour les details d'une stack (lecture seule)."""
 
     category: serializers.StringRelatedField = serializers.StringRelatedField()
+    logo = RelativeMediaFileField(read_only=True)
     resources = StackResourceSerializer(many=True, read_only=True)
     related_stacks = serializers.SerializerMethodField()
     experience = serializers.SerializerMethodField()
@@ -118,6 +122,7 @@ class StackWriteSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         queryset=StackCategory.objects.all(),
     )
+    logo = RelativeMediaFileField(required=False, allow_null=True)
 
     class Meta:
         model = Stack

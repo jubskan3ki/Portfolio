@@ -100,7 +100,6 @@ class Experience(OptimizeImageMixin, models.Model):
         ordering = ["-start_date", "title"]
         indexes = [
             models.Index(fields=["start_date"]),
-            models.Index(fields=["type"]),
             models.Index(fields=["end_date"]),
             models.Index(fields=["company"]),
         ]

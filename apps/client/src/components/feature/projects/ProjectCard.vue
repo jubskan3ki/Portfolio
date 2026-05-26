@@ -26,8 +26,7 @@
 
     import BaseContentCard from '@/components/base/BaseContentCard.vue';
     import { useCardPrefetch } from '@/composables/performance/usePrefetch';
-    import { queryKeys } from '@/services/api/modules';
-    import { projectsApi } from '@/services/api/modules/projects';
+    import { projectKeys, projectsApi } from '@/services/api/modules/projects';
     import { formatDateShort } from '@/services/utils/date';
     import { truncateText } from '@/services/utils/helpers';
 
@@ -49,7 +48,7 @@
     // Prefetch on hover
     const prefetchHandlers = useCardPrefetch(
         () => props.project.slug,
-        (s) => queryKeys.projects.detail(s),
+        (s) => projectKeys.detail(s),
         (s) => projectsApi.getBySlug(s),
     );
 

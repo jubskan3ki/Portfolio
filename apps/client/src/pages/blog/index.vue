@@ -160,7 +160,6 @@
     import { useScrollToTop } from '@/composables/ui/useScrollToTop';
     import { filterPresets } from '@/config/filterPresets';
     import { ROUTES } from '@/config/routes';
-    import { queryKeys } from '@/services/api/modules';
     import {
         articleKeys,
         articlesApi,
@@ -327,7 +326,7 @@
             prefetchTimers.delete(slug);
             prefetchedSlugs.add(slug);
             queryClient.prefetchQuery({
-                queryKey: queryKeys.articles.detail(slug),
+                queryKey: articleKeys.detail(slug),
                 queryFn: () => articlesApi.getBySlug(slug),
             });
         }, PREFETCH_HOVER_DELAY);
@@ -459,13 +458,11 @@
     .blog-loader :deep(.skeleton-list--grid) {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        grid-auto-rows: $blog-card-row;
         gap: vars.$spacing-lg;
         contain: layout;
 
         @include mix.responsive(mobile) {
             grid-template-columns: 1fr;
-            grid-auto-rows: $blog-card-row-mobile;
             gap: vars.$spacing-md;
         }
     }
@@ -483,6 +480,9 @@
             animation-delay: calc(min(var(--article-index, 0), 2) * 40ms);
             // Pas de `paint` ici non plus : sinon hover shadow coupé.
             contain: layout;
+
+            content-visibility: auto;
+            contain-intrinsic-size: auto 480px;
         }
     }
 

@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from utils.serializers import ReadOnlySerializer
+from utils.serializers.fields import RelativeMediaFileField
 
 from ..models import Experience, ExperienceType
 
@@ -12,9 +13,11 @@ class ExperienceWriteSerializer(serializers.ModelSerializer):
     """Serializer pour la creation et mise a jour des experiences."""
 
     type = serializers.PrimaryKeyRelatedField(queryset=ExperienceType.objects.all())
-    # camelCase cote client -> snake_case DB (frontend Nuxt).
-    startDate = serializers.DateField(source="start_date", required=True)
-    endDate = serializers.DateField(source="end_date", required=False, allow_null=True)
+    logo = RelativeMediaFileField(required=False, allow_null=True)
+    start_date = serializers.DateField(required=False, allow_null=True)
+    end_date = serializers.DateField(required=False, allow_null=True)
+    startDate = serializers.DateField(source="start_date", required=False, allow_null=True, write_only=True)
+    endDate = serializers.DateField(source="end_date", required=False, allow_null=True, write_only=True)
 
     class Meta:
         model = Experience
@@ -23,6 +26,8 @@ class ExperienceWriteSerializer(serializers.ModelSerializer):
             "title",
             "company",
             "location",
+            "start_date",
+            "end_date",
             "startDate",
             "endDate",
             "description",
@@ -39,15 +44,18 @@ class ExperienceWriteSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        """Validate dates: start_date not in future, end_date after start_date."""
+        """Validate dates: start_date requise, pas dans le futur, end_date apres start_date."""
         start_date = attrs.get("start_date")
         end_date = attrs.get("end_date")
 
+        if not self.partial and not start_date:
+            raise serializers.ValidationError({"start_date": "La date de debut est obligatoire."})
+
         if start_date and start_date > timezone.now().date():
-            raise serializers.ValidationError({"startDate": "La date de debut ne peut pas etre dans le futur."})
+            raise serializers.ValidationError({"start_date": "La date de debut ne peut pas etre dans le futur."})
 
         if end_date and start_date and end_date < start_date:
-            raise serializers.ValidationError({"endDate": "La date de fin doit etre posterieure a la date de debut."})
+            raise serializers.ValidationError({"end_date": "La date de fin doit etre posterieure a la date de debut."})
 
         return attrs
 
@@ -56,6 +64,7 @@ class ExperienceSerializer(serializers.ModelSerializer):
     """Serializer pour les experiences professionnelles."""
 
     type: serializers.StringRelatedField = serializers.StringRelatedField()
+    logo = RelativeMediaFileField(read_only=True)
     startDate = serializers.DateField(source="start_date")
     endDate = serializers.DateField(source="end_date", required=False, allow_null=True)
     isCurrent = serializers.BooleanField(source="is_current", read_only=True)

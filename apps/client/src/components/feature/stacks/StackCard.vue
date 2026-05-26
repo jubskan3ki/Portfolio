@@ -69,8 +69,7 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useCardPrefetch } from '@/composables/performance/usePrefetch';
     import { TEXT_LIMITS } from '@/config/constants';
-    import { queryKeys } from '@/services/api/modules';
-    import { stacksApi } from '@/services/api/modules/stacks';
+    import { stackKeys, stacksApi } from '@/services/api/modules/stacks';
     import { sliceTags, truncateText } from '@/services/utils/helpers';
 
     import type { StackCardProps } from '@/types/feature/stacks';
@@ -128,7 +127,7 @@
     // Prefetch on hover
     const prefetchHandlers = useCardPrefetch(
         () => props.stack.slug,
-        (s) => queryKeys.stacks.detail(s),
+        (s) => stackKeys.detail(s),
         (s) => stacksApi.getBySlug(s),
     );
 

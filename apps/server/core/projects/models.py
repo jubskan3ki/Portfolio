@@ -43,9 +43,6 @@ class ProjectCategory(AutoSlugMixin, models.Model):
         verbose_name_plural = "Categories de projets"
         db_table = "project_categories"
         ordering = ["name"]
-        indexes = [
-            models.Index(fields=["slug"]),
-        ]
 
     def __str__(self) -> str:
         return str(self.name)
@@ -127,10 +124,9 @@ class Project(OptimizeImageMixin, AutoSlugMixin, models.Model):
         db_table = "projects"
         ordering = ["-date", "title"]
         indexes = [
-            models.Index(fields=["slug"]),
+            # slug UNIQUE (couvert par projects_slug_key + _like)
+            # category / status FK couverts par auto index Django (couverts aussi par les composites ci-dessous)
             models.Index(fields=["date"]),
-            models.Index(fields=["category"]),
-            models.Index(fields=["status"]),
             models.Index(fields=["-view_count"]),
             models.Index(fields=["category", "-date"]),
             models.Index(fields=["status", "-date"]),

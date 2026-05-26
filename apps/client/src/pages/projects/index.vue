@@ -413,6 +413,9 @@
             animation: fadeUp 0.4s ease forwards;
             animation-delay: calc(var(--i, 0) * 50ms);
             opacity: 0;
+
+            content-visibility: auto;
+            contain-intrinsic-size: auto 420px;
         }
     }
 

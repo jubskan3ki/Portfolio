@@ -9,6 +9,34 @@ from django.core.validators import URLValidator
 from rest_framework import serializers
 
 
+class RelativeMediaImageField(serializers.ImageField):
+    """ImageField qui retourne toujours une URL relative (ex: /media/...).
+
+    Evite que SSR (Nuxt -> http://backend:8000) encode des URLs internes Docker
+    dans le HTML rendu au navigateur. Le frontend prefixe via window.location.origin.
+    """
+
+    def to_representation(self, value: Any) -> str | None:
+        if not value:
+            return None
+        try:
+            return value.url
+        except (AttributeError, ValueError):
+            return None
+
+
+class RelativeMediaFileField(serializers.FileField):
+    """FileField qui retourne toujours une URL relative (ex: /media/...)."""
+
+    def to_representation(self, value: Any) -> str | None:
+        if not value:
+            return None
+        try:
+            return value.url
+        except (AttributeError, ValueError):
+            return None
+
+
 class JSONBlockListField(serializers.JSONField):
     """JSONField qui valide que la valeur est une liste de blocs JSON.
 
@@ -21,7 +49,6 @@ class JSONBlockListField(serializers.JSONField):
         default: list[Any] | Callable[[], list[Any]] | Any = serializers.empty,
         **kwargs: Any,
     ) -> None:
-        # DRF's JSONField stub narrows `default` to Mapping but the field happily accepts lists.
         if default is not serializers.empty:
             kwargs["default"] = default
         super().__init__(*args, **kwargs)
@@ -53,6 +80,12 @@ class URLDictField(serializers.DictField):
         super().__init__(**kwargs)
 
     def to_internal_value(self, data: Any) -> dict[str, Any]:
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except json.JSONDecodeError as e:
+                raise serializers.ValidationError(f"Format JSON invalide: {e.msg}") from e
+
         if not isinstance(data, dict):
             raise serializers.ValidationError("Doit etre un objet JSON.")
 

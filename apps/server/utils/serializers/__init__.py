@@ -5,13 +5,15 @@ from .base import (
     SlugLookupMixin,
     WriteOnlyModelSerializer,
 )
-from .fields import JSONBlockListField, URLDictField
+from .fields import JSONBlockListField, RelativeMediaFileField, RelativeMediaImageField, URLDictField
 from .pagination import PaginatedResponseSerializer
 
 __all__ = [
     "JSONBlockListField",
     "PaginatedResponseSerializer",
     "ReadOnlySerializer",
+    "RelativeMediaFileField",
+    "RelativeMediaImageField",
     "SlugLookupMixin",
     "URLDictField",
     "WriteOnlyModelSerializer",

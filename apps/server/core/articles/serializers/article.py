@@ -4,7 +4,7 @@ from typing import Any
 
 from rest_framework import serializers
 
-from utils.serializers.fields import JSONBlockListField
+from utils.serializers.fields import JSONBlockListField, RelativeMediaImageField
 
 from ..models import Article, Category, Tag
 from ..services.article import ArticleService
@@ -18,6 +18,7 @@ class ArticleWriteSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(), many=True, required=False
     )
     content: JSONBlockListField = JSONBlockListField(required=False, default=list)
+    image = RelativeMediaImageField(required=False, allow_null=True)
 
     class Meta:
         model = Article
@@ -75,6 +76,7 @@ class _ArticleReadFieldsMixin(serializers.Serializer):
 
     category: serializers.StringRelatedField = serializers.StringRelatedField()
     tags: serializers.SerializerMethodField = serializers.SerializerMethodField()
+    image = RelativeMediaImageField(read_only=True)
     date = serializers.DateTimeField(source="published_date")
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
     seoTitle = serializers.CharField(source="seo_title", read_only=True)

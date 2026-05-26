@@ -1,12 +1,6 @@
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import relativeTime from 'dayjs/plugin/relativeTime';
 
-dayjs.extend(relativeTime);
-dayjs.extend(isSameOrAfter);
-dayjs.extend(isSameOrBefore);
 dayjs.locale('fr');
 
 type DateInput = string | Date | null | undefined;

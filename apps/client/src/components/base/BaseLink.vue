@@ -74,7 +74,6 @@
         gap: vars.$spacing-xxs;
         color: vars.$primary-color;
         text-decoration: none;
-        transition: color vars.$transition-base;
 
         @include mix.focus-outline;
 

@@ -46,6 +46,7 @@
                                 quality="75"
                                 loading="eager"
                                 fetchpriority="high"
+                                preload
                             />
                         </div>
                         <div class="hero-background-shape"></div>

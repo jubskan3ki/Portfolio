@@ -64,7 +64,7 @@
 
     import type { StackCategorySliderProps } from '@/types/feature/stacks';
 
-    defineProps<StackCategorySliderProps>();
+    const props = defineProps<StackCategorySliderProps>();
 
     defineEmits<{
         navigate: [slug: string];
@@ -145,28 +145,45 @@
         });
     };
 
-    // Initialize and update on resize
+    // Seed canScrollRight from prop count so the nav renders correctly during SSR/hydration
+    // without forcing a synchronous layout read. CARD_WIDTH/GAP match the CSS for the desktop
+    // breakpoint; off-by-a-card on tablet/mobile self-corrects on the first real scroll.
+    canScrollRight.value = props.stacks.length * (CARD_WIDTH + GAP) > 600;
+
+    // Defer the first scroll-state probe + ResizeObserver attach until the slider
+    // actually intersects the viewport. With 7 sliders on /stacks, doing this on mount
+    // produced ~7 forced reflows (37ms desktop / 73ms mobile per Lighthouse).
     let resizeObserver: ResizeObserver | null = null;
+    let intersectionObserver: IntersectionObserver | null = null;
+
+    const armObservers = () => {
+        if (!sliderRef.value || resizeObserver) return;
+        updateScrollState();
+        resizeObserver = new ResizeObserver(updateScrollState);
+        resizeObserver.observe(sliderRef.value);
+    };
 
     onMounted(() => {
-        const scheduleFirst = (cb: () => void) => {
-            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-                (window as unknown as { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
-                    .requestIdleCallback(cb, { timeout: 200 });
-            } else {
-                setTimeout(cb, 0);
+        nextTick(() => {
+            const el = sliderRef.value;
+            if (!el) return;
+
+            if (typeof IntersectionObserver === 'undefined') {
+                armObservers();
+                return;
             }
-        };
 
-        scheduleFirst(() => {
-            nextTick(() => {
-                updateScrollState();
-
-                if (sliderRef.value) {
-                    resizeObserver = new ResizeObserver(updateScrollState);
-                    resizeObserver.observe(sliderRef.value);
-                }
-            });
+            intersectionObserver = new IntersectionObserver(
+                (entries) => {
+                    if (entries.some((e) => e.isIntersecting)) {
+                        intersectionObserver?.disconnect();
+                        intersectionObserver = null;
+                        armObservers();
+                    }
+                },
+                { rootMargin: '200px' },
+            );
+            intersectionObserver.observe(el);
         });
     });
 
@@ -177,6 +194,9 @@
         }
         if (resizeObserver) {
             resizeObserver.disconnect();
+        }
+        if (intersectionObserver) {
+            intersectionObserver.disconnect();
         }
     });
 </script>

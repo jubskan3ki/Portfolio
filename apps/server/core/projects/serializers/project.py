@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from utils.serializers.fields import URLDictField
+from utils.serializers.fields import RelativeMediaImageField, URLDictField
 from utils.validators import validate_string_list
 
 from ..models import Project, ProjectCategory, ProjectStatus
@@ -17,6 +17,7 @@ class ProjectWriteSerializer(serializers.ModelSerializer[Project]):
         required=False,
         allow_null=True,
     )
+    image = RelativeMediaImageField(required=False, allow_null=True)
     long_description = serializers.CharField(required=False, allow_blank=True)
     # Alias camelCase pour compat frontend (mappe sur long_description).
     longDescription = serializers.CharField(
@@ -74,6 +75,7 @@ class ProjectListSerializer(serializers.ModelSerializer[Project]):
 
     category: serializers.StringRelatedField = serializers.StringRelatedField()
     status: serializers.StringRelatedField = serializers.StringRelatedField()
+    image = RelativeMediaImageField(read_only=True)
     views = serializers.IntegerField(source="view_count", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
 
@@ -99,6 +101,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer[Project]):
 
     category: serializers.StringRelatedField = serializers.StringRelatedField()
     status: serializers.StringRelatedField = serializers.StringRelatedField()
+    image = RelativeMediaImageField(read_only=True)
     views = serializers.IntegerField(source="view_count", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
     seoTitle = serializers.CharField(source="seo_title", read_only=True)

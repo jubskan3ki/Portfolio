@@ -144,7 +144,7 @@
                 </DetailPageLayout>
             </Main>
 
-            <Section v-if="currentStack.resources?.length" variant="light" size="default">
+            <LazySection v-if="currentStack.resources?.length" variant="light" size="default" hydrate-on-visible>
                 <template #header>
                     <h2 class="stack-page__section-title">
                         <BaseIcon name="book-open" :size="22" class="stack-page__section-icon" />
@@ -172,9 +172,9 @@
                         <BaseIcon name="arrow-right" :size="16" class="resource-card__arrow" />
                     </BaseLink>
                 </div>
-            </Section>
+            </LazySection>
 
-            <Section v-if="stackArticles?.length" variant="default" size="default">
+            <LazySection v-if="stackArticles?.length" variant="default" size="default" hydrate-on-visible>
                 <template #header>
                     <h2 class="stack-page__section-title">
                         <BaseIcon name="file-text" :size="22" class="stack-page__section-icon" />
@@ -182,11 +182,16 @@
                     </h2>
                 </template>
                 <div class="stack-page__articles-grid">
-                    <ArticleCard v-for="article in stackArticles" :key="article.id" :article="article" />
+                    <LazyArticleCard
+                        v-for="article in stackArticles"
+                        :key="article.id"
+                        :article="article"
+                        hydrate-on-visible
+                    />
                 </div>
-            </Section>
+            </LazySection>
 
-            <Section v-if="stackProjects?.length" variant="light" size="default">
+            <LazySection v-if="stackProjects?.length" variant="light" size="default" hydrate-on-visible>
                 <template #header>
                     <h2 class="stack-page__section-title">
                         <BaseIcon name="grid" :size="22" class="stack-page__section-icon" />
@@ -195,11 +200,16 @@
                     <p class="stack-page__section-subtitle">Découvrez les projets utilisant ce stack</p>
                 </template>
                 <div class="stack-page__projects-grid">
-                    <ProjectCard v-for="project in stackProjects" :key="project.id" :project="project" />
+                    <LazyProjectCard
+                        v-for="project in stackProjects"
+                        :key="project.id"
+                        :project="project"
+                        hydrate-on-visible
+                    />
                 </div>
-            </Section>
+            </LazySection>
 
-            <CTA
+            <LazyCTA
                 key="stack-detail-cta"
                 :title="`Besoin d'un développeur ${currentStack.name} ?`"
                 :description="ctaDescription"
@@ -213,6 +223,7 @@
                     label: 'Voir tous les stacks',
                     to: ROUTES.STACKS.path,
                 }"
+                hydrate-on-visible
             />
         </template>
     </div>
@@ -224,17 +235,13 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
-    import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
-    import ProjectCard from '@/components/feature/projects/ProjectCard.vue';
     import StackLogo from '@/components/feature/stacks/StackLogo.vue';
     import StackTags from '@/components/feature/stacks/StackTags.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
     import Main from '@/components/layouts/Main.vue';
-    import Section from '@/components/layouts/Section.vue';
     import LoadingState from '@/components/loaders/LoadingState.vue';
     import Breadcrumb from '@/components/navigation/Breadcrumb.vue';
-    import CTA from '@/components/ui/CTA.vue';
     import Hero from '@/components/ui/Hero.vue';
     import ProgressBar from '@/components/ui/ProgressBar.vue';
     import ShareCard from '@/components/ui/ShareCard.vue';
@@ -415,10 +422,10 @@
         align-items: center;
         gap: vars.$spacing-xl;
         background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(vars.$glass-blur);
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-xl;
+        contain: layout paint;
         box-shadow:
             0 8px 32px fn.color-alpha(vars.$black, 0.06),
             0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
@@ -458,10 +465,10 @@
 
     .detail-card {
         background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(vars.$glass-blur);
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-xl;
+        contain: layout paint;
         box-shadow:
             0 8px 32px fn.color-alpha(vars.$black, 0.06),
             0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
@@ -593,10 +600,10 @@
 
     .sidebar-card {
         background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(vars.$glass-blur);
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-lg;
+        contain: layout paint;
         box-shadow:
             0 8px 32px fn.color-alpha(vars.$black, 0.06),
             0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;
@@ -666,12 +673,15 @@
         gap: vars.$spacing-md;
         padding: vars.$spacing-lg;
         background: fn.color-alpha(vars.$white, 0.95);
-        backdrop-filter: blur(vars.$glass-blur);
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-lg;
         box-shadow: vars.$box-shadow-xs;
+        contain: layout paint;
         text-decoration: none;
-        transition: all vars.$transition-base;
+        transition:
+            transform vars.$transition-base,
+            box-shadow vars.$transition-base,
+            border-color vars.$transition-base;
 
         &:hover {
             transform: translateY(-4px);
@@ -732,12 +742,22 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: vars.$spacing-lg;
+
+        > * {
+            content-visibility: auto;
+            contain-intrinsic-size: auto 380px;
+        }
     }
 
     .stack-page__projects-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: vars.$spacing-lg;
+
+        > * {
+            content-visibility: auto;
+            contain-intrinsic-size: auto 420px;
+        }
     }
 
     .experience-info {

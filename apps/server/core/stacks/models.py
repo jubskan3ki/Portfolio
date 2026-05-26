@@ -161,9 +161,7 @@ class Stack(AutoSlugMixin, models.Model):
         db_table = "stacks"
         ordering = ["-level", "name"]
         indexes = [
-            models.Index(fields=["slug"]),
             models.Index(fields=["level"]),
-            models.Index(fields=["category"]),
         ]
 
     def __str__(self) -> str:

@@ -136,10 +136,7 @@ class Article(OptimizeImageMixin, AutoSlugMixin, SoftDeleteMixin):
         db_table = "articles"
         ordering = ["-published_date"]
         indexes = [
-            models.Index(fields=["slug"]),
-            models.Index(fields=["is_published"]),
             models.Index(fields=["published_date"]),
-            models.Index(fields=["category"]),
             models.Index(fields=["is_published", "-published_date"]),
             models.Index(fields=["category", "is_published", "-published_date"]),
             models.Index(fields=["is_featured", "is_published", "-published_date"]),
