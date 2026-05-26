@@ -36,20 +36,20 @@ export interface ButtonProps {
 }
 
 // BaseInput
-export type InputType
-    = | 'text'
-        | 'password'
-        | 'email'
-        | 'number'
-        | 'tel'
-        | 'url'
-        | 'search'
-        | 'date'
-        | 'time'
-        | 'datetime-local'
-        | 'month'
-        | 'week'
-        | 'color';
+export type InputType =
+    | 'text'
+    | 'password'
+    | 'email'
+    | 'number'
+    | 'tel'
+    | 'url'
+    | 'search'
+    | 'date'
+    | 'time'
+    | 'datetime-local'
+    | 'month'
+    | 'week'
+    | 'color';
 
 export interface InputProps {
     id?: string;
@@ -79,12 +79,12 @@ export interface SelectOption {
     disabled?: boolean;
 }
 
-export type SelectInitialValue
-    = | string
-        | number
-        | { id?: string | number; name?: string; slug?: string }
-        | null
-        | undefined;
+export type SelectInitialValue =
+    | string
+    | number
+    | { id?: string | number; name?: string; slug?: string }
+    | null
+    | undefined;
 
 export interface SelectProps {
     options?: SelectOption[];
@@ -118,10 +118,7 @@ export interface MultiSelectOption {
     [key: string]: unknown;
 }
 
-export type MultiSelectInitialItem
-    = | string
-        | number
-        | { id?: string | number; name?: string; slug?: string };
+export type MultiSelectInitialItem = string | number | { id?: string | number; name?: string; slug?: string };
 
 export interface MultiSelectProps {
     options?: MultiSelectOption[];
@@ -315,6 +312,8 @@ export interface BaseContentCardProps {
     to?: string;
     image?: string;
     imageAlt?: string;
+    imageWidth?: number | string;
+    imageHeight?: number | string;
     placeholderIcon?: string;
     badge?: string;
     title: string;

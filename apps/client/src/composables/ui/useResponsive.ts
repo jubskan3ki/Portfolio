@@ -1,6 +1,6 @@
-import { ref, computed, onMounted, onUnmounted, readonly } from 'vue';
-
-import { BREAKPOINTS, type Breakpoint } from '@/config/constants';
+import { computed, onMounted, onUnmounted, readonly, ref } from 'vue';
+import type { Breakpoint } from '@/config/constants';
+import { BREAKPOINTS } from '@/config/constants';
 
 import type { UseResponsiveOptions, UseResponsiveReturn } from '@/types/composables/ui';
 

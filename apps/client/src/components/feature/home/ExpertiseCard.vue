@@ -7,7 +7,6 @@
         class="expertise-card"
         :class="[`expertise-card--${variant}`, { 'expertise-card--no-motion': prefersReducedMotion }]"
         tabindex="0"
-        role="article"
         :aria-label="`Expertise en ${title}`"
         :style="cardStyle"
         @mouseenter="onMouseEnter"
@@ -26,7 +25,7 @@
             <div class="expertise-card__icon">
                 <BaseIcon :name="icon" size="md" />
             </div>
-            <h3 class="expertise-card__title">{{ title }}</h3>
+            <h2 class="expertise-card__title">{{ title }}</h2>
         </div>
         <p class="expertise-card__description">{{ description }}</p>
 
@@ -222,10 +221,19 @@
         }
 
         &__title {
+            font-size: vars.$font-size-3xl;
             font-weight: vars.$font-weight-semibold;
             margin: 0;
             position: relative;
             z-index: 1;
+
+            @include mix.responsive(tablet) {
+                font-size: vars.$font-size-xxl;
+            }
+
+            @include mix.responsive(mobile) {
+                font-size: vars.$font-size-xl;
+            }
         }
 
         &__description {

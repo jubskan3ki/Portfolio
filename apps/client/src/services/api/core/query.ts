@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/vue-query';
+import type { MaybeRef } from 'vue';
 import { computed, unref } from 'vue';
 
-import { CACHE_TIMES } from './cache';
-
 import type { QueryOptions, QueryPreset } from '@/types/services/api';
-import type { MaybeRef } from 'vue';
+import { CACHE_TIMES } from './cache';
 
 const QUERY_PRESETS: Record<QueryPreset, { staleTime: number; refetchInterval?: number }> = {
     list: { staleTime: CACHE_TIMES.LIST },

@@ -1,10 +1,3 @@
-import { API_ENDPOINTS } from '@/config/api';
-
-import type {
-    AnyMetricWithAttribution,
-    WebVitalsAttribution,
-    WebVitalsPayload,
-} from '@/types/services/web-vitals';
 import type { Router } from 'vue-router';
 import type {
     CLSMetricWithAttribution,
@@ -13,6 +6,8 @@ import type {
     LCPMetricWithAttribution,
     TTFBMetricWithAttribution,
 } from 'web-vitals/attribution';
+import { API_ENDPOINTS } from '@/config/api';
+import type { AnyMetricWithAttribution, WebVitalsAttribution, WebVitalsPayload } from '@/types/services/web-vitals';
 
 const clampSampleRate = (value: string | number | undefined, fallback: number): number => {
     const parsed = Number(value);
@@ -85,10 +80,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     const runtimeConfig = useRuntimeConfig();
-    const sampleRate = clampSampleRate(
-        runtimeConfig.public.webVitalsSampleRate as string | number | undefined,
-        0.2,
-    );
+    const sampleRate = clampSampleRate(runtimeConfig.public.webVitalsSampleRate as string | number | undefined, 0.2);
 
     if (Math.random() > sampleRate) {
         return;
@@ -109,59 +101,62 @@ export default defineNuxtPlugin((nuxtApp) => {
         }
     };
 
-    scheduleInit(() => void import('web-vitals/attribution').then(({ onCLS, onFCP, onINP, onLCP, onTTFB }) => {
-        const sendMetric = (metric: AnyMetricWithAttribution): void => {
-            try {
-                const route = (nuxtApp.$router as Router).currentRoute.value;
-                const browserNavigator = navigator as Navigator & {
-                    connection?: { effectiveType?: string };
-                    userAgentData?: { mobile?: boolean };
+    scheduleInit(
+        () =>
+            void import('web-vitals/attribution').then(({ onCLS, onFCP, onINP, onLCP, onTTFB }) => {
+                const sendMetric = (metric: AnyMetricWithAttribution): void => {
+                    try {
+                        const route = (nuxtApp.$router as Router).currentRoute.value;
+                        const browserNavigator = navigator as Navigator & {
+                            connection?: { effectiveType?: string };
+                            userAgentData?: { mobile?: boolean };
+                        };
+                        const payload: WebVitalsPayload = {
+                            name: metric.name,
+                            value: metric.value,
+                            rating: metric.rating,
+                            delta: metric.delta,
+                            id: metric.id,
+                            page: route.path,
+                            url: window.location.href,
+                            userAgent: navigator.userAgent || '',
+                            language: navigator.language || '',
+                            viewport: {
+                                width: window.innerWidth,
+                                height: window.innerHeight,
+                            },
+                            connectionType: browserNavigator.connection?.effectiveType ?? null,
+                            isMobile:
+                                browserNavigator.userAgentData?.mobile ??
+                                window.matchMedia('(max-width: 768px)').matches,
+                            timestamp: new Date().toISOString(),
+                            attribution: extractAttribution(metric),
+                        };
+
+                        const body = JSON.stringify(payload);
+                        if (navigator.sendBeacon) {
+                            const blob = new Blob([body], { type: 'application/json' });
+                            navigator.sendBeacon(endpoint, blob);
+                            return;
+                        }
+
+                        void fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body,
+                            keepalive: true,
+                            credentials: 'omit',
+                        });
+                    } catch {
+                        // telemetry non-critique
+                    }
                 };
-                const payload: WebVitalsPayload = {
-                    name: metric.name,
-                    value: metric.value,
-                    rating: metric.rating,
-                    delta: metric.delta,
-                    id: metric.id,
-                    page: route.path,
-                    url: window.location.href,
-                    userAgent: navigator.userAgent || '',
-                    language: navigator.language || '',
-                    viewport: {
-                        width: window.innerWidth,
-                        height: window.innerHeight,
-                    },
-                    connectionType: browserNavigator.connection?.effectiveType ?? null,
-                    isMobile:
-                        browserNavigator.userAgentData?.mobile
-                        ?? window.matchMedia('(max-width: 768px)').matches,
-                    timestamp: new Date().toISOString(),
-                    attribution: extractAttribution(metric),
-                };
 
-                const body = JSON.stringify(payload);
-                if (navigator.sendBeacon) {
-                    const blob = new Blob([body], { type: 'application/json' });
-                    navigator.sendBeacon(endpoint, blob);
-                    return;
-                }
-
-                void fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body,
-                    keepalive: true,
-                    credentials: 'omit',
-                });
-            } catch {
-                // telemetry non-critique
-            }
-        };
-
-        onLCP(sendMetric);
-        onCLS(sendMetric);
-        onINP(sendMetric);
-        onFCP(sendMetric);
-        onTTFB(sendMetric);
-    }));
+                onLCP(sendMetric);
+                onCLS(sendMetric);
+                onINP(sendMetric);
+                onFCP(sendMetric);
+                onTTFB(sendMetric);
+            }),
+    );
 });

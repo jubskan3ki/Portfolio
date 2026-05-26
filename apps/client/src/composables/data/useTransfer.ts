@@ -4,20 +4,17 @@ import { computed } from 'vue';
 import { TRANSFER_MODULES, TRANSFER_QUERY_KEYS } from '@/config/transfer';
 import { statsApi } from '@/services/api/modules/stats';
 import { extractStatsCount } from '@/services/utils/transfer';
-
+import type { ModuleInfo, TransferStats } from '@/types/composables/data';
 import { useExport } from './useExport';
 import { useImport } from './useImport';
 import { useTransferJobs } from './useTransferJobs';
-
-import type { ModuleInfo, TransferStats } from '@/types/composables/data';
-
-export type { ExportFormat, ImportImage, TransferModule } from '@/types/composables/data';
 
 export {
     formatFileSize,
     formatTransferDate,
     getTransferStatusLabel as getStatusLabel,
 } from '@/services/utils/transfer';
+export type { ExportFormat, ImportImage, TransferModule } from '@/types/composables/data';
 
 export function useTransfer() {
     const { data: statsData, refetch: refetchStats } = useQuery({
@@ -31,8 +28,8 @@ export function useTransfer() {
             ...m,
             count: statsData.value
                 ? extractStatsCount(
-                    (statsData.value as Record<string, unknown>)[m.key] as number | { count?: number } | undefined,
-                )
+                      (statsData.value as Record<string, unknown>)[m.key] as number | { count?: number } | undefined,
+                  )
                 : m.count,
         })),
     );

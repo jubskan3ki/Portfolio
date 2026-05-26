@@ -39,7 +39,7 @@ services:
         command:
             - sh
             - -c
-            - "unset PORT; pnpm install --prefer-offline && exec pnpm dev --host 0.0.0.0 --port 80"
+            - "unset PORT; bun install && exec bun run dev --host 0.0.0.0 --port 80"
         ports:
             - "${FRONTEND_PORT:-3000}:80"
         volumes:

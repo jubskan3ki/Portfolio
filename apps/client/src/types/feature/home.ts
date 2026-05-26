@@ -1,5 +1,5 @@
-import type { Stack } from './stacks';
 import type { StatCardVariant } from '@/types/components/ui';
+import type { Stack } from './stacks';
 
 export type HomeVariant = 'light' | 'dark' | 'secondary' | 'primary';
 

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/vue-query';
 
-import type { MutationOptions, IdField, EntityApi, SubResourceKeys } from '@/types/services/api';
+import type { EntityApi, IdField, MutationOptions, SubResourceKeys } from '@/types/services/api';
 
 export function createSubResourceMutations<T, TCreate, TUpdate, TId extends string | number = string>(
     api: EntityApi<T, TCreate, TUpdate, TId>,

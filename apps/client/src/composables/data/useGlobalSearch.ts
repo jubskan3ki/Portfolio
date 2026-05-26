@@ -1,18 +1,14 @@
 import { useQuery } from '@tanstack/vue-query';
 import { useDebounceFn } from '@vueuse/core';
-import { ref, computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-import {
-    SEARCH_TYPE_CONFIG,
-    SEARCH_DEFAULTS,
-    generateSearchLink,
-    groupSearchResults,
-} from '@/config/search';
-import { searchApi, searchKeys, type UnifiedSearchItem } from '@/services/api/modules/search';
+import { generateSearchLink, groupSearchResults, SEARCH_DEFAULTS, SEARCH_TYPE_CONFIG } from '@/config/search';
+import type { UnifiedSearchItem } from '@/services/api/modules/search';
+import { searchApi, searchKeys } from '@/services/api/modules/search';
 
 import type { SearchResult, SearchResultGroup, SearchResultType, UseGlobalSearchOptions } from '@/types/config/search';
 
-export type { SearchResult, SearchMode, SearchResultType } from '@/types/config/search';
+export type { SearchMode, SearchResult, SearchResultType } from '@/types/config/search';
 
 export function useGlobalSearch(options: UseGlobalSearchOptions = {}) {
     const { mode = 'public' } = options;

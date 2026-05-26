@@ -4,7 +4,7 @@ import { buildImageUrl } from '@/services/utils/form';
 
 import type { UseImagePreviewReturn, UseRawValuesReturn } from '@/types/composables/forms';
 
-export { toSelectOptions, findItemByIdOrName, mapToIds, buildImageUrl } from '@/services/utils/form';
+export { buildImageUrl, findItemByIdOrName, mapToIds, toSelectOptions } from '@/services/utils/form';
 
 export function useImagePreview(): UseImagePreviewReturn {
     const previewImage = ref('');

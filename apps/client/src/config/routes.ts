@@ -1,4 +1,4 @@
-import type { AppRoutes, AdminRoutes, PathCreator } from '@/types/config/routes';
+import type { AdminRoutes, AppRoutes, PathCreator } from '@/types/config/routes';
 
 export const ROUTES: AppRoutes = {
     HOME: {

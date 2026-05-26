@@ -120,8 +120,7 @@ class TestAuditServices:
         assert stats["by_action"]["update"] == 1
 
     def test_compute_stats_excludes_old_logs(self) -> None:
-        old = AuditLogFactory()
-        AuditLog.objects.filter(id=old.id).update(timestamp=timezone.now() - timedelta(days=365))
+        AuditLogFactory(timestamp=timezone.now() - timedelta(days=365))
         AuditLogFactory()
         stats = compute_stats(window_days=30)
         assert stats["total"] == 1
@@ -159,8 +158,7 @@ class TestAuditCleanupTask:
 
     def test_deletes_logs_older_than_retention(self) -> None:
         fresh = AuditLogFactory()
-        old = AuditLogFactory()
-        AuditLog.objects.filter(id=old.id).update(timestamp=timezone.now() - timedelta(days=365))
+        old = AuditLogFactory(timestamp=timezone.now() - timedelta(days=365))
         result = cleanup_old_audit_logs(days=180)
         assert result["deleted_count"] == 1
         assert AuditLog.objects.filter(id=fresh.id).exists()
@@ -172,8 +170,7 @@ class TestAuditCleanupTask:
         assert result["retention_days"] > 0
 
     def test_respects_custom_days(self) -> None:
-        log = AuditLogFactory()
-        AuditLog.objects.filter(id=log.id).update(timestamp=timezone.now() - timedelta(days=10))
+        AuditLogFactory(timestamp=timezone.now() - timedelta(days=10))
         result = cleanup_old_audit_logs(days=5)
         assert result["deleted_count"] == 1
 

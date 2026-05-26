@@ -23,8 +23,9 @@ function findEntryCss(): string | false {
             if (entryFile) {
                 return readFileSync(join(dir, entryFile), 'utf-8');
             }
+        } catch {
+            /* skip */
         }
-        catch { /* skip */ }
     }
 
     return false;
@@ -40,16 +41,13 @@ export default defineNitroPlugin((nitroApp) => {
         }
 
         if (typeof entryCssCache === 'string') {
-            response.body = response.body.replace(
-                ENTRY_CSS_LINK_RE,
-                `<style>${entryCssCache}</style>`,
-            );
+            response.body = response.body.replace(ENTRY_CSS_LINK_RE, `<style>${entryCssCache}</style>`);
         }
 
         response.body = response.body.replace(
             NON_ENTRY_CSS_RE,
-            '<link rel="preload" href="$1" as="style" $2 onload="this.rel=\'stylesheet\'">'
-            + '<noscript><link rel="stylesheet" href="$1" $2></noscript>',
+            '<link rel="preload" href="$1" as="style" $2 onload="this.rel=\'stylesheet\'">' +
+                '<noscript><link rel="stylesheet" href="$1" $2></noscript>',
         );
     });
 });

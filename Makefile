@@ -8,7 +8,7 @@ endif
 
 ENV             ?= dev
 COMPOSE_BIN     ?= docker compose
-PNPM            ?= pnpm
+BUN             ?= bun
 DOMAIN          ?= aitaddajuba.fr
 EMAIL           ?= contact@aitaddajuba.fr
 DATA_DIR        ?= Data
@@ -105,7 +105,7 @@ dev: ## Stack dev avec HMR + Swagger UI + pgAdmin (avant-plan)
 dev-reset: ## Purge node_modules + cache Nuxt (sans toucher DB)
 	$(COMPOSE_DEV) down
 	-docker volume rm $$(docker volume ls -q | grep -E '_(frontend_node_modules|frontend_nuxt_cache)$$') 2>/dev/null
-	@echo ">> Prochain 'make dev' fera un pnpm install propre"
+	@echo ">> Prochain 'make dev' fera un bun install propre"
 
 .PHONY: shell
 shell: ## Shell interactif. SVC=backend (défaut) | db | frontend | redis
@@ -126,21 +126,21 @@ djshell: ## Shell Django (manage.py shell)
 
 .PHONY: lint
 lint: ## Lint front + back (check only, 0 modification)
-	cd $(CLIENT_DIR) && $(PNPM) lint && $(PNPM) lint:css
+	cd $(CLIENT_DIR) && $(BUN) run lint && $(BUN) run lint:css
 	$(COMPOSE_EXEC) backend sh -c "black --check . && isort --check-only . && ruff check ."
 
 .PHONY: format
 format: ## Formate front + back (écrit les fixes)
-	cd $(CLIENT_DIR) && $(PNPM) fix
+	cd $(CLIENT_DIR) && $(BUN) run fix
 	$(COMPOSE_EXEC) backend sh -c "black . && isort . && ruff check --fix ."
 
 .PHONY: typecheck
 typecheck: ## TypeScript (vue-tsc) + Python (mypy advisory)
-	cd $(CLIENT_DIR) && $(PNPM) type-check
+	cd $(CLIENT_DIR) && $(BUN) run type-check
 
 .PHONY: test
 test: ## Tests unitaires front (vitest) + back (pytest)
-	cd $(CLIENT_DIR) && $(PNPM) test
+	cd $(CLIENT_DIR) && $(BUN) run test
 	$(COMPOSE_EXEC) backend pytest
 
 .PHONY: check
@@ -177,6 +177,40 @@ db-restore: ## Restore un dump local. FILE=backups/xxx.sql.gz
 	@test -f "$(FILE)" || { echo "Usage: make db-restore FILE=backups/xxx.sql.gz"; exit 1; }
 	@gunzip -c "$(FILE)" | $(COMPOSE_EXEC) -T db psql -U $(DB_USER) -d $(DB_NAME)
 	@echo "Restore OK"
+
+##@ TimescaleDB - hypertables + compression + retention
+
+.PHONY: timescale-stats
+timescale-stats: ## Affiche compression + chunks + policies pour toutes les hypertables
+	@$(COMPOSE_EXEC) -T db psql -U $(DB_USER) -d $(DB_NAME) -x -c "\
+		SELECT \
+		    h.hypertable_name AS table_name, \
+		    (SELECT count(*) FROM timescaledb_information.chunks c WHERE c.hypertable_name = h.hypertable_name) AS chunks, \
+		    (SELECT count(*) FROM timescaledb_information.chunks c WHERE c.hypertable_name = h.hypertable_name AND c.is_compressed) AS chunks_compressed, \
+		    pg_size_pretty(hypertable_size(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass)) AS total_size, \
+		    pg_size_pretty(COALESCE((SELECT sum(after_compression_total_bytes) FROM hypertable_compression_stats(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass)), 0)) AS compressed_size, \
+		    ROUND(CASE WHEN COALESCE((SELECT sum(after_compression_total_bytes) FROM hypertable_compression_stats(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass)), 0) = 0 \
+		         THEN 0 \
+		         ELSE (SELECT sum(before_compression_total_bytes) FROM hypertable_compression_stats(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass))::numeric / NULLIF((SELECT sum(after_compression_total_bytes) FROM hypertable_compression_stats(format('%I.%I', h.hypertable_schema, h.hypertable_name)::regclass)), 0) END, 2) AS compression_ratio \
+		FROM timescaledb_information.hypertables h ORDER BY h.hypertable_name;"
+
+.PHONY: timescale-policies
+timescale-policies: ## Liste les jobs de compression + retention et leur dernier run
+	@$(COMPOSE_EXEC) -T db psql -U $(DB_USER) -d $(DB_NAME) -c "\
+		SELECT j.job_id, j.hypertable_name, j.proc_name AS policy, j.schedule_interval, \
+		       s.last_run_started_at, s.last_run_status, s.next_start \
+		FROM timescaledb_information.jobs j \
+		LEFT JOIN timescaledb_information.job_stats s USING (job_id) \
+		WHERE j.proc_name IN ('policy_compression', 'policy_retention') \
+		ORDER BY j.hypertable_name, j.proc_name;"
+
+.PHONY: timescale-version
+timescale-version: ## Affiche la version TimescaleDB installée + version PG
+	@$(COMPOSE_EXEC) -T db psql -U $(DB_USER) -d $(DB_NAME) -c "\
+		SELECT extversion AS timescaledb, current_setting('server_version') AS postgres \
+		FROM pg_extension WHERE extname = 'timescaledb';"
+
+##@ Database - Django migrations + pg_dump (suite)
 
 .PHONY: db-reset
 db-reset: ## Drop + recreate DB + migrate (DANGER: perte totale)
@@ -379,7 +413,7 @@ status-check: ## Teste /api/public/status/ (agrégation Prometheus + Alertmanage
 
 .PHONY: seo-build
 seo-build: ## Type-check + build client (vérifie que les changements SEO compilent)
-	cd $(CLIENT_DIR) && $(PNPM) type-check && $(PNPM) build
+	cd $(CLIENT_DIR) && $(BUN) run type-check && $(BUN) run build
 
 .PHONY: seo-ssr-check
 seo-ssr-check: ## Curl les pages publiques + extrait meta/JSON-LD (dev server requis sur :3000)
@@ -408,9 +442,9 @@ clean: ## Arrête la stack. VOLUMES=1 supprime aussi les volumes (DANGER)
 	else $(COMPOSE_ALL) down --remove-orphans; fi
 
 .PHONY: clean-cache
-clean-cache: ## Vide caches Docker build + pip + pnpm
+clean-cache: ## Vide caches Docker build + pip + bun
 	docker builder prune -f
-	rm -rf $(CLIENT_DIR)/node_modules $(CLIENT_DIR)/.nuxt $(CLIENT_DIR)/.output .pip-cache .pnpm-store
+	rm -rf $(CLIENT_DIR)/node_modules $(CLIENT_DIR)/.nuxt $(CLIENT_DIR)/.output .pip-cache .bun-cache
 
 .PHONY: redis-reset
 redis-reset: ## Reset le volume Redis (corrige AOF corrompu)

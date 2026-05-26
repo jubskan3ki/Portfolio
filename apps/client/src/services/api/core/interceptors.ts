@@ -1,4 +1,4 @@
-import type { RequestInterceptor, ResponseInterceptor, ErrorInterceptor } from '@/types/services/api';
+import type { ErrorInterceptor, RequestInterceptor, ResponseInterceptor } from '@/types/services/api';
 
 export const interceptors = {
     request: [] as RequestInterceptor[],

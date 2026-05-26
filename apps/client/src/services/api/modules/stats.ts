@@ -1,8 +1,6 @@
 import { API_ENDPOINTS } from '@/config/api';
-
-import { httpClient, createKeys, createRealtimeQuery } from '../core';
-
 import type { DashboardOverview } from '@/types/api/stats';
+import { createKeys, createRealtimeQuery, httpClient } from '../core';
 
 export const statsKeys = {
     ...createKeys('stats'),

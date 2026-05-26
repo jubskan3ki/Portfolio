@@ -44,78 +44,82 @@ export function useStacksPage(options: UseStacksPageOptions) {
         return [...stacks].sort((a, b) => (Number(b.level) || 0) - (Number(a.level) || 0));
     });
 
-    const getCategoryCount = (categoryKey: string): number => {
-        if (categoryKey === 'all') {
-            return allStacks.value.length;
-        }
+    const categorizedStacks = computed(() => {
         const cats = extractCategories(categoriesData.value);
-        const cat = cats.find((c) => c.name.toLowerCase() === categoryKey);
-        if (!cat) {
-            return 0;
+        const keyByName = new Map<string, string>();
+        const keyById = new Map<string, string>();
+        for (const cat of cats) {
+            const key = cat.name.toLowerCase();
+            keyByName.set(cat.name, key);
+            keyById.set(String(cat.id), key);
         }
-        return allStacks.value.filter((s) => s.category === cat.name || s.category === String(cat.id)).length;
-    };
+
+        const byKey = new Map<string, Stack[]>();
+        for (const stack of allStacks.value) {
+            const raw = stack.category ?? '';
+            const key = keyByName.get(raw) ?? keyById.get(String(raw));
+            if (!key) {
+                continue;
+            }
+            const list = byKey.get(key);
+            if (list) {
+                list.push(stack);
+            } else {
+                byKey.set(key, [stack]);
+            }
+        }
+
+        return { cats, byKey };
+    });
 
     const availableTabs = computed(() => {
         if (allStacks.value.length === 0 && !stacksLoading.value) {
             return [];
         }
 
-        const cats = extractCategories(categoriesData.value);
-        const categoriesWithData = new Set<string>();
-
-        allStacks.value.forEach((stack) => {
-            const cat = cats.find((c) => c.name === stack.category || String(c.id) === stack.category);
-            if (cat) {
-                categoriesWithData.add(cat.name.toLowerCase());
-            }
-        });
+        const { cats, byKey } = categorizedStacks.value;
 
         const tabs = [
             {
                 key: 'all',
                 label: `Toutes (${allStacks.value.length})`,
-                icon: STACK_CATEGORY_ICONS['all'] || 'layers',
+                icon: STACK_CATEGORY_ICONS.all || 'layers',
             },
         ];
 
-        cats.forEach((cat) => {
+        for (const cat of cats) {
             const key = cat.name.toLowerCase();
-            if (categoriesWithData.has(key)) {
-                const count = getCategoryCount(key);
+            const list = byKey.get(key);
+            if (list && list.length > 0) {
                 const label = STACK_CATEGORY_LABELS[key] || cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
                 tabs.push({
                     key,
-                    label: `${label} (${count})`,
+                    label: `${label} (${list.length})`,
                     icon: STACK_CATEGORY_ICONS[key] || 'code',
                 });
             }
-        });
+        }
 
         return tabs;
     });
 
     const filteredStacks = computed(() => {
-        let stacks = allStacks.value;
-
         if (isSearchMode.value && searchQuery.value.trim()) {
             const query = searchQuery.value.toLowerCase().trim();
-            stacks = stacks.filter(
+            return allStacks.value.filter(
                 (s) =>
-                    s.name.toLowerCase().includes(query)
-                    || s.description?.toLowerCase().includes(query)
-                    || s.tags?.some((t) => t.toLowerCase().includes(query))
-                    || s.category?.toLowerCase().includes(query),
+                    s.name.toLowerCase().includes(query) ||
+                    s.description?.toLowerCase().includes(query) ||
+                    s.tags?.some((t) => t.toLowerCase().includes(query)) ||
+                    s.category?.toLowerCase().includes(query),
             );
-        } else if (activeCategory.value !== 'all') {
-            const cats = extractCategories(categoriesData.value);
-            const cat = cats.find((c) => c.name.toLowerCase() === activeCategory.value);
-            if (cat) {
-                stacks = stacks.filter((s) => s.category === cat.name || s.category === String(cat.id));
-            }
         }
 
-        return stacks;
+        if (activeCategory.value !== 'all') {
+            return categorizedStacks.value.byKey.get(activeCategory.value) ?? [];
+        }
+
+        return allStacks.value;
     });
 
     const showSections = computed(() => activeCategory.value === 'all' && !isSearchMode.value && !searchQuery.value);
@@ -137,24 +141,21 @@ export function useStacksPage(options: UseStacksPageOptions) {
             return [];
         }
 
-        const cats = extractCategories(categoriesData.value);
+        const { cats, byKey } = categorizedStacks.value;
         const sections: Array<{ key: string; label: string; icon: string; stacks: Stack[] }> = [];
 
-        cats.forEach((cat) => {
+        for (const cat of cats) {
             const key = cat.name.toLowerCase();
-            const categoryStacks = allStacks.value.filter(
-                (s) => s.category === cat.name || s.category === String(cat.id),
-            );
-
-            if (categoryStacks.length > 0) {
+            const list = byKey.get(key);
+            if (list && list.length > 0) {
                 sections.push({
                     key,
                     label: STACK_CATEGORY_LABELS[key] || cat.name,
                     icon: STACK_CATEGORY_ICONS[key] || 'code',
-                    stacks: categoryStacks,
+                    stacks: list,
                 });
             }
-        });
+        }
 
         return sections;
     });

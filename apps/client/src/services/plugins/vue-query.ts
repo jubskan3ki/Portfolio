@@ -1,18 +1,9 @@
-import {
-    VueQueryPlugin,
-    QueryClient,
-    MutationCache,
-    hydrate,
-    dehydrate,
-    type DehydratedState,
-    type VueQueryPluginOptions,
-} from '@tanstack/vue-query';
-
+import type { DehydratedState, VueQueryPluginOptions } from '@tanstack/vue-query';
+import { dehydrate, hydrate, MutationCache, QueryClient, VueQueryPlugin } from '@tanstack/vue-query';
+import type { Pinia } from 'pinia';
 import { setBaseUrl } from '@/config/api';
 import { isApiError } from '@/services/utils/errors/guards';
 import { useAlertStore } from '@/stores/alert';
-
-import type { Pinia } from 'pinia';
 
 export default defineNuxtPlugin((nuxtApp) => {
     // API base URL via runtime config, SSR-safe (apiBaseServer > public.apiBase)
@@ -59,11 +50,11 @@ export default defineNuxtPlugin((nuxtApp) => {
                 retry: import.meta.server
                     ? 0
                     : (failureCount, error) => {
-                        if (isApiError(error) && error.code === 'NETWORK_ERROR') {
-                            return false;
-                        }
-                        return failureCount < 2;
-                    },
+                          if (isApiError(error) && error.code === 'NETWORK_ERROR') {
+                              return false;
+                          }
+                          return failureCount < 2;
+                      },
                 retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
                 refetchOnWindowFocus: false,
                 refetchOnReconnect: true,
@@ -89,13 +80,7 @@ export default defineNuxtPlugin((nuxtApp) => {
                             return false;
                         }
                         const key = query.queryKey;
-                        const criticalPrefixes = [
-                            'stacks',
-                            'articles',
-                            'projects',
-                            'experiences',
-                            'site-settings',
-                        ];
+                        const criticalPrefixes = ['stacks', 'articles', 'projects', 'experiences', 'site-settings'];
                         return typeof key[0] === 'string' && criticalPrefixes.includes(key[0]);
                     },
                 });

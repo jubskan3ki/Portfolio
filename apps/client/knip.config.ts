@@ -3,7 +3,7 @@ import type { KnipConfig } from 'knip';
 const config: KnipConfig = {
     entry: [
         'nuxt.config.ts',
-        'eslint.config.mjs',
+        'stylelint.config.mjs',
         'playwright.config.ts',
         'vitest.config.ts',
         'app/**/*.ts',

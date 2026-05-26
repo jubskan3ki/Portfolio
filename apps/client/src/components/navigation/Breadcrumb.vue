@@ -21,11 +21,13 @@
 
                 <meta itemprop="position" :content="String(index + 1)" />
 
-                <span v-if="index < items.length - 1" class="breadcrumb__separator" aria-hidden="true">
-                    <slot name="separator">
-                        <span v-if="separator === 'dot'" class="breadcrumb__separator-dot"></span>
-                        <BaseIcon v-else :name="separatorIcon" :size="12" />
-                    </slot>
+                <!-- Separator rendered via CSS pseudo-element to avoid an inline SVG (saves ~3 DOM nodes per separator). -->
+                <span
+                    v-if="index < items.length - 1"
+                    :class="separatorClass"
+                    aria-hidden="true"
+                >
+                    <slot v-if="$slots.separator" name="separator"></slot>
                 </span>
             </li>
         </ol>
@@ -37,7 +39,7 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
-    import type { BreadcrumbProps, BreadcrumbSeparator } from '@/types/components/navigation';
+    import type { BreadcrumbProps } from '@/types/components/navigation';
 
     type Props = BreadcrumbProps;
 
@@ -49,14 +51,9 @@
 
     const breadcrumbClasses = computed(() => ['breadcrumb', `breadcrumb--${props.variant}`, props.customClass]);
 
-    const separatorIcon = computed((): string => {
-        const icons: Record<BreadcrumbSeparator, string> = {
-            chevron: 'chevron-right',
-            slash: 'slash',
-            dot: 'circle',
-            arrow: 'arrow-right',
-        };
-        return icons[props.separator ?? 'dot'];
+    const separatorClass = computed(() => {
+        const variant = props.separator ?? 'dot';
+        return ['breadcrumb__separator', `breadcrumb__separator--${variant}`];
     });
 </script>
 
@@ -141,23 +138,42 @@
         }
 
         &__separator {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             color: func.color-alpha(vars.$gray-light, 0.8);
             margin: 0 vars.$spacing-xxxs;
-        }
+            line-height: 1;
 
-        &__separator-dot {
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: linear-gradient(
-                135deg,
-                vars.$primary-color,
-                func.adjust-color-brightness(vars.$primary-color, 20%)
-            );
-            opacity: 0.6;
+            // Default character separators rendered via ::before — no SVG/path nodes.
+            &--chevron::before {
+                content: '\203A'; // ›
+                font-size: 1.1em;
+                line-height: 1;
+            }
+
+            &--slash::before {
+                content: '/';
+                line-height: 1;
+            }
+
+            &--arrow::before {
+                content: '\2192'; // →
+                line-height: 1;
+            }
+
+            &--dot::before {
+                content: '';
+                width: 4px;
+                height: 4px;
+                border-radius: 50%;
+                background: linear-gradient(
+                    135deg,
+                    vars.$primary-color,
+                    func.adjust-color-brightness(vars.$primary-color, 20%)
+                );
+                opacity: 0.6;
+            }
         }
 
         &__icon {

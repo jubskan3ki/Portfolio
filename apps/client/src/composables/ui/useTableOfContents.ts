@@ -1,10 +1,8 @@
+import type { Ref } from 'vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-
 import { slugify } from '@/services/utils/string';
-
 import type { TocItem } from '@/types/composables/ui';
 import type { ContentBlock } from '@/types/feature/blog';
-import type { Ref } from 'vue';
 
 export function useTableOfContents(blocks: Ref<ContentBlock[] | undefined>) {
     const activeId = ref('');

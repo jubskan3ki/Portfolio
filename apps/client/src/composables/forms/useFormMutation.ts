@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router';
 
 import { useAlert } from '@/composables/ui/useAlert';
 
-import type { UseFormStateReturn, UseFormMutationOptions } from '@/types/composables/forms';
+import type { UseFormMutationOptions, UseFormStateReturn } from '@/types/composables/forms';
 
 export function useFormMutation<TForm extends Record<string, unknown>, TPayload = unknown, TResult = unknown>(
     formState: UseFormStateReturn<TForm>,
@@ -22,8 +22,8 @@ export function useFormMutation<TForm extends Record<string, unknown>, TPayload 
                 }
             }
 
-            const message
-                = typeof options.successMessage === 'function' ? options.successMessage() : options.successMessage;
+            const message =
+                typeof options.successMessage === 'function' ? options.successMessage() : options.successMessage;
             showSuccess(message ?? 'Opération réussie');
             options.onSuccess?.(result);
 

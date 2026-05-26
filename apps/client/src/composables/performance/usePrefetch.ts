@@ -1,7 +1,6 @@
+import type { PrefetchOptions, UsePrefetchReturn } from '@/types/composables/performance';
 import { useHoverPrefetch } from './useHoverPrefetch';
 import { useIdlePrefetch } from './useIdlePrefetch';
-
-import type { PrefetchOptions, UsePrefetchReturn } from '@/types/composables/performance';
 
 export function usePrefetch<S extends PrefetchOptions['strategy']>(
     options: PrefetchOptions & { strategy: S },

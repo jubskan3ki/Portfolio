@@ -21,7 +21,7 @@ export function useExport(options: UseExportOptions = {}) {
             downloadFile(blob, filename);
         },
         onError: () => {
-            showError('Erreur lors de l\'export', 'Export');
+            showError("Erreur lors de l'export", 'Export');
         },
     });
 
@@ -52,7 +52,7 @@ export function useExport(options: UseExportOptions = {}) {
 
             options.onSuccess?.();
         } catch {
-            showError('Erreur lors de l\'export', 'Export');
+            showError("Erreur lors de l'export", 'Export');
         } finally {
             isExporting.value = false;
         }

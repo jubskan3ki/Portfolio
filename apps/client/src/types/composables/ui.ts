@@ -1,10 +1,10 @@
 // Types pour les composables ui/
 
-import type { LinkTarget, RouteObject } from '../components/base';
-import type { DateRange, SwiperProps } from '../components/ui';
-import type { Breakpoint, StorageKey } from '@/config/constants';
 import type { Chart, ChartData, ChartOptions, ChartType } from 'chart.js';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
+import type { Breakpoint, StorageKey } from '@/config/constants';
+import type { LinkTarget, RouteObject } from '../components/base';
+import type { DateRange, SwiperProps } from '../components/ui';
 
 // useClickOutside
 

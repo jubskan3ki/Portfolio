@@ -1,6 +1,5 @@
-export { httpClient, getBaseUrl, onAuthFailure } from './httpClient';
-export { httpClient as api } from './httpClient';
 export { CACHE_TIMES } from './cache';
+export { getBaseUrl, httpClient, httpClient as api, onAuthFailure } from './httpClient';
 export { createKeys } from './keys';
-export { createListQuery, createDetailQuery, createStaticQuery, createRealtimeQuery } from './query';
 export { createSubResourceMutations } from './mutation';
+export { createDetailQuery, createListQuery, createRealtimeQuery, createStaticQuery } from './query';

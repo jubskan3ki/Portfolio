@@ -1,11 +1,9 @@
-import { ref, computed, watch, onMounted, readonly } from 'vue';
-
+import { computed, onMounted, readonly, ref, watch } from 'vue';
+import type { Router } from 'vue-router';
 import { STORAGE_KEYS } from '@/config/constants';
 
-import { useResponsive } from './useResponsive';
-
 import type { UseSidebarOptions, UseSidebarReturn } from '@/types/composables/ui';
-import type { Router } from 'vue-router';
+import { useResponsive } from './useResponsive';
 
 // SSR-safe: useRoute() auto-import unavailable at module scope, fall back to router current route.
 const getRoute = () => (import.meta.client ? (useNuxtApp().$router as Router).currentRoute : ref({ path: '' }));

@@ -25,7 +25,7 @@ const legalLinks: LegalLink[] = [
         url: '/privacy',
     },
     {
-        label: 'Conditions d\'utilisation',
+        label: "Conditions d'utilisation",
         url: '/terms',
     },
 ];

@@ -1,5 +1,5 @@
-import type { ContactAvailabilityStatus } from '@/types/feature/contact';
 import type { ComputedRef, Ref } from 'vue';
+import type { ContactAvailabilityStatus } from '@/types/feature/contact';
 
 // useViewRecording
 

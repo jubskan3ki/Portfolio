@@ -80,7 +80,7 @@ export const ACTIVITY_TYPE_OPTIONS = [
 
 export const ACTIVITY_PERIOD_OPTIONS = [
     { value: 'all', label: 'Tout' },
-    { value: 'today', label: 'Aujourd\'hui' },
+    { value: 'today', label: "Aujourd'hui" },
     { value: 'week', label: 'Cette semaine' },
     { value: 'month', label: 'Ce mois' },
 ] as const;

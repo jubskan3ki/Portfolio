@@ -1,0 +1,120 @@
+{
+    "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+    "vcs": {
+        "enabled": false,
+        "clientKind": "git",
+        "useIgnoreFile": false
+    },
+    "files": {
+        "includes": [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "src/**/*.js",
+            "src/**/*.mjs",
+            "src/**/*.cjs",
+            "src/**/*.json",
+            "src/**/*.jsonc",
+            "app/**/*.ts",
+            "server/**/*.ts",
+            "tests/**/*.ts",
+            "tests/**/*.js",
+            "*.ts",
+            "*.mjs",
+            "*.js",
+            "*.json",
+            "!**/node_modules",
+            "!**/.nuxt",
+            "!**/.output",
+            "!**/dist",
+            "!**/coverage",
+            "!**/public",
+            "!**/test-results",
+            "!**/.lighthouseci",
+            "!**/*.min.js",
+            "!**/api.generated.ts"
+        ]
+    },
+    "formatter": {
+        "enabled": false,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 120,
+        "lineEnding": "lf"
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "jsxQuoteStyle": "double",
+            "trailingCommas": "all",
+            "semicolons": "always",
+            "arrowParentheses": "always",
+            "bracketSpacing": true,
+            "quoteProperties": "asNeeded"
+        }
+    },
+    "json": {
+        "formatter": {
+            "trailingCommas": "none"
+        },
+        "parser": {
+            "allowComments": true,
+            "allowTrailingCommas": true
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "style": {
+                "useConst": "error",
+                "useTemplate": "error",
+                "noUselessElse": "error",
+                "noParameterAssign": "error",
+                "noInferrableTypes": "error",
+                "noUnusedTemplateLiteral": "error",
+                "noNonNullAssertion": "warn",
+                "useImportType": "off",
+                "useNodejsImportProtocol": "off",
+                "useShorthandFunctionType": "off",
+                "useExponentiationOperator": "off"
+            },
+            "suspicious": {
+                "noExplicitAny": "warn",
+                "noConsole": { "level": "warn", "options": { "allow": ["warn", "error", "info"] } },
+                "noDebugger": "error",
+                "noDuplicateObjectKeys": "error",
+                "useIterableCallbackReturn": "off"
+            },
+            "complexity": {
+                "noUselessTernary": "error",
+                "useArrowFunction": "off",
+                "useOptionalChain": "off",
+                "useLiteralKeys": "off"
+            },
+            "correctness": {
+                "noUnusedVariables": "warn",
+                "useExhaustiveDependencies": "off"
+            },
+            "performance": {
+                "noAccumulatingSpread": "warn"
+            }
+        }
+    },
+    "assist": {
+        "actions": {
+            "source": {
+                "organizeImports": "off"
+            }
+        }
+    },
+    "overrides": [
+        {
+            "includes": ["*.config.{ts,mjs,js}", "nuxt.config.ts", "**/*.test.ts", "tests/**/*.ts"],
+            "linter": {
+                "rules": {
+                    "suspicious": { "noConsole": "off" }
+                }
+            }
+        }
+    ]
+}

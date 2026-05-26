@@ -144,9 +144,7 @@ export interface SessionItemProps {
     isRevoking?: boolean;
 }
 
-export interface SessionItemEmits {
-    (e: 'revoke', sessionId: string): void;
-}
+export type SessionItemEmits = (e: 'revoke', sessionId: string) => void;
 
 // AdminFormLayout
 

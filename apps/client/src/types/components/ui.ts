@@ -1,6 +1,6 @@
-import type { ColorVariant, RouteObject } from './base';
 import type { StatItem } from '../config/footer';
 import type { SearchMode } from '../config/search';
+import type { ColorVariant, RouteObject } from './base';
 
 type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 

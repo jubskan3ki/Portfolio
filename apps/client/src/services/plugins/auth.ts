@@ -1,7 +1,6 @@
+import type { Pinia } from 'pinia';
 import { onAuthFailure } from '@/services/api/core';
 import { useAuthStore } from '@/stores/auth';
-
-import type { Pinia } from 'pinia';
 
 export default defineNuxtPlugin((nuxtApp) => {
     if (!import.meta.client) {

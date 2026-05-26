@@ -474,6 +474,8 @@
         flex-direction: column;
         margin-bottom: vars.$spacing-md;
         width: 100%;
+        min-height: 48px;
+        contain: layout;
 
         @include mix.form-field-chrome;
 
@@ -655,6 +657,8 @@
         }
 
         @include mix.responsive(mobile) {
+            min-height: 44px;
+
             &__container {
                 min-height: 44px;
             }

@@ -1,15 +1,17 @@
 <template>
-    <component
-        :is="lucideComponent"
-        v-if="lucideComponent"
-        v-bind="$attrs"
-        :size="numericSize"
-        :stroke-width="strokeWidth"
+    <span
         :class="iconClasses"
         :style="iconStyle"
         :aria-label="ariaLabel || name"
         aria-hidden="true"
-    />
+    >
+        <component
+            :is="lucideComponent"
+            v-if="lucideComponent"
+            :size="numericSize"
+            :stroke-width="strokeWidth"
+        />
+    </span>
 </template>
 
 <script setup lang="ts">
@@ -114,6 +116,8 @@
 
     const iconStyle = computed<CSSProperties>(() => ({
         color: props.color || undefined,
+        width: `${numericSize.value}px`,
+        height: `${numericSize.value}px`,
     }));
 </script>
 

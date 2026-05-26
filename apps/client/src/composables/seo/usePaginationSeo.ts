@@ -1,8 +1,6 @@
 import { computed } from 'vue';
-
-import { SITE_CONFIG } from './useSeo';
-
 import type { PaginationSeoOptions } from '@/types/composables/seo';
+import { SITE_CONFIG } from './useSeo';
 
 export function usePaginationSeo({ basePath, currentPage, totalPages }: PaginationSeoOptions): void {
     const buildPageUrl = (page: number): string => {

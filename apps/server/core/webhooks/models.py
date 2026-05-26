@@ -229,12 +229,7 @@ class WebhookDelivery(models.Model):
             models.Index(fields=["status", "-created_at"]),
             models.Index(fields=["webhook", "-created_at"]),
             models.Index(fields=["event_type"]),
-        ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["webhook", "event_id"],
-                name="unique_webhook_event_id",
-            ),
+            models.Index(fields=["webhook", "event_id"], name="webhook_dedup_lookup_idx"),
         ]
 
     def __str__(self) -> str:

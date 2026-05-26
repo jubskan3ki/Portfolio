@@ -42,15 +42,11 @@ function toSettings(info: ContactInfo | null): SiteSettings {
 }
 
 export async function useSiteSettings(options: { lazy?: boolean } = {}) {
-    const result = useAsyncData(
-        SITE_SETTINGS_KEY,
-        () => contactApi.getInfo(),
-        {
-            lazy: options.lazy ?? false,
-            default: () => null,
-            transform: (info: ContactInfo | null) => toSettings(info),
-        },
-    );
+    const result = useAsyncData(SITE_SETTINGS_KEY, () => contactApi.getInfo(), {
+        lazy: options.lazy ?? false,
+        default: () => null,
+        transform: (info: ContactInfo | null) => toSettings(info),
+    });
 
     const { data, refresh, pending, error } = options.lazy ? result : await result;
 

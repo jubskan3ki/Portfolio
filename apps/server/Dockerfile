@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 ARG PYTHON_VERSION=3.14
 ARG VCS_REF=unknown
 ARG BUILD_DATE=unknown
@@ -18,10 +19,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 COPY requirements.in .
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir pip-tools wheel && \
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    pip install --upgrade pip && \
+    pip install pip-tools wheel && \
     pip-compile --quiet requirements.in -o requirements.txt && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install -r requirements.txt
 
 FROM python:${PYTHON_VERSION}-alpine
 ARG VCS_REF
@@ -38,7 +40,8 @@ RUN apk upgrade --no-cache --available && \
     libjpeg-turbo \
     curl \
     bash \
-    netcat-openbsd
+    netcat-openbsd \
+    tini
 
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -64,4 +67,5 @@ USER appuser
 
 EXPOSE 8000
 
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["python", "manage.py", "bootstrap"]

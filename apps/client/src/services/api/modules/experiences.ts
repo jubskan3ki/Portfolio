@@ -1,29 +1,27 @@
+import type { MaybeRef } from 'vue';
 import { computed, unref } from 'vue';
-
 import { API_ENDPOINTS } from '@/config/api';
-
-import {
-    httpClient,
-    createKeys,
-    createListQuery,
-    createDetailQuery,
-    createStaticQuery,
-    createSubResourceMutations,
-} from '../core';
 
 import type { ExperienceFilters, PaginatedResponse } from '@/types/api/common';
 import type {
     Experience,
-    ExperienceType,
+    ExperienceCreateData,
     ExperienceStats,
     ExperienceTimeline,
-    ExperienceCreateData,
-    ExperienceUpdateData,
+    ExperienceType,
     ExperienceTypeCreateData,
     ExperienceTypeUpdateData,
+    ExperienceUpdateData,
 } from '@/types/feature/experience';
 import type { QueryOptions } from '@/types/services/api';
-import type { MaybeRef } from 'vue';
+import {
+    createDetailQuery,
+    createKeys,
+    createListQuery,
+    createStaticQuery,
+    createSubResourceMutations,
+    httpClient,
+} from '../core';
 
 export const experienceKeys = {
     ...createKeys('experiences'),

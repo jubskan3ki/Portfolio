@@ -219,28 +219,38 @@
         useRecordArticleView,
     } from '@/services/api/modules/articles';
     import { stackKeys, stacksApi, useFeaturedStacks } from '@/services/api/modules/stacks';
+    import { extractErrorStatus } from '@/services/utils/errors';
     import { normalizeContent } from '@/services/utils/contentParser';
 
     import type { BreadcrumbSeoItem } from '@/types/composables/seo';
-
-    const router = useRouter();
 
     const { slug } = useDetailSlug(ROUTES.BLOG.path);
 
     // SSR-prefetch detail + sidebars (kills CLS on first paint).
     const queryClient = useQueryClient();
-    await useAsyncData(
+    const { error: detailError } = await useAsyncData(
         () => `article-${unref(slug)}`,
         async () => {
             const slugValue = unref(slug);
             if (!slugValue) {
-                return true;
+                return null;
             }
-            await Promise.all([
-                queryClient.prefetchQuery({
-                    queryKey: articleKeys.detail(slugValue),
-                    queryFn: () => articlesApi.getBySlug(slugValue),
-                }),
+            let article;
+            try {
+                // Direct API call (not fetchQuery) so the original ApiError
+                // status is preserved instead of being wrapped by vue-query.
+                article = await articlesApi.getBySlug(slugValue);
+                queryClient.setQueryData(articleKeys.detail(slugValue), article);
+            } catch (err) {
+                const status = extractErrorStatus(err);
+                throw createError({
+                    statusCode: status === 404 ? 404 : 500,
+                    statusMessage: status === 404 ? 'Article introuvable' : 'Erreur de chargement',
+                    fatal: true,
+                });
+            }
+            // Sidebars best-effort: empty state is acceptable.
+            await Promise.allSettled([
                 queryClient.prefetchQuery({
                     queryKey: articleKeys.popular(3),
                     queryFn: () => articlesApi.getPopular(3),
@@ -254,12 +264,18 @@
                     queryFn: () => stacksApi.getFeatured(100),
                 }),
             ]);
-            return true;
+            return article;
         },
         { watch: [slug] },
     );
 
-    const { data: currentArticle, isLoading, isError, error } = useArticle(slug);
+    if (detailError.value) {
+        // Re-throw at setup level so Nuxt renders error.vue with the correct
+        // status code. useAsyncData stores the error but does not propagate it.
+        throw detailError.value;
+    }
+
+    const { data: currentArticle, isLoading, error } = useArticle(slug);
     const { data: popularArticles } = usePopularArticles(3);
     const { data: relatedArticles } = useRelatedArticles(slug);
 
@@ -330,12 +346,6 @@
             { immediate: true },
         );
     }
-
-    watch(isError, (hasError) => {
-        if (hasError) {
-            router.push(ROUTES.BLOG.path);
-        }
-    });
 
     const articleRef = ref<HTMLElement | null>(null);
     const { progress, isVisible: progressVisible } = useReadingProgress(articleRef);

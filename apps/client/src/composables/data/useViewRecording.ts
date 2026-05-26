@@ -1,7 +1,6 @@
-import { ref, watch, toValue } from 'vue';
-
-import type { UseViewRecordingReturn } from '@/types/composables/data';
 import type { MaybeRefOrGetter } from 'vue';
+import { ref, toValue, watch } from 'vue';
+import type { UseViewRecordingReturn } from '@/types/composables/data';
 
 export function useViewRecording(
     data: MaybeRefOrGetter<{ slug: string } | null | undefined>,

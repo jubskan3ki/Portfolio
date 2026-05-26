@@ -247,16 +247,16 @@ export function useProjectSeo(project: ProjectDetail) {
         }),
         ...(project.links?.github
             ? [
-                {
-                    '@type': 'SoftwareSourceCode' as const,
-                    '@id': `${projectUrl}/#code`,
-                    name: project.title,
-                    codeRepository: project.links.github,
-                    programmingLanguage: project.technologies,
-                    author: AUTHOR_REF,
-                    inLanguage: 'fr-FR',
-                },
-            ]
+                  {
+                      '@type': 'SoftwareSourceCode' as const,
+                      '@id': `${projectUrl}/#code`,
+                      name: project.title,
+                      codeRepository: project.links.github,
+                      programmingLanguage: project.technologies,
+                      author: AUTHOR_REF,
+                      inLanguage: 'fr-FR',
+                  },
+              ]
             : []),
         {
             '@type': 'CreativeWork' as const,
@@ -495,8 +495,8 @@ export function useContactSeo() {
             '@id': `${contactUrl}/#jobposting`,
             title: 'Développeur Fullstack Nuxt/Django | ouvert CDI & Freelance',
             description:
-                'Juba Ait-Adda, développeur fullstack & DevOps à Paris, est ouvert aux missions freelance et aux opportunités CDI. '
-                + 'Stack Nuxt 3, Vue 3, TypeScript, Django, Python, Docker. Remote-first, déplacements Île-de-France.',
+                'Juba Ait-Adda, développeur fullstack & DevOps à Paris, est ouvert aux missions freelance et aux opportunités CDI. ' +
+                'Stack Nuxt 3, Vue 3, TypeScript, Django, Python, Docker. Remote-first, déplacements Île-de-France.',
             datePosted: today(),
             validThrough: inSixMonths(),
             employmentType: ['FULL_TIME', 'CONTRACTOR', 'PART_TIME'],
@@ -546,7 +546,7 @@ export function useBlogSeo() {
     useSeo({
         title: 'Blog | Dev web, DevOps & bonnes pratiques',
         description:
-            'Articles techniques sur Nuxt, Vue, Django, Docker, CI/CD et DevOps par Juba Ait-Adda, dev fullstack à Paris. Retours d\'expérience terrain.',
+            "Articles techniques sur Nuxt, Vue, Django, Docker, CI/CD et DevOps par Juba Ait-Adda, dev fullstack à Paris. Retours d'expérience terrain.",
         keywords: ['blog', 'articles', 'nuxt', 'vue', 'django', 'docker', 'devops', 'ci/cd'],
         url: '/blog',
     });

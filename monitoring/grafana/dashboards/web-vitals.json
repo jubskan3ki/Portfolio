@@ -1,0 +1,393 @@
+{
+    "annotations": { "list": [] },
+    "description": "Core Web Vitals (LCP, CLS, INP, FCP, TTFB) ingested from the Nuxt client. p75 / p95 / mean over a 5min sliding window plus rating distribution.",
+    "editable": false,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "liveNow": false,
+    "panels": [
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "orange", "value": 2500 },
+                            { "color": "red", "value": 4000 }
+                        ]
+                    },
+                    "unit": "ms"
+                }
+            },
+            "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+            "id": 10,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+            },
+            "targets": [
+                { "expr": "web_vitals_p75{metric=\"LCP\"}", "legendFormat": "p75", "refId": "A" }
+            ],
+            "title": "LCP p75 (5m)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "orange", "value": 0.1 },
+                            { "color": "red", "value": 0.25 }
+                        ]
+                    },
+                    "unit": "none",
+                    "decimals": 3
+                }
+            },
+            "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+            "id": 11,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+            },
+            "targets": [
+                { "expr": "web_vitals_p75{metric=\"CLS\"}", "legendFormat": "p75", "refId": "A" }
+            ],
+            "title": "CLS p75 (5m)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "orange", "value": 200 },
+                            { "color": "red", "value": 500 }
+                        ]
+                    },
+                    "unit": "ms"
+                }
+            },
+            "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+            "id": 12,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+            },
+            "targets": [
+                { "expr": "web_vitals_p75{metric=\"INP\"}", "legendFormat": "p75", "refId": "A" }
+            ],
+            "title": "INP p75 (5m)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "orange", "value": 1800 },
+                            { "color": "red", "value": 3000 }
+                        ]
+                    },
+                    "unit": "ms"
+                }
+            },
+            "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+            "id": 13,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+            },
+            "targets": [
+                { "expr": "web_vitals_p75{metric=\"FCP\"}", "legendFormat": "p75", "refId": "A" }
+            ],
+            "title": "FCP p75 (5m)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "orange", "value": 800 },
+                            { "color": "red", "value": 1800 }
+                        ]
+                    },
+                    "unit": "ms"
+                }
+            },
+            "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+            "id": 14,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+            },
+            "targets": [
+                { "expr": "web_vitals_p75{metric=\"TTFB\"}", "legendFormat": "p75", "refId": "A" }
+            ],
+            "title": "TTFB p75 (5m)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "blue", "value": null }]
+                    },
+                    "unit": "short"
+                }
+            },
+            "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+            "id": 15,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "textMode": "auto"
+            },
+            "targets": [
+                {
+                    "expr": "sum(web_vitals_events)",
+                    "legendFormat": "events",
+                    "refId": "A"
+                }
+            ],
+            "title": "Events received (5m, all metrics)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+                    "unit": "ms"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+            "id": 20,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "web_vitals_p75{metric=\"LCP\"}",
+                    "legendFormat": "p75",
+                    "refId": "A"
+                },
+                {
+                    "expr": "web_vitals_p95{metric=\"LCP\"}",
+                    "legendFormat": "p95",
+                    "refId": "B"
+                },
+                {
+                    "expr": "web_vitals_mean{metric=\"LCP\"}",
+                    "legendFormat": "mean",
+                    "refId": "C"
+                }
+            ],
+            "title": "LCP | p75 / p95 / mean",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+                    "unit": "ms"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+            "id": 21,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "web_vitals_p75{metric=\"INP\"}",
+                    "legendFormat": "p75",
+                    "refId": "A"
+                },
+                {
+                    "expr": "web_vitals_p95{metric=\"INP\"}",
+                    "legendFormat": "p95",
+                    "refId": "B"
+                },
+                {
+                    "expr": "web_vitals_mean{metric=\"INP\"}",
+                    "legendFormat": "mean",
+                    "refId": "C"
+                }
+            ],
+            "title": "INP | p75 / p95 / mean",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+                    "unit": "none",
+                    "decimals": 3
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+            "id": 22,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "web_vitals_p75{metric=\"CLS\"}",
+                    "legendFormat": "p75",
+                    "refId": "A"
+                },
+                {
+                    "expr": "web_vitals_p95{metric=\"CLS\"}",
+                    "legendFormat": "p95",
+                    "refId": "B"
+                },
+                {
+                    "expr": "web_vitals_mean{metric=\"CLS\"}",
+                    "legendFormat": "mean",
+                    "refId": "C"
+                }
+            ],
+            "title": "CLS | p75 / p95 / mean",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 },
+                    "unit": "ms"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+            "id": 23,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "web_vitals_p75{metric=\"FCP\"}",
+                    "legendFormat": "FCP p75",
+                    "refId": "A"
+                },
+                {
+                    "expr": "web_vitals_p95{metric=\"FCP\"}",
+                    "legendFormat": "FCP p95",
+                    "refId": "B"
+                },
+                {
+                    "expr": "web_vitals_p75{metric=\"TTFB\"}",
+                    "legendFormat": "TTFB p75",
+                    "refId": "C"
+                },
+                {
+                    "expr": "web_vitals_p95{metric=\"TTFB\"}",
+                    "legendFormat": "TTFB p95",
+                    "refId": "D"
+                }
+            ],
+            "title": "FCP / TTFB | p75 + p95",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "drawStyle": "bars",
+                        "fillOpacity": 80,
+                        "lineWidth": 1,
+                        "stacking": { "mode": "normal" }
+                    },
+                    "unit": "short"
+                },
+                "overrides": [
+                    {
+                        "matcher": { "id": "byRegexp", "options": ".*good.*" },
+                        "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }]
+                    },
+                    {
+                        "matcher": { "id": "byRegexp", "options": ".*needs-improvement.*" },
+                        "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }]
+                    },
+                    {
+                        "matcher": { "id": "byRegexp", "options": ".*poor.*" },
+                        "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+                    }
+                ]
+            },
+            "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+            "id": 30,
+            "options": {
+                "legend": { "displayMode": "table", "placement": "right" },
+                "tooltip": { "mode": "multi" }
+            },
+            "targets": [
+                {
+                    "expr": "sum by (metric, rating) (web_vitals_events)",
+                    "legendFormat": "{{metric}} | {{rating}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Rating distribution by metric (5m window, stacked)",
+            "type": "timeseries"
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 39,
+    "tags": ["web-vitals", "frontend", "portfolio"],
+    "templating": { "list": [] },
+    "time": { "from": "now-3h", "to": "now" },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Web Vitals | Core (LCP / CLS / INP / FCP / TTFB)",
+    "uid": "web-vitals",
+    "version": 1,
+    "weekStart": ""
+}

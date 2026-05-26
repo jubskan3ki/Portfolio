@@ -14,7 +14,13 @@ export default defineNitroPlugin(async () => {
         const { NodeSDK } = await import('@opentelemetry/sdk-node');
         const { getNodeAutoInstrumentations } = await import('@opentelemetry/auto-instrumentations-node');
         const { OTLPTraceExporter } = await import('@opentelemetry/exporter-trace-otlp-http');
+        // Cross-version shim between @opentelemetry/resources v1 (Resource ctor)
+        // and v2 (resourceFromAttributes fn); the constant export names in
+        // semantic-conventions also moved. `any` is the honest escape hatch for
+        // a runtime feature-detection bridge between API generations.
+        // biome-ignore lint/suspicious/noExplicitAny: cross-version OTel shim, runtime-detected
         const resourcesMod: any = await import('@opentelemetry/resources');
+        // biome-ignore lint/suspicious/noExplicitAny: cross-version OTel shim, runtime-detected
         const semconv: any = await import('@opentelemetry/semantic-conventions');
 
         const attributes = {

@@ -1,17 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import { computed, watch, toValue } from 'vue';
+import { computed, toValue, watch } from 'vue';
 
 import { PAGINATION, TIMEOUTS } from '@/config/constants';
 import { CACHE_TIMES } from '@/services/api/core/cache';
 import { normalizePaginatedResponse } from '@/services/utils/responseNormalizer';
-
+import type { ListParams, UseDataListOptions, UseDataListReturn } from '@/types/composables';
 import { useBulkDelete } from './useBulkDelete';
 import { usePagination } from './usePagination';
 import { useSearch } from './useSearch';
 import { useSelection } from './useSelection';
 import { useSorting } from './useSorting';
-
-import type { UseDataListOptions, UseDataListReturn, ListParams } from '@/types/composables';
 
 export function useDataList<
     T extends { id: number | string },
@@ -105,13 +103,13 @@ export function useDataList<
 
     const { deletion, bulkDeletion } = deleteFn
         ? useBulkDelete<T>({
-            deleteFn,
-            onRefresh: refresh,
-            onDeleteSuccess,
-            onDeleteError,
-            onBulkDeleteSuccess,
-            onBulkDeleteError,
-        })
+              deleteFn,
+              onRefresh: refresh,
+              onDeleteSuccess,
+              onDeleteError,
+              onBulkDeleteSuccess,
+              onBulkDeleteError,
+          })
         : { deletion: undefined, bulkDeletion: undefined };
 
     watch(items, () => {

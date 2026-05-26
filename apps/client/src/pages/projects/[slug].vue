@@ -157,7 +157,12 @@
                 </DetailPageLayout>
             </Main>
 
-            <Section v-if="relatedProjects.length > 0" variant="light" size="default">
+            <LazySection
+                v-if="relatedProjects.length > 0"
+                variant="light"
+                size="default"
+                hydrate-on-visible
+            >
                 <template #header>
                     <h2 class="project-page__section-title">
                         <span class="project-page__section-icon">
@@ -168,11 +173,16 @@
                     <p class="project-page__section-subtitle">Découvrez d'autres réalisations</p>
                 </template>
                 <div class="related-grid">
-                    <ProjectCard v-for="project in relatedProjects" :key="project.id" :project="project" />
+                    <LazyProjectCard
+                        v-for="project in relatedProjects"
+                        :key="project.id"
+                        :project="project"
+                        hydrate-on-visible
+                    />
                 </div>
-            </Section>
+            </LazySection>
 
-            <CTA
+            <LazyCTA
                 key="project-detail-cta"
                 title="Vous avez un projet similaire en tête ?"
                 description="Discutons de la façon dont je peux vous aider à concrétiser votre vision."
@@ -186,6 +196,7 @@
                     label: 'Voir tous les projets',
                     to: ROUTES.PROJECTS.path,
                 }"
+                hydrate-on-visible
             />
         </template>
     </div>
@@ -198,15 +209,12 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseImage from '@/components/base/BaseImage.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
-    import ProjectCard from '@/components/feature/projects/ProjectCard.vue';
     import StackLogo from '@/components/feature/stacks/StackLogo.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
     import Main from '@/components/layouts/Main.vue';
-    import Section from '@/components/layouts/Section.vue';
     import LoadingState from '@/components/loaders/LoadingState.vue';
     import Breadcrumb from '@/components/navigation/Breadcrumb.vue';
-    import CTA from '@/components/ui/CTA.vue';
     import Hero from '@/components/ui/Hero.vue';
     import ShareCard from '@/components/ui/ShareCard.vue';
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
@@ -223,41 +231,56 @@
         useRecordProjectView,
     } from '@/services/api/modules/projects';
     import { useFeaturedStacks } from '@/services/api/modules/stacks';
+    import { extractErrorStatus } from '@/services/utils/errors';
     import { resolveMediaUrl } from '@/services/utils/helpers';
 
     import type { BreadcrumbSeoItem } from '@/types/composables/seo';
 
     const NuxtLink = resolveComponent('NuxtLink');
 
-    const router = useRouter();
-
     const { slug } = useDetailSlug(ROUTES.PROJECTS.path);
 
-    // shrink the SSR payload and unblock LCP on the text paragraph.
     const queryClient = useQueryClient();
-    await useAsyncData(
+    const { error: detailError } = await useAsyncData(
         () => `project-${unref(slug)}`,
         async () => {
             const slugValue = unref(slug);
             if (!slugValue) {
-                return true;
+                return null;
             }
-            await Promise.all([
-                queryClient.prefetchQuery({
-                    queryKey: projectKeys.detail(slugValue),
-                    queryFn: () => projectsApi.getBySlug(slugValue),
-                }),
+            let project;
+            try {
+                // Direct API call (not fetchQuery) so the original ApiError
+                // status is preserved instead of being wrapped by vue-query.
+                project = await projectsApi.getBySlug(slugValue);
+                queryClient.setQueryData(projectKeys.detail(slugValue), project);
+            } catch (err) {
+                const status = extractErrorStatus(err);
+                throw createError({
+                    statusCode: status === 404 ? 404 : 500,
+                    statusMessage: status === 404 ? 'Projet introuvable' : 'Erreur de chargement',
+                    fatal: true,
+                });
+            }
+            // Sidebars best-effort: empty state is acceptable.
+            await Promise.allSettled([
                 queryClient.prefetchQuery({
                     queryKey: projectKeys.featured(),
                     queryFn: () => projectsApi.getFeatured(4),
                 }),
             ]);
-            return true;
+            return project;
         },
         { watch: [slug] },
     );
 
-    const { data: currentProject, isLoading, isError, error } = useProject(slug);
+    if (detailError.value) {
+        // Re-throw at setup level so Nuxt renders error.vue with the correct
+        // status code. useAsyncData stores the error but does not propagate it.
+        throw detailError.value;
+    }
+
+    const { data: currentProject, isLoading, error } = useProject(slug);
     const { data: featuredProjects } = useFeaturedProjects(4);
     const { data: allStacks } = useFeaturedStacks(100, {
         enabled: computed(() => import.meta.client),
@@ -305,12 +328,6 @@
         }
         crumbs.push({ label: project.title, to: `/projects/${project.slug}` });
         return crumbs;
-    });
-
-    watch(isError, (hasError) => {
-        if (hasError) {
-            router.push(ROUTES.PROJECTS);
-        }
     });
 
     const errorMessage = computed(() => {
@@ -459,7 +476,7 @@
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-xl;
         box-shadow: 0 4px 24px fn.color-alpha(vars.$black, 0.06);
-        min-height: 120px;
+        min-height: 200px;
         contain: layout paint;
 
         @include mix.responsive(mobile) {
@@ -495,8 +512,6 @@
         display: flex;
         flex-direction: column;
         gap: 0;
-        animation: features-fade-in 0.35s ease-out both;
-        will-change: opacity, transform;
     }
 
     .feature-item {
@@ -581,18 +596,6 @@
             transition:
                 opacity 0.2s ease,
                 transform 0.2s ease;
-        }
-    }
-
-    @keyframes features-fade-in {
-        from {
-            opacity: 0;
-            transform: translateY(6px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
         }
     }
 

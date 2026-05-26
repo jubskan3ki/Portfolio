@@ -45,7 +45,10 @@
         </div>
 
         <div v-if="canScroll" class="stack-slider__progress">
-            <div class="stack-slider__progress-fill" :style="{ width: `${scrollProgress}%` }"></div>
+            <div
+                class="stack-slider__progress-fill"
+                :style="{ transform: `scaleX(${scrollProgress / 100})` }"
+            ></div>
         </div>
     </section>
 </template>
@@ -84,7 +87,9 @@
 
     useDragScroll(sliderRef);
 
-    const updateScrollState = () => {
+    let rafId: number | null = null;
+    const readScrollState = () => {
+        rafId = null;
         const el = sliderRef.value;
         if (!el) {
             return;
@@ -93,9 +98,26 @@
         const { scrollLeft, scrollWidth, clientWidth } = el;
         const maxScroll = scrollWidth - clientWidth;
 
-        canScrollLeft.value = scrollLeft > 5;
-        canScrollRight.value = scrollLeft < maxScroll - 5;
-        scrollProgress.value = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 0;
+        const nextLeft = scrollLeft > 5;
+        const nextRight = scrollLeft < maxScroll - 5;
+        const nextProgress = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 0;
+
+        if (nextLeft !== canScrollLeft.value) {
+            canScrollLeft.value = nextLeft;
+        }
+        if (nextRight !== canScrollRight.value) {
+            canScrollRight.value = nextRight;
+        }
+        if (nextProgress !== scrollProgress.value) {
+            scrollProgress.value = nextProgress;
+        }
+    };
+
+    const updateScrollState = () => {
+        if (rafId !== null) {
+            return;
+        }
+        rafId = requestAnimationFrame(readScrollState);
     };
 
     const scrollToPrev = () => {
@@ -127,19 +149,32 @@
     let resizeObserver: ResizeObserver | null = null;
 
     onMounted(() => {
-        nextTick(() => {
-            updateScrollState();
-        });
+        const scheduleFirst = (cb: () => void) => {
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+                (window as unknown as { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
+                    .requestIdleCallback(cb, { timeout: 200 });
+            } else {
+                setTimeout(cb, 0);
+            }
+        };
 
-        if (sliderRef.value) {
-            resizeObserver = new ResizeObserver(() => {
+        scheduleFirst(() => {
+            nextTick(() => {
                 updateScrollState();
+
+                if (sliderRef.value) {
+                    resizeObserver = new ResizeObserver(updateScrollState);
+                    resizeObserver.observe(sliderRef.value);
+                }
             });
-            resizeObserver.observe(sliderRef.value);
-        }
+        });
     });
 
     onUnmounted(() => {
+        if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
         if (resizeObserver) {
             resizeObserver.disconnect();
         }
@@ -154,6 +189,9 @@
     .stack-slider {
         position: relative;
         margin-bottom: vars.$spacing-xxl;
+
+        content-visibility: auto;
+        contain-intrinsic-size: auto 480px;
 
         &:last-child {
             margin-bottom: 0;
@@ -296,9 +334,13 @@
         top: 0;
         left: 0;
         height: 100%;
+        width: 100%;
         background: linear-gradient(90deg, vars.$primary-color, vars.$primary-dark);
         border-radius: vars.$border-radius-full;
-        transition: width 0.15s ease-out;
+        transform-origin: left center;
+        transform: scaleX(0);
+        transition: transform 0.15s ease-out;
+        will-change: transform;
     }
 
     // Animation

@@ -1,19 +1,20 @@
 // Types for Feedback components
-import type { ButtonVariant } from './base';
+
 import type { Alert } from '@/types/stores/alert';
+import type { ButtonVariant } from './base';
 
 export type { Alert, ButtonVariant };
 
 // Common types
 export type FeedbackType = 'info' | 'success' | 'warning' | 'error';
 
-export type FeedbackPosition
-    = | 'top-right'
-        | 'top-left'
-        | 'top-center'
-        | 'bottom-right'
-        | 'bottom-left'
-        | 'bottom-center';
+export type FeedbackPosition =
+    | 'top-right'
+    | 'top-left'
+    | 'top-center'
+    | 'bottom-right'
+    | 'bottom-left'
+    | 'bottom-center';
 
 export interface AlertItemProps {
     alert: Alert;
@@ -85,13 +86,7 @@ export interface QueryErrorBoundaryProps {
     refetch?: () => void;
 }
 
-export type QueryErrorBoundaryErrorType
-    = | 'not-found'
-        | 'forbidden'
-        | 'unauthorized'
-        | 'server'
-        | 'client'
-        | 'network';
+export type QueryErrorBoundaryErrorType = 'not-found' | 'forbidden' | 'unauthorized' | 'server' | 'client' | 'network';
 
 export interface QueryErrorBoundaryErrorConfig {
     icon: string;
@@ -103,13 +98,7 @@ export interface QueryErrorBoundaryErrorConfig {
 export type ErrorBoundaryVariant = 'default' | 'compact' | 'inline';
 export type ErrorBoundarySize = 'sm' | 'md' | 'lg';
 
-export type ErrorBoundaryErrorType
-    = | 'type'
-        | 'reference'
-        | 'syntax'
-        | 'network'
-        | 'timeout'
-        | 'unknown';
+export type ErrorBoundaryErrorType = 'type' | 'reference' | 'syntax' | 'network' | 'timeout' | 'unknown';
 
 export interface ErrorBoundaryProps {
     title?: string;

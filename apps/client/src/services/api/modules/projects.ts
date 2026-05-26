@@ -1,36 +1,34 @@
-import { useInfiniteQuery, useQueryClient, useMutation, keepPreviousData } from '@tanstack/vue-query';
+import { keepPreviousData, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import type { MaybeRef } from 'vue';
 import { computed, unref } from 'vue';
-
 import { API_ENDPOINTS } from '@/config/api';
-
-import {
-    httpClient,
-    createKeys,
-    CACHE_TIMES,
-    createDetailQuery,
-    createStaticQuery,
-    createSubResourceMutations,
-} from '../core';
 
 import type { ProjectFilters } from '@/types/api/common';
 import type {
     Project,
-    ProjectDetail,
-    ProjectCategory,
-    ProjectStatus,
-    ProjectsResponse,
     ProjectCategoriesResponse,
-    ProjectStatusesResponse,
-    ProjectStats,
-    ProjectCreateData,
-    ProjectUpdateData,
+    ProjectCategory,
     ProjectCategoryCreateData,
     ProjectCategoryUpdateData,
+    ProjectCreateData,
+    ProjectDetail,
+    ProjectStats,
+    ProjectStatus,
     ProjectStatusCreateData,
+    ProjectStatusesResponse,
     ProjectStatusUpdateData,
+    ProjectsResponse,
+    ProjectUpdateData,
 } from '@/types/feature/project';
 import type { QueryOptions } from '@/types/services/api';
-import type { MaybeRef } from 'vue';
+import {
+    CACHE_TIMES,
+    createDetailQuery,
+    createKeys,
+    createStaticQuery,
+    createSubResourceMutations,
+    httpClient,
+} from '../core';
 
 export const projectKeys = {
     ...createKeys('projects'),

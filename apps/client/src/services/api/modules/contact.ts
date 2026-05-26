@@ -3,24 +3,22 @@ import { useMutation, useQueryClient } from '@tanstack/vue-query';
 import { useAlert } from '@/composables/ui/useAlert';
 import { API_ENDPOINTS } from '@/config/api';
 import { parseError } from '@/services/utils/errors';
-
-import { httpClient, createKeys, createStaticQuery } from '../core';
-
 import type {
-    FAQ,
     ContactForm,
     ContactInfo,
-    ContactResponse,
-    ContactStats,
-    ContactMessage,
-    ContactMessagesFilters,
-    FAQCreateData,
-    FAQUpdateData,
     ContactInfoCreateData,
     ContactInfoUpdateData,
+    ContactMessage,
+    ContactMessagesFilters,
     ContactMessageUpdateData,
+    ContactResponse,
+    ContactStats,
+    FAQ,
+    FAQCreateData,
+    FAQUpdateData,
 } from '@/types/feature/contact';
 import type { QueryOptions } from '@/types/services/api';
+import { createKeys, createStaticQuery, httpClient } from '../core';
 
 export const contactKeys = {
     ...createKeys('contact'),
@@ -96,9 +94,7 @@ export function useContactInfoUpsert() {
     const { success, error: showError } = useAlert();
 
     return useMutation({
-        mutationFn: (
-            payload: ContactInfoCreateData & { id?: number },
-        ): Promise<ContactInfo> => {
+        mutationFn: (payload: ContactInfoCreateData & { id?: number }): Promise<ContactInfo> => {
             if (payload.id) {
                 const { id, ...data } = payload;
                 return contactApi.updateInfo(id, data);

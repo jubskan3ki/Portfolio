@@ -1,5 +1,5 @@
-import type { ArticleBase, CategoryBase, TagBase } from './admin';
 import type { PaginationData } from '@/types/api/common';
+import type { ArticleBase, CategoryBase, TagBase } from './admin';
 
 export type ContentBlockType = 'paragraph' | 'heading' | 'blockquote' | 'image' | 'code' | 'list' | 'table';
 
@@ -45,21 +45,21 @@ export interface TableBlock {
     rows: string[][];
 }
 
-export type ContentBlock
-    = | ParagraphBlock
-        | HeadingBlock
-        | BlockquoteBlock
-        | ImageBlock
-        | CodeBlock
-        | ListBlock
-        | TableBlock;
+export type ContentBlock =
+    | ParagraphBlock
+    | HeadingBlock
+    | BlockquoteBlock
+    | ImageBlock
+    | CodeBlock
+    | ListBlock
+    | TableBlock;
 
-export type InlineNode
-    = | { type: 'text'; content: string }
-        | { type: 'strong'; children: InlineNode[] }
-        | { type: 'em'; children: InlineNode[] }
-        | { type: 'code'; content: string }
-        | { type: 'link'; url: string; children: InlineNode[] };
+export type InlineNode =
+    | { type: 'text'; content: string }
+    | { type: 'strong'; children: InlineNode[] }
+    | { type: 'em'; children: InlineNode[] }
+    | { type: 'code'; content: string }
+    | { type: 'link'; url: string; children: InlineNode[] };
 
 export interface ArticlesResponse {
     data: Article[];

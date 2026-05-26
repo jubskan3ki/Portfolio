@@ -1,4 +1,4 @@
-import { brotliCompressSync, gzipSync, constants } from 'node:zlib';
+import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 
 const MIN_COMPRESS_SIZE = 1024;
 
@@ -33,13 +33,13 @@ export default defineEventHandler((event) => {
     const acceptEncoding = event.node.req.headers['accept-encoding'];
     if (!acceptEncoding) return;
 
-    const encoding
-        = typeof acceptEncoding === 'string'
+    const encoding =
+        typeof acceptEncoding === 'string'
             ? acceptEncoding.includes('br')
                 ? 'br'
                 : acceptEncoding.includes('gzip')
-                    ? 'gzip'
-                    : ''
+                  ? 'gzip'
+                  : ''
             : '';
 
     if (!encoding) return;
@@ -52,13 +52,13 @@ export default defineEventHandler((event) => {
     const originalEnd = res.end;
     const chunks: Buffer[] = [];
 
-    res.write = function (chunk: WritableChunk): boolean {
+    res.write = ((chunk: WritableChunk): boolean => {
         const buf = toBuffer(chunk);
         if (buf) chunks.push(buf);
         return true;
-    } as typeof res.write;
+    }) as typeof res.write;
 
-    res.end = function (chunk?: WritableChunk): typeof res {
+    res.end = ((chunk?: WritableChunk): typeof res => {
         if (chunk && typeof chunk !== 'function') {
             const buf = toBuffer(chunk);
             if (buf) chunks.push(buf);
@@ -86,8 +86,8 @@ export default defineEventHandler((event) => {
         }
 
         try {
-            const compressed
-                = encoding === 'br'
+            const compressed =
+                encoding === 'br'
                     ? brotliCompressSync(body, { params: { [constants.BROTLI_PARAM_QUALITY]: 4 } })
                     : gzipSync(body, { level: 6 });
 
@@ -103,5 +103,5 @@ export default defineEventHandler((event) => {
 
         res.setHeader('content-length', body.length);
         return res.end(body);
-    } as typeof res.end;
+    }) as typeof res.end;
 });

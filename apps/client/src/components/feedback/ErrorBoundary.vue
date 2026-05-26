@@ -160,6 +160,21 @@
     const showActions = computed(() => props.showRetry || (props.showHomeButton && props.variant !== 'inline'));
 
     onErrorCaptured((err: Error) => {
+        // Let Nuxt fatal errors (createError) bubble up to error.vue.
+        const nuxtError = err as Error & {
+            statusCode?: number;
+            fatal?: boolean;
+            cause?: { statusCode?: number; fatal?: boolean };
+        };
+        if (
+            nuxtError.fatal
+            || typeof nuxtError.statusCode === 'number'
+            || nuxtError.cause?.fatal
+            || typeof nuxtError.cause?.statusCode === 'number'
+        ) {
+            return undefined;
+        }
+
         error.value = err;
         props.onError?.(err);
         emit('error', err);

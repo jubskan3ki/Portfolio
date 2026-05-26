@@ -251,28 +251,35 @@
         useStackProjects,
         useStackArticles,
     } from '@/services/api/modules/stacks';
+    import { extractErrorStatus } from '@/services/utils/errors';
 
     import type { BreadcrumbSeoItem } from '@/types/composables/seo';
     import type { StackResourceType } from '@/types/feature/stacks';
-
-    const router = useRouter();
 
     const { slug } = useDetailSlug(ROUTES.STACKS.path);
 
     // SSR-prefetch detail + sidebars (kills CLS on first paint).
     const queryClient = useQueryClient();
-    await useAsyncData(
+    const { error: detailError } = await useAsyncData(
         () => `stack-${unref(slug)}`,
         async () => {
             const slugValue = unref(slug);
             if (!slugValue) {
-                return true;
+                return null;
             }
-            await Promise.all([
-                queryClient.prefetchQuery({
-                    queryKey: stackKeys.detail(slugValue),
-                    queryFn: () => stacksApi.getBySlug(slugValue),
-                }),
+            let stack;
+            try {
+                stack = await stacksApi.getBySlug(slugValue);
+                queryClient.setQueryData(stackKeys.detail(slugValue), stack);
+            } catch (err) {
+                const status = extractErrorStatus(err);
+                throw createError({
+                    statusCode: status === 404 ? 404 : 500,
+                    statusMessage: status === 404 ? 'Stack introuvable' : 'Erreur de chargement',
+                    fatal: true,
+                });
+            }
+            await Promise.allSettled([
                 queryClient.prefetchQuery({
                     queryKey: stackKeys.featured(5),
                     queryFn: () => stacksApi.getFeatured(5),
@@ -286,12 +293,18 @@
                     queryFn: () => stacksApi.getArticles(slugValue),
                 }),
             ]);
-            return true;
+            return stack;
         },
         { watch: [slug] },
     );
 
-    const { data: currentStack, isLoading, isError, error } = useStack(slug);
+    if (detailError.value) {
+        // Re-throw at setup level so Nuxt renders error.vue with the correct
+        // status code. useAsyncData stores the error but does not propagate it.
+        throw detailError.value;
+    }
+
+    const { data: currentStack, isLoading, error } = useStack(slug);
     const { data: featuredStacks } = useFeaturedStacks(5);
     const { data: stackProjects } = useStackProjects(slug);
     const { data: stackArticles } = useStackArticles(slug);
@@ -317,12 +330,6 @@
         },
         { immediate: true },
     );
-
-    watch(isError, (hasError) => {
-        if (hasError) {
-            router.push(ROUTES.STACKS);
-        }
-    });
 
     const errorMessage = computed(() => {
         if (!error.value) {

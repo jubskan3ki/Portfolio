@@ -39,8 +39,8 @@ export interface UsePrefetchIdleReturn {
 export type UsePrefetchReturn<S extends PrefetchOptions['strategy']> = S extends 'hover'
     ? UsePrefetchHoverReturn
     : S extends 'idle'
-        ? UsePrefetchIdleReturn
-        : never;
+      ? UsePrefetchIdleReturn
+      : never;
 
 // useViewportTrigger
 

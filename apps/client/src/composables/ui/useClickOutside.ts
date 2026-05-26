@@ -1,4 +1,5 @@
-import { ref, watch, onScopeDispose, getCurrentScope, type Ref } from 'vue';
+import type { Ref } from 'vue';
+import { getCurrentScope, onScopeDispose, ref, watch } from 'vue';
 
 import type { ClickOutsideHandler, UseClickOutsideOptions, UseClickOutsideReturn } from '@/types/composables/ui';
 

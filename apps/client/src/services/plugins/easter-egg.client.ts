@@ -21,9 +21,5 @@ export default defineNuxtPlugin(() => {
         subStyle,
         linkStyle,
     );
-    console.info(
-        '%cRecrutement / freelance : %ccontact@aitaddajuba.fr',
-        subStyle,
-        linkStyle,
-    );
+    console.info('%cRecrutement / freelance : %ccontact@aitaddajuba.fr', subStyle, linkStyle);
 });

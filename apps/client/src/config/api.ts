@@ -25,10 +25,10 @@ export function setBaseUrl(url: string): void {
 export function getBaseUrl(): string {
     if (import.meta.server) {
         return (
-            _configuredBase
-            || process.env.NUXT_API_BASE_SERVER
-            || process.env.NUXT_PUBLIC_API_BASE
-            || HTTP_CONFIG.DEFAULT_API_URL
+            _configuredBase ||
+            process.env.NUXT_API_BASE_SERVER ||
+            process.env.NUXT_PUBLIC_API_BASE ||
+            HTTP_CONFIG.DEFAULT_API_URL
         );
     }
     if (_resolvedClientBase !== null) {

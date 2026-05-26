@@ -11,14 +11,15 @@ from __future__ import annotations
 
 import logging
 import os
-import socket
 import subprocess
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
+from django.db import OperationalError, connections
 
 logger = logging.getLogger("bootstrap")
 
@@ -50,6 +51,9 @@ RUNTIME_DIRS = (
 
 DB_WAIT_MAX_ATTEMPTS = 30
 DB_WAIT_INTERVAL_SECONDS = 2
+
+MIGRATE_MAX_ATTEMPTS = 5
+MIGRATE_RETRY_INTERVAL_SECONDS = 3
 
 MINIMAL_OPENAPI = '{"swagger":"2.0","info":{"title":"Portfolio API","version":"v1"},"paths":{},"definitions":{}}'
 
@@ -100,31 +104,68 @@ class Command(BaseCommand):
         self._log("OK", "runtime directories ready")
 
     def _wait_for_db(self) -> None:
-        host = os.environ["DB_HOST"]
-        port = int(os.environ["DB_PORT"])
-        for attempt in range(1, DB_WAIT_MAX_ATTEMPTS + 1):
-            try:
-                with socket.create_connection((host, port), timeout=2):
-                    self._log("OK", f"database reachable at {host}:{port}")
+        host, port = self._direct_db_target()
+        with self._direct_db_connection():
+            for attempt in range(1, DB_WAIT_MAX_ATTEMPTS + 1):
+                try:
+                    connections["default"].close()
+                    with connections["default"].cursor() as cursor:
+                        cursor.execute("SELECT 1")
+                        cursor.fetchone()
+                    self._log("OK", f"database queryable at {host}:{port}")
                     return
-            except OSError:
-                self._log("INFO", f"DB not ready ({attempt}/{DB_WAIT_MAX_ATTEMPTS})")
-                time.sleep(DB_WAIT_INTERVAL_SECONDS)
+                except OperationalError as err:
+                    self._log("INFO", f"DB not ready ({attempt}/{DB_WAIT_MAX_ATTEMPTS}): {err.__class__.__name__}")
+                    time.sleep(DB_WAIT_INTERVAL_SECONDS)
         raise CommandError(f"database {host}:{port} unreachable after {DB_WAIT_MAX_ATTEMPTS} attempts")
 
     def _run_migrations(self) -> None:
         self._log("INFO", "running migrations")
-        try:
-            call_command("migrate", no_input=True, verbosity=1)
-        except Exception as err:
-            self._log("WARN", f"migrate failed ({err}) | retrying per-app")
-            for app in ("contenttypes", "auth", "admin", "sessions", "user"):
+        with self._direct_db_connection():
+            last_err: Exception | None = None
+            for attempt in range(1, MIGRATE_MAX_ATTEMPTS + 1):
                 try:
-                    call_command("migrate", app, no_input=True, verbosity=0)
-                except Exception as sub_err:
-                    self._log("WARN", f"migrate {app} failed: {sub_err}")
-            call_command("migrate", no_input=True, verbosity=1)
-        self._log("OK", "migrations done")
+                    call_command("migrate", no_input=True, verbosity=1)
+                    self._log("OK", "migrations done")
+                    return
+                except OperationalError as err:
+                    last_err = err
+                    self._log("WARN", f"migrate failed ({attempt}/{MIGRATE_MAX_ATTEMPTS}): {err}")
+                    connections["default"].close()
+                    time.sleep(MIGRATE_RETRY_INTERVAL_SECONDS)
+        raise CommandError(f"migrations failed after {MIGRATE_MAX_ATTEMPTS} attempts: {last_err}")
+
+    @staticmethod
+    def _direct_db_target() -> tuple[str, str]:
+        """Direct (bypass pgbouncer) DB endpoint for bootstrap-time work."""
+        host = os.environ.get("DB_HOST_DIRECT") or os.environ["DB_HOST"]
+        port = os.environ.get("DB_PORT_DIRECT") or os.environ["DB_PORT"]
+        return host, port
+
+    @contextmanager
+    def _direct_db_connection(self):
+        """Temporarily route Django's default DB connection to the direct endpoint.
+
+        PgBouncer in transaction pooling is fragile for DDL/migrations and adds a
+        DNS dependency on the pooler resolving the upstream. Bootstrap-time work
+        runs better against the database directly.
+        """
+        host, port = self._direct_db_target()
+        cfg = connections.databases["default"]
+        original_host, original_port = cfg["HOST"], cfg["PORT"]
+        if (host, port) == (original_host, original_port):
+            yield
+            return
+        connections["default"].close()
+        cfg["HOST"] = host
+        cfg["PORT"] = port
+        self._log("INFO", f"bootstrap using direct DB connection {host}:{port}")
+        try:
+            yield
+        finally:
+            connections["default"].close()
+            cfg["HOST"] = original_host
+            cfg["PORT"] = original_port
 
     def _create_admin(self) -> None:
         script = SCRIPTS_DIR / "create_admin.py"

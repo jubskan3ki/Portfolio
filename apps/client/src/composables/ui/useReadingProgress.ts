@@ -1,7 +1,6 @@
 import { useEventListener } from '@vueuse/core';
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-
 import type { Ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 export function useReadingProgress(containerRef: Ref<HTMLElement | null>) {
     const progress = ref(0);
@@ -49,11 +48,15 @@ export function useReadingProgress(containerRef: Ref<HTMLElement | null>) {
         const el = containerRef.value;
         if (!el) {
             // Defer until ref is set.
-            watch(containerRef, (val) => {
-                if (val) {
-                    bind(val);
-                }
-            }, { once: true });
+            watch(
+                containerRef,
+                (val) => {
+                    if (val) {
+                        bind(val);
+                    }
+                },
+                { once: true },
+            );
             return;
         }
         bind(el);

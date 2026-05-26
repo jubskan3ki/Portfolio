@@ -1,7 +1,7 @@
-import { ref, onUnmounted, nextTick, type Ref } from 'vue';
-
+import type { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType } from 'chart.js';
+import type { Ref } from 'vue';
+import { nextTick, onUnmounted, ref } from 'vue';
 import type { UseChartLifecycleOptions, UseChartLifecycleReturn } from '@/types/composables/ui';
-import type { Chart, ChartConfiguration, ChartType, ChartData, ChartOptions } from 'chart.js';
 
 const waitForCanvas = (
     canvasRef: Ref<HTMLCanvasElement | null>,

@@ -29,7 +29,7 @@ export default defineConfig({
     webServer: process.env.E2E_SKIP_WEBSERVER
         ? undefined
         : {
-              command: 'pnpm preview:lhci',
+              command: 'bun run preview:lhci',
               url: BASE_URL,
               reuseExistingServer: REUSE_SERVER,
               timeout: 120_000,

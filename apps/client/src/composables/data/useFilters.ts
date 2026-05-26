@@ -1,5 +1,6 @@
 import { useDebounceFn } from '@vueuse/core';
-import { ref, computed, watch, type Ref } from 'vue';
+import type { Ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { TIMEOUTS } from '@/config/constants';

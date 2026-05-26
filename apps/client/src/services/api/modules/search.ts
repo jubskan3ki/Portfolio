@@ -1,8 +1,6 @@
+import type { MaybeRef } from 'vue';
 import { computed, unref } from 'vue';
-
 import { API_ENDPOINTS } from '@/config/api';
-
-import { httpClient, createKeys, createListQuery } from '../core';
 
 import type {
     UnifiedSearchItem,
@@ -10,7 +8,7 @@ import type {
     UnifiedSearchResponse,
     UnifiedSearchType,
 } from '@/types/api/search';
-import type { MaybeRef } from 'vue';
+import { createKeys, createListQuery, httpClient } from '../core';
 
 export type { UnifiedSearchItem, UnifiedSearchParams, UnifiedSearchResponse, UnifiedSearchType };
 

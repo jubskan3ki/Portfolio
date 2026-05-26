@@ -11,8 +11,8 @@ function decodeStr(s: string): string {
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
-        .replace(/&#0?39;/g, '\'')
-        .replace(/&#x27;/g, '\'')
+        .replace(/&#0?39;/g, "'")
+        .replace(/&#x27;/g, "'")
         .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)))
         .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
 }

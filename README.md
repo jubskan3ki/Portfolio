@@ -36,7 +36,7 @@ monitoring/      Grafana, Prometheus, Loki, Promtail
 ## Prerequis
 
 - [Docker](https://www.docker.com/products/docker-desktop) et [Docker Compose](https://docs.docker.com/compose/)
-- [pnpm](https://pnpm.io/) (dev local frontend uniquement)
+- [Bun](https://bun.sh/) (dev local frontend uniquement)
 
 ## Installation
 
@@ -74,13 +74,20 @@ docker-compose logs -f backend
 ### Frontend (`apps/client/`)
 
 ```bash
-pnpm install
-pnpm dev              # Serveur de dev
-pnpm build            # Build production
-pnpm check            # Lint + Stylelint + TypeCheck
-pnpm lint:fix         # Fix automatique ESLint
-pnpm lighthouse:ci    # Audit Lighthouse
+bun install
+bun run dev              # Serveur de dev
+bun run build            # Build production
+bun run check            # Biome lint + Oxlint + Stylelint + type-check + tests
+bun run lint             # Biome lint (TS/JS) + Oxlint (TS/JS/.vue script)
+bun run lint:fix         # Biome + Oxlint avec --fix
+bun run lighthouse:ci    # Audit Lighthouse
 ```
+
+**Outillage** :
+
+- [Biome](https://biomejs.dev/) lint TS/JS/JSON (config : `biome.json`). Formatter Biome désactivé : pas de reformat opiniâtre.
+- [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) en complément : lint TS/JS et les `<script>` des `.vue`, plugins `vue`, `vitest`, `import`, `promise`, `typescript`, `oxc` (config : `.oxlintrc.json`). Ne lint pas les `<template>`/`<style>` Vue (limitation Rust-based linters).
+- Stylelint pour les `<style>` Vue et les `.scss` (config : `stylelint.config.mjs`).
 
 ### Backend (`apps/server/`)
 

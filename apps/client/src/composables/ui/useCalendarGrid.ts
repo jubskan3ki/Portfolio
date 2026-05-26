@@ -52,7 +52,7 @@ export function useCalendarGrid(options: UseCalendarGridOptions) {
             let isInRange = false;
             let isRangeStart = false;
             let isRangeEnd = false;
-            if (start && end && end.isAfter(start)) {
+            if (start && end?.isAfter(start)) {
                 isInRange = date.isAfter(start, 'day') && date.isBefore(end, 'day');
                 isRangeStart = date.isSame(start, 'day');
                 isRangeEnd = date.isSame(end, 'day');

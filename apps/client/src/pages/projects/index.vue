@@ -57,7 +57,9 @@
                         <div class="project-skeleton__image"></div>
                         <div class="project-skeleton__body">
                             <div class="project-skeleton__title"></div>
+                            <div class="project-skeleton__title project-skeleton__title--short"></div>
                             <div class="project-skeleton__text"></div>
+                            <div class="project-skeleton__text project-skeleton__text--short"></div>
                             <div class="project-skeleton__tags">
                                 <span></span>
                                 <span></span>
@@ -103,7 +105,9 @@
                             <div class="project-skeleton__image"></div>
                             <div class="project-skeleton__body">
                                 <div class="project-skeleton__title"></div>
+                                <div class="project-skeleton__title project-skeleton__title--short"></div>
                                 <div class="project-skeleton__text"></div>
+                                <div class="project-skeleton__text project-skeleton__text--short"></div>
                                 <div class="project-skeleton__tags">
                                     <span></span>
                                     <span></span>
@@ -333,19 +337,31 @@
 
         &__select {
             width: 250px;
+            min-height: 48px;
             margin-bottom: 0;
+            contain: layout;
 
             @include mix.responsive(tablet) {
                 width: 100%;
+            }
+
+            @include mix.responsive(mobile) {
+                min-height: 44px;
             }
         }
 
         &__multiselect {
             width: 250px;
+            min-height: 48px;
             margin-bottom: 0;
+            contain: layout;
 
             @include mix.responsive(tablet) {
                 width: 100%;
+            }
+
+            @include mix.responsive(mobile) {
+                min-height: 44px;
             }
         }
 
@@ -412,36 +428,58 @@
     }
 
     .project-skeleton {
+        display: flex;
+        flex-direction: column;
         background: vars.$white;
         border: 1px solid vars.$border-color;
         border-radius: vars.$border-radius-lg;
         overflow: hidden;
+        contain: layout paint;
 
         &__image {
+            position: relative;
             aspect-ratio: 16 / 10;
-            background: linear-gradient(90deg, vars.$gray-light 25%, vars.$white-dark 50%, vars.$gray-light 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+            background: vars.$gray-light;
+            overflow: hidden;
+            animation: skeleton-pulse 1.5s ease-in-out infinite;
+            will-change: opacity;
         }
 
         &__body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             padding: vars.$spacing-md;
         }
 
         &__title {
-            width: 75%;
+            width: 80%;
             height: 18px;
-            margin-bottom: vars.$spacing-xs;
+            margin-bottom: vars.$spacing-xxs;
             background: vars.$gray-light;
             border-radius: vars.$border-radius-sm;
+            animation: skeleton-pulse 1.5s ease-in-out infinite;
+            will-change: opacity;
+
+            &--short {
+                width: 55%;
+                margin-bottom: vars.$spacing-xs;
+            }
         }
 
         &__text {
             width: 100%;
             height: 14px;
-            margin-bottom: vars.$spacing-sm;
+            margin-bottom: vars.$spacing-xxs;
             background: vars.$gray-light;
             border-radius: vars.$border-radius-sm;
+            animation: skeleton-pulse 1.5s ease-in-out infinite;
+            will-change: opacity;
+
+            &--short {
+                width: 70%;
+                margin-bottom: vars.$spacing-sm;
+            }
         }
 
         &__tags {
@@ -460,20 +498,23 @@
         &__footer {
             height: 16px;
             width: 60px;
-            margin-top: vars.$spacing-sm;
+            margin-top: auto;
             padding-top: vars.$spacing-sm;
             border-top: 1px solid vars.$border-color;
-            background: vars.$gray-light;
+            background-clip: content-box;
+            background-color: vars.$gray-light;
             border-radius: vars.$border-radius-sm;
         }
     }
 
-    @keyframes shimmer {
-        0% {
-            background-position: 200% 0;
-        }
+    @keyframes skeleton-pulse {
+        0%,
         100% {
-            background-position: -200% 0;
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.55;
         }
     }
 

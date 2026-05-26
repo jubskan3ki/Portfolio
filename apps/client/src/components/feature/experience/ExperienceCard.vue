@@ -16,7 +16,7 @@
             </figure>
 
             <div class="exp-card__info">
-                <h4 class="exp-card__title">{{ title }}</h4>
+                <h3 class="exp-card__title">{{ title }}</h3>
                 <p class="exp-card__company">
                     <span>{{ company }}</span>
                     <span v-if="location" class="exp-card__location">
@@ -223,9 +223,18 @@
 
         &__title {
             margin: 0 0 vars.$spacing-xxs;
+            font-size: vars.$font-size-xxl;
             font-weight: vars.$font-weight-semibold;
             color: vars.$text-primary;
             line-height: 1.3;
+
+            @include mix.responsive(tablet) {
+                font-size: vars.$font-size-xl;
+            }
+
+            @include mix.responsive(mobile) {
+                font-size: vars.$font-size-lg;
+            }
         }
 
         &__company {

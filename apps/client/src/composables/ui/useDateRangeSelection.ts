@@ -31,8 +31,8 @@ export function useDateRangeSelection({ model, availableDates, minDays, maxDays 
         if (tempEndDate.value && !tempStartDate.value) {
             const end = dayjs(tempEndDate.value);
             return (
-                d.isAfter(end.subtract(minDays.value, 'day'), 'day')
-                || d.isBefore(end.subtract(maxDays.value, 'day'), 'day')
+                d.isAfter(end.subtract(minDays.value, 'day'), 'day') ||
+                d.isBefore(end.subtract(maxDays.value, 'day'), 'day')
             );
         }
         return false;
@@ -95,9 +95,9 @@ export function useDateRangeSelection({ model, availableDates, minDays, maxDays 
         }
         const lastDate = sortedAvailableDates.value[sortedAvailableDates.value.length - 1];
         const targetStartDate = dayjs(lastDate).subtract(minDays.value, 'day').format('YYYY-MM-DD');
-        const startDate
-            = sortedAvailableDates.value.find((date) => dayjs(date).isSameOrAfter(dayjs(targetStartDate), 'day'))
-                || sortedAvailableDates.value[0];
+        const startDate =
+            sortedAvailableDates.value.find((date) => dayjs(date).isSameOrAfter(dayjs(targetStartDate), 'day')) ||
+            sortedAvailableDates.value[0];
         const endDate = lastDate;
         if (!startDate || !endDate) {
             return;

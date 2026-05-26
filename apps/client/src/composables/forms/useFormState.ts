@@ -1,4 +1,5 @@
-import { reactive, ref, computed, shallowRef, type UnwrapRef } from 'vue';
+import type { UnwrapRef } from 'vue';
+import { computed, reactive, ref, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useAlert } from '@/composables/ui/useAlert';

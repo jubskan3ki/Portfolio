@@ -1,6 +1,6 @@
 import type { RouterConfig } from '@nuxt/schema';
 
-export default <RouterConfig>{
+export default (<RouterConfig>{
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition;
@@ -16,4 +16,4 @@ export default <RouterConfig>{
 
         return { left: 0, top: 0 };
     },
-};
+});

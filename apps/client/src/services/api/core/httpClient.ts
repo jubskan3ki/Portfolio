@@ -1,6 +1,7 @@
 import { getBaseUrl } from '@/config/api';
 
 import { createApiError } from './errors';
+import type { HttpMethod } from './fetch';
 import {
     buildUrl,
     fetchApi,
@@ -9,8 +10,6 @@ import {
     handleResponse,
     runRequestInterceptors,
 } from './fetch';
-
-import type { HttpMethod } from './fetch';
 
 export const httpClient = {
     get<T>(endpoint: string, params?: Record<string, unknown>): Promise<T> {
@@ -97,5 +96,5 @@ export const httpClient = {
     },
 };
 
-export { getBaseUrl };
 export { onAuthFailure } from './token';
+export { getBaseUrl };

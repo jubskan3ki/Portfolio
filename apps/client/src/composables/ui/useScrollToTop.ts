@@ -1,4 +1,4 @@
-import { ref, readonly, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, readonly, ref } from 'vue';
 
 import { SCROLL_THRESHOLDS } from '@/config/constants';
 

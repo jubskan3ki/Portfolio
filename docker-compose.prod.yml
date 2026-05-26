@@ -1,5 +1,22 @@
 # Prod overlay: pinned IMAGE_TAG pulled from registry, Traefik-internal routing, strict resource caps.
 # Usage: `make up ENV=prod` (zero-downtime via `make deploy-zd ENV=prod`).
+#
+# Note: `deploy.resources.limits` is enforced when running under Docker Swarm.
+# Under plain `docker compose up`, only `cpus`/`mem_limit` (top-level) are enforced —
+# the `deploy.*` block becomes advisory. Kept here as the canonical declaration.
+x-restart-policy: &restart-policy
+    condition: on-failure
+    delay: 5s
+    max_attempts: 3
+    window: 60s
+
+x-update-config: &update-config
+    parallelism: 1
+    order: start-first
+    failure_action: rollback
+    delay: 10s
+    monitor: 30s
+
 services:
     backend:
         image: ${CI_REGISTRY_IMAGE:-portfolio}/backend:${IMAGE_TAG:-latest}
@@ -9,9 +26,13 @@ services:
         deploy:
             resources:
                 limits:
+                    cpus: "1.5"
                     memory: 768M
                 reservations:
+                    cpus: "0.25"
                     memory: 256M
+            restart_policy: *restart-policy
+            update_config: *update-config
 
     celery:
         image: ${CI_REGISTRY_IMAGE:-portfolio}/backend:${IMAGE_TAG:-latest}
@@ -20,15 +41,23 @@ services:
         deploy:
             resources:
                 limits:
+                    cpus: "1.0"
                     memory: 512M
                 reservations:
+                    cpus: "0.15"
                     memory: 128M
+            restart_policy: *restart-policy
+            update_config: *update-config
 
     frontend:
         image: ${CI_REGISTRY_IMAGE:-portfolio}/frontend:${IMAGE_TAG:-latest}
         deploy:
             resources:
                 limits:
+                    cpus: "1.0"
                     memory: 512M
                 reservations:
+                    cpus: "0.15"
                     memory: 128M
+            restart_policy: *restart-policy
+            update_config: *update-config

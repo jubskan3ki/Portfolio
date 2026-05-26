@@ -1,36 +1,34 @@
+import type { MaybeRef } from 'vue';
 import { computed, unref } from 'vue';
-
 import { API_ENDPOINTS } from '@/config/api';
 
-import {
-    httpClient,
-    createKeys,
-    createListQuery,
-    createDetailQuery,
-    createStaticQuery,
-    createSubResourceMutations,
-} from '../core';
-
-import type { StackFilters, PaginatedResponse } from '@/types/api/common';
+import type { PaginatedResponse, StackFilters } from '@/types/api/common';
 import type { Article } from '@/types/feature/blog';
 import type { Project } from '@/types/feature/project';
 import type {
-    Stack,
-    StackDetail,
-    StackCategory,
-    StackResource,
     RelatedStack,
-    StackStats,
-    StackCreateData,
-    StackUpdateData,
+    Stack,
+    StackCategory,
     StackCategoryCreateData,
     StackCategoryUpdateData,
+    StackCreateData,
+    StackDetail,
+    StackResource,
     StackResourceCreateData,
-    StackResourceUpdateData,
     StackResourceFilters,
+    StackResourceUpdateData,
+    StackStats,
+    StackUpdateData,
 } from '@/types/feature/stacks';
 import type { QueryOptions } from '@/types/services/api';
-import type { MaybeRef } from 'vue';
+import {
+    createDetailQuery,
+    createKeys,
+    createListQuery,
+    createStaticQuery,
+    createSubResourceMutations,
+    httpClient,
+} from '../core';
 
 export const stackKeys = {
     ...createKeys('stacks'),

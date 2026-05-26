@@ -15,8 +15,8 @@ function getOrCreateAnnouncer(): HTMLElement | null {
         globalAnnouncer.setAttribute('aria-live', 'polite');
         globalAnnouncer.setAttribute('aria-atomic', 'true');
         globalAnnouncer.className = 'sr-only';
-        globalAnnouncer.style.cssText
-            = 'position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;';
+        globalAnnouncer.style.cssText =
+            'position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;';
         document.body.appendChild(globalAnnouncer);
     }
 
@@ -61,8 +61,8 @@ export function useAnnounce() {
     };
 
     const announceLoaded = (resource: string, count?: number) => {
-        const countText
-            = count !== undefined ? `, ${count} résultat${count > 1 ? 's' : ''} trouvé${count > 1 ? 's' : ''}` : '';
+        const countText =
+            count !== undefined ? `, ${count} résultat${count > 1 ? 's' : ''} trouvé${count > 1 ? 's' : ''}` : '';
         announce(`${resource} chargé${countText}`, 'polite');
     };
 

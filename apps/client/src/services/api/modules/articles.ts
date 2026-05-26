@@ -1,33 +1,31 @@
-import { useQueryClient, useMutation } from '@tanstack/vue-query';
+import { useMutation, useQueryClient } from '@tanstack/vue-query';
+import type { MaybeRef } from 'vue';
 import { computed, unref } from 'vue';
-
 import { API_ENDPOINTS } from '@/config/api';
-
-import {
-    httpClient,
-    createKeys,
-    createListQuery,
-    createDetailQuery,
-    createStaticQuery,
-    createSubResourceMutations,
-} from '../core';
 
 import type { ArticleFilters } from '@/types/api/common';
 import type {
     Article,
-    ArticleDetail,
-    Category,
-    Tag,
-    ArticlesResponse,
     ArticleCreateData,
+    ArticleDetail,
+    ArticlesResponse,
     ArticleUpdateData,
+    Category,
     CategoryCreateData,
     CategoryUpdateData,
+    Tag,
     TagCreateData,
     TagUpdateData,
 } from '@/types/feature/blog';
 import type { QueryOptions } from '@/types/services/api';
-import type { MaybeRef } from 'vue';
+import {
+    createDetailQuery,
+    createKeys,
+    createListQuery,
+    createStaticQuery,
+    createSubResourceMutations,
+    httpClient,
+} from '../core';
 
 export const articleKeys = {
     ...createKeys('articles'),

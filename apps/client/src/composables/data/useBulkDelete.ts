@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/vue-query';
-import { ref, computed } from 'vue';
-
+import type { Ref } from 'vue';
+import { computed, ref } from 'vue';
 import type {
     BulkDeleteResult,
     UseBulkDeleteConfirmationReturn,
@@ -8,7 +8,6 @@ import type {
     UseBulkDeleteReturn,
     UseDeleteConfirmationReturn,
 } from '@/types/composables';
-import type { Ref } from 'vue';
 
 export function useBulkDelete<T extends { id: number | string }>(
     options: UseBulkDeleteOptions<T>,

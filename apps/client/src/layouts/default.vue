@@ -50,10 +50,12 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import ErrorBoundary from '@/components/feedback/ErrorBoundary.vue';
     import Header from '@/components/layouts/Header.vue';
-    import { usePrefetch } from '@/composables/performance/usePrefetch';
+    // Direct import (instead of the strategy-dispatching usePrefetch facade) keeps the hover
+    // prefetch path — which pulls in @tanstack/vue-query — out of the entry chunk.
+    import { useIdlePrefetch } from '@/composables/performance/useIdlePrefetch';
     import { useUiStore } from '@/stores/ui';
 
-    usePrefetch({ strategy: 'idle' });
+    useIdlePrefetch();
 
     const uiStore = useUiStore();
     const showScrollTop = ref(false);

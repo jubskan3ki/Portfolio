@@ -1,5 +1,7 @@
 <template>
     <div class="error-page" ref="pageRef">
+        <a href="#error-main" class="skip-link">Aller au contenu principal</a>
+
         <!-- Background dots -->
         <div class="error-page__dots"></div>
 
@@ -26,7 +28,7 @@
         <div class="error-page__orb error-page__orb--2"></div>
 
         <!-- Content -->
-        <main class="error-page__content">
+        <main id="error-main" class="error-page__content">
             <div class="error-page__card">
                 <!-- Error code with bug -->
                 <div class="error-page__hero">
@@ -37,7 +39,7 @@
                 </div>
 
                 <!-- Title -->
-                <h2 class="error-page__title">{{ errorTitle }}</h2>
+                <h1 class="error-page__title">{{ errorTitle }}</h1>
 
                 <!-- Message -->
                 <p class="error-page__message">{{ errorMessage }}</p>
@@ -216,6 +218,24 @@
     @use '@/styles/abstracts/variables' as vars;
     @use '@/styles/abstracts/mixins' as mix;
     @use '@/styles/abstracts/functions' as fn;
+
+    .skip-link {
+        position: absolute;
+        top: -100%;
+        left: vars.$spacing-md;
+        z-index: vars.$z-index-modal;
+        padding: vars.$spacing-xs vars.$spacing-md;
+        background: vars.$primary-color;
+        color: vars.$white;
+        border-radius: vars.$border-radius-md;
+        text-decoration: none;
+        font-weight: vars.$font-weight-bold;
+        transition: top 0.2s ease;
+
+        &:focus {
+            top: vars.$spacing-md;
+        }
+    }
 
     .error-page {
         min-height: 100vh;

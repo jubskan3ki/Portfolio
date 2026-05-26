@@ -1,6 +1,5 @@
-import { SITE_CONFIG } from './useSeo';
-
 import type { ItemListSeoOptions } from '@/types/composables/seo';
+import { SITE_CONFIG } from './useSeo';
 
 export function useItemListSeo(options: ItemListSeoOptions) {
     useSchemaOrg([

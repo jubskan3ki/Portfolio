@@ -1,4 +1,5 @@
-import { ref, watch, type Ref } from 'vue';
+import type { Ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { slugify } from '@/services/utils/string';
 

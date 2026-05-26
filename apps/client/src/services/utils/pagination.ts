@@ -1,4 +1,5 @@
-import { computed, type ComputedRef, type Ref } from 'vue';
+import type { ComputedRef, Ref } from 'vue';
+import { computed } from 'vue';
 
 // Ordre de résolution: data -> results -> fallbackKeys -> tableau brut
 export function extractPaginatedData<T>(response: unknown, fallbackKeys?: string[]): T[] {

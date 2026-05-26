@@ -9,7 +9,7 @@ from datetime import timedelta
 from typing import Any
 
 import requests
-from django.db import models
+from django.db import connection, models, transaction
 from django.utils import timezone
 
 from ..models import Webhook, WebhookDelivery
@@ -69,27 +69,53 @@ class WebhookDispatcher:
             event_id = uuid.uuid4()
 
         webhooks = list(Webhook.objects.for_event(event_type))
-        deliveries = []
+        deliveries = cls._create_pending_deliveries(webhooks, event_id, event_type, payload)
 
-        # Deduplication batch : une seule requete pour tous les webhooks
-        already_delivered = set(
-            WebhookDelivery.objects.filter(webhook__in=webhooks, event_id=event_id).values_list("webhook_id", flat=True)
-        )
-
-        for webhook in webhooks:
-            if webhook.pk in already_delivered:
-                logger.info(
-                    "Webhook delivery skipped (duplicate): %s -> %s (event_id=%s)",
-                    event_type,
-                    webhook.name,
-                    event_id,
-                )
-                continue
-
-            delivery = cls._create_delivery(webhook, event_type, payload, event_id)
-            deliveries.append(delivery)
+        # HTTP sends run outside the transaction: holding an advisory lock across
+        # blocking network I/O would serialize concurrent dispatches unnecessarily.
+        for delivery in deliveries:
             cls.send_delivery(delivery)
 
+        return deliveries
+
+    @classmethod
+    def _create_pending_deliveries(
+        cls,
+        webhooks: list[Webhook],
+        event_id: uuid.UUID,
+        event_type: str,
+        payload: dict[str, Any],
+    ) -> list[WebhookDelivery]:
+        """Create pending deliveries under a per-event advisory lock.
+
+        Uniqueness of (webhook, event_id) used to be enforced by a UNIQUE
+        constraint, but the table is now a TimescaleDB hypertable (partitioned
+        on created_at) which forbids unique indexes that don't include the
+        partition column. We replace the DB-level guarantee with a transactional
+        advisory lock keyed on event_id: concurrent dispatch() calls for the
+        same event will serialize through the lock, and the second one will see
+        the rows created by the first.
+        """
+        deliveries: list[WebhookDelivery] = []
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [str(event_id)])
+
+            already_delivered = set(
+                WebhookDelivery.objects.filter(webhook__in=webhooks, event_id=event_id).values_list(
+                    "webhook_id", flat=True
+                )
+            )
+            for webhook in webhooks:
+                if webhook.pk in already_delivered:
+                    logger.info(
+                        "Webhook delivery skipped (duplicate): %s -> %s (event_id=%s)",
+                        event_type,
+                        webhook.name,
+                        event_id,
+                    )
+                    continue
+                deliveries.append(cls._create_delivery(webhook, event_type, payload, event_id))
         return deliveries
 
     @classmethod

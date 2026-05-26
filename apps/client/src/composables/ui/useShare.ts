@@ -1,7 +1,6 @@
-import { computed, ref, toValue } from 'vue';
-
-import type { UseShareReturn } from '@/types/composables/ui';
 import type { MaybeRef } from 'vue';
+import { computed, ref, toValue } from 'vue';
+import type { UseShareReturn } from '@/types/composables/ui';
 
 export function useShare(title: MaybeRef<string>): UseShareReturn {
     const linkCopied = ref(false);

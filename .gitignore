@@ -205,7 +205,7 @@ lhr-*.json
 
 # AI tooling (caches, sessions, project-local configs)
 CLAUDE.md
-CONTEXT/
+context/
 claude.config.json
 .claude/
 .aider*

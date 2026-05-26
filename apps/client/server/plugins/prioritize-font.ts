@@ -8,10 +8,7 @@ export default defineNitroPlugin((nitroApp) => {
             const attrs = `${pre} ${post}`;
             const hasType = /\btype=/.test(attrs);
             const hasPriority = /\bfetchpriority=/.test(attrs);
-            const extra = [
-                hasType ? '' : 'type="font/woff2"',
-                hasPriority ? '' : 'fetchpriority="high"',
-            ]
+            const extra = [hasType ? '' : 'type="font/woff2"', hasPriority ? '' : 'fetchpriority="high"']
                 .filter(Boolean)
                 .join(' ');
             return `<link rel="preload" as="font" ${pre}href="${href}" ${extra}${post}>`;

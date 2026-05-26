@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-
-import { useSearchHistory, type HistoryItem } from '@/composables/data/useSearchHistory';
+import type { HistoryItem } from '@/composables/data/useSearchHistory';
+import { useSearchHistory } from '@/composables/data/useSearchHistory';
 
 function mountHistory() {
     let api!: ReturnType<typeof useSearchHistory>;
@@ -23,7 +23,9 @@ describe('useSearchHistory', () => {
 
     it('records a new query at the top and caps to 5', () => {
         const api = mountHistory();
-        ['one', 'two', 'three', 'four', 'five', 'six'].forEach((q) => api.recordQuery(q));
+        for (const q of ['one', 'two', 'three', 'four', 'five', 'six']) {
+            api.recordQuery(q);
+        }
         expect(api.queries.value).toHaveLength(5);
         expect(api.queries.value[0]).toBe('six');
         expect(api.queries.value).not.toContain('one');

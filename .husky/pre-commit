@@ -6,12 +6,12 @@ GIT_ROOT=$(git rev-parse --show-toplevel)
 FRONTEND_STAGED=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|vue|js|mjs|cjs)$' || true)
 if [ -n "$FRONTEND_STAGED" ]; then
     echo "→ Lint frontend staged files…"
-    cd "$GIT_ROOT/apps/client" && pnpm exec lint-staged && cd "$GIT_ROOT"
+    cd "$GIT_ROOT/apps/client" && bunx lint-staged && cd "$GIT_ROOT"
 fi
 
-# ── Backend : pre-commit hooks sur fichiers Python ───────────────────────────
-PYTHON_STAGED=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.py$' || true)
-if [ -n "$PYTHON_STAGED" ] && command -v pre-commit >/dev/null 2>&1; then
-    echo "→ Lint Python staged files…"
-    echo "$PYTHON_STAGED" | xargs pre-commit run --files
+# ── Pre-commit hooks (Python lint, secrets, Dockerfiles…) ───────────────────
+# Hooks gate themselves via `files:` patterns in .pre-commit-config.yaml.
+if command -v pre-commit >/dev/null 2>&1; then
+    echo "→ pre-commit hooks (gitleaks, hadolint, black/isort/ruff, …)…"
+    pre-commit run --hook-stage pre-commit
 fi

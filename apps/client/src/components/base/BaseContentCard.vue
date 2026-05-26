@@ -5,6 +5,8 @@
                 v-if="image"
                 :src="image"
                 :alt="imageAlt"
+                :width="imageWidth"
+                :height="imageHeight"
                 aspect-ratio="16:9"
                 object-fit="cover"
                 :quality="85"
@@ -67,6 +69,8 @@
         to: '',
         image: '',
         imageAlt: '',
+        imageWidth: 640,
+        imageHeight: 400,
         placeholderIcon: 'file-text',
         badge: '',
         description: '',
@@ -209,6 +213,7 @@
         font-weight: vars.$font-weight-semibold;
         color: vars.$text-primary;
         line-height: 1.3;
+        min-height: calc(1.3em * 2);
         transition: color 0.2s ease;
 
         @include mix.truncate(2);
@@ -220,6 +225,7 @@
         font-size: vars.$font-size-sm;
         color: vars.$text-secondary;
         line-height: 1.6;
+        min-height: calc(1.6em * 2);
 
         @include mix.truncate(2);
     }

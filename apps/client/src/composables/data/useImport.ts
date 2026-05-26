@@ -69,7 +69,7 @@ export function useImport(options: UseImportOptions = {}) {
             queryClient.invalidateQueries({ queryKey: TRANSFER_QUERY_KEYS.stats });
         },
         onError: () => {
-            showError('Erreur lors de l\'import', 'Import');
+            showError("Erreur lors de l'import", 'Import');
         },
     });
 

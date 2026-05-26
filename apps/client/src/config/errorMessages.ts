@@ -6,9 +6,9 @@ export const ERROR_MESSAGES = {
 
     NOT_FOUND: (entity: string) => `${entity} introuvable`,
     AUTH_EXPIRED: 'Votre session a expiré. Veuillez vous reconnecter.',
-    FORBIDDEN: 'Vous n\'avez pas les permissions nécessaires.',
+    FORBIDDEN: "Vous n'avez pas les permissions nécessaires.",
     NETWORK_ERROR: 'Impossible de contacter le serveur. Vérifiez votre connexion.',
-    SERVER_ERROR: 'Une erreur inattendue s\'est produite. Veuillez réessayer.',
+    SERVER_ERROR: "Une erreur inattendue s'est produite. Veuillez réessayer.",
 
     FIELD_REQUIRED: 'Ce champ est requis',
     FIELD_INVALID: 'Format invalide',
@@ -17,10 +17,10 @@ export const ERROR_MESSAGES = {
 
     ARTICLE: {
         NOT_FOUND: 'Article introuvable',
-        LOAD_FAILED: 'Impossible de charger l\'article',
-        CREATE_FAILED: 'Erreur lors de la création de l\'article',
-        UPDATE_FAILED: 'Erreur lors de la mise à jour de l\'article',
-        DELETE_FAILED: 'Erreur lors de la suppression de l\'article',
+        LOAD_FAILED: "Impossible de charger l'article",
+        CREATE_FAILED: "Erreur lors de la création de l'article",
+        UPDATE_FAILED: "Erreur lors de la mise à jour de l'article",
+        DELETE_FAILED: "Erreur lors de la suppression de l'article",
     },
     PROJECT: {
         NOT_FOUND: 'Projet introuvable',
@@ -38,10 +38,10 @@ export const ERROR_MESSAGES = {
     },
     EXPERIENCE: {
         NOT_FOUND: 'Expérience introuvable',
-        LOAD_FAILED: 'Impossible de charger l\'expérience',
-        CREATE_FAILED: 'Erreur lors de la création de l\'expérience',
-        UPDATE_FAILED: 'Erreur lors de la mise à jour de l\'expérience',
-        DELETE_FAILED: 'Erreur lors de la suppression de l\'expérience',
+        LOAD_FAILED: "Impossible de charger l'expérience",
+        CREATE_FAILED: "Erreur lors de la création de l'expérience",
+        UPDATE_FAILED: "Erreur lors de la mise à jour de l'expérience",
+        DELETE_FAILED: "Erreur lors de la suppression de l'expérience",
     },
     CATEGORY: {
         CREATE_FAILED: 'Erreur lors de la création de la catégorie',

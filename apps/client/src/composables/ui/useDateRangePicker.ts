@@ -1,16 +1,19 @@
 import { useEventListener } from '@vueuse/core';
-import { ref, watch, onMounted } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import { dayjs } from '@/services/utils/date';
-
+import type { UseDateRangePickerOptions } from '@/types/composables/ui';
 import { useCalendarGrid } from './useCalendarGrid';
 import { useDateRangeSelection } from './useDateRangeSelection';
 
-import type { UseDateRangePickerOptions } from '@/types/composables/ui';
-
-export function useDateRangePicker(
-    { model, availableDates, minDays, maxDays, disabled, dropdownRef }: UseDateRangePickerOptions,
-) {
+export function useDateRangePicker({
+    model,
+    availableDates,
+    minDays,
+    maxDays,
+    disabled,
+    dropdownRef,
+}: UseDateRangePickerOptions) {
     const isOpen = ref(false);
 
     const selection = useDateRangeSelection({ model, availableDates, minDays, maxDays });

@@ -35,13 +35,14 @@ x-logging: &default-logging
 
 services:
     db:
-        image: postgres:${POSTGRES_VERSION:-17.4}-alpine
+        image: timescale/timescaledb:${TIMESCALEDB_VERSION:-2.18.2-pg17}
         container_name: postgres-db
         environment:
             POSTGRES_DB: ${DB_NAME}
             POSTGRES_USER: ${DB_USER}
             POSTGRES_PASSWORD: ${DB_PASSWORD}
             POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+            TIMESCALEDB_TELEMETRY: ${TIMESCALEDB_TELEMETRY:-off}
         ports:
             - "${POSTGRES_PORT:-5432}:5432"
         volumes:
@@ -79,11 +80,16 @@ services:
             db:
                 condition: service_healthy
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 || exit 1"]
+            test:
+                - "CMD-SHELL"
+                - >-
+                  PGPASSWORD="$$DB_PASSWORD" psql
+                  -h localhost -p 5432 -U "$$DB_USER" -d "$$DB_NAME"
+                  -tAc 'SELECT 1' >/dev/null || exit 1
             interval: 10s
             timeout: 5s
             retries: 5
-            start_period: 10s
+            start_period: 15s
 
     redis:
         image: redis:${REDIS_VERSION:-7.4}-alpine
@@ -165,12 +171,15 @@ services:
             <<: *common-env
             DB_HOST: pgbouncer
             DB_PORT: "5432"
+            DB_HOST_DIRECT: db
+            DB_PORT_DIRECT: "5432"
             USE_PGBOUNCER: "true"
             SERVER_PORT: ${SERVER_PORT:-8000}
             GUNICORN_WORKERS: ${GUNICORN_WORKERS:-3}
             GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-30}
             GUNICORN_GRACEFUL_TIMEOUT: ${GUNICORN_GRACEFUL_TIMEOUT:-30}
             GUNICORN_KEEP_ALIVE: ${GUNICORN_KEEP_ALIVE:-5}
+            OTEL_SERVICE_NAME: portfolio-backend
         healthcheck:
             test: ["CMD-SHELL", "python manage.py healthcheck || exit 1"]
             interval: 30s
@@ -205,11 +214,14 @@ services:
             <<: *common-env
             DB_HOST: pgbouncer
             DB_PORT: "5432"
+            DB_HOST_DIRECT: db
+            DB_PORT_DIRECT: "5432"
             USE_PGBOUNCER: "true"
             CELERY_LOG_LEVEL: ${CELERY_LOG_LEVEL:-INFO}
             CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-2}
             CELERY_MAX_TASKS_PER_CHILD: ${CELERY_MAX_TASKS_PER_CHILD:-1000}
             CELERY_SHUTDOWN_TIMEOUT: ${CELERY_SHUTDOWN_TIMEOUT:-60}
+            OTEL_SERVICE_NAME: portfolio-celery
         healthcheck:
             test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$$HOSTNAME --timeout 10 || exit 1"]
             interval: 60s
@@ -223,7 +235,7 @@ services:
             dockerfile: Dockerfile
             args:
                 NODE_VERSION: ${NODE_VERSION:-24}
-                PNPM_VERSION: ${PNPM_VERSION:-10.28.0}
+                BUN_VERSION: ${BUN_VERSION:-1.3}
                 NUXT_API_BASE_SERVER: ${NUXT_API_BASE_SERVER:-http://backend:8000}
                 NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8000}
                 VCS_REF: ${IMAGE_TAG:-dev}
@@ -354,6 +366,10 @@ services:
             GF_USERS_ALLOW_SIGN_UP: "false"
             GF_SERVER_DOMAIN: ${GRAFANA_DOMAIN:-localhost}
             GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3001}
+            # Pour la datasource TimescaleDB (substitution dans datasources.yml).
+            DB_USER: ${DB_USER}
+            DB_PASSWORD: ${DB_PASSWORD}
+            DB_NAME: ${DB_NAME}
         ports:
             - "${GRAFANA_PORT:-3001}:3000"
         volumes:

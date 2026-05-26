@@ -111,8 +111,8 @@ export function useSwiper(options: UseSwiperOptions) {
             const slidesToShow = props.slidesToShow ?? 1;
             const gap = props.gap ?? 16;
             const containerWidth = swiperRef.value.offsetWidth;
-            slideWidth.value
-                = slidesToShow > 1 ? (containerWidth - gap * (slidesToShow - 1)) / slidesToShow : containerWidth;
+            slideWidth.value =
+                slidesToShow > 1 ? (containerWidth - gap * (slidesToShow - 1)) / slidesToShow : containerWidth;
             updateTranslateX();
         }
     };

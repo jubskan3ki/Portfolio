@@ -56,3 +56,23 @@ datasources:
       editable: false
       jsonData:
           implementation: prometheus
+
+    - name: TimescaleDB
+      type: postgres
+      uid: timescaledb
+      access: proxy
+      # On pointe le service `db` direct (pas pgbouncer) car TimescaleDB introspection
+      # utilise des fonctions/vues qui requièrent une session stable.
+      url: db:5432
+      user: ${DB_USER}
+      secureJsonData:
+          password: ${DB_PASSWORD}
+      jsonData:
+          database: ${DB_NAME}
+          sslmode: disable
+          maxOpenConns: 4
+          maxIdleConns: 2
+          connMaxLifetime: 14400
+          postgresVersion: 1700
+          timescaledb: true
+      editable: false

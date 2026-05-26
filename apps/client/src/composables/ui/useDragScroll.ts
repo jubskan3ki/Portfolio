@@ -1,14 +1,9 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue';
-
-import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
-
-import type { UseDragScrollOptions } from '@/types/composables/ui';
 import type { Ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
+import type { UseDragScrollOptions } from '@/types/composables/ui';
 
-export function useDragScroll(
-    elRef: Readonly<Ref<HTMLElement | null>>,
-    options: UseDragScrollOptions = {},
-) {
+export function useDragScroll(elRef: Readonly<Ref<HTMLElement | null>>, options: UseDragScrollOptions = {}) {
     const { inertia = true, dragThreshold = 5 } = options;
     const { prefersReducedMotion } = useReducedMotion();
 

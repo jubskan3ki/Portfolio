@@ -86,6 +86,7 @@
         }
 
         &__indicator {
+            position: relative;
             width: 8px;
             height: 8px;
             border-radius: vars.$border-radius-full;
@@ -94,7 +95,25 @@
 
             &--available {
                 background-color: vars.$success-color;
-                animation: pulse 2s ease-in-out infinite;
+
+                // Composite-only ring pulse via pseudo-element (transform + opacity).
+                &::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    border-radius: inherit;
+                    background-color: vars.$success-color;
+                    transform-origin: center;
+                    animation: pulse 2s ease-in-out infinite;
+                    will-change: transform, opacity;
+                    pointer-events: none;
+                }
+
+                @media (prefers-reduced-motion: reduce) {
+                    &::after {
+                        animation: none;
+                    }
+                }
             }
         }
     }
@@ -102,11 +121,13 @@
     @keyframes pulse {
         0%,
         100% {
-            box-shadow: 0 0 0 0 func.color-alpha(vars.$success-color, 0.5);
+            transform: scale(1);
+            opacity: 0.5;
         }
 
         50% {
-            box-shadow: 0 0 0 6px func.color-alpha(vars.$success-color, 0);
+            transform: scale(2.5);
+            opacity: 0;
         }
     }
 </style>

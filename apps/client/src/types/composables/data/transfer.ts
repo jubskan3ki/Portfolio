@@ -1,7 +1,7 @@
-import type { TransferModule, ExportFormat, JobStatus } from '@/types/api/transfer';
+import type { ExportFormat, JobStatus, TransferModule } from '@/types/api/transfer';
 
 // Re-export base types from api/transfer for consistency
-export type { TransferModule, ExportFormat, JobStatus } from '@/types/api/transfer';
+export type { ExportFormat, JobStatus, TransferModule } from '@/types/api/transfer';
 
 export interface ModuleInfo {
     key: TransferModule;

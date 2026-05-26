@@ -1,8 +1,7 @@
-import { ref, computed, nextTick, type Ref } from 'vue';
-
-import { useClickOutside } from './useClickOutside';
-
+import type { Ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import type { UseDropdownOptions, UseDropdownReturn } from '@/types/composables/ui';
+import { useClickOutside } from './useClickOutside';
 
 export function useDropdown(
     containerRef: Ref<HTMLElement | null>,

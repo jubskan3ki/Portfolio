@@ -43,7 +43,7 @@
 
                     <div class="blog-transition">
                         <div v-if="isLoading" class="blog-loader">
-                            <SkeletonList
+                            <LazySkeletonList
                                 :count="6"
                                 variant="article"
                                 layout="grid"
@@ -149,7 +149,6 @@
     import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
     import StatCard from '@/components/feature/home/StatCard.vue';
     import Main from '@/components/layouts/Main.vue';
-    import SkeletonList from '@/components/loaders/SkeletonList.vue';
     import Hero from '@/components/ui/Hero.vue';
     import SearchInput from '@/components/ui/search/SearchInput.vue';
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
@@ -389,17 +388,16 @@
         min-width: 0;
     }
 
+    $blog-card-row: 560px;
+    $blog-card-row-mobile: 480px;
+
     .blog-transition {
         position: relative;
-        min-height: 1800px;
         contain: layout;
-
-        @include mix.responsive(tablet) {
-            min-height: 2100px;
-        }
+        min-height: calc(#{$blog-card-row} * 3 + #{vars.$spacing-lg} * 2);
 
         @include mix.responsive(mobile) {
-            min-height: 2900px;
+            min-height: calc(#{$blog-card-row-mobile} * 6 + #{vars.$spacing-md} * 5);
         }
     }
 
@@ -457,24 +455,27 @@
         box-shadow: 0 8px 32px fn.color-alpha(vars.$black, 0.06);
     }
 
-    .articles-grid {
+    .articles-grid,
+    .blog-loader :deep(.skeleton-list--grid) {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: $blog-card-row;
         gap: vars.$spacing-lg;
-        // `contain: layout` seulement : `paint` clippait le shadow/translateY au hover.
         contain: layout;
 
         @include mix.responsive(mobile) {
             grid-template-columns: 1fr;
+            grid-auto-rows: $blog-card-row-mobile;
+            gap: vars.$spacing-md;
         }
+    }
 
+    .articles-grid {
         &--fetching {
             opacity: 0.55;
             pointer-events: none;
         }
 
-        // Cascade limitée : 0 / 40 / 80 ms puis immédiat. Évite qu'une page
-        // de 6+ cartes reste "non-stable" jusqu'à 500 ms.
         &__item {
             opacity: 0;
             will-change: opacity;
@@ -517,12 +518,6 @@
     @include mix.responsive(tablet) {
         .search-bar {
             margin-bottom: vars.$spacing-md;
-        }
-    }
-
-    @include mix.responsive(mobile) {
-        .articles-grid {
-            gap: vars.$spacing-md;
         }
     }
 </style>

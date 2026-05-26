@@ -1,8 +1,8 @@
 import type {
     BlogFilters,
+    ExperienceListFilters,
     ProjectListFilters,
     StackListFilters,
-    ExperienceListFilters,
 } from '@/types/composables/data';
 import type { FilterPresetConfig } from '@/types/config/filterPresets';
 
@@ -11,10 +11,7 @@ function createPreset<T extends Record<string, unknown>>(
     pagination: FilterPresetConfig = { enabled: false },
 ) {
     const fieldConfig = Object.fromEntries(
-        Object.keys(defaults).map((key) => [
-            key,
-            { resetOnChange: key !== 'ordering', debounced: key === 'search' },
-        ]),
+        Object.keys(defaults).map((key) => [key, { resetOnChange: key !== 'ordering', debounced: key === 'search' }]),
     ) as Record<keyof T, { resetOnChange: boolean; debounced: boolean }>;
 
     return { defaults, fieldConfig, pagination };

@@ -24,16 +24,16 @@ export interface DjangoPaginatedResponse<T> {
     previous?: string | null;
 }
 
-export type ApiErrorCode
-    = | 'VALIDATION_ERROR'
-        | 'AUTH_ERROR'
-        | 'NOT_FOUND'
-        | 'FORBIDDEN'
-        | 'RATE_LIMITED'
-        | 'SERVER_ERROR'
-        | 'NETWORK_ERROR'
-        | 'TIMEOUT'
-        | 'UNKNOWN';
+export type ApiErrorCode =
+    | 'VALIDATION_ERROR'
+    | 'AUTH_ERROR'
+    | 'NOT_FOUND'
+    | 'FORBIDDEN'
+    | 'RATE_LIMITED'
+    | 'SERVER_ERROR'
+    | 'NETWORK_ERROR'
+    | 'TIMEOUT'
+    | 'UNKNOWN';
 
 interface BaseApiError {
     code: ApiErrorCode;
@@ -89,16 +89,16 @@ export interface UnknownError extends BaseApiError {
     code: 'UNKNOWN';
 }
 
-export type ApiError
-    = | ValidationError
-        | AuthError
-        | ForbiddenError
-        | NotFoundError
-        | RateLimitError
-        | ServerError
-        | NetworkError
-        | TimeoutError
-        | UnknownError;
+export type ApiError =
+    | ValidationError
+    | AuthError
+    | ForbiddenError
+    | NotFoundError
+    | RateLimitError
+    | ServerError
+    | NetworkError
+    | TimeoutError
+    | UnknownError;
 
 // Normalized error info produced by the error handler (services/utils/errors/)
 

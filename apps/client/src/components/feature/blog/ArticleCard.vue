@@ -62,9 +62,6 @@
 
     const articleLink = computed(() => (props.article.slug ? `/blog/${props.article.slug}` : ''));
 
-    // Prefetch handlers moved to parent: a single delegated listener on the grid covers
-    // all cards (6 cards × 6 instances of useCardPrefetch was wasteful hydration).
-
     const formattedDate = computed(() => formatDateShort(props.article.date));
     const truncatedExcerpt = computed(() => truncateText(props.article.excerpt || '', props.excerptLength));
 </script>
@@ -78,11 +75,14 @@
         align-items: center;
         gap: vars.$spacing-sm;
         margin-bottom: vars.$spacing-xs;
+        min-height: 1.2em;
+        line-height: 1.2;
     }
 
     .article-card__meta-item {
         font-size: vars.$font-size-xs;
         color: vars.$text-muted;
+        white-space: nowrap;
     }
 
     .article-card__views {

@@ -37,6 +37,7 @@
                 role="tabpanel"
                 :aria-labelledby="`tab-${activeType}`"
             >
+                <h2 class="sr-only">{{ activeTypeHeading }}</h2>
                 <Transition name="slide-fade" mode="out-in">
                     <div v-if="isLoading" key="loader" class="timeline-loader">
                         <SkeletonList
@@ -309,6 +310,12 @@
     } = useExperiencesByType(activeType);
 
     const totalExperiences = computed(() => experiences.value?.length ?? 0);
+
+    const activeTypeHeading = computed(() => {
+        const tab = availableTabs.value.find((t) => t.key === activeType.value);
+        const label = tab?.label.replace(/\s*\(\d+\)$/, '') ?? 'Expériences';
+        return label;
+    });
 
     const isLoading = computed(() => experiencesLoading.value || typesLoading.value || allExperiencesLoading.value);
     const hasError = computed(() => experiencesError.value || typesError.value);

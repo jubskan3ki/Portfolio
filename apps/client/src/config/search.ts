@@ -1,13 +1,13 @@
 import { API_ENDPOINTS } from '@/config/api';
-import { ROUTES, ADMIN_ROUTES } from '@/config/routes';
+import { ADMIN_ROUTES, ROUTES } from '@/config/routes';
 
 import type {
-    SearchResultType,
     SearchMode,
-    SearchTypeConfig,
     SearchResult,
     SearchResultGroup,
+    SearchResultType,
     SearchSourceConfig,
+    SearchTypeConfig,
 } from '@/types/config/search';
 
 export const SEARCH_TYPE_CONFIG: Record<SearchResultType, SearchTypeConfig> = {

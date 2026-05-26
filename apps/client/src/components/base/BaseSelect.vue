@@ -409,6 +409,8 @@
         display: flex;
         flex-direction: column;
         width: 100%;
+        min-height: 48px;
+        contain: layout;
 
         @include mix.form-field-chrome;
 
@@ -551,6 +553,8 @@
         }
 
         @include mix.responsive(mobile) {
+            min-height: 44px;
+
             &__trigger {
                 height: 44px;
             }

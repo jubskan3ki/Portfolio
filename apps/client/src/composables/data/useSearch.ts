@@ -1,5 +1,5 @@
 import { useDebounceFn } from '@vueuse/core';
-import { ref, computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import type { UseSearchOptions, UseSearchReturn } from '@/types/composables';
 

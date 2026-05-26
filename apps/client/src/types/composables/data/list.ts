@@ -1,3 +1,5 @@
+import type { ComputedRef, Ref } from 'vue';
+import type { DjangoPaginatedResponse as PaginatedResponse } from '@/types/api/common';
 import type { PaginationMeta, UsePaginationReturn } from './pagination';
 import type { UseSearchReturn } from './search';
 import type {
@@ -7,8 +9,6 @@ import type {
     UseSelectionReturn,
 } from './selection';
 import type { UseSortingReturn } from './sorting';
-import type { DjangoPaginatedResponse as PaginatedResponse } from '@/types/api/common';
-import type { ComputedRef, Ref } from 'vue';
 
 // useDataList
 

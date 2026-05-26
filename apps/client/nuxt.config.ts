@@ -1,11 +1,20 @@
-import { fileURLToPath } from 'url';
-
+import { fileURLToPath } from 'node:url';
 import { defineNuxtConfig } from 'nuxt/config';
 import { visualizer } from 'rollup-plugin-visualizer';
 
+// Avoid emitting a self-referencing preconnect when the API shares the site origin (e.g. proxied under /api).
+const SITE_URL = process.env.NUXT_PUBLIC_SITE_URL || 'https://juba-aitadda.dev';
+const API_BASE = process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000';
+const apiPreconnectHref = (() => {
+    try {
+        return new URL(SITE_URL).origin === new URL(API_BASE).origin ? null : API_BASE;
+    } catch {
+        return API_BASE;
+    }
+})();
+
 export default defineNuxtConfig({
     modules: [
-        '@nuxt/eslint',
         '@pinia/nuxt',
         '@nuxt/image',
         '@nuxt/fonts',
@@ -60,6 +69,7 @@ export default defineNuxtConfig({
                 },
                 { name: 'author', content: 'Juba Ait-Adda' },
                 { name: 'publisher', content: 'Juba Ait-Adda' },
+                { name: 'google-site-verification', content: 'q4wxKu9JSOg0DLhCDJIu-bbPW_Hz_hGXipe2ePrvNEQ' },
                 { name: 'theme-color', content: '#1a1a2e' },
                 { name: 'color-scheme', content: 'light dark' },
                 { name: 'format-detection', content: 'telephone=no' },
@@ -81,7 +91,31 @@ export default defineNuxtConfig({
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
                 { rel: 'mask-icon', href: '/favicon.svg', color: '#1a1a2e' },
                 { rel: 'apple-touch-icon', href: '/logo.png' },
-                { rel: 'preconnect', href: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000' },
+                ...(apiPreconnectHref
+                    ? [{ rel: 'preconnect', href: apiPreconnectHref, crossorigin: 'anonymous' } as const]
+                    : []),
+                // Explicit Lato preloads with fetchpriority="high" — @nuxt/fonts auto-preload
+                // (preload: true) is disabled below to avoid emitting duplicate <link rel="preload">
+                // tags without fetchpriority. Hashes are content-derived by @nuxt/fonts; stable
+                // across builds unless the upstream Google Font file changes.
+                // - Lato 400: body copy + smaller LCP elements
+                // - Lato 700: H1 (LCP element on most pages)
+                {
+                    rel: 'preload',
+                    as: 'font',
+                    type: 'font/woff2',
+                    href: '/_fonts/E9gAUejIpWiYG4NXk_H7-EI7uoXiYOJAJOsfxkChFnY-DEQ80D3nJs2q1ZN9RCtfuxGZLKpX_1xw0AirgnJ4lt0.woff2',
+                    crossorigin: 'anonymous',
+                    fetchpriority: 'high',
+                },
+                {
+                    rel: 'preload',
+                    as: 'font',
+                    type: 'font/woff2',
+                    href: '/_fonts/q_QnoPBQzztBGYstej5dRS1mKx_g6hjNfQWiBzRGy7o-oH6p1vIGT7djDjOJBVh4kw9aYpVbtRZ2bYAi2c6WN9I.woff2',
+                    crossorigin: 'anonymous',
+                    fetchpriority: 'high',
+                },
                 { rel: 'alternate', type: 'application/atom+xml', title: 'Blog | Atom', href: '/feed.xml' },
                 { rel: 'alternate', type: 'application/feed+json', title: 'Blog | JSON Feed', href: '/feed.json' },
                 { rel: 'me', href: 'https://github.com/jubskan3ki' },
@@ -94,7 +128,9 @@ export default defineNuxtConfig({
         rootId: 'app',
     },
 
-    css: ['~/src/styles/main.scss'],
+    // main.scss is imported via app.vue's <style> block so it lands in the inlined SSR
+    // styles (features.inlineStyles below). Declaring it again here would also emit an
+    // external entry.css link — that's the render-blocking stylesheet flagged by Lighthouse.
 
     router: {
         options: {
@@ -114,8 +150,8 @@ export default defineNuxtConfig({
         public: {
             apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
             webVitalsSampleRate:
-                process.env.NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE ||
-                (process.env.NODE_ENV === 'development' ? '0' : '0.2'),
+                process.env.NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE
+                || (process.env.NODE_ENV === 'development' ? '0' : '0.2'),
         },
     },
 
@@ -209,6 +245,9 @@ export default defineNuxtConfig({
             '/fonts/**': {
                 headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
             },
+            '/_fonts/**': {
+                headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
+            },
             '/images/**': {
                 headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
             },
@@ -230,18 +269,21 @@ export default defineNuxtConfig({
 
         server: process.env.NODE_ENV === 'development' ? { allowedHosts: true } : undefined,
 
-        plugins:
-            process.env.ANALYZE === 'true'
-                ? [
-                      visualizer({
-                          open: true,
-                          filename: '.nuxt/bundle-stats.html',
-                          gzipSize: true,
-                          brotliSize: true,
-                          template: 'treemap',
-                      }) as any,
-                  ]
-                : [],
+        plugins: (() => {
+            if (process.env.ANALYZE !== 'true') return [];
+            // rollup-plugin-visualizer returns a Rollup Plugin; Vite/Nuxt expects
+            // Vite's PluginOption. The two type trees share the same shape but
+            // Rolldown vs upstream Vite diverge on hook contexts. Runtime is fine.
+            // biome-ignore lint/suspicious/noExplicitAny: cross-package Plugin type mismatch
+            const analyzerPlugin: any = visualizer({
+                open: true,
+                filename: '.nuxt/bundle-stats.html',
+                gzipSize: true,
+                brotliSize: true,
+                template: 'treemap',
+            });
+            return [analyzerPlugin];
+        })(),
         css: {
             preprocessorOptions: {
                 scss: {
@@ -265,19 +307,32 @@ export default defineNuxtConfig({
                 output: {
                     experimentalMinChunkSize: 30_000,
                     manualChunks: (id) => {
-                        if (id.includes('node_modules')) {
-                            if (id.includes('chart.js')) return 'chartjs';
-                            if (
-                                id.includes('/vue/') ||
-                                id.includes('/@vue/') ||
-                                id.includes('/vue-router/') ||
-                                id.includes('/pinia/')
-                            ) {
-                                return 'vendor-core';
-                            }
-                            if (id.includes('lucide-vue-next')) return;
-                            return 'vendor-lib';
+                        if (!id.includes('node_modules')) return;
+
+                        // Admin-only / heavy lazy deps — keep isolated so the home doesn't pull them.
+                        if (id.includes('chart.js')) return 'chartjs';
+                        if (id.includes('/dayjs/')) return 'vendor-dayjs';
+                        if (id.includes('/@tanstack/')) return 'vendor-query';
+
+                        // Deferred via dynamic import in plugins — let Rollup split by entry.
+                        if (id.includes('web-vitals')) return;
+                        if (id.includes('workbox-') || id.includes('@vite-pwa/')) return;
+
+                        // Per-icon code splitting handled by defineAsyncComponent in BaseIcon.
+                        if (id.includes('lucide-vue-next')) return;
+
+                        if (
+                            id.includes('/vue/')
+                            || id.includes('/@vue/')
+                            || id.includes('/vue-router/')
+                            || id.includes('/pinia/')
+                        ) {
+                            return 'vendor-core';
                         }
+
+                        if (id.includes('/@vueuse/')) return 'vendor-vueuse';
+
+                        return 'vendor-lib';
                     },
                 },
             },
@@ -300,21 +355,6 @@ export default defineNuxtConfig({
         exclude: ['/admin/**'],
     },
 
-    eslint: {
-        config: {
-            stylistic: {
-                indent: 4,
-                semi: true,
-                quotes: 'single',
-                commaDangle: 'always-multiline',
-                braceStyle: '1tbs',
-                arrowParens: true,
-                quoteProps: 'as-needed',
-                blockSpacing: true,
-            },
-        },
-    },
-
     fonts: {
         families: [
             {
@@ -323,7 +363,9 @@ export default defineNuxtConfig({
                 weights: [400, 700],
                 display: 'swap',
                 subsets: ['latin'],
-                preload: true,
+                // Disabled to avoid duplicate preload tags — both weights are explicitly
+                // preloaded with fetchpriority="high" in app.head.link above.
+                preload: false,
             },
             {
                 name: 'Fira Code',
@@ -466,7 +508,29 @@ export default defineNuxtConfig({
     // Security headers | replaces manual headers in routeRules.
     security: {
         headers: {
-            contentSecurityPolicy: false,
+            // CSP disabled in dev (HMR/devtools rely on eval and inline injections);
+            // enforced in prod with a lenient policy. Nuxt emits hydration payload as
+            // inline <script>, hence 'unsafe-inline' on script-src. Tighten to
+            // nonce-based later by setting `security.nonce: true` above.
+            contentSecurityPolicy:
+                process.env.NODE_ENV === 'development'
+                    ? false
+                    : {
+                            'base-uri': ['\'self\''],
+                            'default-src': ['\'self\''],
+                            'script-src': ['\'self\'', '\'unsafe-inline\''],
+                            'style-src': ['\'self\'', '\'unsafe-inline\''],
+                            'img-src': ['\'self\'', 'data:', 'blob:', 'https:'],
+                            'font-src': ['\'self\'', 'data:'],
+                            'connect-src': ['\'self\'', 'https:'],
+                            'frame-src': ['\'self\''],
+                            'frame-ancestors': ['\'none\''],
+                            'object-src': ['\'none\''],
+                            'form-action': ['\'self\''],
+                            'worker-src': ['\'self\'', 'blob:'],
+                            'manifest-src': ['\'self\''],
+                            'upgrade-insecure-requests': true,
+                        },
             crossOriginEmbedderPolicy: false,
             crossOriginOpenerPolicy: process.env.NODE_ENV === 'development' ? false : 'same-origin',
             crossOriginResourcePolicy: 'same-origin',

@@ -1,0 +1,153 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": [
+        "typescript",
+        "oxc",
+        "vue",
+        "vitest",
+        "import",
+        "promise"
+    ],
+    "categories": {
+        "correctness": "error",
+        "suspicious": "warn",
+        "perf": "off",
+        "pedantic": "off",
+        "style": "off",
+        "restriction": "off",
+        "nursery": "off"
+    },
+    "env": {
+        "builtin": true,
+        "browser": true,
+        "node": true,
+        "es2024": true
+    },
+    "globals": {
+        "defineNuxtConfig": "readonly",
+        "defineNuxtRouteMiddleware": "readonly",
+        "defineNuxtPlugin": "readonly",
+        "definePageMeta": "readonly",
+        "defineProps": "readonly",
+        "defineEmits": "readonly",
+        "defineSlots": "readonly",
+        "defineModel": "readonly",
+        "defineOptions": "readonly",
+        "defineExpose": "readonly",
+        "withDefaults": "readonly",
+        "useFetch": "readonly",
+        "useAsyncData": "readonly",
+        "useLazyAsyncData": "readonly",
+        "useLazyFetch": "readonly",
+        "useRoute": "readonly",
+        "useRouter": "readonly",
+        "useRuntimeConfig": "readonly",
+        "useRequestEvent": "readonly",
+        "useRequestHeaders": "readonly",
+        "useRequestURL": "readonly",
+        "useHead": "readonly",
+        "useSeoMeta": "readonly",
+        "useState": "readonly",
+        "useCookie": "readonly",
+        "useNuxtApp": "readonly",
+        "useNuxtData": "readonly",
+        "navigateTo": "readonly",
+        "abortNavigation": "readonly",
+        "createError": "readonly",
+        "showError": "readonly",
+        "clearError": "readonly",
+        "refreshNuxtData": "readonly",
+        "$fetch": "readonly",
+        "computed": "readonly",
+        "ref": "readonly",
+        "reactive": "readonly",
+        "readonly": "readonly",
+        "shallowRef": "readonly",
+        "triggerRef": "readonly",
+        "watch": "readonly",
+        "watchEffect": "readonly",
+        "watchPostEffect": "readonly",
+        "watchSyncEffect": "readonly",
+        "onMounted": "readonly",
+        "onUnmounted": "readonly",
+        "onBeforeMount": "readonly",
+        "onBeforeUnmount": "readonly",
+        "onActivated": "readonly",
+        "onDeactivated": "readonly",
+        "onErrorCaptured": "readonly",
+        "onServerPrefetch": "readonly",
+        "onRenderTracked": "readonly",
+        "onRenderTriggered": "readonly",
+        "onUpdated": "readonly",
+        "onBeforeUpdate": "readonly",
+        "nextTick": "readonly",
+        "provide": "readonly",
+        "inject": "readonly",
+        "h": "readonly",
+        "useSlots": "readonly",
+        "useAttrs": "readonly",
+        "toRef": "readonly",
+        "toRefs": "readonly",
+        "toRaw": "readonly",
+        "isRef": "readonly",
+        "unref": "readonly",
+        "useId": "readonly",
+        "useTemplateRef": "readonly"
+    },
+    "rules": {
+        "no-unused-expressions": [
+            "error",
+            { "allowShortCircuit": true, "allowTernary": true, "allowTaggedTemplates": true }
+        ],
+        "no-empty": ["error", { "allowEmptyCatch": true }],
+        "eqeqeq": ["error", "smart"],
+        "prefer-const": "error",
+        "no-var": "error",
+        "object-shorthand": "error",
+        "no-shadow": "off",
+        "no-underscore-dangle": "off",
+        "preserve-caught-error": "off",
+
+        "no-debugger": "off",
+        "no-console": "off",
+        "typescript/no-explicit-any": "off",
+        "typescript/no-non-null-assertion": "off",
+        "typescript/no-unused-vars": "off",
+
+        "vitest/require-mock-type-parameters": "off",
+        "vitest/require-hook": "off",
+
+        "import/no-duplicates": "error",
+        "import/no-unassigned-import": "off",
+
+        "promise/always-return": "off",
+        "promise/catch-or-return": "off"
+    },
+    "overrides": [
+        {
+            "files": ["*.config.{ts,mjs,js}", "nuxt.config.ts", "tests/**/*.{ts,js}"],
+            "rules": {
+                "no-console": "off"
+            }
+        },
+        {
+            "files": ["tests/**/*.{ts,js}", "**/*.spec.ts", "**/*.test.ts"],
+            "rules": {
+                "typescript/no-explicit-any": "off",
+                "typescript/no-non-null-assertion": "off"
+            }
+        }
+    ],
+    "ignorePatterns": [
+        ".nuxt/",
+        ".output/",
+        "dist/",
+        "node_modules/",
+        "public/",
+        "coverage/",
+        "test-results/",
+        ".lighthouseci/",
+        "**/api.generated.ts",
+        "**/*.min.js"
+    ]
+}

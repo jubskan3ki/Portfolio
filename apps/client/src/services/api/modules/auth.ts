@@ -2,23 +2,21 @@ import { useMutation, useQueryClient } from '@tanstack/vue-query';
 
 import { API_ENDPOINTS } from '@/config/api';
 import { useAuthStore } from '@/stores/auth';
-
-import { httpClient, createKeys } from '../core';
-import { createRealtimeQuery } from '../core/query';
-
 import type {
+    AuthMessageResponse,
+    ChangePasswordData,
+    ConfirmResetPasswordData,
     LoginCredentials,
     LoginResponse,
-    UserProfile,
-    UpdateProfileData,
-    ChangePasswordData,
     RequestResetPasswordData,
-    VerifyResetCodeData,
-    ConfirmResetPasswordData,
-    AuthMessageResponse,
+    UpdateProfileData,
+    UserProfile,
     VerifyCodeResponse,
+    VerifyResetCodeData,
 } from '@/types/api/auth';
 import type { SessionsResponse } from '@/types/feature/admin';
+import { createKeys, httpClient } from '../core';
+import { createRealtimeQuery } from '../core/query';
 
 export const authKeys = {
     ...createKeys('auth'),

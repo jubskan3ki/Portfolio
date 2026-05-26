@@ -23,10 +23,10 @@ variables:
     DOCKER_TLS_CERTDIR: "/certs"
     DOCKER_BUILDKIT: "1"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
-    PNPM_STORE_PATH: "$CI_PROJECT_DIR/.pnpm-store"
+    BUN_INSTALL_CACHE_DIR: "$CI_PROJECT_DIR/.bun-cache"
     PYTHON_VERSION: "3.14"
     NODE_VERSION: "24"
-    PNPM_VERSION: "10.28.0"
+    BUN_VERSION: "1.3"
     IMAGE_TAG: $CI_COMMIT_SHORT_SHA
     BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend
     FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend
@@ -55,9 +55,9 @@ variables:
 
 .node_cache:
     cache:
-        key: "pnpm-${NODE_VERSION}-${CI_COMMIT_REF_SLUG}"
+        key: "bun-${BUN_VERSION}-${CI_COMMIT_REF_SLUG}"
         paths:
-            - .pnpm-store
+            - .bun-cache
             - apps/client/node_modules
         policy: pull-push
 
@@ -69,11 +69,10 @@ variables:
         - pip install --cache-dir $PIP_CACHE_DIR --quiet -r apps/server/requirements.txt
 
 .frontend_base:
-    image: node:${NODE_VERSION}-alpine
+    image: oven/bun:${BUN_VERSION}-alpine
     extends: .node_cache
     before_script:
-        - corepack enable pnpm
-        - pnpm --dir apps/client install --frozen-lockfile --store-dir $PNPM_STORE_PATH
+        - cd apps/client && bun install --frozen-lockfile && cd -
 
 .docker_base:
     image: docker:latest
@@ -126,31 +125,32 @@ validate:frontend:types:
     stage: validate
     extends: [.frontend_base, .rules:all]
     script:
-        - cd apps/client && pnpm type-check
+        - cd apps/client && bun run type-check
 
-validate:frontend:eslint:
+validate:frontend:lint:
     stage: validate
     extends: [.frontend_base, .rules:all]
     script:
-        - cd apps/client && pnpm lint
+        - cd apps/client && bun run lint
 
 validate:frontend:css:
     stage: validate
     extends: [.frontend_base, .rules:all]
     script:
-        - cd apps/client && pnpm lint:css
+        - cd apps/client && bun run lint:css
 
 test:backend:unit:
     stage: test
     image: python:${PYTHON_VERSION}-slim
     extends: [.python_cache, .rules:all]
     services:
-        - name: postgres:17-alpine
+        - name: timescale/timescaledb:2.18.2-pg17
           alias: test-db
           variables:
               POSTGRES_DB: test_portfolio
               POSTGRES_USER: test_user
               POSTGRES_PASSWORD: test_password
+              TIMESCALEDB_TELEMETRY: "off"
     variables:
         DB_HOST: test-db
         TEST_DB_HOST: test-db
@@ -191,7 +191,7 @@ test:frontend:unit:
     stage: test
     extends: [.frontend_base, .rules:all]
     script:
-        - cd apps/client && pnpm test
+        - cd apps/client && bun run test
 
 security:backend:bandit:
     stage: security
@@ -221,7 +221,7 @@ security:frontend:audit:
     stage: security
     extends: [.frontend_base, .rules:all]
     script:
-        - cd apps/client && pnpm audit --audit-level=high
+        - cd apps/client && bun audit --audit-level=high
     allow_failure: false # blocking: high-severity npm CVE blocks merge
 
 security:gitleaks:
@@ -386,6 +386,46 @@ sbom:frontend:
             - sbom-frontend.spdx.json
         expire_in: 1 year
 
+# Cosign keyless signing: OIDC token from GitLab is exchanged for an ephemeral
+# Fulcio cert (Sigstore), signature + SBOM attestation pushed alongside the image.
+# Verify with: cosign verify --certificate-identity-regexp ".*/portfolio.*" \
+#   --certificate-oidc-issuer https://gitlab.com IMAGE
+.cosign_base:
+    stage: sbom
+    image: alpine:latest
+    extends: .rules:main_or_develop
+    id_tokens:
+        SIGSTORE_ID_TOKEN:
+            aud: sigstore
+    variables:
+        COSIGN_VERSION: v2.4.1
+        COSIGN_YES: "true"
+    before_script:
+        - apk add --no-cache curl ca-certificates
+        - curl -sSfL "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64" -o /usr/local/bin/cosign
+        - chmod +x /usr/local/bin/cosign
+        - echo "$CI_REGISTRY_PASSWORD" | cosign login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+
+sign:backend:
+    extends: .cosign_base
+    needs:
+        - job: build:backend
+        - job: sbom:backend
+          artifacts: true
+    script:
+        - cosign sign "$BACKEND_IMAGE:$IMAGE_TAG"
+        - cosign attest --predicate sbom-backend.spdx.json --type spdxjson "$BACKEND_IMAGE:$IMAGE_TAG"
+
+sign:frontend:
+    extends: .cosign_base
+    needs:
+        - job: build:frontend
+        - job: sbom:frontend
+          artifacts: true
+    script:
+        - cosign sign "$FRONTEND_IMAGE:$IMAGE_TAG"
+        - cosign attest --predicate sbom-frontend.spdx.json --type spdxjson "$FRONTEND_IMAGE:$IMAGE_TAG"
+
 perf:k6:nightly:
     stage: perf
     image:
@@ -409,7 +449,7 @@ perf:k6:nightly:
 
 perf:lighthouse:
     stage: perf
-    image: node:24
+    image: oven/bun:${BUN_VERSION}-debian
     extends: [.node_cache, .rules:main_or_develop]
     variables:
         NUXT_PUBLIC_API_BASE: "http://localhost:8000"
@@ -418,10 +458,9 @@ perf:lighthouse:
     before_script:
         - apt-get update -qq && apt-get install -y -qq chromium
         - export CHROME_PATH=$(which chromium)
-        - corepack enable pnpm
-        - pnpm --dir apps/client install --frozen-lockfile --store-dir $PNPM_STORE_PATH
+        - cd apps/client && bun install --frozen-lockfile && cd -
     script:
-        - cd apps/client && pnpm build && pnpm lighthouse:ci
+        - cd apps/client && bun run build && bun run lighthouse:ci
     artifacts:
         paths:
             - apps/client/.lighthouseci/
@@ -451,7 +490,7 @@ deploy:production:
         - job: validate:backend:format
         - job: validate:backend:lint
         - job: validate:frontend:types
-        - job: validate:frontend:eslint
+        - job: validate:frontend:lint
         - job: security:gitleaks
         - job: security:trivy:fs
         - job: security:trivy:image:backend

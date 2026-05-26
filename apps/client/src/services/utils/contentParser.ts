@@ -6,8 +6,8 @@ export function decodeHtmlEntities(text: string): string {
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
-        .replace(/&#0?39;/g, '\'')
-        .replace(/&#x27;/g, '\'')
+        .replace(/&#0?39;/g, "'")
+        .replace(/&#x27;/g, "'")
         .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)))
         .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
@@ -255,14 +255,14 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
         while (i < lines.length) {
             const cur = lineAt(i);
             if (
-                !cur.trim()
-                || /^#{2,4}\s/.test(cur)
-                || cur.trim().startsWith('```')
-                || cur.startsWith('> ')
-                || /^[-*]\s+/.test(cur)
-                || /^\d+\.\s+/.test(cur)
-                || /^!\[/.test(cur)
-                || isTableRow(cur)
+                !cur.trim() ||
+                /^#{2,4}\s/.test(cur) ||
+                cur.trim().startsWith('```') ||
+                cur.startsWith('> ') ||
+                /^[-*]\s+/.test(cur) ||
+                /^\d+\.\s+/.test(cur) ||
+                /^!\[/.test(cur) ||
+                isTableRow(cur)
             ) {
                 break;
             }
@@ -279,17 +279,17 @@ export function parseMarkdownToBlocks(content: string): ContentBlock[] {
 
 function hasMarkdownSyntax(text: string): boolean {
     return (
-        /^#{2,4}\s/m.test(text)
-        || /\n#{2,4}\s/.test(text)
-        || /^[-*]\s+/m.test(text)
-        || /\n[-*]\s+/.test(text)
-        || /^\d+\.\s+/m.test(text)
-        || /\n\d+\.\s+/.test(text)
-        || /^\|.+\|$/m.test(text)
-        || /^>\s/m.test(text)
-        || /\n>\s/.test(text)
-        || /^```/m.test(text)
-        || /\n```/.test(text)
+        /^#{2,4}\s/m.test(text) ||
+        /\n#{2,4}\s/.test(text) ||
+        /^[-*]\s+/m.test(text) ||
+        /\n[-*]\s+/.test(text) ||
+        /^\d+\.\s+/m.test(text) ||
+        /\n\d+\.\s+/.test(text) ||
+        /^\|.+\|$/m.test(text) ||
+        /^>\s/m.test(text) ||
+        /\n>\s/.test(text) ||
+        /^```/m.test(text) ||
+        /\n```/.test(text)
     );
 }
 
@@ -324,10 +324,10 @@ function normalizeContentUncached(content: unknown): ContentBlock[] {
         }
 
         if (
-            block
-            && typeof block === 'object'
-            && (block.type === 'paragraph' || block.type === 'text')
-            && typeof block.content === 'string'
+            block &&
+            typeof block === 'object' &&
+            (block.type === 'paragraph' || block.type === 'text') &&
+            typeof block.content === 'string'
         ) {
             const text = block.content as string;
             // Re-parse si md non-traité ou block-level caché

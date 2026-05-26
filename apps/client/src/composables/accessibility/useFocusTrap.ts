@@ -1,4 +1,5 @@
-import { ref, onUnmounted, type Ref } from 'vue';
+import type { Ref } from 'vue';
+import { onUnmounted, ref } from 'vue';
 
 const FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 

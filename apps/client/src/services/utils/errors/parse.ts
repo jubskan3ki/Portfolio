@@ -1,4 +1,5 @@
-import { API_ERROR_MESSAGES, RETRYABLE_ERRORS, type ErrorInfo } from './constants';
+import type { ErrorInfo } from './constants';
+import { API_ERROR_MESSAGES, RETRYABLE_ERRORS } from './constants';
 import { isApiError } from './guards';
 
 export function parseError(error: unknown): ErrorInfo {

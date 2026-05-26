@@ -8,12 +8,12 @@ import type {
     TTFBMetricWithAttribution,
 } from 'web-vitals/attribution';
 
-export type AnyMetricWithAttribution
-    = | CLSMetricWithAttribution
-        | FCPMetricWithAttribution
-        | INPMetricWithAttribution
-        | LCPMetricWithAttribution
-        | TTFBMetricWithAttribution;
+export type AnyMetricWithAttribution =
+    | CLSMetricWithAttribution
+    | FCPMetricWithAttribution
+    | INPMetricWithAttribution
+    | LCPMetricWithAttribution
+    | TTFBMetricWithAttribution;
 
 export interface WebVitalsAttribution {
     lcpElement?: string;

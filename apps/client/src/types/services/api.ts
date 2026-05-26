@@ -1,5 +1,5 @@
-import type { ApiError } from '@/types/api/common';
 import type { QueryKey, UseQueryOptions } from '@tanstack/vue-query';
+import type { ApiError } from '@/types/api/common';
 
 // createQuery presets
 export type QueryPreset = 'list' | 'detail' | 'static' | 'realtime';
@@ -8,16 +8,16 @@ export type QueryPreset = 'list' | 'detail' | 'static' | 'realtime';
 export type AuthFailureHandler = () => void | Promise<void>;
 
 // Query keys factory
-export type QueryKeyModule
-    = | 'articles'
-        | 'projects'
-        | 'stacks'
-        | 'experiences'
-        | 'contact'
-        | 'auth'
-        | 'stats'
-        | 'transfer'
-        | 'search';
+export type QueryKeyModule =
+    | 'articles'
+    | 'projects'
+    | 'stacks'
+    | 'experiences'
+    | 'contact'
+    | 'auth'
+    | 'stats'
+    | 'transfer'
+    | 'search';
 
 export interface QueryKeys<T extends string> {
     all: readonly [T];

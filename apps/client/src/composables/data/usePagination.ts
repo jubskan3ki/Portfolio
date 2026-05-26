@@ -1,4 +1,4 @@
-import { ref, computed, watch, toValue } from 'vue';
+import { computed, ref, toValue, watch } from 'vue';
 
 import { PAGINATION } from '@/config/constants';
 

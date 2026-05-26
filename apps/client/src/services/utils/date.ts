@@ -37,7 +37,7 @@ export function formatRelativeDate(date: DateInput): string {
     const diffDays = now.diff(d, 'day');
 
     if (diffMinutes < 1) {
-        return 'À l\'instant';
+        return "À l'instant";
     }
     if (diffMinutes < 60) {
         return `Il y a ${diffMinutes} min`;
