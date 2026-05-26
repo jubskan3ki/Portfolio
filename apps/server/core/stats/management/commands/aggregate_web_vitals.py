@@ -15,7 +15,7 @@ import logging
 from collections import defaultdict
 from datetime import timedelta
 from statistics import fmean
-from typing import Any
+from typing import Any, TypedDict
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
@@ -25,6 +25,15 @@ from core.stats.models import WebVitalEvent
 logger = logging.getLogger("core.stats")
 
 RATINGS = ("good", "needs-improvement", "poor")
+
+
+class _MetricSummary(TypedDict):
+    metric_name: str
+    count: int
+    mean: float
+    p75: float | None
+    p95: float | None
+    ratings: dict[str, int]
 
 
 def _percentile(values: list[float], percentile: int) -> float | None:
@@ -79,7 +88,7 @@ class Command(BaseCommand):
             if rating in ratings_by_metric[metric_name]:
                 ratings_by_metric[metric_name][rating] += 1
 
-        metrics_summary = []
+        metrics_summary: list[_MetricSummary] = []
         for metric_name in sorted(values_by_metric.keys()):
             values = values_by_metric[metric_name]
             metrics_summary.append(
