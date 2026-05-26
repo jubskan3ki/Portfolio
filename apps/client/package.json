@@ -8,7 +8,7 @@
         "dev": "nuxt dev",
         "generate": "nuxt generate",
         "preview": "nuxt preview",
-        "preview:lhci": "NITRO_HOST=0.0.0.0 NITRO_PORT=4173 nuxt preview",
+        "preview:lhci": "NITRO_HOST=0.0.0.0 NITRO_PORT=4173 node .output/server/index.mjs",
         "postinstall": "nuxt prepare",
         "start": "nuxt start",
         "analyze": "ANALYZE=true nuxt build",
