@@ -35,6 +35,10 @@
             :glass-animated="!prefersReducedMotion"
             :bubble-count="4"
         >
+            <ClientOnly>
+                <template #fallback>
+                    <div class="page-content-placeholder" style="min-height: 1100px" />
+                </template>
             <div class="stacks-nav">
                 <div v-if="!isSearchMode" class="stacks-nav__tabs">
                     <NavigationTabs
@@ -168,15 +172,21 @@
                     </div>
                 </Transition>
             </div>
+            </ClientOnly>
         </Main>
 
-        <CTA
-            title="Besoin d'un développeur ?"
-            description="Discutons de votre projet et voyons comment je peux vous aider."
-            variant="dark"
-            :primary-button="{ label: 'Me contacter', to: ROUTES.CONTACT.path, icon: 'mail' }"
-            :secondary-button="{ label: 'Mes articles', to: ROUTES.BLOG.path }"
-        />
+        <ClientOnly>
+            <CTA
+                title="Besoin d'un développeur ?"
+                description="Discutons de votre projet et voyons comment je peux vous aider."
+                variant="dark"
+                :primary-button="{ label: 'Me contacter', to: ROUTES.CONTACT.path, icon: 'mail' }"
+                :secondary-button="{ label: 'Mes articles', to: ROUTES.BLOG.path }"
+            />
+            <template #fallback>
+                <div class="page-content-placeholder" style="min-height: 280px" />
+            </template>
+        </ClientOnly>
     </div>
 </template>
 

@@ -19,6 +19,10 @@
         </Hero>
 
         <Main variant="default" size="large">
+            <ClientOnly>
+                <template #fallback>
+                    <div class="page-content-placeholder" style="min-height: 1100px" />
+                </template>
             <div class="projects-filters">
                 <div class="projects-filters__search">
                     <SearchInput
@@ -51,7 +55,6 @@
                 </button>
             </div>
 
-            <ClientOnly>
                 <div v-if="isLoading && !hasProjects" class="projects-grid">
                     <div v-for="i in 6" :key="i" class="project-skeleton">
                         <div class="project-skeleton__image"></div>
@@ -98,43 +101,28 @@
                     </button>
                     <Spinner v-else size="sm" />
                 </div>
-
-                <template #fallback>
-                    <div class="projects-grid">
-                        <div v-for="i in 6" :key="i" class="project-skeleton">
-                            <div class="project-skeleton__image"></div>
-                            <div class="project-skeleton__body">
-                                <div class="project-skeleton__title"></div>
-                                <div class="project-skeleton__title project-skeleton__title--short"></div>
-                                <div class="project-skeleton__text"></div>
-                                <div class="project-skeleton__text project-skeleton__text--short"></div>
-                                <div class="project-skeleton__tags">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-                                <div class="project-skeleton__footer"></div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
             </ClientOnly>
         </Main>
 
-        <CTA
-            title="Un projet en tête ?"
-            description="Discutons de vos idées et voyons comment transformer votre vision en réalité."
-            variant="primary"
-            :primary-button="{
-                label: 'Me contacter',
-                to: ROUTES.CONTACT.path,
-                icon: 'mail',
-            }"
-            :secondary-button="{
-                label: 'Mes compétences',
-                to: ROUTES.STACKS.path,
-            }"
-        />
+        <ClientOnly>
+            <CTA
+                title="Un projet en tête ?"
+                description="Discutons de vos idées et voyons comment transformer votre vision en réalité."
+                variant="primary"
+                :primary-button="{
+                    label: 'Me contacter',
+                    to: ROUTES.CONTACT.path,
+                    icon: 'mail',
+                }"
+                :secondary-button="{
+                    label: 'Mes compétences',
+                    to: ROUTES.STACKS.path,
+                }"
+            />
+            <template #fallback>
+                <div class="page-content-placeholder" style="min-height: 280px" />
+            </template>
+        </ClientOnly>
     </div>
 </template>
 

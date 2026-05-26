@@ -19,6 +19,10 @@
         </Hero>
 
         <Main id="articles" variant="light" size="large">
+            <ClientOnly>
+                <template #fallback>
+                    <div class="page-content-placeholder" style="min-height: 1200px" />
+                </template>
             <div class="blog-layout">
                 <div class="blog-main">
                     <div class="search-bar">
@@ -129,15 +133,21 @@
                     :total-articles="totalArticles"
                 />
             </div>
+            </ClientOnly>
         </Main>
 
-        <LazyCTA
-            title="Découvrez mes projets"
-            description="Explorez mes réalisations et les stacks que j'utilise."
-            variant="secondary"
-            :primary-button="{ label: 'Voir les projets', to: ROUTES.PROJECTS.path, icon: 'briefcase' }"
-            :secondary-button="{ label: 'Mon parcours', to: ROUTES.EXPERIENCE.path }"
-        />
+        <ClientOnly>
+            <LazyCTA
+                title="Découvrez mes projets"
+                description="Explorez mes réalisations et les stacks que j'utilise."
+                variant="secondary"
+                :primary-button="{ label: 'Voir les projets', to: ROUTES.PROJECTS.path, icon: 'briefcase' }"
+                :secondary-button="{ label: 'Mon parcours', to: ROUTES.EXPERIENCE.path }"
+            />
+            <template #fallback>
+                <div class="page-content-placeholder" style="min-height: 280px" />
+            </template>
+        </ClientOnly>
     </div>
 </template>
 

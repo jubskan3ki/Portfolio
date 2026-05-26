@@ -65,7 +65,7 @@ ENV NODE_ENV=production \
 RUN --mount=type=cache,target=/app/.nuxt \
     --mount=type=cache,target=/app/node_modules/.cache \
     bunx nuxt prepare \
- && (timeout --preserve-status 600 bunx nuxt build; true) \
+ && (timeout -s TERM -k 10 600 bunx nuxt build; true) \
  && test -f .output/server/index.mjs
 
 FROM gcr.io/distroless/nodejs${NODE_VERSION}-debian12:nonroot AS runner
