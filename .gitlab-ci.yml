@@ -522,7 +522,7 @@ deploy:production:
                 set -e
                 echo '$CI_JOB_TOKEN' | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
                 cd $DEPLOY_PATH
-                git fetch origin main
+                git fetch $CI_REPOSITORY_URL main
                 git reset --hard $CI_COMMIT_SHA
                 export IMAGE_TAG=$IMAGE_TAG
                 export CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE
