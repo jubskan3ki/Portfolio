@@ -449,17 +449,20 @@ perf:k6:nightly:
 
 perf:lighthouse:
     stage: perf
-    image: oven/bun:${BUN_VERSION}-debian
+    image: node:24-bookworm-slim
     extends: [.node_cache, .rules:main_or_develop]
     variables:
         NUXT_PUBLIC_API_BASE: "http://localhost:8000"
         NUXT_API_BASE_SERVER: "http://localhost:8000"
         NODE_OPTIONS: "--max-old-space-size=4096"
     before_script:
-        - apt-get update -qq && apt-get install -y -qq chromium
+        - apt-get update -qq && apt-get install -y -qq chromium curl unzip
+        - curl -fsSL https://bun.sh/install | bash
+        - export PATH="$HOME/.bun/bin:$PATH"
         - export CHROME_PATH=$(which chromium)
         - cd apps/client && bun install --frozen-lockfile && cd -
     script:
+        - export PATH="$HOME/.bun/bin:$PATH"
         - cd apps/client && bun run build && bun run lighthouse:ci
     artifacts:
         paths:
