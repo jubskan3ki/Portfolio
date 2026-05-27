@@ -145,12 +145,20 @@ format: ## Formate front + back (écrit les fixes)
 	$(COMPOSE_EXEC) backend sh -c "black . && isort . && ruff check --fix ."
 
 .PHONY: typecheck
-typecheck: ## TypeScript (vue-tsc) + Python (mypy advisory)
-	cd $(CLIENT_DIR) && $(BUN) run type-check
+typecheck: ## TypeScript (vue-tsc) ; passe par le container frontend si actif (sinon perms .nuxt/)
+	@if $(COMPOSE) ps -q frontend 2>/dev/null | grep -q .; then \
+	    $(COMPOSE_EXEC) -T frontend bun run type-check; \
+	else \
+	    cd $(CLIENT_DIR) && $(BUN) run type-check; \
+	fi
 
 .PHONY: test
 test: ## Tests unitaires front (vitest) + back (pytest)
-	cd $(CLIENT_DIR) && $(BUN) run test
+	@if $(COMPOSE) ps -q frontend 2>/dev/null | grep -q .; then \
+	    $(COMPOSE_EXEC) -T frontend bun run test; \
+	else \
+	    cd $(CLIENT_DIR) && $(BUN) run test; \
+	fi
 	$(COMPOSE_EXEC) backend pytest
 
 .PHONY: e2e
@@ -158,7 +166,7 @@ e2e: ## Tests Playwright (e2e). Lance le preview Nuxt automatiquement.
 	cd $(CLIENT_DIR) && $(BUN) run e2e
 
 .PHONY: e2e-install
-e2e-install:
+e2e-install: ## Installe Chromium pour Playwright (1x par dev)
 	cd $(CLIENT_DIR) && $(BUN) run e2e:install
 
 .PHONY: check
