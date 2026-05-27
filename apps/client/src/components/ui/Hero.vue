@@ -230,6 +230,7 @@
             line-height: vars.$line-height-relaxed;
             max-width: 500px;
             margin-inline: auto;
+            min-height: calc(2em * #{vars.$line-height-relaxed});
         }
 
         &__meta {

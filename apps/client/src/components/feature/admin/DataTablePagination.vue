@@ -6,16 +6,13 @@
 
         <div class="data-table-pagination__per-page">
             <small>Par page:</small>
-            <select
-                :value="perPage"
-                class="data-table-pagination__select"
+            <BaseSelect
+                :model-value="perPage"
+                :options="perPageSelectOptions"
                 aria-label="Elements par page"
-                @change="handlePerPageChange"
-            >
-                <option v-for="option in perPageOptions" :key="option" :value="option">
-                    {{ option }}
-                </option>
-            </select>
+                class="data-table-pagination__select"
+                @update:model-value="(v) => emit('perPageChange', Number(v))"
+            />
         </div>
 
         <div class="data-table-pagination__nav">
@@ -88,6 +85,7 @@
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
+    import BaseSelect from '@/components/base/BaseSelect.vue';
 
     const props = withDefaults(
         defineProps<{
@@ -106,6 +104,10 @@
         pageChange: [page: number];
         perPageChange: [perPage: number];
     }>();
+
+    const perPageSelectOptions = computed(() =>
+        props.perPageOptions.map((n) => ({ value: n, label: String(n) })),
+    );
 
     const startItem = computed(() => {
         return (props.currentPage - 1) * props.perPage + 1;
@@ -154,11 +156,6 @@
             emit('pageChange', page);
         }
     };
-
-    const handlePerPageChange = (event: Event) => {
-        const select = event.target as HTMLSelectElement;
-        emit('perPageChange', Number(select.value));
-    };
 </script>
 
 <style lang="scss" scoped>
@@ -185,15 +182,7 @@
         }
 
         &__select {
-            padding: vars.$spacing-xxxs vars.$spacing-xs;
-            border: 1px solid vars.$admin-border;
-            border-radius: vars.$border-radius-sm;
-            cursor: pointer;
-
-            &:focus {
-                outline: none;
-                border-color: vars.$primary-color;
-            }
+            min-width: 80px;
         }
 
         &__nav {

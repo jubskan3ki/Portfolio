@@ -425,7 +425,7 @@
         border: 1px solid fn.color-alpha(vars.$white, 0.8);
         border-radius: vars.$border-radius-xl;
         padding: vars.$spacing-xl;
-        contain: layout paint;
+        contain: layout;
         box-shadow:
             0 8px 32px fn.color-alpha(vars.$black, 0.06),
             0 1px 0 fn.color-alpha(vars.$white, 0.8) inset;

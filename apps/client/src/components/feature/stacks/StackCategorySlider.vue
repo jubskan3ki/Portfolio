@@ -210,9 +210,6 @@
         position: relative;
         margin-bottom: vars.$spacing-xxl;
 
-        content-visibility: auto;
-        contain-intrinsic-size: auto 480px;
-
         &:last-child {
             margin-bottom: 0;
         }
@@ -306,7 +303,7 @@
         scrollbar-width: none;
         -ms-overflow-style: none;
         margin: 0 calc(-1 * vars.$spacing-md);
-        padding: vars.$spacing-sm vars.$spacing-md;
+        padding: vars.$spacing-lg vars.$spacing-md;
         cursor: grab;
         touch-action: pan-y;
         user-select: none;
