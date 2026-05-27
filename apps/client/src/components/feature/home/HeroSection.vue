@@ -41,9 +41,9 @@
                                 class="hero-image"
                                 width="280"
                                 height="280"
-                                sizes="(max-width: 768px) 220px, 280px"
+                                sizes="xs:220px md:280px"
                                 format="webp"
-                                quality="75"
+                                quality="70"
                                 loading="eager"
                                 fetchpriority="high"
                                 preload

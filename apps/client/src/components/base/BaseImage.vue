@@ -6,21 +6,8 @@
             </slot>
         </div>
 
-        <img
-            v-if="hasValidSrc && isAbsolute"
-            :src="resolvedSrc"
-            :alt="alt"
-            :width="width"
-            :height="height"
-            :loading="lazy ? 'lazy' : 'eager'"
-            class="base-image__img"
-            :class="{ 'base-image__img--loaded': !isLoading }"
-            @load="handleLoad"
-            @error="handleError"
-        />
-
         <NuxtImg
-            v-else-if="hasValidSrc"
+            v-if="hasValidSrc"
             :src="resolvedSrc"
             :alt="alt"
             :width="width"
@@ -83,7 +70,6 @@
     const isLoading = ref(false);
     const hasError = ref(false);
     const resolvedSrc = computed(() => resolveMediaUrl(props.src));
-    const isAbsolute = computed(() => /^https?:\/\//i.test(resolvedSrc.value));
 
     let loadTimer: ReturnType<typeof setTimeout> | null = null;
     const clearLoadTimer = () => {

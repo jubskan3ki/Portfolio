@@ -396,6 +396,10 @@ export default defineNuxtConfig({
         quality: 80,
         format: ['avif', 'webp', 'png', 'jpg'],
         domains: ['localhost', 'media.aitaddajuba.fr', 'aitaddajuba.fr'],
+        alias: {
+            'https://media.aitaddajuba.fr': 'http://minio:9000/portfolio-media',
+            'http://localhost:9000/portfolio-media': 'http://minio:9000/portfolio-media',
+        },
         screens: {
             xs: 320,
             sm: 640,
@@ -455,6 +459,7 @@ export default defineNuxtConfig({
         },
         workbox: {
             globPatterns: [],
+            additionalManifestEntries: [{ url: '/offline', revision: '1' }],
             navigateFallback: '/offline',
             navigateFallbackDenylist: [/^\/admin/, /^\/api/, /^\/feed\./, /^\/_ipx/, /^\/_nuxt/],
             runtimeCaching: [
