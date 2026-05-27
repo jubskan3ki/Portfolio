@@ -60,8 +60,25 @@ function paginated<T>(items: T[]) {
     };
 }
 
+async function pickOption(page: import('@playwright/test').Page, comboLabel: RegExp, optionLabel: string): Promise<void> {
+    const combobox = page.getByRole('combobox', { name: comboLabel });
+    await combobox.click();
+    await page.getByRole('option', { name: optionLabel }).dispatchEvent('click');
+}
+
 async function mockAdminContext(page: import('@playwright/test').Page): Promise<void> {
-    // Mock auth: fake un user staff via /api/users/profile/ (le frontend l'appelle au mount admin).
+    await page.addInitScript(() => {
+        localStorage.setItem('portfolio.session.hint', '1');
+    });
+
+    // Mock auth: refresh token (POST) puis lecture du profil staff.
+    await page.route('**/api/users/auth/refresh/', async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ ok: true }),
+        });
+    });
     await page.route('**/api/users/profile/', async (route) => {
         await route.fulfill({
             status: 200,
@@ -159,10 +176,11 @@ test.describe('admin projects/create', () => {
         });
 
         await page.goto('/admin/projects/create');
-        await page.getByLabel('Titre').fill('Demo');
-        await page.getByLabel('Slug').fill('demo');
-        await page.getByLabel('Description courte').fill('Une description.');
-        await page.getByLabel('URL Démo').fill('https://demo.example.com');
+        await page.getByLabel(/^Titre\s*\*?$/).fill('Demo');
+        await page.getByLabel(/^Slug\s*\*?$/).fill('demo');
+        await page.getByLabel(/^Description courte\s*\*?$/).fill('Une description.');
+        await page.getByLabel(/^URL Démo\s*\*?$/).fill('https://demo.example.com');
+        await pickOption(page, /Catégorie/, 'Web');
 
         await page.getByRole('button', { name: /Créer le projet/i }).click();
 
@@ -172,7 +190,6 @@ test.describe('admin projects/create', () => {
         expect(cap.fields.get('title')?.[0]).toBe('Demo');
         expect(cap.fields.get('slug')?.[0]).toBe('demo');
         expect(cap.fields.get('description')?.[0]).toBe('Une description.');
-        // links doit etre un JSON string parseable contenant demo.
         const linksRaw = cap.fields.get('links')?.[0] ?? '';
         const links = linksRaw ? JSON.parse(linksRaw) : {};
         expect(links.demo).toBe('https://demo.example.com');
@@ -220,9 +237,10 @@ test.describe('admin experiences/create', () => {
         await page.goto('/admin/experiences/create');
         await page.getByLabel(/Titre du poste/).fill('Dev Full Stack');
         await page.getByLabel(/Entreprise|Établissement/).fill('Anthropic');
-        await page.getByLabel('Localisation').fill('Paris');
-        await page.getByLabel('Date de début').fill('2024-01-15');
-        await page.getByLabel('Description').fill('Mission backend Django + frontend Vue.');
+        await page.getByLabel(/^Localisation\s*\*?$/).fill('Paris');
+        await page.getByLabel(/^Date de début\s*\*?$/).fill('2024-01-15');
+        await page.getByLabel(/^Description\s*\*?$/).fill('Mission backend Django + frontend Vue.');
+        await pickOption(page, /Type/, 'Experience pro');
 
         await page.getByRole('button', { name: /Créer l'expérience/i }).click();
 
@@ -260,6 +278,7 @@ test.describe('admin stacks/create', () => {
         await page.goto('/admin/stacks/create');
         await page.getByLabel(/Nom de la technologie/).fill('Vue 3');
         await page.getByLabel(/Niveau de maîtrise/).fill('85');
+        await pickOption(page, /Catégorie/, 'Framework');
 
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles({
@@ -304,8 +323,8 @@ test.describe('admin articles/create', () => {
         });
 
         await page.goto('/admin/articles/create');
-        await page.getByLabel('Titre').fill('My post');
-        await page.getByLabel('Slug').fill('my-post');
+        await page.getByLabel(/^Titre\s*\*?$/).fill('My post');
+        await page.getByLabel(/^Slug\s*\*?$/).fill('my-post');
         await page.getByLabel(/Contenu/).fill('Un contenu en Markdown.');
 
         await page.getByRole('button', { name: /Créer l'article/i }).click();

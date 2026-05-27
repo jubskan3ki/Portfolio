@@ -153,8 +153,16 @@ test: ## Tests unitaires front (vitest) + back (pytest)
 	cd $(CLIENT_DIR) && $(BUN) run test
 	$(COMPOSE_EXEC) backend pytest
 
+.PHONY: e2e
+e2e: ## Tests Playwright (e2e). Lance le preview Nuxt automatiquement.
+	cd $(CLIENT_DIR) && $(BUN) run e2e
+
+.PHONY: e2e-install
+e2e-install:
+	cd $(CLIENT_DIR) && $(BUN) run e2e:install
+
 .PHONY: check
-check: lint typecheck test ## Tout valider (lint + typecheck + test)
+check: lint typecheck test e2e ## Tout valider (lint + typecheck + test + e2e)
 
 ##@ Database - Django migrations + pg_dump
 

@@ -61,10 +61,7 @@ class Command(BaseCommand):
         media_root = Path(options["media_root"] or settings.MEDIA_ROOT).resolve()
 
         if not getattr(settings, "USE_S3", False):
-            raise CommandError(
-                "USE_S3=false : le storage par defaut est FileSystem, rien a migrer. "
-                "Active USE_S3=true et relance."
-            )
+            raise CommandError("USE_S3=false : le storage par defaut est FileSystem. Active USE_S3=true et relance.")
         if not media_root.exists():
             raise CommandError(f"MEDIA_ROOT introuvable : {media_root}")
 
@@ -81,16 +78,17 @@ class Command(BaseCommand):
 
         stats = Stats()
         for ref in MEDIA_FIELDS:
-            self._migrate_field(ref, fs_storage, commit, stats)
+            self._migrate_field(ref, fs_storage, stats, commit=commit)
 
-        self._print_summary(stats, commit)
+        self._print_summary(stats, commit=commit)
 
     def _migrate_field(
         self,
         ref: MediaField,
         fs_storage: FileSystemStorage,
-        commit: bool,
         stats: Stats,
+        *,
+        commit: bool,
     ) -> None:
         try:
             model: type[Model] = apps.get_model(ref.app_label, ref.model_name)
@@ -103,9 +101,7 @@ class Command(BaseCommand):
             self.stderr.write(self.style.WARNING(f"  ? pas un FileField : {ref.qualified}"))
             return
 
-        qs = model.objects.exclude(**{f"{ref.field_name}__isnull": True}).exclude(
-            **{f"{ref.field_name}": ""}
-        )
+        qs = model.objects.exclude(**{f"{ref.field_name}__isnull": True}).exclude(**{f"{ref.field_name}": ""})
         total = qs.count()
         self.stdout.write(self.style.HTTP_INFO(f"\n{ref.qualified}  ({total} instance(s))"))
 
@@ -114,14 +110,15 @@ class Command(BaseCommand):
             name = file_field.name
             if not name:
                 continue
-            self._migrate_single_file(name, fs_storage, commit, stats)
+            self._migrate_single_file(name, fs_storage, stats, commit=commit)
 
     def _migrate_single_file(
         self,
         name: str,
         fs_storage: FileSystemStorage,
-        commit: bool,
         stats: Stats,
+        *,
+        commit: bool,
     ) -> None:
         if default_storage.exists(name):
             stats.skipped_already_present += 1
@@ -149,7 +146,7 @@ class Command(BaseCommand):
         stats.uploaded += 1
         self.stdout.write(self.style.SUCCESS(f"  + {name}"))
 
-    def _print_summary(self, stats: Stats, commit: bool) -> None:
+    def _print_summary(self, stats: Stats, *, commit: bool) -> None:
         self.stdout.write("\n" + "=" * 60)
         verb = "Upload" if commit else "Upload (dry-run)"
         self.stdout.write(f"  {verb:.<40} {stats.uploaded:>5}")
