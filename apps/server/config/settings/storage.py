@@ -1,8 +1,11 @@
 """Storage backend. USE_S3=true active S3Storage (MinIO self-hosted) ; sinon FileSystemStorage."""
 
+import copy
 from typing import cast
 
 import environ
+
+from config.settings import base as _base
 
 _env = environ.Env(USE_S3=(bool, False))
 
@@ -28,7 +31,6 @@ if USE_S3:
     AWS_S3_URL_PROTOCOL = _env("S3_PUBLIC_PROTOCOL", default="http") + ":"
     AWS_S3_VERIFY = _env.bool("S3_VERIFY_SSL", default=False)
 
-    STORAGES = {
-        "default": {"BACKEND": "storages.backends.s3.S3Storage"},
-    }
+    STORAGES = copy.deepcopy(_base.STORAGES)
+    STORAGES["default"] = {"BACKEND": "storages.backends.s3.S3Storage"}
     MEDIA_URL = f"{AWS_S3_URL_PROTOCOL}//{AWS_S3_CUSTOM_DOMAIN}/"
