@@ -224,14 +224,13 @@ export default defineNuxtConfig({
     },
 
     features: {
-        inlineStyles: true,
+        inlineStyles: false,
     },
 
     experimental: {
         payloadExtraction: true,
         inlineRouteRules: true,
         renderJsonPayloads: true,
-        // true respects prefers-reduced-motion; 'always' would override it.
         viewTransition: true,
     },
 
@@ -396,12 +395,7 @@ export default defineNuxtConfig({
         provider: 'ipx',
         quality: 80,
         format: ['avif', 'webp', 'png', 'jpg'],
-        // En prod, /media/ est servi par nginx-static (Django ne sert pas les
-        // fichiers media quand DEBUG=false). En dev, Django les sert directement.
-        alias: {
-            '/media': `${process.env.NUXT_IMAGE_MEDIA_BASE || process.env.NUXT_API_BASE_SERVER || 'http://localhost:8000'}/media`,
-        },
-        domains: ['localhost', 'backend', 'nginx-static', 'aitaddajuba.fr'],
+        domains: ['localhost', 'media.aitaddajuba.fr', 'aitaddajuba.fr'],
         screens: {
             xs: 320,
             sm: 640,
@@ -474,7 +468,7 @@ export default defineNuxtConfig({
                     },
                 },
                 {
-                    urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/media/'),
+                    urlPattern: ({ url }: { url: URL }) => url.hostname === 'media.aitaddajuba.fr',
                     handler: 'StaleWhileRevalidate',
                     options: {
                         cacheName: 'media-assets',

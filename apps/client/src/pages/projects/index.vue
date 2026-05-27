@@ -7,14 +7,16 @@
             variant="primary"
         >
             <template #stats>
-                <StatCard
-                    v-for="stat in statsCards"
-                    :key="stat.label"
-                    :value="stat.value"
-                    :label="stat.label"
-                    :icon="stat.icon"
-                    variant="primary"
-                />
+                <ClientOnly>
+                    <StatCard
+                        v-for="stat in statsCards"
+                        :key="stat.label"
+                        :value="stat.value"
+                        :label="stat.label"
+                        :icon="stat.icon"
+                        variant="primary"
+                    />
+                </ClientOnly>
             </template>
         </Hero>
 

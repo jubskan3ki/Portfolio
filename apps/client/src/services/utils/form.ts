@@ -1,5 +1,3 @@
-import { getBaseUrl } from '@/services/api/core';
-
 import type { SelectOption } from '@/types/components/base';
 
 export function toSelectOptions<T extends { id: number | string; name: string }>(
@@ -56,18 +54,3 @@ export function mapToIds<T extends { id: number | string; name?: string }>(rawVa
         .filter((id): id is number => typeof id === 'number');
 }
 
-const INTERNAL_HOSTNAMES = /^https?:\/\/(backend|nginx-static|frontend|api)(:\d+)?/i;
-
-export function buildImageUrl(path: string | undefined | null, baseUrl?: string): string {
-    if (!path) {
-        return '';
-    }
-    if (path.startsWith('http')) {
-        if (INTERNAL_HOSTNAMES.test(path)) {
-            const stripped = path.replace(INTERNAL_HOSTNAMES, '');
-            return `${baseUrl || getBaseUrl()}${stripped}`;
-        }
-        return path;
-    }
-    return `${baseUrl || getBaseUrl()}${path}`;
-}

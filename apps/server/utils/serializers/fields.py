@@ -9,32 +9,23 @@ from django.core.validators import URLValidator
 from rest_framework import serializers
 
 
+def _public_media_url(value: Any) -> str | None:
+    if not value:
+        return None
+    try:
+        return value.url
+    except (AttributeError, ValueError):
+        return None
+
+
 class RelativeMediaImageField(serializers.ImageField):
-    """ImageField qui retourne toujours une URL relative (ex: /media/...).
-
-    Evite que SSR (Nuxt -> http://backend:8000) encode des URLs internes Docker
-    dans le HTML rendu au navigateur. Le frontend prefixe via window.location.origin.
-    """
-
     def to_representation(self, value: Any) -> str | None:
-        if not value:
-            return None
-        try:
-            return value.url
-        except (AttributeError, ValueError):
-            return None
+        return _public_media_url(value)
 
 
 class RelativeMediaFileField(serializers.FileField):
-    """FileField qui retourne toujours une URL relative (ex: /media/...)."""
-
     def to_representation(self, value: Any) -> str | None:
-        if not value:
-            return None
-        try:
-            return value.url
-        except (AttributeError, ValueError):
-            return None
+        return _public_media_url(value)
 
 
 class JSONBlockListField(serializers.JSONField):

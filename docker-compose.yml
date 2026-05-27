@@ -26,6 +26,15 @@ x-common-env: &common-env
     CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
     CELERY_BROKER_URL: amqp://${RABBITMQ_USER:?RABBITMQ_USER required}:${RABBITMQ_PASS:?RABBITMQ_PASS required}@rabbitmq:5672/
     REDIS_URL: redis://redis:6379/0
+    USE_S3: ${USE_S3:-true}
+    S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://minio:9000}
+    S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+    S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    S3_BUCKET_NAME: ${S3_BUCKET_NAME:-portfolio-media}
+    S3_REGION: ${S3_REGION:-us-east-1}
+    S3_PUBLIC_DOMAIN: ${S3_PUBLIC_DOMAIN:-localhost:9000/portfolio-media}
+    S3_PUBLIC_PROTOCOL: ${S3_PUBLIC_PROTOCOL:-http}
+    S3_ADDRESSING_STYLE: ${S3_ADDRESSING_STYLE:-path}
 
 x-logging: &default-logging
     driver: json-file
@@ -250,7 +259,6 @@ services:
         environment:
             NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:${SERVER_PORT:-8000}}
             NUXT_API_BASE_SERVER: ${NUXT_API_BASE_SERVER:-http://backend:8000}
-            NUXT_IMAGE_MEDIA_BASE: ${NUXT_IMAGE_MEDIA_BASE:-http://nginx-static}
             NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://localhost:3000}
             NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION: ${NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION:-}
             NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE: ${NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE:-0.2}
@@ -319,6 +327,54 @@ services:
             timeout: 3s
             retries: 3
             start_period: 10s
+
+    minio:
+        image: minio/minio:${MINIO_VERSION:-RELEASE.2025-04-22T22-12-26Z}
+        container_name: minio
+        command: server /data --console-address ":9001"
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER required}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD required}
+            MINIO_BROWSER_REDIRECT_URL: ${MINIO_CONSOLE_URL:-http://localhost:9001}
+            MINIO_PROMETHEUS_AUTH_TYPE: public
+        volumes:
+            - minio_data:/data
+        networks:
+            - portfolio_net
+        restart: unless-stopped
+        logging: *default-logging
+        healthcheck:
+            test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/minio/health/live"]
+            interval: 15s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+
+    minio-init:
+        image: minio/mc:${MINIO_MC_VERSION:-RELEASE.2025-04-16T18-13-26Z}
+        container_name: minio-init
+        depends_on:
+            minio:
+                condition: service_healthy
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+            S3_BUCKET_NAME: ${S3_BUCKET_NAME:-portfolio-media}
+            S3_PUBLIC_READ: ${S3_PUBLIC_READ:-true}
+        entrypoint:
+            - /bin/sh
+            - -c
+            - |
+                set -eu
+                mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+                mc mb --ignore-existing local/"$$S3_BUCKET_NAME"
+                if [ "$$S3_PUBLIC_READ" = "true" ]; then
+                  mc anonymous set download local/"$$S3_BUCKET_NAME"
+                fi
+                echo "minio-init: bucket $$S3_BUCKET_NAME ready (public_read=$$S3_PUBLIC_READ)"
+        networks:
+            - portfolio_net
+        restart: "no"
 
     swagger:
         image: swaggerapi/swagger-ui:latest
@@ -567,6 +623,7 @@ volumes:
     backend_static:
     backend_media:
     backend_swagger:
+    minio_data:
     pgadmin_data:
     letsencrypt_acme:
     alertmanager_data:

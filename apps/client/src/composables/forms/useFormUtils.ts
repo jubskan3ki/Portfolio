@@ -1,10 +1,8 @@
 import { ref } from 'vue';
 
-import { buildImageUrl } from '@/services/utils/form';
-
 import type { UseImagePreviewReturn, UseRawValuesReturn } from '@/types/composables/forms';
 
-export { buildImageUrl, findItemByIdOrName, mapToIds, toSelectOptions } from '@/services/utils/form';
+export { findItemByIdOrName, mapToIds, toSelectOptions } from '@/services/utils/form';
 
 export function useImagePreview(): UseImagePreviewReturn {
     const previewImage = ref('');
@@ -14,7 +12,7 @@ export function useImagePreview(): UseImagePreviewReturn {
     };
 
     const setImageFromPath = (path: string | undefined | null) => {
-        previewImage.value = buildImageUrl(path);
+        previewImage.value = path ?? '';
     };
 
     const clearPreview = () => {

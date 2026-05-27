@@ -7,15 +7,17 @@
             variant="light"
         >
             <template #stats>
-                <StatCard
-                    v-for="stat in heroStats"
-                    :key="stat.label"
-                    :value="stat.value"
-                    :label="stat.label"
-                    :icon="stat.icon"
-                    :suffix="stat.suffix"
-                    variant="light"
-                />
+                <ClientOnly>
+                    <StatCard
+                        v-for="stat in heroStats"
+                        :key="stat.label"
+                        :value="stat.value"
+                        :label="stat.label"
+                        :icon="stat.icon"
+                        :suffix="stat.suffix"
+                        variant="light"
+                    />
+                </ClientOnly>
             </template>
         </Hero>
 

@@ -70,4 +70,17 @@ http:
             inFlightReq:
                 amount: 200
 
+        minio-media-prefix:
+            addPrefix:
+                prefix: "/portfolio-media"
+
+        minio-cors:
+            headers:
+                accessControlAllowMethods: [GET, HEAD, OPTIONS]
+                accessControlAllowOriginList:
+                    - "https://aitaddajuba.fr"
+                    - "https://www.aitaddajuba.fr"
+                accessControlMaxAge: 86400
+                addVaryHeader: true
+
     # Dashboard router is declared via Docker labels on the traefik service (file provider can't interpolate ${DOMAIN}).

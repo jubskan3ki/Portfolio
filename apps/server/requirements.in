@@ -59,6 +59,12 @@ xlsxwriter>=3.2
 requests>=2.32
 
 
+# STORAGE (S3-compatible : MinIO en self-hosted, AWS S3 si besoin)
+
+django-storages[s3]>=1.14
+boto3>=1.35
+
+
 # TESTING
 
 pytest>=8.0

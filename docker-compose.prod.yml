@@ -61,3 +61,15 @@ services:
                     memory: 128M
             restart_policy: *restart-policy
             update_config: *update-config
+
+    minio:
+        deploy:
+            resources:
+                limits:
+                    cpus: "1.0"
+                    memory: 512M
+                reservations:
+                    cpus: "0.1"
+                    memory: 128M
+            restart_policy: *restart-policy
+            update_config: *update-config

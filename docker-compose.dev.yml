@@ -61,6 +61,11 @@ services:
             timeout: 5s
             start_period: 180s
 
+    minio:
+        ports:
+            - "${MINIO_API_PORT:-9000}:9000"
+            - "${MINIO_CONSOLE_PORT:-9001}:9001"
+
 volumes:
     frontend_node_modules:
     frontend_nuxt_cache:

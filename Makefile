@@ -391,6 +391,26 @@ traefik-dashboard: ## URL du dashboard Traefik (BasicAuth)
 traefik-acme: ## Liste les certs émis par Traefik (acme.json)
 	@$(COMPOSE_EXEC) traefik sh -c 'cat /letsencrypt/acme.json | grep -oE "\"main\":\"[^\"]+\"" 2>/dev/null' || echo "(acme.json vide)"
 
+##@ MinIO - stockage media S3-compatible
+
+.PHONY: minio-init
+minio-init: ## (Re)joue le bootstrap du bucket portfolio-media (idempotent)
+	$(COMPOSE) up minio-init
+
+.PHONY: minio-stats
+minio-stats: ## Affiche taille + policy du bucket portfolio-media
+	$(COMPOSE) run --rm --entrypoint sh minio-init -c \
+	    'mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null && mc du local/"$$S3_BUCKET_NAME" && mc anonymous get local/"$$S3_BUCKET_NAME"'
+
+.PHONY: minio-shell
+minio-shell: ## Shell mc dans le container minio-init (alias `local` deja set)
+	$(COMPOSE) run --rm --entrypoint sh minio-init
+
+.PHONY: media-migrate
+media-migrate: ## Migre les fichiers media du filesystem vers MinIO (DRY=1 pour dry-run)
+	@flag=$$( [ "$${DRY:-0}" = "1" ] && echo "" || echo "--commit" ); \
+	$(COMPOSE_EXEC) backend python manage.py migrate_media_to_s3 $$flag
+
 ##@ Bench & Status - k6 + /status
 
 .PHONY: bench-local

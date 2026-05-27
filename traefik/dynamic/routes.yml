@@ -26,6 +26,12 @@ http:
                     path: /healthz
                     interval: 30s
 
+        minio:
+            loadBalancer:
+                servers:
+                    - url: "http://minio:9000"
+                passHostHeader: false
+
         grafana:
             loadBalancer:
                 servers:
@@ -125,6 +131,20 @@ http:
             service: frontend
             middlewares: [admin-noindex@file, cache-none@file, security-headers@file, compress@file]
             priority: 20
+            tls:
+                certResolver: letsencrypt
+
+        media:
+            rule: "Host(`media.aitaddajuba.fr`)"
+            entryPoints: [websecure]
+            service: minio
+            middlewares:
+                - minio-media-prefix@file
+                - minio-cors@file
+                - cache-longterm@file
+                - security-headers@file
+                - compress@file
+            priority: 200
             tls:
                 certResolver: letsencrypt
 

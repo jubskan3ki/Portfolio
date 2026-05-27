@@ -18,6 +18,7 @@ os.environ.setdefault("DB_USER", "postgres")
 os.environ.setdefault("DB_PASSWORD", "postgres")
 os.environ.setdefault("DB_HOST", "postgres-db")
 os.environ.setdefault("DB_PORT", "5432")
+os.environ["USE_S3"] = "false"
 
 from config import settings as base_settings
 from config.settings.base import INSTALLED_APPS as _BASE_INSTALLED_APPS

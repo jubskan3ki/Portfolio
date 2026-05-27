@@ -6,9 +6,8 @@
             </slot>
         </div>
 
-        <!-- External absolute URLs bypass IPX proxying -->
         <img
-            v-if="hasValidSrc && isAbsoluteExternal"
+            v-if="hasValidSrc && isAbsolute"
             :src="resolvedSrc"
             :alt="alt"
             :width="width"
@@ -84,9 +83,7 @@
     const isLoading = ref(false);
     const hasError = ref(false);
     const resolvedSrc = computed(() => resolveMediaUrl(props.src));
-
-    // External http(s) URLs skip IPX; /media/ is proxied via the IPX alias in nuxt.config.ts.
-    const isAbsoluteExternal = computed(() => /^https?:\/\//i.test(resolvedSrc.value));
+    const isAbsolute = computed(() => /^https?:\/\//i.test(resolvedSrc.value));
 
     let loadTimer: ReturnType<typeof setTimeout> | null = null;
     const clearLoadTimer = () => {

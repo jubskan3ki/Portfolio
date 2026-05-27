@@ -18,7 +18,10 @@
                                 :alt="`${name} - ${jobTitle}`"
                                 width="280"
                                 height="280"
+                                sizes="200px"
                                 loading="eager"
+                                fetchpriority="high"
+                                preload
                                 class="about-section__img"
                             />
                         </div>
@@ -61,37 +64,42 @@
             </div>
         </Section>
 
-        <Section class="faq-section">
-            <div class="container">
-                <ContactFAQ :items="faqItems" />
-            </div>
-        </Section>
+        <ClientOnly>
+            <Section class="faq-section">
+                <div class="container">
+                    <ContactFAQ :items="faqItems" />
+                </div>
+            </Section>
 
-        <Section class="contact-section" variant="light">
-            <div class="container">
-                <h2 class="contact-section__heading animate-fade-in">Me contacter</h2>
-                <p class="contact-section__subheading animate-fade-in">
-                    Vous avez un projet ou une opportunité professionnelle ? N'hésitez pas à me contacter.
-                </p>
-                <div class="contact-section__wrapper">
-                    <div class="contact-section__form animate-fade-in-up delay-1">
-                        <ContactForm form-id="contact-form-fixed" />
-                    </div>
+            <Section class="contact-section" variant="light">
+                <div class="container">
+                    <h2 class="contact-section__heading">Me contacter</h2>
+                    <p class="contact-section__subheading">
+                        Vous avez un projet ou une opportunité professionnelle ? N'hésitez pas à me contacter.
+                    </p>
+                    <div class="contact-section__wrapper">
+                        <div class="contact-section__form">
+                            <ContactForm form-id="contact-form-fixed" />
+                        </div>
 
-                    <div class="contact-section__info animate-fade-in-up delay-2">
-                        <ContactInfos
-                            title="Mes coordonnées"
-                            subtitle="N'hésitez pas à me contacter par ces moyens"
-                            :address="contactAddress"
-                            :email="contactEmail"
-                            :phone="contactPhone"
-                            :social-links="socialMediaLinks"
-                            custom-class="contact-page-infos"
-                        />
+                        <div class="contact-section__info">
+                            <ContactInfos
+                                title="Mes coordonnées"
+                                subtitle="N'hésitez pas à me contacter par ces moyens"
+                                :address="contactAddress"
+                                :email="contactEmail"
+                                :phone="contactPhone"
+                                :social-links="socialMediaLinks"
+                                custom-class="contact-page-infos"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Section>
+            </Section>
+            <template #fallback>
+                <div class="page-content-placeholder" style="min-height: 1200px" />
+            </template>
+        </ClientOnly>
     </div>
 </template>
 

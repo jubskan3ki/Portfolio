@@ -142,7 +142,7 @@
     import AdminFormLayout from '@/components/feature/admin/AdminFormLayout.vue';
     import { useDeferredMatch } from '@/composables/data/useDeferredMatch';
     import { useForm } from '@/composables/forms/useForm';
-    import { toSelectOptions, findItemByIdOrName, buildImageUrl } from '@/composables/forms/useFormUtils';
+    import { toSelectOptions, findItemByIdOrName } from '@/composables/forms/useFormUtils';
     import { useAlert } from '@/composables/ui/useAlert';
     import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/config/errorMessages';
     import { ADMIN_ROUTES } from '@/config/routes';
@@ -236,7 +236,7 @@
                 ctx.setRawValue('category', data.category);
             }
             if (data.logo) {
-                ctx.setPreviewImage(buildImageUrl(data.logo));
+                ctx.setPreviewImage(data.logo);
             }
         },
         buildPayload: (formValues) => {

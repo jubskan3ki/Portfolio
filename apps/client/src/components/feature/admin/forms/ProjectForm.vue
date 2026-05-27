@@ -172,7 +172,7 @@
     import AdminFormLayout from '@/components/feature/admin/AdminFormLayout.vue';
     import { useDeferredMatch } from '@/composables/data/useDeferredMatch';
     import { useForm } from '@/composables/forms/useForm';
-    import { toSelectOptions, findItemByIdOrName, mapToIds, buildImageUrl } from '@/composables/forms/useFormUtils';
+    import { toSelectOptions, findItemByIdOrName, mapToIds } from '@/composables/forms/useFormUtils';
     import { generateSlug } from '@/composables/forms/useSlugGenerator';
     import { useAlert } from '@/composables/ui/useAlert';
     import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/config/errorMessages';
@@ -296,7 +296,7 @@
 
             const thumbnail = data.thumbnail || data.image;
             if (thumbnail && typeof thumbnail === 'string') {
-                ctx.setPreviewImage(buildImageUrl(thumbnail));
+                ctx.setPreviewImage(thumbnail);
             }
 
             slugManuallyEdited.value = true;

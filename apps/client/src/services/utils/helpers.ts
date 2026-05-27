@@ -44,28 +44,7 @@ export function decodeHtmlEntities<T>(obj: T): T {
 }
 
 export function resolveMediaUrl(path: string | null | undefined): string {
-    if (!path) {
-        return '';
-    }
-
-    // URL absolue -> extrait le pathname pour éviter les hostnames Docker internes (backend:8000)
-    if (path.startsWith('http')) {
-        try {
-            const url = new URL(path);
-            if (url.pathname.startsWith('/media/')) {
-                return url.pathname;
-            }
-        } catch {
-            // URL malformée
-        }
-        return path;
-    }
-
-    if (path.startsWith('/media/')) {
-        return path;
-    }
-
-    return `/media/${path}`;
+    return path ?? '';
 }
 
 export function truncateText(text: string, maxLength = 100): string {

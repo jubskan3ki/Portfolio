@@ -7,22 +7,24 @@
             variant="dark"
         >
             <template #stats>
-                <template v-if="statsLoading">
-                    <div v-for="i in 3" :key="i" class="stat-skeleton">
-                        <Skeleton width="50px" height="28px" />
-                        <Skeleton width="80px" height="14px" />
-                    </div>
-                </template>
-                <template v-else>
-                    <StatCard
-                        v-for="stat in heroStats"
-                        :key="stat.label"
-                        :value="stat.value"
-                        :label="stat.label"
-                        :icon="stat.icon"
-                        variant="dark"
-                    />
-                </template>
+                <ClientOnly>
+                    <template v-if="statsLoading">
+                        <div v-for="i in 3" :key="i" class="stat-skeleton">
+                            <Skeleton width="50px" height="28px" />
+                            <Skeleton width="80px" height="14px" />
+                        </div>
+                    </template>
+                    <template v-else>
+                        <StatCard
+                            v-for="stat in heroStats"
+                            :key="stat.label"
+                            :value="stat.value"
+                            :label="stat.label"
+                            :icon="stat.icon"
+                            variant="dark"
+                        />
+                    </template>
+                </ClientOnly>
             </template>
         </Hero>
 
