@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, onMounted, ref } from 'vue';
+    import { computed, ref } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
@@ -27,33 +27,24 @@
     });
 
     const { prefersReducedMotion } = useReducedMotion();
-    const currentValue = ref(0);
-    const counted = ref(false);
-
-    const displayValue = computed(() => {
-        if (typeof props.value === 'string' && props.value.endsWith('+')) {
-            const numPart = parseInt(props.value.replace('+', ''));
-            return Math.min(numPart, currentValue.value);
-        }
-        return currentValue.value;
-    });
 
     const targetValue = computed(() => {
         if (typeof props.value === 'string') {
-            if (props.value.endsWith('+')) {
-                return parseInt(props.value.replace('+', ''));
-            }
-            return parseInt(props.value);
+            return parseInt(props.value.replace('+', ''));
         }
         return props.value;
     });
 
-    const startCount = () => {
-        if (counted.value) {
-            return;
-        }
-        counted.value = true;
+    const currentValue = ref(targetValue.value);
 
+    const displayValue = computed(() => {
+        if (typeof props.value === 'string' && props.value.endsWith('+')) {
+            return Math.min(targetValue.value, currentValue.value);
+        }
+        return currentValue.value;
+    });
+
+    const startCount = () => {
         if (prefersReducedMotion.value) {
             currentValue.value = targetValue.value;
             return;
@@ -61,6 +52,7 @@
 
         const startTime = Date.now();
         const endTime = startTime + props.duration;
+        currentValue.value = 0;
 
         const updateCounter = () => {
             const now = Date.now();
@@ -80,10 +72,6 @@
     };
 
     const cardRef = ref<HTMLElement | null>(null);
-
-    onMounted(() => {
-        startCount();
-    });
 
     defineExpose({ cardRef });
 </script>
@@ -138,6 +126,7 @@
             font-weight: vars.$font-weight-bold;
             line-height: 1;
             letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
         }
 
         &__suffix {

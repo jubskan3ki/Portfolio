@@ -20,22 +20,12 @@
             </div>
         </div>
 
-        <ClientOnly>
-            <div class="portfolio-summary__stats">
-                <div v-for="stat in stats" :key="stat.label" class="portfolio-summary__stat">
-                    <span class="portfolio-summary__stat-value">{{ stat.value }}+</span>
-                    <span class="portfolio-summary__stat-label">{{ stat.label }}</span>
-                </div>
+        <div class="portfolio-summary__stats">
+            <div v-for="stat in stats" :key="stat.label" class="portfolio-summary__stat">
+                <span class="portfolio-summary__stat-value">{{ stat.value }}+</span>
+                <span class="portfolio-summary__stat-label">{{ stat.label }}</span>
             </div>
-            <template #fallback>
-                <div class="portfolio-summary__stats">
-                    <div v-for="n in 3" :key="n" class="portfolio-summary__stat portfolio-summary__stat--skeleton">
-                        <span class="portfolio-summary__stat-value">&nbsp;</span>
-                        <span class="portfolio-summary__stat-label">&nbsp;</span>
-                    </div>
-                </div>
-            </template>
-        </ClientOnly>
+        </div>
     </div>
 </template>
 

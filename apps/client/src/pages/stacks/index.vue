@@ -7,24 +7,22 @@
             variant="dark"
         >
             <template #stats>
-                <ClientOnly>
-                    <template v-if="statsLoading">
-                        <div v-for="i in 3" :key="i" class="stat-skeleton">
-                            <Skeleton width="50px" height="28px" />
-                            <Skeleton width="80px" height="14px" />
-                        </div>
-                    </template>
-                    <template v-else>
-                        <StatCard
-                            v-for="stat in heroStats"
-                            :key="stat.label"
-                            :value="stat.value"
-                            :label="stat.label"
-                            :icon="stat.icon"
-                            variant="dark"
-                        />
-                    </template>
-                </ClientOnly>
+                <template v-if="statsLoading">
+                    <div v-for="i in 3" :key="i" class="stat-skeleton">
+                        <Skeleton width="50px" height="28px" />
+                        <Skeleton width="80px" height="14px" />
+                    </div>
+                </template>
+                <template v-else>
+                    <StatCard
+                        v-for="stat in heroStats"
+                        :key="stat.label"
+                        :value="stat.value"
+                        :label="stat.label"
+                        :icon="stat.icon"
+                        variant="dark"
+                    />
+                </template>
             </template>
         </Hero>
 
@@ -37,10 +35,6 @@
             :glass-animated="!prefersReducedMotion"
             :bubble-count="4"
         >
-            <ClientOnly>
-                <template #fallback>
-                    <div class="page-content-placeholder" style="min-height: 1100px" />
-                </template>
             <div class="stacks-nav">
                 <div v-if="!isSearchMode" class="stacks-nav__tabs">
                     <NavigationTabs
@@ -174,34 +168,30 @@
                     </div>
                 </Transition>
             </div>
-            </ClientOnly>
         </Main>
 
-        <ClientOnly>
-            <CTA
-                title="Besoin d'un développeur ?"
-                description="Discutons de votre projet et voyons comment je peux vous aider."
-                variant="dark"
-                :primary-button="{ label: 'Me contacter', to: ROUTES.CONTACT.path, icon: 'mail' }"
-                :secondary-button="{ label: 'Mes articles', to: ROUTES.BLOG.path }"
-            />
-            <template #fallback>
-                <div class="page-content-placeholder" style="min-height: 280px" />
-            </template>
-        </ClientOnly>
+        <CTA
+            title="Besoin d'un développeur ?"
+            description="Discutons de votre projet et voyons comment je peux vous aider."
+            variant="dark"
+            :primary-button="{ label: 'Me contacter', to: ROUTES.CONTACT.path, icon: 'mail' }"
+            :secondary-button="{ label: 'Mes articles', to: ROUTES.BLOG.path }"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
     import { useQueryClient } from '@tanstack/vue-query';
-    import { computed, ref, watch, onMounted, nextTick } from 'vue';
+    import { computed, defineAsyncComponent, ref, watch, onMounted, nextTick } from 'vue';
     import { useRouter } from 'vue-router';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import StatCard from '@/components/feature/home/StatCard.vue';
     import StackCard from '@/components/feature/stacks/StackCard.vue';
-    import StackCategorySlider from '@/components/feature/stacks/StackCategorySlider.vue';
+    const StackCategorySlider = defineAsyncComponent(
+        () => import('@/components/feature/stacks/StackCategorySlider.vue'),
+    );
     import EmptyState from '@/components/feedback/EmptyState.vue';
     import Main from '@/components/layouts/Main.vue';
     import Skeleton from '@/components/loaders/Skeleton.vue';

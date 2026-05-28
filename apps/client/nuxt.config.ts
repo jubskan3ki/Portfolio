@@ -396,10 +396,6 @@ export default defineNuxtConfig({
         quality: 80,
         format: ['avif', 'webp', 'png', 'jpg'],
         domains: ['localhost', 'media.aitaddajuba.fr', 'aitaddajuba.fr'],
-        alias: {
-            'https://media.aitaddajuba.fr': 'http://minio:9000/portfolio-media',
-            'http://localhost:9000/portfolio-media': 'http://minio:9000/portfolio-media',
-        },
         screens: {
             xs: 320,
             sm: 640,
@@ -458,11 +454,21 @@ export default defineNuxtConfig({
             icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
         },
         workbox: {
+            cleanupOutdatedCaches: true,
+            clientsClaim: true,
+            skipWaiting: true,
             globPatterns: [],
-            additionalManifestEntries: [{ url: '/offline', revision: '1' }],
-            navigateFallback: '/offline',
-            navigateFallbackDenylist: [/^\/admin/, /^\/api/, /^\/feed\./, /^\/_ipx/, /^\/_nuxt/],
             runtimeCaching: [
+                {
+                    urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+                    handler: 'NetworkFirst',
+                    options: {
+                        cacheName: 'pages',
+                        networkTimeoutSeconds: 10,
+                        expiration: { maxEntries: 50, maxAgeSeconds: 24 * 3600 },
+                        cacheableResponse: { statuses: [200] },
+                    },
+                },
                 {
                     urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/api/articles/'),
                     handler: 'StaleWhileRevalidate',

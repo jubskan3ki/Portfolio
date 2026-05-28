@@ -7,25 +7,19 @@
             variant="light"
         >
             <template #stats>
-                <ClientOnly>
-                    <StatCard
-                        v-for="stat in heroStats"
-                        :key="stat.label"
-                        :value="stat.value"
-                        :label="stat.label"
-                        :icon="stat.icon"
-                        :suffix="stat.suffix"
-                        variant="light"
-                    />
-                </ClientOnly>
+                <StatCard
+                    v-for="stat in heroStats"
+                    :key="stat.label"
+                    :value="stat.value"
+                    :label="stat.label"
+                    :icon="stat.icon"
+                    :suffix="stat.suffix"
+                    variant="light"
+                />
             </template>
         </Hero>
 
         <Main variant="default" size="large" :custom-class="prefersReducedMotion ? 'content--no-motion' : ''">
-            <ClientOnly>
-                <template #fallback>
-                    <div class="page-content-placeholder" style="min-height: 1100px" />
-                </template>
             <div v-if="availableTabs.length > 1" class="tabs-wrapper">
                 <NavigationTabs v-model="activeType" :tabs="availableTabs" variant="glass" />
             </div>
@@ -122,21 +116,15 @@
                     </p>
                 </div>
             </Transition>
-            </ClientOnly>
         </Main>
 
-        <ClientOnly>
-            <CTA
-                title="Intéressé par mon profil ?"
-                description="Discutons de vos projets ou opportunités de collaboration."
-                variant="light"
-                :primary-button="{ label: 'Me contacter', to: ROUTES.CONTACT.path, icon: 'mail' }"
-                :secondary-button="{ label: 'Voir mes projets', to: ROUTES.PROJECTS.path }"
-            />
-            <template #fallback>
-                <div class="page-content-placeholder" style="min-height: 280px" />
-            </template>
-        </ClientOnly>
+        <CTA
+            title="Intéressé par mon profil ?"
+            description="Discutons de vos projets ou opportunités de collaboration."
+            variant="light"
+            :primary-button="{ label: 'Me contacter', to: ROUTES.CONTACT.path, icon: 'mail' }"
+            :secondary-button="{ label: 'Voir mes projets', to: ROUTES.PROJECTS.path }"
+        />
     </div>
 </template>
 

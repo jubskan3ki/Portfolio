@@ -326,14 +326,6 @@
     .stack-slider__card {
         flex: 0 0 320px;
         scroll-snap-align: start;
-        animation: cardSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        animation-delay: calc(var(--card-index, 0) * 50ms);
-        opacity: 0;
-
-        @media (prefers-reduced-motion: reduce) {
-            animation: none;
-            opacity: 1;
-        }
     }
 
     // Progress indicator
@@ -358,19 +350,6 @@
         transform: scaleX(0);
         transition: transform 0.15s ease-out;
         will-change: transform;
-    }
-
-    // Animation
-    @keyframes cardSlideIn {
-        from {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
     }
 
     // Responsive - Tablet

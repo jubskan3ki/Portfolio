@@ -8,17 +8,15 @@
                     </slot>
                 </div>
 
-                <ClientOnly>
-                    <ul class="navbar__nav" role="menubar">
-                        <NavbarItem
-                            v-for="(item, index) in navigationItems"
-                            :key="item.path"
-                            :item="item"
-                            :index="index"
-                            :is-active="isActiveRoute(item.path, route.path)"
-                        />
-                    </ul>
-                </ClientOnly>
+                <ul class="navbar__nav" role="menubar">
+                    <NavbarItem
+                        v-for="(item, index) in navigationItems"
+                        :key="item.path"
+                        :item="item"
+                        :index="index"
+                        :is-active="isActiveRoute(item.path, route.path)"
+                    />
+                </ul>
 
                 <div class="navbar__actions">
                     <slot name="actions"></slot>

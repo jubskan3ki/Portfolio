@@ -7,24 +7,18 @@
             variant="primary"
         >
             <template #stats>
-                <ClientOnly>
-                    <StatCard
-                        v-for="stat in statsCards"
-                        :key="stat.label"
-                        :value="stat.value"
-                        :label="stat.label"
-                        :icon="stat.icon"
-                        variant="primary"
-                    />
-                </ClientOnly>
+                <StatCard
+                    v-for="stat in statsCards"
+                    :key="stat.label"
+                    :value="stat.value"
+                    :label="stat.label"
+                    :icon="stat.icon"
+                    variant="primary"
+                />
             </template>
         </Hero>
 
         <Main variant="default" size="large">
-            <ClientOnly>
-                <template #fallback>
-                    <div class="page-content-placeholder" style="min-height: 1100px" />
-                </template>
             <div class="projects-filters">
                 <div class="projects-filters__search">
                     <SearchInput
@@ -103,28 +97,22 @@
                     </button>
                     <Spinner v-else size="sm" />
                 </div>
-            </ClientOnly>
         </Main>
 
-        <ClientOnly>
-            <CTA
-                title="Un projet en tête ?"
-                description="Discutons de vos idées et voyons comment transformer votre vision en réalité."
-                variant="primary"
-                :primary-button="{
-                    label: 'Me contacter',
-                    to: ROUTES.CONTACT.path,
-                    icon: 'mail',
-                }"
-                :secondary-button="{
-                    label: 'Mes compétences',
-                    to: ROUTES.STACKS.path,
-                }"
-            />
-            <template #fallback>
-                <div class="page-content-placeholder" style="min-height: 280px" />
-            </template>
-        </ClientOnly>
+        <CTA
+            title="Un projet en tête ?"
+            description="Discutons de vos idées et voyons comment transformer votre vision en réalité."
+            variant="primary"
+            :primary-button="{
+                label: 'Me contacter',
+                to: ROUTES.CONTACT.path,
+                icon: 'mail',
+            }"
+            :secondary-button="{
+                label: 'Mes compétences',
+                to: ROUTES.STACKS.path,
+            }"
+        />
     </div>
 </template>
 

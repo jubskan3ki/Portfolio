@@ -2,15 +2,13 @@
     <div class="section-bg" :class="[`section-bg--${variant}`]" aria-hidden="true">
         <span class="section-bg__dots"></span>
         <span class="section-bg__gradient"></span>
-        <ClientOnly>
-            <div v-if="showBubbles" class="section-bg__bubbles">
-                <span class="section-bg__bubble section-bg__bubble--1"></span>
-                <span class="section-bg__bubble section-bg__bubble--2"></span>
-                <span class="section-bg__bubble section-bg__bubble--3"></span>
-                <span class="section-bg__bubble section-bg__bubble--4"></span>
-                <span class="section-bg__bubble section-bg__bubble--5"></span>
-            </div>
-        </ClientOnly>
+        <div v-if="showBubbles" class="section-bg__bubbles">
+            <span class="section-bg__bubble section-bg__bubble--1"></span>
+            <span class="section-bg__bubble section-bg__bubble--2"></span>
+            <span class="section-bg__bubble section-bg__bubble--3"></span>
+            <span class="section-bg__bubble section-bg__bubble--4"></span>
+            <span class="section-bg__bubble section-bg__bubble--5"></span>
+        </div>
     </div>
 </template>
 

@@ -7,24 +7,18 @@
             variant="secondary"
         >
             <template #stats>
-                <ClientOnly>
-                    <StatCard
-                        v-for="stat in heroStats"
-                        :key="stat.label"
-                        :value="stat.value"
-                        :label="stat.label"
-                        :icon="stat.icon"
-                        variant="secondary"
-                    />
-                </ClientOnly>
+                <StatCard
+                    v-for="stat in heroStats"
+                    :key="stat.label"
+                    :value="stat.value"
+                    :label="stat.label"
+                    :icon="stat.icon"
+                    variant="secondary"
+                />
             </template>
         </Hero>
 
         <Main id="articles" variant="light" size="large">
-            <ClientOnly>
-                <template #fallback>
-                    <div class="page-content-placeholder" style="min-height: 1200px" />
-                </template>
             <div class="blog-layout">
                 <div class="blog-main">
                     <div class="search-bar">
@@ -135,21 +129,15 @@
                     :total-articles="totalArticles"
                 />
             </div>
-            </ClientOnly>
         </Main>
 
-        <ClientOnly>
-            <LazyCTA
-                title="Découvrez mes projets"
-                description="Explorez mes réalisations et les stacks que j'utilise."
-                variant="secondary"
-                :primary-button="{ label: 'Voir les projets', to: ROUTES.PROJECTS.path, icon: 'briefcase' }"
-                :secondary-button="{ label: 'Mon parcours', to: ROUTES.EXPERIENCE.path }"
-            />
-            <template #fallback>
-                <div class="page-content-placeholder" style="min-height: 280px" />
-            </template>
-        </ClientOnly>
+        <LazyCTA
+            title="Découvrez mes projets"
+            description="Explorez mes réalisations et les stacks que j'utilise."
+            variant="secondary"
+            :primary-button="{ label: 'Voir les projets', to: ROUTES.PROJECTS.path, icon: 'briefcase' }"
+            :secondary-button="{ label: 'Mon parcours', to: ROUTES.EXPERIENCE.path }"
+        />
     </div>
 </template>
 
