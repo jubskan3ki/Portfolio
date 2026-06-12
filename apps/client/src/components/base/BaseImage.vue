@@ -1,5 +1,5 @@
 <template>
-    <div class="base-image" :class="containerClasses">
+    <div ref="rootEl" class="base-image" :class="containerClasses">
         <div v-if="hasValidSrc && isLoading && showPlaceholder" class="base-image__placeholder">
             <slot name="placeholder">
                 <div class="base-image__skeleton"></div>
@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, watch, onBeforeUnmount } from 'vue';
+    import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 
     import { resolveMediaUrl } from '@/services/utils/helpers';
 
@@ -85,6 +85,9 @@
     const resolvedSrc = computed(() => resolveMediaUrl(props.src));
     const isAbsolute = computed(() => /^https?:\/\//i.test(resolvedSrc.value));
 
+    const rootEl = ref<HTMLElement | null>(null);
+    const currentImgEl = (): HTMLImageElement | null => rootEl.value?.querySelector('img') ?? null;
+
     let loadTimer: ReturnType<typeof setTimeout> | null = null;
     const clearLoadTimer = () => {
         if (loadTimer !== null) {
@@ -92,15 +95,25 @@
             loadTimer = null;
         }
     };
-    // Safety net: some network stacks never fire load/error (stalled request,
-    // service worker bug, offline with cached HTML). Fall back after 5s.
+
+    const resolveIfSettled = (): boolean => {
+        const el = currentImgEl();
+        if (!el || !el.complete) {
+            return false;
+        }
+        clearLoadTimer();
+        isLoading.value = false;
+        hasError.value = el.naturalWidth === 0;
+        return true;
+    };
+
     const armLoadTimer = () => {
         clearLoadTimer();
         if (!hasValidSrc.value) {
             return;
         }
         loadTimer = setTimeout(() => {
-            if (isLoading.value) {
+            if (isLoading.value && !resolveIfSettled()) {
                 isLoading.value = false;
                 hasError.value = true;
                 emit('error', 'timeout');
@@ -111,16 +124,27 @@
     watch(
         () => props.src,
         () => {
+            clearLoadTimer();
             hasError.value = false;
             isLoading.value = hasValidSrc.value;
-            if (hasValidSrc.value) {
-                armLoadTimer();
-            } else {
-                clearLoadTimer();
-            }
         },
         { immediate: true },
     );
+
+    const settleOrArm = () => {
+        if (!hasValidSrc.value) {
+            clearLoadTimer();
+            return;
+        }
+        nextTick(() => {
+            if (!resolveIfSettled()) {
+                armLoadTimer();
+            }
+        });
+    };
+
+    onMounted(settleOrArm);
+    watch(resolvedSrc, settleOrArm);
 
     onBeforeUnmount(clearLoadTimer);
 
