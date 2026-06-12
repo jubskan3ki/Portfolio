@@ -459,17 +459,7 @@ export default defineNuxtConfig({
             clientsClaim: true,
             skipWaiting: true,
             globPatterns: [],
-            navigateFallback: '/offline',
-            navigateFallbackDenylist: [
-                /^\/api\//,
-                /^\/_ipx\//,
-                /^\/_nuxt\//,
-                /^\/admin/,
-                /^\/django-admin/,
-                /^\/(metrics|health)/,
-                /\.[^/]+$/,
-            ],
-            additionalManifestEntries: [{ url: '/offline', revision: 'offline-v1' }],
+            navigateFallback: '',
             runtimeCaching: [
                 {
                     urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
