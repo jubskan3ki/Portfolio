@@ -1,9 +1,10 @@
 # DJANGO FRAMEWORK
 
-Django>=5.2
+Django>=5.2.15
 djangorestframework>=3.16
 django-prometheus>=2.3           # expose /metrics pour Prometheus
 djangorestframework-simplejwt>=5.5
+PyJWT>=2.13.0
 django-cors-headers>=4.7
 django-filter>=25.1
 django-environ>=0.12
