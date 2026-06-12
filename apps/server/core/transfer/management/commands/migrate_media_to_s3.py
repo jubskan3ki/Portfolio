@@ -101,9 +101,7 @@ class Command(BaseCommand):
             self.stderr.write(self.style.WARNING(f"  ? pas un FileField : {ref.qualified}"))
             return
 
-        qs = model._default_manager.exclude(**{f"{ref.field_name}__isnull": True}).exclude(
-            **{f"{ref.field_name}": ""}
-        )
+        qs = model._default_manager.exclude(**{f"{ref.field_name}__isnull": True}).exclude(**{f"{ref.field_name}": ""})
         total = qs.count()
         self.stdout.write(self.style.HTTP_INFO(f"\n{ref.qualified}  ({total} instance(s))"))
 
