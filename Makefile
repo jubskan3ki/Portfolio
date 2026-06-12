@@ -302,6 +302,16 @@ deploy-zd: ## Deploy zero-downtime (scale+1 → healthy → scale-1). IMAGE_TAG=
 	services="$${SERVICES:-backend frontend}"; poll_max="$${HEALTH_POLL_MAX:-240}"; \
 	export IMAGE_TAG="$${IMAGE_TAG:-$$(git rev-parse --short HEAD)}"; \
 	echo "[deploy-zd] IMAGE_TAG=$$IMAGE_TAG services=$$services poll_max=$${poll_max}s"; \
+	if [ -z "$$($(COMPOSE) ps --filter status=running -q backend)" ]; then \
+	    echo "[deploy-zd] backend non démarré → pull + up + attente healthy avant migrations"; \
+	    $(COMPOSE) pull backend 2>/dev/null || true; \
+	    $(COMPOSE) up -d --no-deps backend; \
+	    w=0; while [ $$w -lt $$poll_max ]; do \
+	        h=$$($(COMPOSE) ps --filter status=running -q backend | xargs -r -I{} docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' {} | grep -cx healthy || true); \
+	        [ "$$h" -ge 1 ] && break; sleep 2; w=$$((w+2)); \
+	    done; \
+	    [ $$w -ge $$poll_max ] && { echo "[deploy-zd] backend cold-start timeout"; $(COMPOSE) logs --tail 50 backend; exit 1; }; \
+	fi; \
 	rc=0; $(COMPOSE) exec -T backend python manage.py migrate_check || rc=$$?; \
 	case "$$rc" in \
 	    0) ;; \
