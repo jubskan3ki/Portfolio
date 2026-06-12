@@ -19,9 +19,3 @@
 # Example (remove when no longer needed):
 
 # CVE-2026-4539 # pygments syntax-highlighting | no fix available yet. exp=2026-07-01
-
-CVE-2026-31789 # libssl3 CRITICAL dans gcr.io/distroless/nodejs24-debian12 | fix dans debian 3.0.19-1~deb12u2 | attente rebuild upstream Google. exp=2026-05-21
-CVE-2026-28387 # libssl3 HIGH dans gcr.io/distroless/nodejs24-debian12 | fix dans debian 3.0.19-1~deb12u2 | attente rebuild upstream Google. exp=2026-05-21
-CVE-2026-28388 # libssl3 HIGH dans gcr.io/distroless/nodejs24-debian12 | fix dans debian 3.0.19-1~deb12u2 | attente rebuild upstream Google. exp=2026-05-21
-CVE-2026-28389 # libssl3 HIGH dans gcr.io/distroless/nodejs24-debian12 | fix dans debian 3.0.19-1~deb12u2 | attente rebuild upstream Google. exp=2026-05-21
-CVE-2026-28390 # libssl3 HIGH dans gcr.io/distroless/nodejs24-debian12 | fix dans debian 3.0.19-1~deb12u2 | attente rebuild upstream Google. exp=2026-05-21

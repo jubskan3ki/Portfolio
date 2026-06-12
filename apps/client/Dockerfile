@@ -66,7 +66,19 @@ RUN --mount=type=cache,target=/app/.nuxt \
     --mount=type=cache,target=/app/node_modules/.cache \
     bunx nuxt prepare && bun run build
 
+FROM debian:12-slim AS ssl-patch
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libssl3 \
+    && dpkg-query -s libssl3 > /libssl3.status \
+    && cp /var/lib/dpkg/info/libssl3:amd64.md5sums /libssl3.md5sums
+
 FROM gcr.io/distroless/nodejs${NODE_VERSION}-debian12:nonroot AS runner
+
+COPY --from=ssl-patch /usr/lib/x86_64-linux-gnu/libssl.so.3 /usr/lib/x86_64-linux-gnu/libcrypto.so.3 /usr/lib/x86_64-linux-gnu/
+COPY --from=ssl-patch /usr/lib/x86_64-linux-gnu/engines-3/ /usr/lib/x86_64-linux-gnu/engines-3/
+COPY --from=ssl-patch /usr/lib/x86_64-linux-gnu/ossl-modules/ /usr/lib/x86_64-linux-gnu/ossl-modules/
+COPY --from=ssl-patch /libssl3.status /var/lib/dpkg/status.d/libssl3
+COPY --from=ssl-patch /libssl3.md5sums /var/lib/dpkg/status.d/libssl3.md5sums
 
 ARG VCS_REF=unknown
 ARG BUILD_DATE=unknown
