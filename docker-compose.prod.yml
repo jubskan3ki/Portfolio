@@ -51,14 +51,16 @@ services:
 
     frontend:
         image: ${CI_REGISTRY_IMAGE:-portfolio}/frontend:${IMAGE_TAG:-latest}
+        environment:
+            NODE_OPTIONS: "--max-old-space-size=768"
         deploy:
             resources:
                 limits:
                     cpus: "1.0"
-                    memory: 512M
+                    memory: 1024M
                 reservations:
                     cpus: "0.15"
-                    memory: 128M
+                    memory: 256M
             restart_policy: *restart-policy
             update_config: *update-config
 

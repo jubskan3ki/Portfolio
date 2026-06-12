@@ -47,6 +47,7 @@ export default defineNuxtConfig({
             'src/components/loaders',
             'src/components/navigation',
             'src/components/ui',
+            { path: 'src/components/OgImage', global: true, pathPrefix: false },
         ],
     },
 
@@ -475,16 +476,16 @@ export default defineNuxtConfig({
                     options: {
                         cacheName: 'articles-api',
                         expiration: { maxEntries: 40, maxAgeSeconds: 24 * 3600 },
-                        cacheableResponse: { statuses: [0, 200] },
+                        cacheableResponse: { statuses: [200] },
                     },
                 },
                 {
                     urlPattern: ({ url }: { url: URL }) => url.hostname === 'media.aitaddajuba.fr',
                     handler: 'StaleWhileRevalidate',
                     options: {
-                        cacheName: 'media-assets',
+                        cacheName: 'media-assets-v2',
                         expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 3600 },
-                        cacheableResponse: { statuses: [0, 200] },
+                        cacheableResponse: { statuses: [200] },
                     },
                 },
             ],
