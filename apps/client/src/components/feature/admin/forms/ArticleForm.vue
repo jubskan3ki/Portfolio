@@ -175,7 +175,6 @@
     const props = defineProps<ArticleFormProps>();
     const { success: showSuccess, error: showError } = useAlert();
 
-    // Form (useForm orchestre useFormState + useFormMutation + fetch + lifecycle)
     const {
         isEditMode,
         isLoading,
@@ -294,8 +293,6 @@
         loadErrorMessage: 'Impossible de charger l\'article. Veuillez réessayer.',
     });
 
-    // Données Externes (Catégories & Tags)
-
     const { data: categoriesData, refetch: refetchCategories } = useArticleCategories();
     const { data: tagsData, refetch: refetchTags } = useArticleTags();
     const createCategoryMutation = useCreateArticleCategory();
@@ -306,8 +303,6 @@
 
     const categoryOptions = computed(() => toSelectOptions(categories.value));
     const tagOptions = computed(() => toSelectOptions(tags.value) as MultiSelectOption[]);
-
-    // Handlers
 
     const onTitleChange = () => {
         if (!isEditMode.value) {
@@ -336,8 +331,6 @@
             showError(ERROR_MESSAGES.TAG.CREATE_FAILED, 'Erreur');
         }
     };
-
-    // Matching Différé
 
     useDeferredMatch({
         source: categories,

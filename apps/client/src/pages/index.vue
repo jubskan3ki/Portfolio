@@ -254,9 +254,7 @@
     import type { Stack } from '@/types/feature/stacks';
 
     useHomeSeo();
-    // LCP image preload is emitted by NuxtImg (preload prop on HeroSection) with the
-    // correct imagesrcset/imagesizes - manual <link rel=preload> for a single density
-    // mis-targeted retina viewports and forced a re-download of the 560px variant.
+    // Le preload de l'image LCP est émis par NuxtImg (prop preload sur HeroSection) avec le bon imagesrcset ; un <link preload> manuel re-téléchargeait la variante 560px.
 
     const { prefersReducedMotion } = useReducedMotion();
     const { isMobile } = useResponsive();

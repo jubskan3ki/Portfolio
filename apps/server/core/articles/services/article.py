@@ -212,7 +212,9 @@ class ArticleService(BaseService["Article"]):
         tags_data = data.pop("tags", None)
 
         is_published = data.get("is_published", article.is_published)
-        if is_published and not article.published_date and not data.get("published_date"):
+        # Un article publié sans published_date disparaît des listes publiques (cf. ArticleQuerySet.published) : on re-stampe ; une date future est préservée.
+        resulting_date = data.get("published_date", article.published_date)
+        if is_published and not resulting_date:
             data["published_date"] = timezone.now()
 
         apply_update(article, data, partial=partial)

@@ -251,8 +251,7 @@
             }
             let project;
             try {
-                // Direct API call (not fetchQuery) so the original ApiError
-                // status is preserved instead of being wrapped by vue-query.
+                // Appel direct (pas fetchQuery) pour préserver le status de l'ApiError d'origine.
                 project = await projectsApi.getBySlug(slugValue);
                 queryClient.setQueryData(projectKeys.detail(slugValue), project);
             } catch (err) {
@@ -263,7 +262,7 @@
                     fatal: true,
                 });
             }
-            // Sidebars best-effort: empty state is acceptable.
+            // Sidebars best-effort : un état vide est acceptable.
             await Promise.allSettled([
                 queryClient.prefetchQuery({
                     queryKey: projectKeys.featured(),
@@ -276,8 +275,7 @@
     );
 
     if (detailError.value) {
-        // Re-throw at setup level so Nuxt renders error.vue with the correct
-        // status code. useAsyncData stores the error but does not propagate it.
+        // Re-throw au niveau setup pour que Nuxt rende error.vue : useAsyncData stocke l'erreur sans la propager.
         throw detailError.value;
     }
 
@@ -287,8 +285,7 @@
     // long_description est rédigé en markdown : on le rend via le même moteur que les articles.
     const longDescriptionBlocks = computed(() => normalizeContent(currentProject.value?.longDescription ?? ''));
 
-    // Stacks list is only needed to wire tech-name → /stacks/<slug> deep links in the sidebar
-    // (below the fold). Defer the 100-row fetch to idle so it doesn't compete with hydration.
+    // Stacks (deep links de la sidebar, sous la ligne de flottaison) : fetch différé à l'idle pour ne pas concurrencer l'hydratation.
     const stacksFetchEnabled = ref(false);
     onMounted(() => {
         const trigger = () => { stacksFetchEnabled.value = true; };
@@ -325,8 +322,7 @@
         { immediate: true },
     );
 
-    // Template-side breadcrumb: pure computed from currentProject, avoids the
-    // ref+watch roundtrip and is ready at first SSR paint (no slot flash).
+    // Breadcrumb en computed pur : prêt au premier paint SSR, sans flash de slot.
     const breadcrumbItems = computed<BreadcrumbSeoItem[]>(() => {
         const project = currentProject.value;
         const crumbs: BreadcrumbSeoItem[] = [
@@ -694,11 +690,6 @@
             }
         }
 
-        &__logo {
-            // Le composant StackLogo gère dimensions/bg/letter lui-même.
-            // Ce wrapper class existe pour cible override contextuelle si besoin.
-        }
-
         &__name {
             font-size: vars.$font-size-xs;
             font-weight: vars.$font-weight-medium;
@@ -737,8 +728,7 @@
             text-decoration: none;
             font-size: vars.$font-size-sm;
             font-weight: vars.$font-weight-medium;
-            // BaseLink declares `transition: color` on .link - override here so the only animated
-            // property is the composited ::before opacity below, avoiding a paint pass on hover.
+            // Override le `transition: color` de BaseLink : seule l'opacity composited du ::before s'anime (pas de repaint au hover).
             transition: none;
 
             &::before {

@@ -97,7 +97,6 @@
         flex-direction: column;
         gap: vars.$spacing-md;
 
-        // Paragraph
         &__paragraph {
             font-size: vars.$font-size-lg;
             line-height: 1.8;
@@ -135,7 +134,6 @@
             }
         }
 
-        // Headings
         &__heading {
             color: vars.$text-primary;
             margin-top: vars.$spacing-xl;
@@ -160,7 +158,6 @@
             }
         }
 
-        // Blockquote
         &__quote {
             position: relative;
             margin: vars.$spacing-lg 0;
@@ -190,7 +187,6 @@
             color: vars.$text-muted;
         }
 
-        // Figure / Image
         &__figure {
             margin: vars.$spacing-lg 0;
             border-radius: vars.$border-radius-lg;
@@ -211,7 +207,6 @@
             background: fn.color-alpha(vars.$black, 0.02);
         }
 
-        // Code
         &__code {
             margin: vars.$spacing-lg 0;
             padding: vars.$spacing-lg;
@@ -232,7 +227,6 @@
             }
         }
 
-        // List
         &__list {
             margin: vars.$spacing-sm 0;
             padding-left: vars.$spacing-lg;
@@ -265,7 +259,6 @@
             }
         }
 
-        // Table
         &__table-wrapper {
             margin: vars.$spacing-lg 0;
             overflow-x: auto;

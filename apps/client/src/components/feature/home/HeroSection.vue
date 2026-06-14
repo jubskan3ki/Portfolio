@@ -1,6 +1,5 @@
 <template>
     <section ref="heroRef" class="hero-section" :class="{ 'hero-section--paused': animationsPaused }">
-        <!-- Background layers (SectionBackground from design system) -->
         <SectionBackground variant="light" />
 
         <div class="container">
@@ -97,19 +96,14 @@
         }
     };
 
-    // Accessibility - used via CSS media query prefers-reduced-motion
     const { prefersReducedMotion: _prefersReducedMotion } = useReducedMotion();
 
-    // Pause infinite animations + typing effect when hero leaves the viewport.
-    // Démarré `true` : les animations décoratives (dont le morph de border-radius, non
-    // compositable = repaint main-thread par frame) ne tournent PAS pendant l'hydratation
-    // (fenêtre TBT). On les libère à l'idle, comme les orbs/shapes de la page d'accueil.
+    // Démarré paused : pas d'animations décoratives pendant l'hydratation (fenêtre TBT), libérées à l'idle.
     const heroRef = ref<HTMLElement | null>(null);
     const animationsPaused = ref(true);
     const typingEnabled = computed(() => !animationsPaused.value);
     let observer: IntersectionObserver | null = null;
 
-    // Typing effect (paused when hero is offscreen)
     const typingTexts = ['React.ts', 'Vue.ts', 'Nest.ts', 'Go', 'Flutter', 'Django'];
     const { currentText: currentTypingText, isPaused } = useTypingEffect(typingTexts, {
         enabled: typingEnabled,
@@ -130,8 +124,7 @@
     };
 
     onMounted(() => {
-        // Différé à l'idle : laisse l'hydratation/le first paint finir avant de lancer
-        // les animations infinies (gain TBT). `buffered`-like : l'IO réajustera l'état réel.
+        // Différé à l'idle : laisse l'hydratation et le first paint finir avant les animations infinies (gain TBT).
         if ('requestIdleCallback' in window) {
             requestIdleCallback(startHeroAnimations, { timeout: 1500 });
         } else {
@@ -312,7 +305,7 @@
         border-radius: 40% 60% 65% 35% / 65% 35% 65% 40%;
         overflow: hidden;
         z-index: 2;
-        // Position figée : seul le border-radius est animé (la surface ondule sur place).
+        // Position figée : seul le border-radius est animé.
         transform: translate(-50%, -50%);
         animation: hero-blob-morph 9s ease-in-out infinite;
 
@@ -351,8 +344,7 @@
         background: linear-gradient(135deg, vars.$primary-color 0%, vars.$primary-dark 100%);
         opacity: 0.85;
         z-index: 1;
-        // Ondule (border-radius) + rotation lente (le dégradé balaie) + respiration (scale).
-        // Le translate de base reste constant dans chaque keyframe → position verrouillée.
+        // Translate constant dans chaque keyframe : seuls border-radius, rotation et scale sont animés.
         transform: translate(-45%, -55%);
         will-change: transform;
         animation: hero-shape-morph 18s linear infinite;
@@ -390,7 +382,6 @@
             animation: float 4s ease-in-out infinite;
         }
 
-        /* Positioned around the profile image */
         &--1 {
             top: 5%;
             left: 0;
@@ -423,7 +414,6 @@
         }
     }
 
-    /* Animations */
     @keyframes blink {
         0%,
         100% {
@@ -446,9 +436,7 @@
         }
     }
 
-    /* Photo : la surface ondule comme un fluide (border-radius seul, position figée).
-       Syntaxe elliptique 8 valeurs (a b c d / e f g h) pour des formes organiques.
-       Le transform n'est PAS animé → le centrage reste intact en permanence. */
+    /* Photo : seul le border-radius ondule, le transform n'est pas animé (centrage préservé). */
     @keyframes hero-blob-morph {
         0%,
         100% {
@@ -472,9 +460,7 @@
         }
     }
 
-    /* Forme de fond : ondulation + rotation complète + respiration d'échelle.
-       Famille de silhouettes distincte de la photo + rotation = clairement différent.
-       0% et 100% partagent le même border-radius ; rotate 0deg→360deg = boucle continue. */
+    /* Forme de fond : border-radius identique à 0% et 100% + rotation 360deg pour une boucle continue. */
     @keyframes hero-shape-morph {
         0% {
             border-radius: 65% 35% 50% 50% / 40% 65% 35% 60%;

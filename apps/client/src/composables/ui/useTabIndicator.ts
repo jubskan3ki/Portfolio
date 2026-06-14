@@ -18,8 +18,7 @@ export function useTabIndicator(options: UseTabIndicatorOptions): UseTabIndicato
         tabRefs.value[index] = el;
     };
 
-    // rAF coalescing: collapse bursts of Vue reactivity updates (active tab change + tabs deep
-    // changes + resize observer ticks) into a single layout read per frame.
+    // rAF coalescing : regroupe les rafales d'updates (tab actif, tabs, resize) en une seule lecture layout par frame.
     let rafId: number | null = null;
     let resizeObs: ResizeObserver | null = null;
 
@@ -34,7 +33,7 @@ export function useTabIndicator(options: UseTabIndicatorOptions): UseTabIndicato
             return;
         }
 
-        // Element not yet laid out (e.g. inside a transition). Defer once more.
+        // Élément pas encore layouté (ex. dans une transition) : on diffère d'une frame de plus.
         const width = activeBtn.offsetWidth;
         if (width === 0) {
             schedule();
@@ -76,8 +75,7 @@ export function useTabIndicator(options: UseTabIndicatorOptions): UseTabIndicato
     onMounted(() => {
         nextTick(schedule);
 
-        // Prefer ResizeObserver on the track when available - fires only on real layout changes
-        // and avoids the window-level forced reflow path that `resize` events trigger.
+        // ResizeObserver sur la track si dispo : ne déclenche que sur vrai changement de layout, sans reflow forcé global.
         const track = trackRef.value;
         if (listenResize) {
             if (typeof ResizeObserver !== 'undefined' && track) {

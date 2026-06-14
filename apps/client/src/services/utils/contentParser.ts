@@ -293,8 +293,7 @@ function hasMarkdownSyntax(text: string): boolean {
     );
 }
 
-// Cache par identité : évite de re-parser le markdown à chaque tick réactif tant
-// que le contenu source (string ou array) est le même objet.
+// Cache par identité : évite de re-parser le markdown tant que la source (string ou array) est le même objet.
 const normalizeCache = new WeakMap<object, ContentBlock[]>();
 const normalizeStringCache = new Map<string, ContentBlock[]>();
 const NORMALIZE_STRING_CACHE_MAX = 8;

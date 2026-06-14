@@ -7,7 +7,7 @@ export function useDropdown(
     containerRef: Ref<HTMLElement | null>,
     options: UseDropdownOptions = {},
 ): UseDropdownReturn {
-    const { onOpen, onClose, closeOnSelect = true, disabled = false } = options;
+    const { onOpen, onClose, closeOnSelect = true, disabled = false, ignore = [] } = options;
 
     const isOpen = ref(false);
     const highlightedIndex = ref(0);
@@ -125,7 +125,7 @@ export function useDropdown(
         return `${baseId}-option-${highlightedIndex.value}`;
     };
 
-    useClickOutside(containerRef, () => close(), { enabled: isOpen });
+    useClickOutside(containerRef, () => close(), { enabled: isOpen, ignore });
 
     return {
         isOpen,

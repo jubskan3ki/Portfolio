@@ -156,7 +156,6 @@
     const props = defineProps<ExperienceFormProps>();
     const { success: showSuccess, error: showError } = useAlert();
 
-    // Form
     const {
         isEditMode,
         isLoading,
@@ -288,8 +287,6 @@
         loadErrorMessage: 'Impossible de charger l\'expérience. Veuillez réessayer.',
     });
 
-    // Données Externes
-
     const { data: typesData, refetch: refetchTypes } = useExperienceTypes();
     const { data: stacksData } = useStacks();
     const createTypeMutation = useCreateExperienceType();
@@ -306,7 +303,7 @@
         );
     });
 
-    // Watch pour initialiser les types
+    // Fallback sur des types par défaut si l'API n'en renvoie aucun.
     watch(
         typesData,
         (response) => {
@@ -343,8 +340,6 @@
         })),
     );
 
-    // Handlers
-
     const handleCurrentChange = (value: boolean) => {
         if (value) {
             setFieldValue('end_date', '');
@@ -362,8 +357,6 @@
             showError(ERROR_MESSAGES.TYPE.CREATE_FAILED, 'Erreur');
         }
     };
-
-    // Matching Différé
 
     useDeferredMatch({
         source: typeOptions,

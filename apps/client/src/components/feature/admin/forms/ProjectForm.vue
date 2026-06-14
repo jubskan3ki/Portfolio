@@ -220,8 +220,6 @@
     const { success: showSuccess, error: showError } = useAlert();
     const slugManuallyEdited = ref(false);
 
-    // Form
-
     const {
         isEditMode,
         isLoading,
@@ -368,8 +366,6 @@
         loadErrorMessage: 'Impossible de charger le projet. Veuillez réessayer.',
     });
 
-    // Données Externes
-
     const { data: categoriesData, refetch: refetchCategories } = useProjectCategories();
     const { data: statusesData } = useProjectStatuses();
     const { data: stacksData } = useStacks();
@@ -400,8 +396,6 @@
         })),
     );
 
-    // Handlers
-
     const onTitleChange = () => {
         if (!slugManuallyEdited.value) {
             setFieldValue('slug', generateSlug(form.title));
@@ -418,8 +412,6 @@
             showError(ERROR_MESSAGES.CATEGORY.CREATE_FAILED, 'Erreur');
         }
     };
-
-    // Matching Différé
 
     useDeferredMatch({
         source: categories,

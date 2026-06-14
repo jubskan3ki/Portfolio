@@ -6,8 +6,6 @@ import type { Breakpoint, StorageKey } from '@/config/constants';
 import type { LinkTarget, RouteObject } from '../components/base';
 import type { DateRange, SwiperProps } from '../components/ui';
 
-// useClickOutside
-
 export type ClickOutsideHandler = (event: MouseEvent | TouchEvent) => void;
 
 export interface UseClickOutsideOptions {
@@ -22,8 +20,6 @@ export interface UseClickOutsideReturn {
     isActive: Ref<boolean>;
 }
 
-// useTiltCSS
-
 export interface TiltCSSOptions {
     maxRotation?: number;
     perspective?: number;
@@ -31,8 +27,6 @@ export interface TiltCSSOptions {
     smoothing?: number;
     resetOnLeave?: boolean;
 }
-
-// useScrollToTop
 
 export interface UseScrollToTopOptions {
     threshold?: number;
@@ -45,8 +39,6 @@ export interface UseScrollToTopReturn {
     scrollToTop: (behavior?: ScrollBehavior) => void;
     scrollToElement: (selector: string, options?: ScrollIntoViewOptions) => void;
 }
-
-// useSidebar
 
 export interface UseSidebarOptions {
     storageKey?: StorageKey;
@@ -66,8 +58,6 @@ export interface UseSidebarReturn {
     openMobile: () => void;
 }
 
-// useTabIndicator
-
 export interface UseTabIndicatorOptions {
     trackRef: Ref<HTMLElement | null>;
     tabRefs: Ref<Array<HTMLElement | null>>;
@@ -84,13 +74,13 @@ export interface UseTabIndicatorReturn {
     setTabRef: (index: number, el: HTMLElement | null) => void;
 }
 
-// useDropdown
-
 export interface UseDropdownOptions {
     onOpen?: () => void;
     onClose?: () => void;
     closeOnSelect?: boolean;
     disabled?: Ref<boolean> | boolean;
+    /** Sélecteurs CSS à ignorer par le click-outside (ex. un panneau téléporté hors du conteneur). */
+    ignore?: string[];
 }
 
 export interface UseDropdownReturn {
@@ -107,8 +97,6 @@ export interface UseDropdownReturn {
     getActiveDescendant: (baseId: string) => string | undefined;
 }
 
-// useShare
-
 export interface UseShareReturn {
     shareUrl: ComputedRef<string>;
     linkCopied: Ref<boolean>;
@@ -116,15 +104,11 @@ export interface UseShareReturn {
     copyLink: () => Promise<void>;
 }
 
-// useTableOfContents
-
 export interface TocItem {
     id: string;
     text: string;
     level: number;
 }
-
-// useLinkResolver
 
 export interface UseLinkResolverOptions {
     to?: string | RouteObject;
@@ -138,8 +122,6 @@ export interface UseLinkResolverReturn {
     linkProps: ComputedRef<Record<string, unknown>>;
     resolvedPath: ComputedRef<string>;
 }
-
-// useChartLifecycle
 
 export interface UseChartLifecycleOptions<T extends ChartType = ChartType> {
     type: T;
@@ -156,15 +138,11 @@ export interface UseChartLifecycleReturn<T extends ChartType = ChartType> {
     isInitialized: Ref<boolean>;
 }
 
-// useSwiper
-
 export interface UseSwiperOptions {
     props: SwiperProps;
     emit: (event: 'change', index: number) => void;
     swiperRef: Readonly<Ref<HTMLElement | null>>;
 }
-
-// useDateRangePicker
 
 export interface UseDateRangePickerOptions {
     model: Ref<DateRange>;
@@ -175,16 +153,12 @@ export interface UseDateRangePickerOptions {
     dropdownRef: Readonly<Ref<HTMLElement | null>>;
 }
 
-// useDateRangeSelection
-
 export interface UseDateRangeSelectionOptions {
     model: Ref<DateRange>;
     availableDates: Ref<string[]>;
     minDays: Ref<number>;
     maxDays: Ref<number>;
 }
-
-// useTypingEffect
 
 export interface UseTypingEffectOptions {
     typeSpeed?: number;
@@ -198,8 +172,6 @@ export interface UseTypingEffectReturn {
     currentText: Ref<string>;
     isPaused: Ref<boolean>;
 }
-
-// useProgressTimer
 
 export interface UseProgressTimerOptions {
     duration: number;
@@ -219,14 +191,10 @@ export interface UseProgressTimerReturn {
     stop: () => void;
 }
 
-// useDragScroll
-
 export interface UseDragScrollOptions {
     inertia?: boolean;
     dragThreshold?: number;
 }
-
-// useCalendarGrid
 
 export interface UseCalendarGridOptions {
     tempStartDate: Ref<string>;
@@ -235,8 +203,6 @@ export interface UseCalendarGridOptions {
     isDateAvailable: (date: string) => boolean;
     isDateDisabled: (date: string) => boolean;
 }
-
-// useResponsive
 
 export interface UseResponsiveOptions {
     initialBreakpoint?: Breakpoint;
