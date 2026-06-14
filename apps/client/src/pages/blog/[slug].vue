@@ -68,7 +68,7 @@
                 <DetailPageLayout>
                     <template #main>
                         <article ref="articleRef" class="detail-card">
-                            <ArticleBlockRenderer :blocks="contentBlocks" />
+                            <ContentRenderer :blocks="contentBlocks" />
                         </article>
                     </template>
 
@@ -192,7 +192,7 @@
     import { computed, ref, unref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
-    import ArticleBlockRenderer from '@/components/feature/blog/ArticleBlockRenderer.vue';
+    import ContentRenderer from '@/components/ui/ContentRenderer.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
     import Main from '@/components/layouts/Main.vue';

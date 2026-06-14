@@ -92,6 +92,15 @@
             :error="errors.description"
         />
 
+        <BaseTextarea
+            id="achievements"
+            v-model="form.achievements"
+            label="Réalisations"
+            placeholder="Une réalisation par ligne..."
+            :rows="5"
+            hint="Une réalisation par ligne"
+        />
+
         <BaseMultiSelect
             v-model="form.technologies"
             label="Stacks utilisées"
@@ -127,7 +136,7 @@
     import AdminFormLayout from '@/components/feature/admin/AdminFormLayout.vue';
     import { useDeferredMatch } from '@/composables/data/useDeferredMatch';
     import { useForm } from '@/composables/forms/useForm';
-    import { toSelectOptions, mapToIds } from '@/composables/forms/useFormUtils';
+    import { toSelectOptions, mapToIds, linesToArray, arrayToLines } from '@/composables/forms/useFormUtils';
     import { useAlert } from '@/composables/ui/useAlert';
     import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/config/errorMessages';
     import { ADMIN_ROUTES } from '@/config/routes';
@@ -172,6 +181,7 @@
             end_date: string;
             is_current: boolean;
             description: string;
+            achievements: string;
             technologies: Array<string | number>;
             logo: File | null;
         },
@@ -187,6 +197,7 @@
             end_date: '',
             is_current: false,
             description: '',
+            achievements: '',
             technologies: [] as Array<string | number>,
             logo: null as File | null,
         },
@@ -227,6 +238,7 @@
             ctx.setFieldValue('company', data.company);
             ctx.setFieldValue('location', data.location);
             ctx.setFieldValue('description', data.description);
+            ctx.setFieldValue('achievements', arrayToLines(data.achievements));
             ctx.setFieldValue('start_date', data.startDate || '');
             ctx.setFieldValue('end_date', data.endDate || '');
             ctx.setFieldValue('is_current', data.isCurrent ?? !data.endDate);
@@ -259,6 +271,11 @@
                     .map((techId) => stacks.value.find((s) => s.id === techId)?.name || '')
                     .filter(Boolean);
                 formData.append('technologies', JSON.stringify(techNames));
+            }
+
+            const achievements = linesToArray(formValues.achievements);
+            if (achievements.length > 0) {
+                formData.append('achievements', JSON.stringify(achievements));
             }
 
             if (formValues.logo instanceof File) {

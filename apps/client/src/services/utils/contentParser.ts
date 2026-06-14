@@ -77,7 +77,7 @@ function parseInline(text: string): InlineNode[] {
             }
         }
 
-        // *italic* — après **bold** pour ne pas matcher une seule étoile dans **.
+        // *italic* - après **bold** pour ne pas matcher une seule étoile dans **.
         if (ch === '*') {
             const end = text.indexOf('*', i + 1);
             if (end !== -1 && end > i + 1 && text[end + 1] !== '*') {

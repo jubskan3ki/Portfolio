@@ -120,7 +120,7 @@ describe('useTabIndicator', () => {
         expect(rafQueue.length - before).toBeLessThanOrEqual(1);
 
         flushRaf();
-        // happy-dom returns 0 for offsetWidth; the composable defers, so indicator never marks ready —
+        // happy-dom returns 0 for offsetWidth; the composable defers, so indicator never marks ready -
         // that's fine, we only assert the rAF coalescing contract here.
         expect(api.indicatorReady).toBe(false);
     });

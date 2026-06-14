@@ -30,6 +30,15 @@
             placeholder="Ex: Vue.js, Python, Docker..."
             required
             :error="errors.name"
+            @input="onNameChange"
+        />
+
+        <BaseInput
+            id="slug"
+            v-model="form.slug"
+            label="Slug"
+            placeholder="nom-de-la-techno"
+            :hint="`URL: /stacks/${form.slug || 'slug'}`"
         />
 
         <div class="admin-form__row">
@@ -71,13 +80,48 @@
             />
 
             <BaseInput
+                id="first_release"
+                v-model="form.first_release"
+                label="Première version"
+                placeholder="Ex: 2014"
+            />
+        </div>
+
+        <div class="admin-form__row">
+            <BaseInput
                 id="website"
                 v-model="form.website"
                 label="Site officiel"
                 type="url"
                 placeholder="https://vuejs.org"
             />
+
+            <BaseInput
+                id="website_label"
+                v-model="form.website_label"
+                label="Libellé du site"
+                placeholder="Ex: Documentation"
+            />
         </div>
+
+        <div class="admin-form__row">
+            <BaseInput
+                id="github"
+                v-model="form.github"
+                label="Dépôt GitHub"
+                type="url"
+                placeholder="https://github.com/vuejs/core"
+            />
+
+            <BaseInput
+                id="github_label"
+                v-model="form.github_label"
+                label="Libellé GitHub"
+                placeholder="Ex: Code source"
+            />
+        </div>
+
+        <BaseInput id="license" v-model="form.license" label="Licence" placeholder="Ex: MIT, Apache 2.0" />
 
         <BaseTextarea
             id="description"
@@ -85,6 +129,24 @@
             label="Description"
             placeholder="Décrivez brièvement votre expérience avec cette technologie..."
             :rows="3"
+        />
+
+        <BaseTextarea
+            id="tags"
+            v-model="form.tags"
+            label="Tags"
+            placeholder="Un tag par ligne..."
+            :rows="4"
+            hint="Un tag par ligne"
+        />
+
+        <BaseTextarea
+            id="content"
+            v-model="form.content"
+            label="Détails techniques"
+            placeholder="Contenu détaillé (Markdown supporté)..."
+            :rows="10"
+            hint="Markdown supporté (titres, listes, tableaux, code, blockquotes...)"
         />
 
         <BaseFileUpload
@@ -142,7 +204,13 @@
     import AdminFormLayout from '@/components/feature/admin/AdminFormLayout.vue';
     import { useDeferredMatch } from '@/composables/data/useDeferredMatch';
     import { useForm } from '@/composables/forms/useForm';
-    import { toSelectOptions, findItemByIdOrName } from '@/composables/forms/useFormUtils';
+    import {
+        toSelectOptions,
+        findItemByIdOrName,
+        linesToArray,
+        arrayToLines,
+    } from '@/composables/forms/useFormUtils';
+    import { generateSlug } from '@/composables/forms/useSlugGenerator';
     import { useAlert } from '@/composables/ui/useAlert';
     import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/config/errorMessages';
     import { ADMIN_ROUTES } from '@/config/routes';
@@ -174,11 +242,19 @@
     } = useForm<
         {
             name: string;
+            slug: string;
             category: string | number;
             proficiency: number;
             started_date: string;
+            first_release: string;
             description: string;
             website: string;
+            website_label: string;
+            github: string;
+            github_label: string;
+            license: string;
+            tags: string;
+            content: string;
             logo: File | null;
             is_featured: boolean;
             seo_title: string;
@@ -189,11 +265,19 @@
         id: computed(() => props.id),
         initialValues: {
             name: '',
+            slug: '',
             category: '' as string | number,
             proficiency: 80,
             started_date: '',
+            first_release: '',
             description: '',
             website: '',
+            website_label: '',
+            github: '',
+            github_label: '',
+            license: '',
+            tags: '',
+            content: '',
             logo: null as File | null,
             is_featured: false,
             seo_title: '',
@@ -224,8 +308,16 @@
         },
         mapEntityToForm: (data, ctx) => {
             ctx.setFieldValue('name', data.name);
+            ctx.setFieldValue('slug', data.slug ?? '');
             ctx.setFieldValue('description', data.description ?? '');
             ctx.setFieldValue('website', data.website ?? '');
+            ctx.setFieldValue('website_label', data.websiteLabel ?? '');
+            ctx.setFieldValue('github', data.github ?? '');
+            ctx.setFieldValue('github_label', data.githubLabel ?? '');
+            ctx.setFieldValue('first_release', data.firstRelease ?? '');
+            ctx.setFieldValue('license', data.license ?? '');
+            ctx.setFieldValue('tags', arrayToLines(data.tags));
+            ctx.setFieldValue('content', data.content ?? '');
             ctx.setFieldValue('is_featured', data.isFeatured ?? false);
             ctx.setFieldValue('proficiency', Math.round((data.level || 2.5) * 20));
             ctx.setFieldValue('started_date', data.startedDate ?? '');
@@ -249,9 +341,17 @@
                 .append('seo_title', formValues.seo_title)
                 .append('meta_description', formValues.meta_description)
                 .appendBoolean('is_featured', formValues.is_featured)
+                .appendIfPresent('slug', formValues.slug)
                 .appendIfPresent('started_date', formValues.started_date)
+                .appendIfPresent('first_release', formValues.first_release)
                 .appendIfPresent('description', formValues.description)
                 .appendIfPresent('website', formValues.website)
+                .appendIfPresent('website_label', formValues.website_label)
+                .appendIfPresent('github', formValues.github)
+                .appendIfPresent('github_label', formValues.github_label)
+                .appendIfPresent('license', formValues.license)
+                .appendIfPresent('content', formValues.content)
+                .appendArray('tags', linesToArray(formValues.tags))
                 .appendFile('logo', formValues.logo)
                 .build();
         },
@@ -268,6 +368,12 @@
     const categoryOptions = computed(() => toSelectOptions(categories.value));
 
     // Handlers
+
+    const onNameChange = () => {
+        if (!isEditMode.value) {
+            setFieldValue('slug', generateSlug(form.name));
+        }
+    };
 
     const handleCreateCategory = async (name: string) => {
         try {

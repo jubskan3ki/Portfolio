@@ -58,7 +58,7 @@
                                 <BaseIcon name="info" :size="20" class="detail-card__heading-icon" />
                                 Description du projet
                             </h2>
-                            <p class="detail-card__text">{{ currentProject.longDescription }}</p>
+                            <ContentRenderer :blocks="longDescriptionBlocks" />
                         </div>
 
                         <div v-if="currentProject.features && currentProject.features.length > 0" class="detail-card">
@@ -209,6 +209,7 @@
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseImage from '@/components/base/BaseImage.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
+    import ContentRenderer from '@/components/ui/ContentRenderer.vue';
     import StackLogo from '@/components/feature/stacks/StackLogo.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
     import DetailPageLayout from '@/components/layouts/DetailPageLayout.vue';
@@ -230,6 +231,7 @@
         useRecordProjectView,
     } from '@/services/api/modules/projects';
     import { useFeaturedStacks } from '@/services/api/modules/stacks';
+    import { normalizeContent } from '@/services/utils/contentParser';
     import { extractErrorStatus } from '@/services/utils/errors';
     import { resolveMediaUrl } from '@/services/utils/helpers';
 
@@ -281,6 +283,9 @@
 
     const { data: currentProject, isLoading, error } = useProject(slug);
     const { data: featuredProjects } = useFeaturedProjects(4);
+
+    // long_description est rédigé en markdown : on le rend via le même moteur que les articles.
+    const longDescriptionBlocks = computed(() => normalizeContent(currentProject.value?.longDescription ?? ''));
 
     // Stacks list is only needed to wire tech-name → /stacks/<slug> deep links in the sidebar
     // (below the fold). Defer the 100-row fetch to idle so it doesn't compete with hydration.
@@ -732,7 +737,7 @@
             text-decoration: none;
             font-size: vars.$font-size-sm;
             font-weight: vars.$font-weight-medium;
-            // BaseLink declares `transition: color` on .link — override here so the only animated
+            // BaseLink declares `transition: color` on .link - override here so the only animated
             // property is the composited ::before opacity below, avoiding a paint pass on hover.
             transition: none;
 

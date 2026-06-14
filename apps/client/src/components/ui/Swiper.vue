@@ -126,14 +126,10 @@
         hasDragged.value = false;
         dragOffset.value = 0;
 
-        const el = swiperRef.value;
-        if (el) {
-            try {
-                el.setPointerCapture(e.pointerId);
-            } catch {
-                /* noop */
-            }
-        }
+        // NOTE: pointer capture is deferred to onDragMove (once the drag threshold
+        // is crossed). Capturing on pointerdown retargets the pointerup - and thus
+        // the synthesized click - to this wrapper, so a plain tap never reaches the
+        // card's <NuxtLink> and the cards become unclickable.
     };
 
     const onDragMove = (e: PointerEvent) => {
@@ -143,8 +139,18 @@
         const dx = e.pageX - dragStartX;
         if (!hasDragged.value && Math.abs(dx) > DRAG_THRESHOLD) {
             hasDragged.value = true;
+            const el = swiperRef.value;
+            if (el) {
+                try {
+                    el.setPointerCapture(e.pointerId);
+                } catch {
+                    /* noop */
+                }
+            }
         }
-        dragOffset.value = dx;
+        if (hasDragged.value) {
+            dragOffset.value = dx;
+        }
     };
 
     const onDragEnd = (e: PointerEvent) => {
@@ -154,7 +160,7 @@
         const dx = dragOffset.value;
 
         const el = swiperRef.value;
-        if (el) {
+        if (el && el.hasPointerCapture?.(e.pointerId)) {
             try {
                 el.releasePointerCapture(e.pointerId);
             } catch {

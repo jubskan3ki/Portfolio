@@ -68,6 +68,7 @@
                             :bordered="cardBordered"
                             :show-level="showStackLevel"
                             :description-length="descriptionLength"
+                            @click="handleStackClick(stack)"
                         />
                     </slot>
                 </template>

@@ -166,8 +166,8 @@
             margin: vars.$spacing-lg 0;
             padding: vars.$spacing-lg vars.$spacing-xl;
             background: fn.color-alpha(vars.$primary-color, 0.04);
-            border-left: 4px solid vars.$primary-color;
-            border-radius: 0 vars.$border-radius-md vars.$border-radius-md 0;
+            border: 1px solid vars.$primary-color;
+            border-radius: vars.$border-radius-md;
 
             p {
                 font-size: vars.$font-size-lg;

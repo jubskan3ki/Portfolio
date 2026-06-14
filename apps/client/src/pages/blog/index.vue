@@ -184,7 +184,7 @@
 
     // SSR-prefetch des données critiques above-fold : articles (grid) + categories + tags
     // (utilisés par heroStats). `popular` n'est consommé que par BlogSidebar (lazy, hors
-    // viewport initial), donc sorti du path SSR bloquant — gain d'1 round-trip API.
+    // viewport initial), donc sorti du path SSR bloquant - gain d'1 round-trip API.
     // `getCachedData` réutilise le payload SSR + cache Nuxt sur nav client.
     const queryClient = useQueryClient();
     await useAsyncData(
@@ -267,7 +267,7 @@
     usePaginationSeo({ basePath: '/blog', currentPage, totalPages });
 
     // Schema.org ItemList pour rich results (SSR-only : basé sur les articles prefetch).
-    // Pas besoin de watch — le JSON-LD reflète la liste initiale, les filtres client
+    // Pas besoin de watch - le JSON-LD reflète la liste initiale, les filtres client
     // ne modifient pas l'URL canonique et n'ont donc pas besoin de re-émettre le schema.
     const articleListItems = computed(() =>
         articles.value.map((a) => ({ name: a.title, url: `/blog/${a.slug}`, image: a.image })),
@@ -480,9 +480,9 @@
             animation-delay: calc(min(var(--article-index, 0), 2) * 40ms);
             // Pas de `paint` ici non plus : sinon hover shadow coupé.
             contain: layout;
-
-            content-visibility: auto;
-            contain-intrinsic-size: auto 480px;
+            // Pas de content-visibility/contain-intrinsic-size sur les 6 cartes :
+            // l'estimation (480px) ne matchait pas la hauteur réelle (~560px) et
+            // re-layoutait la grille → CLS. Bénéfice de rendu négligeable pour 6 items.
         }
     }
 

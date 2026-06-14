@@ -12,15 +12,17 @@
         show-dots
     >
         <template #slide="{ item }">
-            <StackCard :stack="item as Stack" />
+            <StackCard :stack="item as Stack" @click="goToStack((item as Stack).slug)" />
         </template>
     </ContentCarousel>
 </template>
 
 <script setup lang="ts">
     import { computed } from 'vue';
+    import { useRouter } from 'vue-router';
 
     import ContentCarousel from '@/components/ui/ContentCarousel.vue';
+    import { ROUTES } from '@/config/routes';
     import { useFeaturedStacks } from '@/services/api/modules/stacks';
 
     import StackCard from './StackCard.vue';
@@ -37,4 +39,11 @@
     const { data, isLoading, isError } = useFeaturedStacks(props.limit);
 
     const stacks = computed(() => data.value ?? []);
+
+    const router = useRouter();
+    const goToStack = (slug?: string) => {
+        if (slug) {
+            router.push(`${ROUTES.STACKS.path}/${slug}`);
+        }
+    };
 </script>

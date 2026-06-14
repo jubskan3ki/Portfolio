@@ -98,7 +98,7 @@ export default defineNuxtConfig({
                 ...(apiPreconnectHref
                     ? [{ rel: 'preconnect', href: apiPreconnectHref, crossorigin: 'anonymous' } as const]
                     : []),
-                // Explicit Lato preloads with fetchpriority="high" — @nuxt/fonts auto-preload
+                // Explicit Lato preloads with fetchpriority="high" - @nuxt/fonts auto-preload
                 // (preload: true) is disabled below to avoid emitting duplicate <link rel="preload">
                 // tags without fetchpriority. Hashes are content-derived by @nuxt/fonts; stable
                 // across builds unless the upstream Google Font file changes.
@@ -134,7 +134,7 @@ export default defineNuxtConfig({
 
     // main.scss is imported via app.vue's <style> block so it lands in the inlined SSR
     // styles (features.inlineStyles below). Declaring it again here would also emit an
-    // external entry.css link — that's the render-blocking stylesheet flagged by Lighthouse.
+    // external entry.css link - that's the render-blocking stylesheet flagged by Lighthouse.
 
     router: {
         options: {
@@ -320,12 +320,12 @@ export default defineNuxtConfig({
                     manualChunks: (id) => {
                         if (!id.includes('node_modules')) return;
 
-                        // Admin-only / heavy lazy deps — keep isolated so the home doesn't pull them.
+                        // Admin-only / heavy lazy deps - keep isolated so the home doesn't pull them.
                         if (id.includes('chart.js')) return 'chartjs';
                         if (id.includes('/dayjs/') && !id.includes('/dayjs/plugin/')) return 'vendor-dayjs';
                         if (id.includes('/@tanstack/')) return 'vendor-query';
 
-                        // Deferred via dynamic import in plugins — let Rollup split by entry.
+                        // Deferred via dynamic import in plugins - let Rollup split by entry.
                         if (id.includes('web-vitals')) return;
                         if (id.includes('workbox-') || id.includes('@vite-pwa/')) return;
 
@@ -372,9 +372,12 @@ export default defineNuxtConfig({
                 name: 'Lato',
                 provider: 'google',
                 weights: [400, 700],
-                display: 'swap',
+                // `optional` (vs `swap`) : couplé aux preloads fetchpriority=high ci-dessus,
+                // la police arrive quasi toujours dans la fenêtre de blocage (~100ms) ; sinon
+                // fallback Arial sans swap → zéro reflow de police (gros contributeur du CLS blog).
+                display: 'optional',
                 subsets: ['latin'],
-                // Disabled to avoid duplicate preload tags — both weights are explicitly
+                // Disabled to avoid duplicate preload tags - both weights are explicitly
                 // preloaded with fetchpriority="high" in app.head.link above.
                 preload: false,
             },

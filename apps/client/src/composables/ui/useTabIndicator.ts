@@ -76,7 +76,7 @@ export function useTabIndicator(options: UseTabIndicatorOptions): UseTabIndicato
     onMounted(() => {
         nextTick(schedule);
 
-        // Prefer ResizeObserver on the track when available — fires only on real layout changes
+        // Prefer ResizeObserver on the track when available - fires only on real layout changes
         // and avoids the window-level forced reflow path that `resize` events trigger.
         const track = trackRef.value;
         if (listenResize) {

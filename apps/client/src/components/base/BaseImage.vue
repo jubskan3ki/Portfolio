@@ -7,12 +7,13 @@
         </div>
 
         <img
-            v-if="hasValidSrc && isAbsolute"
+            v-if="hasValidSrc && isExternal"
             :src="resolvedSrc"
             :alt="alt"
             :width="width"
             :height="height"
             :loading="lazy ? 'lazy' : 'eager'"
+            :fetchpriority="lazy ? undefined : 'high'"
             class="base-image__img"
             :class="{ 'base-image__img--loaded': !isLoading }"
             @load="handleLoad"
@@ -26,6 +27,7 @@
             :width="width"
             :height="height"
             :loading="lazy ? 'lazy' : 'eager'"
+            :fetchpriority="lazy ? undefined : 'high'"
             :placeholder="placeholder"
             :quality="quality"
             :format="format"
@@ -53,7 +55,7 @@
 <script setup lang="ts">
     import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 
-    import { resolveMediaUrl } from '@/services/utils/helpers';
+    import { isOptimizableImage, resolveMediaUrl } from '@/services/utils/helpers';
 
     import BaseIcon from './BaseIcon.vue';
 
@@ -83,7 +85,9 @@
     const isLoading = ref(false);
     const hasError = ref(false);
     const resolvedSrc = computed(() => resolveMediaUrl(props.src));
-    const isAbsolute = computed(() => /^https?:\/\//i.test(resolvedSrc.value));
+    const isExternal = computed(
+        () => /^https?:\/\//i.test(resolvedSrc.value) && !isOptimizableImage(resolvedSrc.value),
+    );
 
     const rootEl = ref<HTMLElement | null>(null);
     const currentImgEl = (): HTMLImageElement | null => rootEl.value?.querySelector('img') ?? null;

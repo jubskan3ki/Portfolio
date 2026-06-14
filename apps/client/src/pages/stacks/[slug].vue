@@ -72,7 +72,7 @@
                                 <BaseIcon name="cpu" :size="20" class="detail-card__icon" />
                                 Détails techniques
                             </h2>
-                            <p class="detail-card__text">{{ currentStack.content }}</p>
+                            <ContentRenderer :blocks="contentBlocks" />
                         </div>
 
                         <div v-if="relatedStacks.length" class="detail-card">
@@ -235,6 +235,7 @@
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
+    import ContentRenderer from '@/components/ui/ContentRenderer.vue';
     import StackLogo from '@/components/feature/stacks/StackLogo.vue';
     import StackTags from '@/components/feature/stacks/StackTags.vue';
     import ErrorMessage from '@/components/feedback/ErrorMessage.vue';
@@ -258,6 +259,7 @@
         useStackProjects,
         useStackArticles,
     } from '@/services/api/modules/stacks';
+    import { normalizeContent } from '@/services/utils/contentParser';
     import { extractErrorStatus } from '@/services/utils/errors';
 
     import type { BreadcrumbSeoItem } from '@/types/composables/seo';
@@ -315,6 +317,9 @@
     const { data: featuredStacks } = useFeaturedStacks(5);
     const { data: stackProjects } = useStackProjects(slug);
     const { data: stackArticles } = useStackArticles(slug);
+
+    // content est rédigé en markdown : on le rend via le même moteur que les articles.
+    const contentBlocks = computed(() => normalizeContent(currentStack.value?.content ?? ''));
 
     const { announceNavigation } = useAnnounce();
 

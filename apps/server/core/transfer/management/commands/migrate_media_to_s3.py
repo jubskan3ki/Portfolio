@@ -1,4 +1,4 @@
-"""`python manage.py migrate_media_to_s3 [--commit]` — copie MEDIA_ROOT vers MinIO."""
+"""`python manage.py migrate_media_to_s3 [--commit]` - copie MEDIA_ROOT vers MinIO."""
 
 from __future__ import annotations
 

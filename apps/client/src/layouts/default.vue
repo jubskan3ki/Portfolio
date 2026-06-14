@@ -51,7 +51,7 @@
     import ErrorBoundary from '@/components/feedback/ErrorBoundary.vue';
     import Header from '@/components/layouts/Header.vue';
     // Direct import (instead of the strategy-dispatching usePrefetch facade) keeps the hover
-    // prefetch path — which pulls in @tanstack/vue-query — out of the entry chunk.
+    // prefetch path - which pulls in @tanstack/vue-query - out of the entry chunk.
     import { useIdlePrefetch } from '@/composables/performance/useIdlePrefetch';
     import { useUiStore } from '@/stores/ui';
 

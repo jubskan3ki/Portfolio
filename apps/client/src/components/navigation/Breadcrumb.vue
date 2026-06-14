@@ -145,7 +145,7 @@
             margin: 0 vars.$spacing-xxxs;
             line-height: 1;
 
-            // Default character separators rendered via ::before — no SVG/path nodes.
+            // Default character separators rendered via ::before - no SVG/path nodes.
             &--chevron::before {
                 content: '\203A'; // ›
                 font-size: 1.1em;

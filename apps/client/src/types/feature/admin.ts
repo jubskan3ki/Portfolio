@@ -66,6 +66,8 @@ export interface AdminTag extends TagBase {
 export interface AdminProject extends ProjectBase {
     content?: string;
     longDescription?: string;
+    features?: string[];
+    date?: string;
     thumbnail?: string;
     category?: AdminCategory | null;
     status: 'planned' | 'in_progress' | 'completed' | 'archived';

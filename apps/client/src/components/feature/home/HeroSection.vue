@@ -56,8 +56,10 @@
                                 :key="stack.id"
                                 :stack="stack"
                                 size="small"
+                                :clickable="Boolean(stack.slug)"
                                 class="hero-badge"
                                 :class="`hero-badge--${index + 1}`"
+                                @click="onStackClick"
                             />
                         </div>
                     </div>
@@ -69,6 +71,7 @@
 
 <script setup lang="ts">
     import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+    import { useRouter } from 'vue-router';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
@@ -78,7 +81,7 @@
     import { useTypingEffect } from '@/composables/ui/useTypingEffect';
     import { ROUTES } from '@/config/routes';
 
-    import type { HeroSectionProps } from '@/types/feature/home';
+    import type { HeroSectionProps, HeroStack } from '@/types/feature/home';
 
     type Props = HeroSectionProps;
 
@@ -87,12 +90,22 @@
         bio: '',
     });
 
+    const router = useRouter();
+    const onStackClick = (stack: HeroStack) => {
+        if (stack.slug) {
+            router.push(`${ROUTES.STACKS.path}/${stack.slug}`);
+        }
+    };
+
     // Accessibility - used via CSS media query prefers-reduced-motion
     const { prefersReducedMotion: _prefersReducedMotion } = useReducedMotion();
 
-    // Pause infinite animations + typing effect when hero leaves the viewport
+    // Pause infinite animations + typing effect when hero leaves the viewport.
+    // Démarré `true` : les animations décoratives (dont le morph de border-radius, non
+    // compositable = repaint main-thread par frame) ne tournent PAS pendant l'hydratation
+    // (fenêtre TBT). On les libère à l'idle, comme les orbs/shapes de la page d'accueil.
     const heroRef = ref<HTMLElement | null>(null);
-    const animationsPaused = ref(false);
+    const animationsPaused = ref(true);
     const typingEnabled = computed(() => !animationsPaused.value);
     let observer: IntersectionObserver | null = null;
 
@@ -102,8 +115,9 @@
         enabled: typingEnabled,
     });
 
-    onMounted(() => {
+    const startHeroAnimations = () => {
         if (!heroRef.value || typeof IntersectionObserver === 'undefined') {
+            animationsPaused.value = false;
             return;
         }
         observer = new IntersectionObserver(
@@ -113,6 +127,16 @@
             { rootMargin: '0px', threshold: 0 },
         );
         observer.observe(heroRef.value);
+    };
+
+    onMounted(() => {
+        // Différé à l'idle : laisse l'hydratation/le first paint finir avant de lancer
+        // les animations infinies (gain TBT). `buffered`-like : l'IO réajustera l'état réel.
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(startHeroAnimations, { timeout: 1500 });
+        } else {
+            setTimeout(startHeroAnimations, 300);
+        }
     });
 
     onBeforeUnmount(() => observer?.disconnect());
@@ -285,21 +309,23 @@
         left: 50%;
         width: 280px;
         height: 280px;
-        border-radius: 30% 70% 70% 30%;
+        border-radius: 40% 60% 65% 35% / 65% 35% 65% 40%;
         overflow: hidden;
         z-index: 2;
-        will-change: transform;
-        animation: hero-float 7s ease-in-out infinite alternate;
+        // Position figée : seul le border-radius est animé (la surface ondule sur place).
+        transform: translate(-50%, -50%);
+        animation: hero-blob-morph 9s ease-in-out infinite;
 
         box-shadow:
-            0 20px 40px fn.color-alpha(vars.$primary-color, 0.15),
-            0 0 0 4px fn.color-alpha(vars.$white, 0.9),
-            inset 0 0 20px fn.color-alpha(vars.$white, 0.3);
+            0 18px 44px fn.color-alpha(vars.$primary-color, 0.3),
+            0 0 0 5px fn.color-alpha(vars.$white, 0.95),
+            0 0 0 11px fn.color-alpha(vars.$primary-color, 0.08),
+            inset 0 0 24px fn.color-alpha(vars.$white, 0.35);
 
         @include mix.responsive(mobile) {
             width: 220px;
             height: 220px;
-            animation: hero-float-mobile 8s ease-in-out infinite alternate;
+            animation-duration: 11s;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -319,19 +345,22 @@
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 300px;
-        height: 300px;
-        border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        width: 330px;
+        height: 330px;
+        border-radius: 65% 35% 50% 50% / 40% 65% 35% 60%;
         background: linear-gradient(135deg, vars.$primary-color 0%, vars.$primary-dark 100%);
-        opacity: 0.8;
+        opacity: 0.85;
         z-index: 1;
+        // Ondule (border-radius) + rotation lente (le dégradé balaie) + respiration (scale).
+        // Le translate de base reste constant dans chaque keyframe → position verrouillée.
+        transform: translate(-45%, -55%);
         will-change: transform;
-        animation: hero-shape-morph 14s ease-in-out infinite;
+        animation: hero-shape-morph 18s linear infinite;
 
         @include mix.responsive(mobile) {
-            width: 240px;
-            height: 240px;
-            animation: hero-shape-morph 16s ease-in-out infinite;
+            width: 260px;
+            height: 260px;
+            animation-duration: 22s;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -417,53 +446,59 @@
         }
     }
 
-    @keyframes hero-float {
-        0% {
-            transform: translate(-50%, -50%) rotate(0deg);
-        }
-
-        50% {
-            transform: translate(calc(-50% + 6px), calc(-50% - 14px)) rotate(1.2deg);
-        }
-
+    /* Photo : la surface ondule comme un fluide (border-radius seul, position figée).
+       Syntaxe elliptique 8 valeurs (a b c d / e f g h) pour des formes organiques.
+       Le transform n'est PAS animé → le centrage reste intact en permanence. */
+    @keyframes hero-blob-morph {
+        0%,
         100% {
-            transform: translate(calc(-50% - 7px), calc(-50% - 10px)) rotate(-1.2deg);
+            border-radius: 40% 60% 65% 35% / 65% 35% 65% 40%;
+        }
+
+        20% {
+            border-radius: 72% 28% 45% 55% / 55% 70% 30% 45%;
+        }
+
+        40% {
+            border-radius: 50% 50% 25% 75% / 35% 60% 40% 65%;
+        }
+
+        60% {
+            border-radius: 60% 40% 70% 30% / 70% 30% 60% 40%;
+        }
+
+        80% {
+            border-radius: 30% 70% 50% 50% / 45% 50% 50% 55%;
         }
     }
 
-    @keyframes hero-float-mobile {
-        0% {
-            transform: translate(-50%, -50%) rotate(0deg);
-        }
-
-        50% {
-            transform: translate(calc(-50% + 3px), calc(-50% - 7px)) rotate(0.6deg);
-        }
-
-        100% {
-            transform: translate(calc(-50% - 4px), calc(-50% - 5px)) rotate(-0.6deg);
-        }
-    }
-
+    /* Forme de fond : ondulation + rotation complète + respiration d'échelle.
+       Famille de silhouettes distincte de la photo + rotation = clairement différent.
+       0% et 100% partagent le même border-radius ; rotate 0deg→360deg = boucle continue. */
     @keyframes hero-shape-morph {
         0% {
-            transform: translate(-45%, -55%) scale(1) rotate(0deg);
+            border-radius: 65% 35% 50% 50% / 40% 65% 35% 60%;
+            transform: translate(-45%, -55%) rotate(0deg) scale(1);
         }
 
         25% {
-            transform: translate(-48%, -52%) scale(1.05) rotate(6deg);
+            border-radius: 35% 65% 70% 30% / 60% 45% 55% 40%;
+            transform: translate(-45%, -55%) rotate(90deg) scale(1.07);
         }
 
         50% {
-            transform: translate(-42%, -58%) scale(0.97) rotate(-4deg);
+            border-radius: 55% 45% 30% 70% / 50% 35% 65% 50%;
+            transform: translate(-45%, -55%) rotate(180deg) scale(0.94);
         }
 
         75% {
-            transform: translate(-47%, -53%) scale(1.03) rotate(5deg);
+            border-radius: 70% 30% 60% 40% / 35% 60% 40% 65%;
+            transform: translate(-45%, -55%) rotate(270deg) scale(1.05);
         }
 
         100% {
-            transform: translate(-45%, -55%) scale(1) rotate(0deg);
+            border-radius: 65% 35% 50% 50% / 40% 65% 35% 60%;
+            transform: translate(-45%, -55%) rotate(360deg) scale(1);
         }
     }
 </style>

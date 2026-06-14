@@ -59,6 +59,16 @@
             label="Description détaillée"
             placeholder="Description complète du projet (Markdown supporté)..."
             :rows="8"
+            hint="Markdown supporté (titres, listes, tableaux, code, blockquotes...)"
+        />
+
+        <BaseTextarea
+            id="features"
+            v-model="form.features"
+            label="Fonctionnalités principales"
+            placeholder="Une fonctionnalité par ligne..."
+            :rows="5"
+            hint="Une fonctionnalité par ligne"
         />
 
         <div class="admin-form__row">
@@ -79,6 +89,14 @@
 
             <BaseSelect id="status" v-model="form.status" label="Statut" :options="statusOptions" />
         </div>
+
+        <BaseInput
+            id="date"
+            v-model="form.date"
+            label="Date du projet"
+            type="date"
+            hint="Date de réalisation (par défaut : aujourd'hui)"
+        />
 
         <BaseMultiSelect
             v-model="form.technologies"
@@ -172,7 +190,13 @@
     import AdminFormLayout from '@/components/feature/admin/AdminFormLayout.vue';
     import { useDeferredMatch } from '@/composables/data/useDeferredMatch';
     import { useForm } from '@/composables/forms/useForm';
-    import { toSelectOptions, findItemByIdOrName, mapToIds } from '@/composables/forms/useFormUtils';
+    import {
+        toSelectOptions,
+        findItemByIdOrName,
+        mapToIds,
+        linesToArray,
+        arrayToLines,
+    } from '@/composables/forms/useFormUtils';
     import { generateSlug } from '@/composables/forms/useSlugGenerator';
     import { useAlert } from '@/composables/ui/useAlert';
     import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/config/errorMessages';
@@ -218,6 +242,8 @@
             slug: string;
             description: string;
             long_description: string;
+            features: string;
+            date: string;
             category: string | number;
             status: string | number;
             technologies: Array<string | number>;
@@ -237,6 +263,8 @@
             slug: '',
             description: '',
             long_description: '',
+            features: '',
+            date: '',
             category: '' as string | number,
             status: '' as string | number,
             technologies: [] as Array<string | number>,
@@ -279,6 +307,8 @@
             ctx.setFieldValue('slug', data.slug);
             ctx.setFieldValue('description', data.description || '');
             ctx.setFieldValue('long_description', data.longDescription ?? '');
+            ctx.setFieldValue('features', arrayToLines(data.features));
+            ctx.setFieldValue('date', data.date ?? '');
             ctx.setFieldValue('status', data.status || 'completed');
             ctx.setFieldValue('demo_url', data.links?.demo || '');
             ctx.setFieldValue('github_url', data.links?.github || '');
@@ -326,7 +356,9 @@
                 .append('meta_description', formValues.meta_description)
                 .appendBoolean('is_featured', formValues.is_featured)
                 .appendIfPresent('longDescription', formValues.long_description)
+                .appendIfPresent('date', formValues.date)
                 .appendIfPresent('status', typeof formValues.status === 'number' ? formValues.status : null)
+                .appendArray('features', linesToArray(formValues.features))
                 .appendArray('technologies', techNames.length > 0 ? techNames : null)
                 .appendObject('links', Object.keys(links).length > 0 ? links : null)
                 .appendFile('image', formValues.image)

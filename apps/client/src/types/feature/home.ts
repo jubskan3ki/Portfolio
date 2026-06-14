@@ -3,7 +3,7 @@ import type { Stack } from './stacks';
 
 export type HomeVariant = 'light' | 'dark' | 'secondary' | 'primary';
 
-export type HeroStack = Pick<Stack, 'id' | 'name' | 'logo' | 'level'>;
+export type HeroStack = Pick<Stack, 'id' | 'name' | 'logo' | 'level' | 'slug'>;
 
 export interface HeroSectionProps {
     featuredStacks?: HeroStack[];

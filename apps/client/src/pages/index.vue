@@ -255,7 +255,7 @@
 
     useHomeSeo();
     // LCP image preload is emitted by NuxtImg (preload prop on HeroSection) with the
-    // correct imagesrcset/imagesizes — manual <link rel=preload> for a single density
+    // correct imagesrcset/imagesizes - manual <link rel=preload> for a single density
     // mis-targeted retina viewports and forced a re-download of the 560px variant.
 
     const { prefersReducedMotion } = useReducedMotion();
@@ -378,11 +378,11 @@
     });
 
     const defaultStacks: HeroStack[] = [
-        { id: 1, name: 'Vue.js', logo: '', level: 90 },
-        { id: 2, name: 'React', logo: '', level: 85 },
-        { id: 3, name: 'TypeScript', logo: '', level: 90 },
-        { id: 4, name: 'Node.js', logo: '', level: 80 },
-        { id: 5, name: 'Go', logo: '', level: 70 },
+        { id: 1, name: 'Vue.js', logo: '', level: 90, slug: 'vue-js' },
+        { id: 2, name: 'React', logo: '', level: 85, slug: 'react' },
+        { id: 3, name: 'TypeScript', logo: '', level: 90, slug: 'typescript' },
+        { id: 4, name: 'Node.js', logo: '', level: 80, slug: 'node-js' },
+        { id: 5, name: 'Go', logo: '', level: 70, slug: 'golang' },
     ];
 
     const { data: heroStacks } = useAsyncData(
@@ -395,7 +395,7 @@
                 stacks
                     .sort((a, b) => b.level - a.level)
                     .slice(0, 5)
-                    .map(({ id, name, logo, level }) => ({ id, name, logo, level })),
+                    .map(({ id, name, logo, level, slug }) => ({ id, name, logo, level, slug })),
         },
     );
 

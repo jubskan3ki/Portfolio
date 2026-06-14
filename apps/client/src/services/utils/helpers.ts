@@ -47,6 +47,30 @@ export function resolveMediaUrl(path: string | null | undefined): string {
     return path ?? '';
 }
 
+// Hôtes que IPX est autorisé à optimiser (média S3/MinIO + domaine du site).
+// ⚠ Garder en phase avec `image.domains` dans nuxt.config.ts.
+const OPTIMIZABLE_IMAGE_HOSTS = new Set(['media.aitaddajuba.fr', 'aitaddajuba.fr', 'localhost']);
+
+/**
+ * Indique si une image peut passer par NuxtImg/IPX (resize + format moderne).
+ * Les URLs relatives sont toujours optimisables ; les URLs absolues ne le sont
+ * que si leur hôte est dans l'allowlist IPX. Les URLs externes / data: / blob:
+ * doivent rester sur une balise <img> brute pour éviter un 404 IPX.
+ */
+export function isOptimizableImage(src: string | null | undefined): boolean {
+    if (!src || src.trim().length === 0) {
+        return false;
+    }
+    if (!/^https?:\/\//i.test(src)) {
+        return true;
+    }
+    try {
+        return OPTIMIZABLE_IMAGE_HOSTS.has(new URL(src).hostname);
+    } catch {
+        return false;
+    }
+}
+
 export function truncateText(text: string, maxLength = 100): string {
     if (!text || text.length <= maxLength) {
         return text;

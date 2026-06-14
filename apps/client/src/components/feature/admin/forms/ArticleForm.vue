@@ -97,6 +97,16 @@
             @update:preview="setPreviewImage"
         />
 
+        <BaseInput
+            id="read_time"
+            v-model.number="form.read_time"
+            label="Temps de lecture (min)"
+            type="number"
+            :min="1"
+            placeholder="5"
+            hint="Durée de lecture estimée en minutes"
+        />
+
         <BaseSwitch v-model="form.is_published" :label="form.is_published ? 'Publié' : 'Brouillon'" />
 
         <details class="admin-form__seo">
@@ -189,6 +199,7 @@
             category: string | number;
             tags: Array<string | number>;
             cover_image: File | null;
+            read_time: number;
             is_published: boolean;
             seo_title: string;
             meta_description: string;
@@ -204,6 +215,7 @@
             category: '' as string | number,
             tags: [] as Array<string | number>,
             cover_image: null as File | null,
+            read_time: 5,
             is_published: false,
             seo_title: '',
             meta_description: '',
@@ -236,6 +248,7 @@
             ctx.setFieldValue('slug', data.slug);
             ctx.setFieldValue('excerpt', data.excerpt || '');
             ctx.setFieldValue('content', parseJsonContent(data.content));
+            ctx.setFieldValue('read_time', data.readTime ?? 5);
             ctx.setFieldValue('is_published', data.isPublished ?? false);
             ctx.setFieldValue('seo_title', data.seoTitle ?? '');
             ctx.setFieldValue('meta_description', data.metaDescription ?? '');
@@ -256,6 +269,7 @@
             fd.append('slug', formValues.slug);
             fd.append('excerpt', formValues.excerpt);
             fd.append('content', formatContentForApi(formValues.content));
+            fd.append('read_time', String(formValues.read_time));
             fd.append('is_published', String(formValues.is_published));
             fd.append('seo_title', formValues.seo_title);
             fd.append('meta_description', formValues.meta_description);

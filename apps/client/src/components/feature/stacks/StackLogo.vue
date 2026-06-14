@@ -99,7 +99,7 @@
             transform 0.2s ease,
             box-shadow 0.2s ease;
 
-        // Toujours des carrés arrondis (jamais de rond) — cohérent avec StackCard.
+        // Toujours des carrés arrondis (jamais de rond) - cohérent avec StackCard.
         &--md {
             border-radius: vars.$border-radius-lg;
         }

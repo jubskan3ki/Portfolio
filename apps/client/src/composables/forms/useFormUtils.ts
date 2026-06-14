@@ -4,6 +4,19 @@ import type { UseImagePreviewReturn, UseRawValuesReturn } from '@/types/composab
 
 export { findItemByIdOrName, mapToIds, toSelectOptions } from '@/services/utils/form';
 
+/** Convertit un texte multi-lignes en tableau (une entrée par ligne non vide). */
+export function linesToArray(text: string): string[] {
+    return text
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+}
+
+/** Convertit un tableau de chaînes en texte multi-lignes (une entrée par ligne). */
+export function arrayToLines(items: string[] | null | undefined): string {
+    return Array.isArray(items) ? items.join('\n') : '';
+}
+
 export function useImagePreview(): UseImagePreviewReturn {
     const previewImage = ref('');
 
