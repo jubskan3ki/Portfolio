@@ -62,8 +62,7 @@ ENV NODE_ENV=production \
     NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE} \
     NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}"
 
-RUN --mount=type=cache,target=/app/.nuxt \
-    --mount=type=cache,target=/app/node_modules/.cache \
+RUN --mount=type=cache,target=/app/node_modules/.cache \
     bunx nuxt prepare && bun run build
 
 FROM debian:12-slim AS ssl-patch

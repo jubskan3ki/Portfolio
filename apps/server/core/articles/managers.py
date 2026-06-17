@@ -15,9 +15,10 @@ class CategoryQuerySet(models.QuerySet):
         return self.annotate(
             published_count=models.Count(
                 "articles",
-                filter=models.Q(
-                    articles__is_published=True,
-                    articles__published_date__lte=timezone.now(),
+                filter=models.Q(articles__is_published=True)
+                & (
+                    models.Q(articles__published_date__isnull=True)
+                    | models.Q(articles__published_date__lte=timezone.now())
                 ),
             )
         )
@@ -55,9 +56,10 @@ class TagQuerySet(models.QuerySet):
         return self.annotate(
             published_count=models.Count(
                 "articles",
-                filter=models.Q(
-                    articles__is_published=True,
-                    articles__published_date__lte=timezone.now(),
+                filter=models.Q(articles__is_published=True)
+                & (
+                    models.Q(articles__published_date__isnull=True)
+                    | models.Q(articles__published_date__lte=timezone.now())
                 ),
             )
         )
@@ -67,9 +69,10 @@ class TagQuerySet(models.QuerySet):
         return self.annotate(
             view_count_sum=models.Sum(
                 "articles__view_count",
-                filter=models.Q(
-                    articles__is_published=True,
-                    articles__published_date__lte=timezone.now(),
+                filter=models.Q(articles__is_published=True)
+                & (
+                    models.Q(articles__published_date__isnull=True)
+                    | models.Q(articles__published_date__lte=timezone.now())
                 ),
             )
         )
@@ -110,8 +113,18 @@ class ArticleQuerySet(models.QuerySet):
         return self.select_related("category").prefetch_related("tags")
 
     def published(self) -> ArticleQuerySet:
-        """Filtre les articles publies (exclut les soft-deleted)."""
-        return self.filter(is_published=True, published_date__lte=timezone.now(), deleted_at__isnull=True)
+        """Filtre les articles publies (exclut les soft-deleted).
+
+        Coherent avec ArticleService._is_published : un article `is_published=True`
+        sans `published_date` (NULL) est considere publie. Seul un `published_date`
+        FUTUR (article programme) reste masque.
+        """
+        now = timezone.now()
+        return self.filter(
+            models.Q(published_date__isnull=True) | models.Q(published_date__lte=now),
+            is_published=True,
+            deleted_at__isnull=True,
+        )
 
     def published_with_related(self) -> ArticleQuerySet:
         """Filtre les articles publies avec leurs relations."""

@@ -182,10 +182,7 @@
         pagination: { ...filterPresets.blog.pagination, itemsPerPage: 6 },
     });
 
-    // SSR-prefetch des données critiques above-fold : articles (grid) + categories + tags
-    // (utilisés par heroStats). `popular` n'est consommé que par BlogSidebar (lazy, hors
-    // viewport initial), donc sorti du path SSR bloquant - gain d'1 round-trip API.
-    // `getCachedData` réutilise le payload SSR + cache Nuxt sur nav client.
+    // SSR-prefetch above-fold : articles + categories + tags ; `popular` est lazy (BlogSidebar) donc hors du path SSR bloquant.
     const queryClient = useQueryClient();
     await useAsyncData(
         'blog-prefetch',
@@ -241,8 +238,7 @@
         { value: 'title', label: 'A → Z' },
     ];
 
-    // Tags filtres par category+search (mais pas tags!): on n'enleve jamais les
-    // tags deja selectionnes, sinon l'utilisateur ne pourrait plus les deselectionner.
+    // Filtré par category+search mais pas par tags : sinon on ne pourrait plus désélectionner un tag actif.
     const tagsFilters = computed(() => ({
         category: filters.value.category || undefined,
         search: filters.value.search || undefined,
@@ -266,9 +262,7 @@
 
     usePaginationSeo({ basePath: '/blog', currentPage, totalPages });
 
-    // Schema.org ItemList pour rich results (SSR-only : basé sur les articles prefetch).
-    // Pas besoin de watch - le JSON-LD reflète la liste initiale, les filtres client
-    // ne modifient pas l'URL canonique et n'ont donc pas besoin de re-émettre le schema.
+    // Schema.org ItemList (SSR-only) : pas de watch, les filtres client ne changent pas l'URL canonique.
     const articleListItems = computed(() =>
         articles.value.map((a) => ({ name: a.title, url: `/blog/${a.slug}`, image: a.image })),
     );
@@ -309,9 +303,7 @@
         scrollToTop('smooth');
     };
 
-    // Prefetch délégué : 1 listener partagé pour les 6 cartes (vs 6 instances de useCardPrefetch).
-    // Delay 120 ms : si l'utilisateur traverse la grille à la souris, on ne spamme pas 6 fetches.
-    // Ça reste très court devant un clic intentionnel (> 200 ms).
+    // Prefetch délégué : 1 listener partagé pour les 6 cartes ; délai 120ms pour ne pas fetch en survol de traversée.
     const PREFETCH_HOVER_DELAY = 120;
     const prefetchedSlugs = new Set<string>();
     const prefetchTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -478,11 +470,9 @@
             will-change: opacity;
             animation: blogFadeIn 0.3s ease-out forwards;
             animation-delay: calc(min(var(--article-index, 0), 2) * 40ms);
-            // Pas de `paint` ici non plus : sinon hover shadow coupé.
+            // Pas de `paint` : sinon le hover shadow est coupé.
             contain: layout;
-            // Pas de content-visibility/contain-intrinsic-size sur les 6 cartes :
-            // l'estimation (480px) ne matchait pas la hauteur réelle (~560px) et
-            // re-layoutait la grille → CLS. Bénéfice de rendu négligeable pour 6 items.
+            // Pas de content-visibility ici : l'estimation ne matchait pas la hauteur réelle et causait du CLS.
         }
     }
 

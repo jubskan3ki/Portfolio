@@ -98,12 +98,7 @@ export default defineNuxtConfig({
                 ...(apiPreconnectHref
                     ? [{ rel: 'preconnect', href: apiPreconnectHref, crossorigin: 'anonymous' } as const]
                     : []),
-                // Explicit Lato preloads with fetchpriority="high" - @nuxt/fonts auto-preload
-                // (preload: true) is disabled below to avoid emitting duplicate <link rel="preload">
-                // tags without fetchpriority. Hashes are content-derived by @nuxt/fonts; stable
-                // across builds unless the upstream Google Font file changes.
-                // - Lato 400: body copy + smaller LCP elements
-                // - Lato 700: H1 (LCP element on most pages)
+                // Lato 400/700 preloads with fetchpriority=high; @nuxt/fonts auto-preload disabled below to avoid duplicate tags.
                 {
                     rel: 'preload',
                     as: 'font',
@@ -132,9 +127,7 @@ export default defineNuxtConfig({
         rootId: 'app',
     },
 
-    // main.scss is imported via app.vue's <style> block so it lands in the inlined SSR
-    // styles (features.inlineStyles below). Declaring it again here would also emit an
-    // external entry.css link - that's the render-blocking stylesheet flagged by Lighthouse.
+    // main.scss is imported via app.vue's <style> to inline it in SSR; declaring it here would emit a render-blocking entry.css.
 
     router: {
         options: {
@@ -282,11 +275,20 @@ export default defineNuxtConfig({
         server: process.env.NODE_ENV === 'development' ? { allowedHosts: true } : undefined,
 
         plugins: (() => {
-            if (process.env.ANALYZE !== 'true') return [];
-            // rollup-plugin-visualizer returns a Rollup Plugin; Vite/Nuxt expects
-            // Vite's PluginOption. The two type trees share the same shape but
-            // Rolldown vs upstream Vite diverge on hook contexts. Runtime is fine.
-            // biome-ignore lint/suspicious/noExplicitAny: cross-package Plugin type mismatch
+            const forceFontDisplayOptional: any = {
+                name: 'force-font-display-optional',
+                generateBundle(_options: unknown, bundle: Record<string, { type: string; fileName: string; source?: unknown }>) {
+                    for (const file of Object.values(bundle)) {
+                        if (file.type !== 'asset' || !file.fileName.endsWith('.css')) continue;
+                        const css = typeof file.source === 'string' ? file.source : null;
+                        if (!css || !css.includes('font-display')) continue;
+                        file.source = css.replace(/font-display\s*:\s*swap/g, 'font-display:optional');
+                    }
+                },
+            };
+
+            if (process.env.ANALYZE !== 'true') return [forceFontDisplayOptional];
+            // biome-ignore lint/suspicious/noExplicitAny: cross-package Plugin type mismatch (Rollup vs Vite PluginOption)
             const analyzerPlugin: any = visualizer({
                 open: true,
                 filename: '.nuxt/bundle-stats.html',
@@ -294,7 +296,7 @@ export default defineNuxtConfig({
                 brotliSize: true,
                 template: 'treemap',
             });
-            return [analyzerPlugin];
+            return [forceFontDisplayOptional, analyzerPlugin];
         })(),
         css: {
             preprocessorOptions: {
@@ -372,13 +374,10 @@ export default defineNuxtConfig({
                 name: 'Lato',
                 provider: 'google',
                 weights: [400, 700],
-                // `optional` (vs `swap`) : couplé aux preloads fetchpriority=high ci-dessus,
-                // la police arrive quasi toujours dans la fenêtre de blocage (~100ms) ; sinon
-                // fallback Arial sans swap → zéro reflow de police (gros contributeur du CLS blog).
+                // 'optional' + preloads fetchpriority ci-dessus : police dans la fenêtre de blocage (~100ms), sinon fallback Arial sans swap (zéro CLS).
                 display: 'optional',
                 subsets: ['latin'],
-                // Disabled to avoid duplicate preload tags - both weights are explicitly
-                // preloaded with fetchpriority="high" in app.head.link above.
+                // Désactivé : les deux graisses sont déjà préchargées avec fetchpriority=high dans app.head.link.
                 preload: false,
             },
             {

@@ -47,8 +47,7 @@
         },
     );
 
-    // Dimensions du container (px) et image interne (px) par taille.
-    // `md` est calé sur le design référence `stack-card__logo` (48px, 20px bold).
+    // `md` est calé sur le design référence `stack-card__logo` (48px).
     const SIZE_MAP: Record<Size, { box: number; img: number; font: string }> = {
         xs: { box: 24, img: 18, font: '0.75rem' },
         sm: { box: 40, img: 28, font: '1.1rem' },
@@ -61,8 +60,7 @@
 
     const firstLetter = computed(() => (props.stack.name?.charAt(0) ?? '?').toUpperCase());
 
-    // Couleur du stack → bg clair (alpha 0.12) + letter color saturée.
-    // Fallback sur variables CSS (primary) si pas de color fournie.
+    // Couleur du stack en bg alpha + lettre saturée ; fallback sur la couleur primary si absente.
     const logoStyle = computed<CSSProperties>(() => {
         const style: CSSProperties = {
             width: `${SIZE_MAP[props.size].box}px`,
@@ -92,14 +90,13 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        // Design aligné sur stack-card__logo : fond alpha, pas de bordure, lettre saturée.
         background: fn.color-alpha(vars.$primary-color, 0.1);
         color: vars.$primary-color;
         transition:
             transform 0.2s ease,
             box-shadow 0.2s ease;
 
-        // Toujours des carrés arrondis (jamais de rond) - cohérent avec StackCard.
+        // Carrés arrondis (jamais ronds), cohérent avec StackCard.
         &--md {
             border-radius: vars.$border-radius-lg;
         }

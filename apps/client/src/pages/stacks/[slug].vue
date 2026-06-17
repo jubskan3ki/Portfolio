@@ -308,8 +308,7 @@
     );
 
     if (detailError.value) {
-        // Re-throw at setup level so Nuxt renders error.vue with the correct
-        // status code. useAsyncData stores the error but does not propagate it.
+        // Re-throw au niveau setup pour que Nuxt rende error.vue : useAsyncData stocke l'erreur sans la propager.
         throw detailError.value;
     }
 

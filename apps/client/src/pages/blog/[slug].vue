@@ -200,8 +200,7 @@
     import LoadingState from '@/components/loaders/LoadingState.vue';
     import Breadcrumb from '@/components/navigation/Breadcrumb.vue';
     import Hero from '@/components/ui/Hero.vue';
-    // Below-fold components (CTA, ShareCard, ArticlePopular, ArticleTags, ArticleCard)
-    // sont chargés via auto-import Nuxt en Lazy* + hydrate-on-visible (voir <template>).
+    // Les composants below-fold sont chargés en Lazy* + hydrate-on-visible via auto-import Nuxt (voir <template>).
     import { useAnnounce } from '@/composables/accessibility/useAnnounce';
     import { useDetailSlug } from '@/composables/data/useDetailSlug';
     import { useViewRecording } from '@/composables/data/useViewRecording';
@@ -237,8 +236,7 @@
             }
             let article;
             try {
-                // Direct API call (not fetchQuery) so the original ApiError
-                // status is preserved instead of being wrapped by vue-query.
+                // Appel direct (pas fetchQuery) pour préserver le status de l'ApiError d'origine.
                 article = await articlesApi.getBySlug(slugValue);
                 queryClient.setQueryData(articleKeys.detail(slugValue), article);
             } catch (err) {
@@ -249,7 +247,7 @@
                     fatal: true,
                 });
             }
-            // Sidebars best-effort: empty state is acceptable.
+            // Sidebars best-effort : un état vide est acceptable.
             await Promise.allSettled([
                 queryClient.prefetchQuery({
                     queryKey: articleKeys.popular(3),
@@ -270,8 +268,7 @@
     );
 
     if (detailError.value) {
-        // Re-throw at setup level so Nuxt renders error.vue with the correct
-        // status code. useAsyncData stores the error but does not propagate it.
+        // Re-throw au niveau setup pour que Nuxt rende error.vue : useAsyncData stocke l'erreur sans la propager.
         throw detailError.value;
     }
 
@@ -308,9 +305,7 @@
 
     const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
 
-    // SEO + Schema.org enregistrés UNE SEULE FOIS (helpers unhead empilent sinon).
-    // Flag local = ne tourne qu'au premier article non-null (vs `once` qui fire
-    // au premier tick même si article est encore `null`).
+    // SEO + Schema.org enregistrés une seule fois au premier article non-null (les helpers unhead empilent sinon).
     let seoRegistered = false;
     watch(
         currentArticle,
@@ -747,12 +742,12 @@
         gap: vars.$spacing-lg;
         // Skip rendering + isolate layout tant que hors viewport (grosse économie main-thread).
         content-visibility: auto;
-        contain-intrinsic-size: 1px 400px;
+        contain-intrinsic-size: auto 400px;
     }
 
     .article-cta-wrapper {
         // Même optimisation que .related-grid : le CTA est le dernier bloc de la page.
         content-visibility: auto;
-        contain-intrinsic-size: 1px 300px;
+        contain-intrinsic-size: auto 300px;
     }
 </style>

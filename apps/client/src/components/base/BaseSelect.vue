@@ -6,6 +6,7 @@
         </label>
 
         <div
+            ref="triggerRef"
             class="select__trigger"
             role="combobox"
             tabindex="0"
@@ -75,11 +76,12 @@
             </div>
         </div>
 
-        <Transition name="dropdown">
-            <div v-if="isOpen" class="select__dropdown">
-                <div
-                    :id="`${inputId}-listbox`"
-                    ref="optionsRef"
+        <Teleport to="body">
+            <Transition name="dropdown">
+                <div v-if="isOpen" class="select__dropdown" :style="dropdownStyle">
+                    <div
+                        :id="`${inputId}-listbox`"
+                        ref="optionsRef"
                     class="select__options"
                     role="listbox"
                     :aria-labelledby="triggerLabelledBy"
@@ -164,7 +166,8 @@
                     </div>
                 </div>
             </div>
-        </Transition>
+            </Transition>
+        </Teleport>
 
         <p v-if="error" :id="messageId" class="select__message select__message--error" role="alert">{{ error }}</p>
         <p v-else-if="success" :id="messageId" class="select__message select__message--success">{{ success }}</p>
@@ -173,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref, useId, toRef, watch } from 'vue';
+    import { computed, nextTick, onBeforeUnmount, ref, useId, toRef, watch } from 'vue';
 
     import { useDropdown } from '@/composables/ui/useDropdown';
 
@@ -207,6 +210,7 @@
     const model = defineModel<string | number>({ default: '' });
 
     const containerRef = ref<HTMLElement | null>(null);
+    const triggerRef = ref<HTMLElement | null>(null);
     const optionsRef = ref<HTMLElement | null>(null);
     const newItemName = ref('');
     const generatedId = useId();
@@ -222,10 +226,62 @@
     } = useDropdown(containerRef, {
         disabled: toRef(props, 'disabled'),
         closeOnSelect: true,
+        // Le dropdown est téléporté hors de containerRef : on l'exclut du click-outside.
+        ignore: ['.select__dropdown'],
         onClose: () => {
             newItemName.value = '';
         },
     });
+
+    // Téléporté dans <body> en position fixed : échappe à l'overflow/stacking context des parents (tables, sidebars).
+    const dropdownStyle = ref<Record<string, string>>({});
+
+    const updateDropdownPosition = () => {
+        const el = triggerRef.value;
+        if (!el) {
+            return;
+        }
+        const rect = el.getBoundingClientRect();
+        const gap = 4;
+        const viewportH = window.innerHeight;
+        const spaceBelow = viewportH - rect.bottom;
+        const spaceAbove = rect.top;
+        // Ouvre vers le haut si peu de place en bas et davantage en haut.
+        const openUp = spaceBelow < 240 && spaceAbove > spaceBelow;
+
+        dropdownStyle.value = {
+            position: 'fixed',
+            left: `${Math.round(rect.left)}px`,
+            right: 'auto',
+            width: `${Math.round(rect.width)}px`,
+            marginTop: '0',
+            zIndex: '1000',
+            ...(openUp
+                ? { bottom: `${Math.round(viewportH - rect.top + gap)}px`, top: 'auto' }
+                : { top: `${Math.round(rect.bottom + gap)}px`, bottom: 'auto' }),
+        };
+    };
+
+    let detachReposition: (() => void) | null = null;
+
+    watch(isOpen, (open) => {
+        if (open) {
+            nextTick(updateDropdownPosition);
+            const onReflow = () => updateDropdownPosition();
+            // `capture` pour intercepter le scroll de n'importe quel ancêtre scrollable.
+            window.addEventListener('scroll', onReflow, true);
+            window.addEventListener('resize', onReflow);
+            detachReposition = () => {
+                window.removeEventListener('scroll', onReflow, true);
+                window.removeEventListener('resize', onReflow);
+            };
+        } else {
+            detachReposition?.();
+            detachReposition = null;
+        }
+    });
+
+    onBeforeUnmount(() => detachReposition?.());
 
     const inputId = computed(() => props.id || generatedId);
     const messageId = computed(() =>

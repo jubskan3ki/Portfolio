@@ -224,7 +224,6 @@
     const props = defineProps<StackFormProps>();
     const { success: showSuccess, error: showError } = useAlert();
 
-    // Form
     const {
         isEditMode,
         isLoading,
@@ -359,15 +358,11 @@
         loadErrorMessage: 'Impossible de charger la stack. Veuillez réessayer.',
     });
 
-    // Données Externes
-
     const { data: categoriesData, refetch: refetchCategories } = useStackCategories();
     const createCategoryMutation = useCreateStackCategory();
 
     const categories = usePaginatedData<StackCategory>(categoriesData);
     const categoryOptions = computed(() => toSelectOptions(categories.value));
-
-    // Handlers
 
     const onNameChange = () => {
         if (!isEditMode.value) {
@@ -385,8 +380,6 @@
             showError(ERROR_MESSAGES.CATEGORY.CREATE_FAILED, 'Erreur');
         }
     };
-
-    // Matching Différé
 
     useDeferredMatch({
         source: categories,

@@ -126,47 +126,35 @@
         retry: [];
     }>();
 
-    // Filtre actif
     const activeFilter = ref('all');
 
-    // Définir le filtre
     const setFilter = (filter: string) => {
         activeFilter.value = filter;
         emit('filterChange', filter);
     };
 
-    // Technologies filtrées
+    // Filtré par catégorie puis trié par niveau décroissant (les stacks sans niveau en dernier, par nom).
     const filteredStacks = computed(() => {
         let filtered = [...props.stacks];
 
-        // Filtrer par catégorie
         if (activeFilter.value !== 'all') {
             filtered = filtered.filter((stack) => stack.category === activeFilter.value);
         }
 
-        // Trier les stacks par niveau (du plus élevé au plus bas)
         return filtered.sort((a, b) => {
-            // Si les deux ont un niveau, trier par niveau décroissant
             if (a.level !== undefined && b.level !== undefined) {
                 return b.level - a.level;
             }
-
-            // Si seulement a a un niveau, a vient en premier
             if (a.level !== undefined) {
                 return -1;
             }
-
-            // Si seulement b a un niveau, b vient en premier
             if (b.level !== undefined) {
                 return 1;
             }
-
-            // Sinon, trier par nom
             return a.name.localeCompare(b.name);
         });
     });
 
-    // Gérer le clic sur une technologie
     const handleStackClick = (stack: Stack) => {
         emit('stackClick', stack);
     };
@@ -297,7 +285,6 @@
         }
     }
 
-    /* Animations pour les filtres */
     .filter-enter-active,
     .filter-leave-active {
         transition:
@@ -311,7 +298,6 @@
         transform: translateY(10px);
     }
 
-    /* Animations pour les cartes */
     .stack-enter-active,
     .stack-leave-active {
         transition:
@@ -329,7 +315,6 @@
         transform: scale(0.9);
     }
 
-    /* Responsive adjustments */
     @include mix.responsive(tablet) {
         .stack-list {
             &__filters {

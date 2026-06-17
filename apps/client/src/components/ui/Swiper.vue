@@ -103,7 +103,6 @@
         goToSlide,
     } = useSwiper({ props, emit, swiperRef });
 
-    // Pointer drag (mouse + touch + stylus)
     const DRAG_THRESHOLD = 5;
     const SNAP_THRESHOLD = 50;
     const isDragging = ref(false);
@@ -125,11 +124,7 @@
         isDragging.value = true;
         hasDragged.value = false;
         dragOffset.value = 0;
-
-        // NOTE: pointer capture is deferred to onDragMove (once the drag threshold
-        // is crossed). Capturing on pointerdown retargets the pointerup - and thus
-        // the synthesized click - to this wrapper, so a plain tap never reaches the
-        // card's <NuxtLink> and the cards become unclickable.
+        // Pointer capture déféré à onDragMove : capturer ici retargette le click et rend les cartes non cliquables au tap.
     };
 
     const onDragMove = (e: PointerEvent) => {

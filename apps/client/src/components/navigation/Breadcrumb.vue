@@ -145,7 +145,7 @@
             margin: 0 vars.$spacing-xxxs;
             line-height: 1;
 
-            // Default character separators rendered via ::before - no SVG/path nodes.
+            // Séparateurs en caractères via ::before (pas de SVG).
             &--chevron::before {
                 content: '\203A'; // ›
                 font-size: 1.1em;
@@ -183,7 +183,6 @@
             transition: transform 0.3s ease;
         }
 
-        // Variants
         &--pills {
             .breadcrumb__link {
                 background: func.color-alpha(vars.$gray-light, 0.3);
@@ -222,7 +221,7 @@
             }
         }
 
-        // Hero variant | tuned for dark/gradient hero backgrounds
+        // Variant hero : pour fonds sombres/gradient.
         &--hero {
             padding: 0;
 
@@ -274,7 +273,6 @@
             }
         }
 
-        // Mobile responsive
         @include mix.responsive(mobile) {
             padding: vars.$spacing-xxs 0;
 
@@ -283,12 +281,12 @@
             }
 
             &__item {
-                // Hide middle items on mobile, keep first and last two
+                // Masque les items du milieu : garde le premier et les deux derniers.
                 &:not(:nth-last-child(-n + 2), :first-child) {
                     display: none;
                 }
 
-                // Ellipsis indicator for hidden items
+                // Indicateur d'ellipse pour les items masqués.
                 &:nth-last-child(2):not(:first-child)::before {
                     content: '';
                     display: flex;
