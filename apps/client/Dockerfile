@@ -62,10 +62,6 @@ ENV NODE_ENV=production \
     NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE} \
     NODE_OPTIONS="--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}"
 
-# NB : on ne met PAS /app/.nuxt en cache mount. C'est le dossier de build généré
-# (modules virtuels inclus, dont le @font-face de @nuxt/fonts). Le cacher entre builds
-# fige des artefacts générés : un changement de nuxt.config (ex. font-display) n'était
-# pas répercuté (l'ancien @font-face swap restait). On garde uniquement le cache Vite.
 RUN --mount=type=cache,target=/app/node_modules/.cache \
     bunx nuxt prepare && bun run build
 
