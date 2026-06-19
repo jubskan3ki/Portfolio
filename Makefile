@@ -172,6 +172,45 @@ e2e-install: ## Installe Chromium pour Playwright (1x par dev)
 .PHONY: check
 check: lint typecheck test e2e ## Tout valider (lint + typecheck + test + e2e)
 
+##@ Dependencies - audit · obsoletes · mises a jour
+
+PY_COMPILE_IMAGE ?= python:3.14-slim
+
+.PHONY: deps-outdated
+deps-outdated: ## Liste les paquets obsoletes (front bun + back pip)
+	@echo -e "\033[1;33m# Frontend (apps/client)\033[0m"
+	@cd $(CLIENT_DIR) && $(BUN) outdated || true
+	@echo -e "\n\033[1;33m# Racine (commitlint/husky)\033[0m"
+	@$(BUN) outdated || true
+	@echo -e "\n\033[1;33m# Backend (env du conteneur backend)\033[0m"
+	@$(COMPOSE_EXEC) -T backend pip list --outdated 2>/dev/null || echo "  (backend non demarre : 'make up' d'abord)"
+
+.PHONY: deps-audit
+deps-audit: ## Audit CVE HIGH+ (front bun audit · racine · back pip-audit). Exit 1 si vuln corrigeable.
+	cd $(CLIENT_DIR) && $(BUN) audit --audit-level=high
+	$(BUN) audit --audit-level=high
+	$(COMPOSE_EXEC) -T backend pip-audit --skip-editable
+
+.PHONY: deps-update
+deps-update: ## MAJ sures : front+racine dans les bornes semver, back recompile depuis requirements.in
+	cd $(CLIENT_DIR) && $(BUN) update
+	$(BUN) update
+	$(MAKE) deps-compile-back
+	@echo -e "\033[1;33m>> Valide avant commit : make typecheck test\033[0m"
+
+.PHONY: deps-upgrade
+deps-upgrade: ## MAJ maximales : front --latest (MAJEURES incluses) + back recompile. DANGER : casse possible.
+	cd $(CLIENT_DIR) && $(BUN) update --latest
+	$(BUN) update --latest
+	$(MAKE) deps-compile-back
+	@echo -e "\033[1;31m>> Changements potentiellement cassants : 'make check' OBLIGATOIRE avant commit\033[0m"
+
+.PHONY: deps-compile-back
+deps-compile-back: ## Recompile apps/server/requirements.txt depuis requirements.in (latest dans les planchers)
+	docker run --rm -v "$(PWD)/$(SERVER_DIR):/w" -w /w $(PY_COMPILE_IMAGE) \
+	    sh -c "pip install -q --upgrade pip pip-tools wheel && pip-compile -q --upgrade requirements.in -o requirements.txt"
+	@echo "-> $(SERVER_DIR)/requirements.txt recompile (relance 'make build' + 'make test')"
+
 ##@ Database - Django migrations + pg_dump
 
 .PHONY: backend-migrate
