@@ -25,7 +25,7 @@ psycopg[binary]>=3.2
 # ASYNC & TASKS
 
 channels>=4.2
-daphne>=4.1
+daphne>=4.2.2                # PYSEC-2026-213/214
 celery>=5.5
 django-celery-results>=2.6
 redis>=6.0
@@ -104,3 +104,6 @@ pre-commit>=4.2
 python-dotenv>=1.1
 bandit>=1.8                  # audit sécurité statique
 pip-audit>=2.9               # audit des dépendances (CVE)
+
+cryptography>=48.0.1         # GHSA-537c-gmf6-5ccf (OpenSSL embarqué)
+pyOpenSSL>=26.2.0            # autorise cryptography<49 (compat avec le plancher ci-dessus)

@@ -742,12 +742,12 @@
         gap: vars.$spacing-lg;
         // Skip rendering + isolate layout tant que hors viewport (grosse économie main-thread).
         content-visibility: auto;
-        contain-intrinsic-size: 1px 400px;
+        contain-intrinsic-size: auto 400px;
     }
 
     .article-cta-wrapper {
         // Même optimisation que .related-grid : le CTA est le dernier bloc de la page.
         content-visibility: auto;
-        contain-intrinsic-size: 1px 300px;
+        contain-intrinsic-size: auto 300px;
     }
 </style>

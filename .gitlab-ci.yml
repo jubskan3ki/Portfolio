@@ -55,10 +55,9 @@ variables:
 
 .node_cache:
     cache:
-        key: "bun-${BUN_VERSION}-${CI_COMMIT_REF_SLUG}"
+        key: "bun-${BUN_VERSION}-v2-${CI_COMMIT_REF_SLUG}"
         paths:
             - .bun-cache
-            - apps/client/node_modules
         policy: pull-push
 
 .backend_base:
@@ -457,7 +456,7 @@ perf:lighthouse:
         NODE_OPTIONS: "--max-old-space-size=4096"
     before_script:
         - apt-get update -qq && apt-get install -y -qq chromium curl unzip
-        - curl -fsSL https://bun.sh/install | bash
+        - curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}.0"
         - export PATH="$HOME/.bun/bin:$PATH"
         - export CHROME_PATH=$(which chromium)
         - cd apps/client && bun install --frozen-lockfile && cd -

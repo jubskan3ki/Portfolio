@@ -275,7 +275,19 @@ export default defineNuxtConfig({
         server: process.env.NODE_ENV === 'development' ? { allowedHosts: true } : undefined,
 
         plugins: (() => {
-            if (process.env.ANALYZE !== 'true') return [];
+            const forceFontDisplayOptional: any = {
+                name: 'force-font-display-optional',
+                generateBundle(_options: unknown, bundle: Record<string, { type: string; fileName: string; source?: unknown }>) {
+                    for (const file of Object.values(bundle)) {
+                        if (file.type !== 'asset' || !file.fileName.endsWith('.css')) continue;
+                        const css = typeof file.source === 'string' ? file.source : null;
+                        if (!css || !css.includes('font-display')) continue;
+                        file.source = css.replace(/font-display\s*:\s*swap/g, 'font-display:optional');
+                    }
+                },
+            };
+
+            if (process.env.ANALYZE !== 'true') return [forceFontDisplayOptional];
             // biome-ignore lint/suspicious/noExplicitAny: cross-package Plugin type mismatch (Rollup vs Vite PluginOption)
             const analyzerPlugin: any = visualizer({
                 open: true,
@@ -284,7 +296,7 @@ export default defineNuxtConfig({
                 brotliSize: true,
                 template: 'treemap',
             });
-            return [analyzerPlugin];
+            return [forceFontDisplayOptional, analyzerPlugin];
         })(),
         css: {
             preprocessorOptions: {

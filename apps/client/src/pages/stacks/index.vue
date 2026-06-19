@@ -7,22 +7,16 @@
             variant="dark"
         >
             <template #stats>
-                <template v-if="statsLoading">
-                    <div v-for="i in 3" :key="i" class="stat-skeleton">
-                        <Skeleton width="50px" height="28px" />
-                        <Skeleton width="80px" height="14px" />
-                    </div>
-                </template>
-                <template v-else>
-                    <StatCard
-                        v-for="stat in heroStats"
-                        :key="stat.label"
-                        :value="stat.value"
-                        :label="stat.label"
-                        :icon="stat.icon"
-                        variant="dark"
-                    />
-                </template>
+                <!-- Toujours rendre les StatCard (données SSR-préchargées, fallbacks stables dans heroStats) :
+                     pas de skeleton -> StatCard, donc pas de saut de hauteur du hero qui pousse tout le main (CLS). -->
+                <StatCard
+                    v-for="stat in heroStats"
+                    :key="stat.label"
+                    :value="stat.value"
+                    :label="stat.label"
+                    :icon="stat.icon"
+                    variant="dark"
+                />
             </template>
         </Hero>
 
@@ -194,7 +188,6 @@
     );
     import EmptyState from '@/components/feedback/EmptyState.vue';
     import Main from '@/components/layouts/Main.vue';
-    import Skeleton from '@/components/loaders/Skeleton.vue';
     import SkeletonList from '@/components/loaders/SkeletonList.vue';
     import NavigationTabs from '@/components/navigation/NavigationTabs.vue';
     import Badge from '@/components/ui/Badge.vue';
@@ -254,7 +247,7 @@
         refetch: refetchCategories,
     } = useStackCategories();
 
-    const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useStackStats();
+    const { data: statsData, refetch: refetchStats } = useStackStats();
 
     const isSearchMode = ref(false);
     const searchInputRef = ref<HTMLInputElement | null>(null);
@@ -371,11 +364,6 @@
 
     .stacks-page {
         min-height: 100vh;
-    }
-
-    .stat-skeleton {
-        @include mix.flex(column, center, center, vars.$spacing-xs);
-        padding: vars.$spacing-sm;
     }
 
     .stacks-main--no-motion {

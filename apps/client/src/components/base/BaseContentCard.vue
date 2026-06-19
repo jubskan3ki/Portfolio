@@ -11,7 +11,7 @@
                 object-fit="cover"
                 :quality="85"
                 :lazy="!eager"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 400px"
                 class="content-card__image"
             >
                 <template #placeholder>

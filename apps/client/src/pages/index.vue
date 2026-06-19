@@ -85,7 +85,7 @@
                             compact
                         />
                         <template #fallback>
-                            <div class="home-section-placeholder" style="min-height: 420px" />
+                            <div class="home-section-placeholder" :style="{ minHeight: '420px' }" />
                         </template>
                     </ClientOnly>
 
@@ -115,7 +115,7 @@
                         autoplay
                     />
                     <template #fallback>
-                        <div class="home-section-placeholder" style="min-height: 420px" />
+                        <div class="home-section-placeholder" :style="{ minHeight: '420px' }" />
                     </template>
                 </ClientOnly>
 
@@ -145,7 +145,7 @@
                         show-level
                     />
                     <template #fallback>
-                        <div class="home-section-placeholder" style="min-height: 280px" />
+                        <div class="home-section-placeholder" :style="{ minHeight: '280px' }" />
                     </template>
                 </ClientOnly>
 
@@ -178,7 +178,7 @@
                         show-dots
                     />
                     <template #fallback>
-                        <div class="home-section-placeholder" style="min-height: 420px" />
+                        <div class="home-section-placeholder" :style="{ minHeight: '420px' }" />
                     </template>
                 </ClientOnly>
 
@@ -205,7 +205,7 @@
                                 form-id="contact-form-home"
                             />
                             <template #fallback>
-                                <div class="home-section-placeholder" style="min-height: 580px" />
+                                <div class="home-section-placeholder" :style="{ minHeight: '580px' }" />
                             </template>
                         </ClientOnly>
                     </div>
@@ -221,7 +221,7 @@
                                 :social-links="socialMediaLinks"
                             />
                             <template #fallback>
-                                <div class="home-section-placeholder" style="min-height: 480px" />
+                                <div class="home-section-placeholder" :style="{ minHeight: '480px' }" />
                             </template>
                         </ClientOnly>
                     </div>
