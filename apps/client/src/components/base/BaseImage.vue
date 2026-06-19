@@ -102,12 +102,12 @@
 
     const resolveIfSettled = (): boolean => {
         const el = currentImgEl();
-        if (!el || !el.complete) {
+        if (!el || !el.complete || el.naturalWidth === 0) {
             return false;
         }
         clearLoadTimer();
         isLoading.value = false;
-        hasError.value = el.naturalWidth === 0;
+        hasError.value = false;
         return true;
     };
 
@@ -117,11 +117,18 @@
             return;
         }
         loadTimer = setTimeout(() => {
-            if (isLoading.value && !resolveIfSettled()) {
-                isLoading.value = false;
-                hasError.value = true;
-                emit('error', 'timeout');
+            if (!isLoading.value) {
+                return;
             }
+            clearLoadTimer();
+            isLoading.value = false;
+            const el = currentImgEl();
+            if (el && el.complete && el.naturalWidth > 0) {
+                hasError.value = false;
+                return;
+            }
+            hasError.value = true;
+            emit('error', 'timeout');
         }, LOAD_TIMEOUT_MS);
     };
 

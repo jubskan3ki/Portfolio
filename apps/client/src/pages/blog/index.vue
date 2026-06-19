@@ -379,17 +379,9 @@
         min-width: 0;
     }
 
-    $blog-card-row: 560px;
-    $blog-card-row-mobile: 480px;
-
     .blog-transition {
         position: relative;
         contain: layout;
-        min-height: calc(#{$blog-card-row} * 3 + #{vars.$spacing-lg} * 2);
-
-        @include mix.responsive(mobile) {
-            min-height: calc(#{$blog-card-row-mobile} * 6 + #{vars.$spacing-md} * 5);
-        }
     }
 
     .search-bar {

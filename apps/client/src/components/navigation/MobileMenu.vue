@@ -147,7 +147,8 @@
         isMounted.value = true;
 
         if (props.isOpen) {
-            setTimeout(close, 0);
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('click', handleClickOutside);
         }
     });
 
