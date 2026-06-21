@@ -74,7 +74,7 @@ license-expression==30.4.4
 markdown-it-py==4.0.0
 mccabe==0.7.0
 mdurl==0.1.2
-msgpack==1.1.2
+msgpack==1.2.1
 mypy==1.19.1
 mypy_extensions==1.1.0
 nodeenv==1.10.0
