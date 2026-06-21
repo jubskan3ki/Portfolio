@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import re
+from urllib.parse import parse_qsl, urlencode
 
 from django.conf import settings
 from django.core.cache import cache
@@ -29,7 +30,6 @@ DEFAULT_NON_CACHEABLE_URLS = [
 
 DEFAULT_CACHE_TIMEOUT = 300
 CACHE_KEY_PREFIX = "api_cache"
-CACHE_KEYS_SET = "api_cache_keys"
 
 # TTL differencies par endpoint (en secondes)
 CACHE_TTL_MAP: dict[str, int] = {
@@ -71,49 +71,42 @@ class CacheInvalidator:
         return invalidated
 
     @classmethod
-    def _invalidate_pattern(cls, pattern: str) -> int:
-        """Invalide toutes les cles de cache correspondant a un pattern.
+    def _invalidate_pattern(cls, target: str) -> int:
+        """Invalide les entrees de cache d'un endpoint via delete_pattern (Redis).
 
-        Note: Utilise une approche atomique avec try/except pour gerer
-        les modifications concurrentes de CACHE_KEYS_SET.
+        Les cles ont la forme `api_cache:<path>:<hash>`, donc le glob
+        `api_cache:<path>*` couvre la liste et les details. Aucune borne a
+        maintenir (plus de registre CACHE_KEYS_SET racy/non borne).
         """
-        keys_to_delete: set[str] = set()
+        pattern = f"{CACHE_KEY_PREFIX}:{target}*"
+        try:
+            if hasattr(cache, "delete_pattern"):
+                count = cache.delete_pattern(pattern)
+                if count:
+                    logger.info("Cache invalide: %d cles pour pattern '%s'", count, target)
+                return count
+        except Exception as e:
+            logger.warning("delete_pattern failed for %s: %s", pattern, e)
+            return 0
 
-        # Recuperer les cles actuelles
-        all_keys = cache.get(CACHE_KEYS_SET, set())
-        if not isinstance(all_keys, set):
-            all_keys = set(all_keys) if all_keys else set()
-
-        for key in all_keys:
-            if pattern in key:
-                keys_to_delete.add(key)
-
-        if keys_to_delete:
-            # Supprimer les cles de cache
-            cache.delete_many(list(keys_to_delete))
-
-            # Mise a jour atomique: re-lire et recalculer
-            # pour eviter les race conditions
-            current_keys = cache.get(CACHE_KEYS_SET, set())
-            if not isinstance(current_keys, set):
-                current_keys = set(current_keys) if current_keys else set()
-            remaining_keys = current_keys - keys_to_delete
-            cache.set(CACHE_KEYS_SET, remaining_keys, timeout=None)
-
-            logger.info("Cache invalide: %d cles pour pattern '%s'", len(keys_to_delete), pattern)
-
-        return len(keys_to_delete)
+        logger.warning("Cache backend sans delete_pattern: invalidation ignoree pour %s", target)
+        return 0
 
     @classmethod
     def invalidate_all(cls) -> int:
         """Invalide tout le cache API."""
-        all_keys = cache.get(CACHE_KEYS_SET, set())
-        count = len(all_keys)
-        if all_keys:
-            cache.delete_many(list(all_keys))
-            cache.delete(CACHE_KEYS_SET)
-            logger.info("Cache API completement invalide: %d cles", count)
-        return count
+        pattern = f"{CACHE_KEY_PREFIX}:*"
+        try:
+            if hasattr(cache, "delete_pattern"):
+                count = cache.delete_pattern(pattern)
+                logger.info("Cache API completement invalide: %d cles", count)
+                return count
+        except Exception as e:
+            logger.warning("delete_pattern failed for %s: %s", pattern, e)
+            return 0
+
+        logger.warning("Cache backend sans delete_pattern: invalidate_all ignore")
+        return 0
 
 
 class ConditionalCacheMiddleware(MiddlewareMixin):
@@ -142,15 +135,18 @@ class ConditionalCacheMiddleware(MiddlewareMixin):
         return any(path.startswith(url) for url in self.cacheable_urls)
 
     def _get_cache_key(self, request: HttpRequest) -> str:
-        """Generate cache key from request URL.
+        """Generate cache key from path + normalized querystring.
 
-        Sanitizes the path to remove characters invalid for memcached.
+        N'inclut PAS le Host (evite le cache poisoning / split via l'en-tete
+        Host) et normalise l'ordre des parametres (evite des entrees dupliquees
+        pour `?a=1&b=2` vs `?b=2&a=1`).
         """
-        url = request.build_absolute_uri()
-        url_hash = hashlib.sha256(url.encode()).hexdigest()[:32]
-        # Remplacer les caracteres invalides pour memcached par des underscores
+        query = request.META.get("QUERY_STRING", "")
+        normalized_qs = urlencode(sorted(parse_qsl(query, keep_blank_values=True))) if query else ""
+        qs_hash = hashlib.sha256(normalized_qs.encode()).hexdigest()[:32]
+        # Remplacer les caracteres de cle invalides par des underscores
         safe_path = INVALID_CACHE_KEY_CHARS.sub("_", request.path_info)
-        return f"{CACHE_KEY_PREFIX}:{safe_path}:{url_hash}"
+        return f"{CACHE_KEY_PREFIX}:{safe_path}:{qs_hash}"
 
     def _should_cache(self, request: HttpRequest) -> bool:
         """Check if request should use cache."""
@@ -161,12 +157,6 @@ class ConditionalCacheMiddleware(MiddlewareMixin):
         if hasattr(request, "user") and request.user.is_authenticated:
             return False
         return self._is_cacheable(request.path_info)
-
-    def _track_cache_key(self, key: str) -> None:
-        """Track cache key for invalidation."""
-        all_keys = cache.get(CACHE_KEYS_SET, set())
-        all_keys.add(key)
-        cache.set(CACHE_KEYS_SET, all_keys, timeout=None)
 
     def process_request(self, request: HttpRequest) -> HttpResponse | None:
         """Return cached response if available."""
@@ -229,7 +219,6 @@ class ConditionalCacheMiddleware(MiddlewareMixin):
         }
         ttl = self._get_ttl(request.path_info)
         cache.set(cache_key, cache_data, ttl)
-        self._track_cache_key(cache_key)
 
         response["ETag"] = etag
 

@@ -102,18 +102,23 @@ class StackDetailSerializer(serializers.ModelSerializer):
         return obj.experience_months
 
     def get_related_stacks(self, obj: Stack) -> list[dict[str, Any]]:
-        """Recupere les stacks associees avec leurs relations."""
+        """Recupere les stacks associees avec leurs relations.
+
+        Delegue a RelatedStackSerializer (source unique du dict de sortie) ;
+        le type de relation transite par le contexte {pk: relationship_type}.
+        """
         qs = getattr(obj, "relationships", StackRelationship.objects.none())
-        return [
-            {
-                "name": rel.to_stack.name,
-                "slug": rel.to_stack.slug,
-                "logo": rel.to_stack.logo.url if rel.to_stack.logo else None,
-                "category": (rel.to_stack.category.name if rel.to_stack.category else None),
-                "relationship": rel.relationship_type,
-            }
-            for rel in qs.all()
-        ]
+        related_stacks: list[Stack] = []
+        relationship_map: dict[Any, str] = {}
+        for rel in qs.all():
+            related_stacks.append(rel.to_stack)
+            relationship_map[rel.to_stack.pk] = rel.relationship_type
+
+        return RelatedStackSerializer(
+            related_stacks,
+            many=True,
+            context={"relationships": relationship_map},
+        ).data
 
 
 class StackWriteSerializer(serializers.ModelSerializer):

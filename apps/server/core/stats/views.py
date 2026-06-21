@@ -1,11 +1,7 @@
 """Views pour le module Stats (Dashboard)."""
 
 import logging
-from collections import defaultdict
-from datetime import timedelta
-from statistics import fmean
 
-from django.utils import timezone
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -15,7 +11,6 @@ from rest_framework.views import APIView
 
 from utils.exceptions.service import ValidationError as ServiceValidationError
 
-from .models import WebVitalEvent
 from .serializers import (
     ChartDataSerializer,
     DashboardStatsSerializer,
@@ -120,16 +115,6 @@ class DashboardOverviewView(APIView):
         )
 
 
-def _percentile(values: list[float], percentile: int) -> float | None:
-    """Calcule un percentile simple sur une liste triee."""
-    if not values:
-        return None
-
-    sorted_values = sorted(values)
-    index = round((len(sorted_values) - 1) * (percentile / 100))
-    return float(sorted_values[index])
-
-
 class WebVitalsIngestView(APIView):
     """Endpoint public d'ingestion des Web Vitals."""
 
@@ -186,42 +171,5 @@ class WebVitalsSummaryView(APIView):
         except (ValueError, TypeError) as exc:
             raise ServiceValidationError("Le parametre 'days' doit etre un entier.") from exc
 
-        since = timezone.now() - timedelta(days=days)
-        events = list(WebVitalEvent.objects.filter(created_at__gte=since).values("metric_name", "value", "rating"))
-
-        grouped_values: dict[str, list[float]] = defaultdict(list)
-        default_ratings = {"good": 0, "needs-improvement": 0, "poor": 0}
-
-        def _make_default_ratings() -> dict[str, int]:
-            return default_ratings.copy()
-
-        grouped_ratings: dict[str, dict[str, int]] = defaultdict(_make_default_ratings)
-
-        for event in events:
-            metric_name = str(event["metric_name"])
-            metric_value = float(event["value"])
-            rating = str(event["rating"])
-            grouped_values[metric_name].append(metric_value)
-            if rating in grouped_ratings[metric_name]:
-                grouped_ratings[metric_name][rating] += 1
-
-        metrics_summary = []
-        for metric_name in sorted(grouped_values.keys()):
-            values = grouped_values[metric_name]
-            metrics_summary.append(
-                {
-                    "metric_name": metric_name,
-                    "count": len(values),
-                    "mean": round(float(fmean(values)), 2) if values else None,
-                    "p75": _percentile(values, 75),
-                    "p95": _percentile(values, 95),
-                    "ratings": grouped_ratings[metric_name],
-                }
-            )
-
-        payload = {
-            "window_days": days,
-            "total_events": len(events),
-            "metrics": metrics_summary,
-        }
+        payload = WebVitalsService.summary(days)
         return Response(payload, status=status.HTTP_200_OK)

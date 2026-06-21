@@ -24,7 +24,7 @@ export interface ExperienceType {
 export interface ExperienceStats {
     totalYears: number;
     companiesCount: number;
-    topSkills: Array<{ skill: string; count: number }>;
+    topTechnologies: Array<{ name: string; level: number }>;
     experienceByType: Array<{ type: string; count: number }>;
 }
 
@@ -63,16 +63,7 @@ export interface ExperienceFilterOption {
 }
 
 export interface ExperienceCardProps {
-    title: string;
-    company: string;
-    logo?: string;
-    location?: string;
-    startDate: string;
-    endDate?: string;
-    period?: string;
-    description?: string;
-    skills?: string | string[];
-    achievements?: string | string[];
+    experience: Experience;
     dateFormat?: string;
     currentText?: string;
 }

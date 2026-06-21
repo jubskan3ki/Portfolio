@@ -15,6 +15,15 @@ class CategoryService(BaseService["ProjectCategory"]):
     logger_name = "core.projects"
 
     @classmethod
+    def _get_detail_queryset(cls) -> QuerySet[ProjectCategory]:
+        """Annote projects_count pour que le detail expose le bon compteur.
+
+        Sans annotation, get_count retombait sur 0 (le detail passait par le
+        manager nu via get_by_slug).
+        """
+        return cls.model.objects.annotate(projects_count=Count("projects"))
+
+    @classmethod
     def get_all(cls, *, with_count: bool = False) -> QuerySet[ProjectCategory]:
         """Recupere toutes les categories.
 

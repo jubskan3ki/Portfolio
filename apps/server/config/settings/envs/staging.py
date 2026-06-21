@@ -1,7 +1,7 @@
-"""Staging overrides."""
+"""Staging overrides.
 
-DEBUG = False
-ENABLE_DEBUG_TOOLBAR = False
+DEBUG/ENABLE_DEBUG_TOOLBAR sont figés dans base.py à partir de DJANGO_ENV.
+"""
 
 # Laxer than prod for nightly k6 benchmarks.
 REST_FRAMEWORK_DEFAULT_THROTTLE_RATES_OVERRIDE = {

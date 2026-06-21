@@ -10,10 +10,9 @@
 
                 <ul class="navbar__nav" role="menubar">
                     <NavbarItem
-                        v-for="(item, index) in navigationItems"
+                        v-for="item in navigationItems"
                         :key="item.path"
                         :item="item"
-                        :index="index"
                         :is-active="isActiveRoute(item.path, route.path)"
                     />
                 </ul>

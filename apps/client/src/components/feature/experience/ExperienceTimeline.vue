@@ -39,19 +39,7 @@
                 </div>
                 <div class="timeline__content">
                     <slot name="experience-item" :experience="exp" :index="idx">
-                        <ExperienceCard
-                            :title="exp.title"
-                            :company="exp.company"
-                            :logo="exp.logo"
-                            :location="exp.location"
-                            :start-date="exp.startDate"
-                            :end-date="exp.endDate"
-                            :description="exp.description"
-                            :skills="exp.technologies?.length ? exp.technologies : exp.skills"
-                            :achievements="exp.achievements"
-                            :date-format="dateFormat"
-                            :current-text="currentText"
-                        />
+                        <ExperienceCard :experience="exp" :date-format="dateFormat" :current-text="currentText" />
                     </slot>
                 </div>
             </div>

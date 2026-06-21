@@ -1,11 +1,11 @@
 <template>
     <div class="date-range-calendar">
         <div class="calendar-header">
-            <button type="button" class="calendar-header__nav" @click="$emit('previousMonth')">
+            <button type="button" class="calendar-header__nav" aria-label="Mois précédent" @click="$emit('previousMonth')">
                 <BaseIcon name="chevron-left" :size="16" />
             </button>
             <div class="calendar-header__title">{{ currentMonthYear }}</div>
-            <button type="button" class="calendar-header__nav" @click="$emit('nextMonth')">
+            <button type="button" class="calendar-header__nav" aria-label="Mois suivant" @click="$emit('nextMonth')">
                 <BaseIcon name="chevron-right" :size="16" />
             </button>
         </div>

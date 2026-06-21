@@ -174,7 +174,9 @@ export interface UseTypingEffectReturn {
 }
 
 export interface UseProgressTimerOptions {
-    duration: number;
+    // Accepte un getter pour que la durée puisse être relue dynamiquement
+    // (reset/start après changement de prop) au lieu d'être figée à la création.
+    duration: number | (() => number);
     onComplete?: () => void;
     autoStart?: boolean;
     stepTime?: number;

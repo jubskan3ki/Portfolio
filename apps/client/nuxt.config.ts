@@ -82,7 +82,6 @@ export default defineNuxtConfig({
                 { name: 'geo.placename', content: 'Paris' },
                 { name: 'geo.position', content: '48.8566;2.3522' },
                 { name: 'ICBM', content: '48.8566, 2.3522' },
-                // PWA / Apple / Microsoft tiles
                 { name: 'application-name', content: 'Juba Ait-Adda' },
                 { name: 'apple-mobile-web-app-title', content: 'Juba A.' },
                 { name: 'apple-mobile-web-app-capable', content: 'yes' },
@@ -98,7 +97,7 @@ export default defineNuxtConfig({
                 ...(apiPreconnectHref
                     ? [{ rel: 'preconnect', href: apiPreconnectHref, crossorigin: 'anonymous' } as const]
                     : []),
-                // Lato 400/700 preloads with fetchpriority=high; @nuxt/fonts auto-preload disabled below to avoid duplicate tags.
+                // Preloads Lato 400/700 manuels ; auto-preload @nuxt/fonts désactivé plus bas pour éviter les tags dupliqués.
                 {
                     rel: 'preload',
                     as: 'font',
@@ -218,6 +217,7 @@ export default defineNuxtConfig({
     },
 
     features: {
+        // inlineStyles natif casse le build SSR (rolldown-vite + @nuxt/fonts : double export `default`) ; inlining fait dans server/plugins/defer-css.ts.
         inlineStyles: false,
     },
 
@@ -239,7 +239,6 @@ export default defineNuxtConfig({
             brotli: true,
             gzip: true,
         },
-        // API proxy handled by server/routes/api/[...path].ts.
         routeRules: {
             '/_nuxt/**': {
                 headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
@@ -322,16 +321,16 @@ export default defineNuxtConfig({
                     manualChunks: (id) => {
                         if (!id.includes('node_modules')) return;
 
-                        // Admin-only / heavy lazy deps - keep isolated so the home doesn't pull them.
+                        // Deps lourdes admin-only isolées pour que la home ne les tire pas.
                         if (id.includes('chart.js')) return 'chartjs';
                         if (id.includes('/dayjs/') && !id.includes('/dayjs/plugin/')) return 'vendor-dayjs';
                         if (id.includes('/@tanstack/')) return 'vendor-query';
 
-                        // Deferred via dynamic import in plugins - let Rollup split by entry.
+                        // Différé via dynamic import : laisser Rollup splitter par entry.
                         if (id.includes('web-vitals')) return;
                         if (id.includes('workbox-') || id.includes('@vite-pwa/')) return;
 
-                        // Per-icon code splitting handled by defineAsyncComponent in BaseIcon.
+                        // Code splitting par icône via defineAsyncComponent dans BaseIcon.
                         if (id.includes('lucide-vue-next')) return;
 
                         if (

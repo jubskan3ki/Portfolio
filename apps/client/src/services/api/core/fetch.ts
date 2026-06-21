@@ -16,8 +16,24 @@ export type { HttpMethod } from '@/types/services/api';
 const MAX_FETCH_DEPTH = 3;
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-// ETag store: URL -> { etag, body } for conditional GET
+// ETag store: URL -> { etag, body } for conditional GET.
+// Client uniquement: au niveau module il serait partagé entre toutes les requêtes SSR
+// (fuite mémoire non bornée + cache inter-utilisateurs). Borné en FIFO/LRU léger pour
+// éviter une croissance illimitée sur une session longue.
+const ETAG_STORE_MAX_ENTRIES = 200;
 const etagStore = new Map<string, { etag: string; data: unknown }>();
+
+function setEtagEntry(url: string, entry: { etag: string; data: unknown }): void {
+    // Rafraîchit la position (LRU léger) puis évince la plus ancienne au dépassement
+    etagStore.delete(url);
+    etagStore.set(url, entry);
+    if (etagStore.size > ETAG_STORE_MAX_ENTRIES) {
+        const oldest = etagStore.keys().next().value;
+        if (oldest !== undefined) {
+            etagStore.delete(oldest);
+        }
+    }
+}
 
 // SSR dedup: coalesce concurrent GETs to same URL
 const ssrPendingRequests = new Map<string, Promise<unknown>>();
@@ -80,10 +96,22 @@ export async function handleAuthRefresh(response: Response, endpoint: string): P
 export async function fetchWithTimeout(
     url: string,
     options: RequestInit,
-    timeout = import.meta.server ? HTTP_CONFIG.SSR_TIMEOUT : HTTP_CONFIG.DEFAULT_TIMEOUT,
+    timeout: number = import.meta.server ? HTTP_CONFIG.SSR_TIMEOUT : HTTP_CONFIG.DEFAULT_TIMEOUT,
+    externalSignal?: AbortSignal,
 ): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    // Lie le signal externe (annulation Vue Query) au controller interne (timeout).
+    // Listener nettoyé en finally pour ne pas retenir le controller.
+    const onExternalAbort = () => controller.abort();
+    if (externalSignal) {
+        if (externalSignal.aborted) {
+            controller.abort();
+        } else {
+            externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+        }
+    }
 
     try {
         const response = await fetch(url, {
@@ -93,11 +121,17 @@ export async function fetchWithTimeout(
         return response;
     } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
+            // Annulation explicite (navigation, changement de clé) -> propage l'AbortError
+            // pour que Vue Query l'ignore au lieu de la traiter comme un timeout réseau.
+            if (externalSignal?.aborted) {
+                throw error;
+            }
             throw new TypeError('fetch timeout: Request took too long');
         }
         throw error;
     } finally {
         clearTimeout(timeoutId);
+        externalSignal?.removeEventListener('abort', onExternalAbort);
     }
 }
 
@@ -151,7 +185,14 @@ export async function fetchApi<T>(
     params?: Record<string, unknown>,
     options: FetchOptions = {},
 ): Promise<T> {
-    const { retries = 0, skipRefresh = false, transformResponse = true, transformRequest = true, _depth = 0 } = options;
+    const {
+        retries = 0,
+        skipRefresh = false,
+        transformResponse = true,
+        transformRequest = true,
+        signal,
+        _depth = 0,
+    } = options;
 
     if (_depth >= MAX_FETCH_DEPTH) {
         throw createApiError(0, 'Maximum fetch depth exceeded | possible infinite loop');
@@ -187,8 +228,8 @@ export async function fetchApi<T>(
         }
     }
 
-    // Conditional GET via ETag
-    if (method === 'GET') {
+    // Conditional GET via ETag (client uniquement)
+    if (method === 'GET' && import.meta.client) {
         const cached = etagStore.get(url);
         if (cached) {
             requestInit.headers = {
@@ -202,7 +243,7 @@ export async function fetchApi<T>(
 
     const executeFetch = async (): Promise<T> => {
         try {
-            const response = await fetchWithTimeout(url, requestInit);
+            const response = await fetchWithTimeout(url, requestInit, undefined, signal);
 
             if (!skipRefresh && (await handleAuthRefresh(response, endpoint))) {
                 return fetchApi<T>(endpoint, method, data, params, {
@@ -213,7 +254,7 @@ export async function fetchApi<T>(
             }
 
             // 304 -> renvoie le cache ETag
-            if (response.status === 304) {
+            if (response.status === 304 && import.meta.client) {
                 const cached = etagStore.get(url);
                 if (cached) {
                     return cached.data as T;
@@ -224,8 +265,8 @@ export async function fetchApi<T>(
 
             const result = await handleResponse<T>(response, requestInit, transformResponse);
 
-            if (etag && method === 'GET') {
-                etagStore.set(url, { etag, data: result });
+            if (etag && method === 'GET' && import.meta.client) {
+                setEtagEntry(url, { etag, data: result });
             }
 
             return result;
@@ -246,18 +287,26 @@ export async function fetchApi<T>(
                 throw processedError;
             }
 
-            if (isApiError(error)) {
-                if (retries > 0 && (error.code === 'SERVER_ERROR' || error.code === 'RATE_LIMITED')) {
+            if (isApiError(error) && retries > 0) {
+                const isRateLimited = error.code === 'RATE_LIMITED';
+                const isServerError = error.code === 'SERVER_ERROR';
+                // 429 : requête rejetée par le throttler AVANT exécution → retry sûr même pour une mutation.
+                // 500 : la mutation a pu être partiellement appliquée côté serveur → on ne retente que
+                // les requêtes idempotentes (GET), sinon risque de doublon (POST) ou double-application (PATCH).
+                const canRetry = isRateLimited || (isServerError && !MUTATION_METHODS.has(method));
+                if (canRetry) {
                     // Respecter Retry-After pour 429
                     const delay
-                        = error.code === 'RATE_LIMITED' && 'retryAfter' in error
+                        = isRateLimited && 'retryAfter' in error
                             ? (error.retryAfter || 1) * 1000
                             : calculateRetryDelay(API_RETRY.MAX_RETRIES - retries);
 
                     await new Promise((resolve) => setTimeout(resolve, delay));
+                    // Préserver toutes les options (transformResponse/Request, skipRefresh, signal...)
+                    // comme le fait le retry d'auth ; ne surcharger que les compteurs.
                     return fetchApi<T>(endpoint, method, data, params, {
+                        ...options,
                         retries: retries - 1,
-                        skipRefresh,
                         _depth: _depth + 1,
                     });
                 }

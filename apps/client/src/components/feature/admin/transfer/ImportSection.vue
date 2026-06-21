@@ -35,6 +35,7 @@
                 :images="images"
                 @add-images="addImages"
                 @remove-image="removeImage"
+                @update-image-key="updateImageKey"
             />
 
             <ImportProgress
@@ -162,6 +163,13 @@
             URL.revokeObjectURL(img.preview);
         }
         images.splice(index, 1);
+    };
+
+    const updateImageKey = ({ index, value }: { index: number; value: string }) => {
+        const img = images[index];
+        if (img) {
+            img.key = value;
+        }
     };
 
     const clearImages = () => {

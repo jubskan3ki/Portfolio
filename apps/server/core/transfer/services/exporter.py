@@ -27,6 +27,10 @@ logger = logging.getLogger("core.transfer")
 class ExporterService:
     """Service pour l'export de donnees."""
 
+    # Modules exportes par defaut lors d'un export bulk "all"
+    # (contacts exclu volontairement : donnees personnelles).
+    DEFAULT_BULK_MODULES: list[str] = ["articles", "projects", "stacks", "experiences"]
+
     @classmethod
     def get_model_and_serializer(cls, module: str) -> tuple[Any, Any, dict[str, Any]]:
         """Recupere le modele et serializer pour un module."""
@@ -76,13 +80,14 @@ class ExporterService:
         """Exporte les donnees au format JSON."""
         queryset, serializer_class = cls._get_filtered_queryset(module, filters)
 
-        count = queryset.count()
         serializer = serializer_class(queryset, many=True)
+        serialized = serializer.data
+        count = len(serialized)
         data = {
             "module": module,
             "exported_at": timezone.now().isoformat(),
             "count": count,
-            "data": serializer.data,
+            "data": serialized,
         }
 
         return json.dumps(data, indent=2, ensure_ascii=False, default=str), count

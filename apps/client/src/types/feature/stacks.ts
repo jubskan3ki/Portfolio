@@ -150,7 +150,6 @@ export interface StackListProps {
     clickableItems?: boolean;
     cardHoverable?: boolean;
     cardFlat?: boolean;
-    cardBordered?: boolean;
     descriptionLength?: number;
     customClass?: string;
 }
@@ -158,6 +157,7 @@ export interface StackListProps {
 export interface StackCarouselProps {
     limit?: number;
     autoplay?: boolean;
+    slidesPerView?: number;
 }
 
 // Light entry for StackBadge | minimal fields the caller is expected to pass.

@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref } from 'vue';
+    import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useReducedMotion } from '@/composables/accessibility/useReducedMotion';
@@ -44,11 +44,17 @@
         return currentValue.value;
     });
 
+    let rafId = 0;
+    let isAnimating = false;
+
     const startCount = () => {
         if (prefersReducedMotion.value) {
             currentValue.value = targetValue.value;
             return;
         }
+
+        cancelAnimationFrame(rafId);
+        isAnimating = true;
 
         const startTime = Date.now();
         const endTime = startTime + props.duration;
@@ -62,14 +68,28 @@
             currentValue.value = Math.floor(progress * targetValue.value);
 
             if (remaining > 0) {
-                requestAnimationFrame(updateCounter);
+                rafId = requestAnimationFrame(updateCounter);
             } else {
                 currentValue.value = targetValue.value;
+                isAnimating = false;
             }
         };
 
         updateCounter();
     };
+
+    // La valeur peut arriver de façon asynchrone (stats vue-query, client-only) : sans cette
+    // synchro, la carte resterait bloquée sur la valeur initiale jusqu'à un survol.
+    watch(targetValue, (value) => {
+        if (!isAnimating) {
+            currentValue.value = value;
+        }
+    });
+
+    onBeforeUnmount(() => {
+        cancelAnimationFrame(rafId);
+        isAnimating = false;
+    });
 
     const cardRef = ref<HTMLElement | null>(null);
 

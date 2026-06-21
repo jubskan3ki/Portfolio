@@ -1,15 +1,23 @@
+// Compteur volontairement muté côté client uniquement : au niveau module il serait
+// partagé entre toutes les requêtes SSR (dérive du compteur entre utilisateurs).
 let overflowLockCount = 0;
 
 export function lockBodyOverflow(): void {
+    if (!import.meta.client) {
+        return;
+    }
     overflowLockCount++;
-    if (import.meta.client && overflowLockCount === 1) {
+    if (overflowLockCount === 1) {
         document.body.style.overflow = 'hidden';
     }
 }
 
 export function unlockBodyOverflow(): void {
+    if (!import.meta.client) {
+        return;
+    }
     overflowLockCount = Math.max(0, overflowLockCount - 1);
-    if (import.meta.client && overflowLockCount === 0) {
+    if (overflowLockCount === 0) {
         document.body.style.overflow = '';
     }
 }

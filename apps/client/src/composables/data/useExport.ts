@@ -20,9 +20,7 @@ export function useExport(options: UseExportOptions = {}) {
             const filename = `${module}_export_${new Date().toISOString().split('T')[0]}.${format}`;
             downloadFile(blob, filename);
         },
-        onError: () => {
-            showError("Erreur lors de l'export", 'Export');
-        },
+        // Pas de onError : exportModules() gère déjà l'erreur dans son catch (sinon double toast).
     });
 
     async function exportModules(selectedModules: TransferModule[], format: ExportFormat) {

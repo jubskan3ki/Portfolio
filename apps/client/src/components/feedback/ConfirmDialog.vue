@@ -38,12 +38,13 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, useId, ref, watch, nextTick } from 'vue';
+    import { computed, useId, ref, watch, nextTick, onUnmounted } from 'vue';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useEscapeKey } from '@/composables/accessibility/useEscapeKey';
     import { useFocusTrap } from '@/composables/accessibility/useFocusTrap';
+    import { lockBodyOverflow, unlockBodyOverflow } from '@/services/utils/dom';
 
     import type { ConfirmDialogProps, ConfirmDialogVariant, ButtonVariant } from '@/types/components/feedback';
 
@@ -121,13 +122,22 @@
         () => props.modelValue,
         async (isOpen) => {
             if (isOpen) {
+                lockBodyOverflow();
                 await nextTick();
                 activateFocusTrap();
             } else {
                 deactivateFocusTrap();
+                unlockBodyOverflow();
             }
         },
     );
+
+    // Filet de sécurité : démontage alors que le dialogue est ouvert (équilibre le compteur de lock).
+    onUnmounted(() => {
+        if (props.modelValue) {
+            unlockBodyOverflow();
+        }
+    });
 </script>
 
 <style lang="scss" scoped>

@@ -53,6 +53,32 @@ class ContactSerializer(serializers.ModelSerializer):
         return cleaned
 
 
+class ContactAdminWriteSerializer(serializers.ModelSerializer):
+    """Serialiseur d'edition admin d'une soumission de contact.
+
+    Expose uniquement les champs reellement modifiables par l'admin
+    (statut + reponse). Le serializer public de creation (ContactSerializer)
+    ne doit pas exposer ces champs.
+    """
+
+    class Meta:
+        model = Contact
+        fields = [
+            "status",
+            "response_message",
+            "response_date",
+        ]
+
+    def validate_status(self, value):
+        """Valide que le statut fait partie des valeurs autorisees."""
+        allowed = {choice[0] for choice in Contact.STATUS_CHOICES}
+        if value not in allowed:
+            raise serializers.ValidationError(
+                f"Statut invalide. Valeurs autorisees : {', '.join(sorted(allowed))}."
+            )
+        return value
+
+
 class ContactResponseSerializer(ReadOnlySerializer):
     """Serialiseur pour la reponse de soumission du formulaire."""
 

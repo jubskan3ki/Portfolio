@@ -13,6 +13,7 @@ export function useTiltCSS(elementRef: Ref<HTMLElement | null>, options: TiltCSS
 
     let animationId: number | null = null;
     let rect: DOMRect | null = null;
+    let bound = false;
 
     const lerp = (start: number, end: number, factor: number): number => {
         return start + (end - start) * factor;
@@ -87,9 +88,10 @@ export function useTiltCSS(elementRef: Ref<HTMLElement | null>, options: TiltCSS
     };
 
     const bindEvents = () => {
-        if (!elementRef.value) {
+        if (bound || !elementRef.value) {
             return;
         }
+        bound = true;
 
         elementRef.value.style.willChange = 'transform';
         elementRef.value.style.transformStyle = 'preserve-3d';
@@ -100,9 +102,10 @@ export function useTiltCSS(elementRef: Ref<HTMLElement | null>, options: TiltCSS
     };
 
     const unbindEvents = () => {
-        if (!elementRef.value) {
+        if (!bound || !elementRef.value) {
             return;
         }
+        bound = false;
 
         elementRef.value.style.willChange = '';
         elementRef.value.style.transformStyle = '';

@@ -61,6 +61,21 @@ class TestGetTag:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_get_tag_detail_exposes_counts(self, api_client: APIClient) -> None:
+        """Le detail expose count + view_count reels (regression: renvoyait 0)."""
+        from tests.factories import ArticleFactory, TagFactory
+
+        tag = TagFactory()
+        ArticleFactory(is_published=True, view_count=10, tags=[tag])
+        ArticleFactory(is_published=True, view_count=5, tags=[tag])
+
+        response = cast(Response, api_client.get(f"{self.URL}{tag.name}/"))
+
+        assert response.status_code == status.HTTP_200_OK
+        data = cast(dict[str, Any], response.data)
+        assert data["count"] == 2
+        assert data["view_count"] == 15
+
 
 @pytest.mark.django_db
 class TestArticlesByTag:

@@ -13,6 +13,7 @@
         :eager="eager"
         :data-slug="article.slug"
         :prefetch="false"
+        :show-footer="showFooter"
         :class="customClass"
     >
         <template #before-title>
@@ -25,7 +26,7 @@
         </template>
 
         <template #footer-left>
-            <span v-if="article.views" class="article-card__views">
+            <span v-if="showStats && article.views" class="article-card__views">
                 <BaseIcon name="eye" :size="12" />
                 {{ formatViews(article.views) }}
             </span>
@@ -33,7 +34,7 @@
 
         <template #footer-right>
             <span class="article-card__action">
-                Lire l'article
+                {{ readMoreText }}
                 <BaseIcon name="arrow-right" :size="14" class="article-card__arrow" />
             </span>
         </template>
@@ -58,6 +59,9 @@
         showTags: true,
         maxTags: 3,
         eager: false,
+        showFooter: true,
+        showStats: true,
+        readMoreText: 'Lire l\'article',
     });
 
     const articleLink = computed(() => (props.article.slug ? `/blog/${props.article.slug}` : ''));
@@ -69,7 +73,6 @@
 <style lang="scss" scoped>
     @use '@/styles/abstracts/variables' as vars;
 
-    // Article-specific styles (meta, views, action)
     .article-card__meta {
         display: flex;
         align-items: center;

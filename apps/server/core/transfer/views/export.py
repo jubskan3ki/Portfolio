@@ -58,11 +58,7 @@ class ExportModuleView(APIView):
             data={
                 "module": module,
                 "format": export_format,
-                "filters": {
-                    k: v
-                    for k, v in request.query_params.items()
-                    if k not in ("export_format", "format", "page", "page_size")
-                },
+                "filters": ExportRequestSerializer.build_filters(request.query_params),
             }
         )
 
@@ -73,7 +69,7 @@ class ExportModuleView(APIView):
             )
 
         try:
-            filters = getattr(serializer.validated_data, "get", lambda _: None)("filters")
+            filters = serializer.validated_data.get("filters")
             job = ExporterService.create_export_job(
                 user=request.user,
                 module=module,

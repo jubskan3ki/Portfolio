@@ -36,22 +36,26 @@ export const experienceKeys = {
 };
 
 export const experiencesApi = {
-    getAll: (filters?: ExperienceFilters): Promise<PaginatedResponse<Experience>> =>
-        httpClient.get(API_ENDPOINTS.EXPERIENCES.BASE, filters as Record<string, unknown>),
+    getAll: (filters?: ExperienceFilters, signal?: AbortSignal): Promise<PaginatedResponse<Experience>> =>
+        httpClient.get(API_ENDPOINTS.EXPERIENCES.BASE, filters as Record<string, unknown>, signal),
 
-    getById: (id: number | string): Promise<Experience> => httpClient.get(API_ENDPOINTS.EXPERIENCES.DETAIL(id)),
+    getById: (id: number | string, signal?: AbortSignal): Promise<Experience> =>
+        httpClient.get(API_ENDPOINTS.EXPERIENCES.DETAIL(id), undefined, signal),
 
-    getByType: async (typeName: string, filters?: ExperienceFilters): Promise<Experience[]> => {
+    getByType: async (typeName: string, filters?: ExperienceFilters, signal?: AbortSignal): Promise<Experience[]> => {
         const response: PaginatedResponse<Experience> = await httpClient.get(
             API_ENDPOINTS.EXPERIENCES.BY_TYPE(typeName),
             filters as Record<string, unknown>,
+            signal,
         );
         return response.data;
     },
 
-    getCurrent: (): Promise<Experience | null> => httpClient.get(API_ENDPOINTS.EXPERIENCES.CURRENT),
+    getCurrent: (signal?: AbortSignal): Promise<Experience | null> =>
+        httpClient.get(API_ENDPOINTS.EXPERIENCES.CURRENT, undefined, signal),
 
-    getTimeline: (): Promise<ExperienceTimeline[]> => httpClient.get(API_ENDPOINTS.EXPERIENCES.TIMELINE),
+    getTimeline: (signal?: AbortSignal): Promise<ExperienceTimeline[]> =>
+        httpClient.get(API_ENDPOINTS.EXPERIENCES.TIMELINE, undefined, signal),
 
     create: (data: ExperienceCreateData): Promise<Experience> => httpClient.post(API_ENDPOINTS.EXPERIENCES.BASE, data),
 
@@ -60,7 +64,8 @@ export const experiencesApi = {
 
     delete: (id: number | string): Promise<void> => httpClient.delete(API_ENDPOINTS.EXPERIENCES.DETAIL(id)),
 
-    getTypes: (): Promise<ExperienceType[]> => httpClient.get(API_ENDPOINTS.EXPERIENCES.TYPES),
+    getTypes: (signal?: AbortSignal): Promise<ExperienceType[]> =>
+        httpClient.get(API_ENDPOINTS.EXPERIENCES.TYPES, undefined, signal),
 
     getType: (id: number | string): Promise<ExperienceType> =>
         httpClient.get(API_ENDPOINTS.EXPERIENCES.TYPE_DETAIL(id)),
@@ -73,7 +78,8 @@ export const experiencesApi = {
 
     deleteType: (id: number | string): Promise<void> => httpClient.delete(API_ENDPOINTS.EXPERIENCES.TYPE_DETAIL(id)),
 
-    getStats: (): Promise<ExperienceStats> => httpClient.get(API_ENDPOINTS.EXPERIENCES.STATS),
+    getStats: (signal?: AbortSignal): Promise<ExperienceStats> =>
+        httpClient.get(API_ENDPOINTS.EXPERIENCES.STATS, undefined, signal),
 
     getAdminList: <T = unknown>(params: Record<string, unknown>): Promise<T> =>
         httpClient.get(API_ENDPOINTS.EXPERIENCES.BASE, params),
@@ -88,7 +94,7 @@ export const experiencesApi = {
 export function useExperiences(filters?: MaybeRef<ExperienceFilters>) {
     return createListQuery(
         computed(() => experienceKeys.list(unref(filters))),
-        () => experiencesApi.getAll(unref(filters)),
+        ({ signal }) => experiencesApi.getAll(unref(filters), signal),
         { placeholderData: (prev: PaginatedResponse<Experience> | undefined) => prev },
     );
 }
@@ -96,7 +102,7 @@ export function useExperiences(filters?: MaybeRef<ExperienceFilters>) {
 export function useExperienceDetail(id: MaybeRef<number | string>) {
     return createDetailQuery(
         computed(() => experienceKeys.detail(unref(id))),
-        () => experiencesApi.getById(unref(id)),
+        ({ signal }) => experiencesApi.getById(unref(id), signal),
         { enabled: computed(() => !!unref(id)) },
     );
 }
@@ -104,29 +110,33 @@ export function useExperienceDetail(id: MaybeRef<number | string>) {
 export function useExperiencesByType(typeName: MaybeRef<string>) {
     return createStaticQuery(
         computed(() => experienceKeys.byType(unref(typeName))),
-        () => experiencesApi.getByType(unref(typeName)),
+        ({ signal }) => experiencesApi.getByType(unref(typeName), undefined, signal),
         { enabled: computed(() => !!unref(typeName)) },
     );
 }
 
 export function useProfessionalExperiences(options?: QueryOptions<Experience[]>) {
-    return createStaticQuery(experienceKeys.professional(), () => experiencesApi.getByType('professional'), options);
+    return createStaticQuery(
+        experienceKeys.professional(),
+        ({ signal }) => experiencesApi.getByType('professional', undefined, signal),
+        options,
+    );
 }
 
 export function useExperienceTypes() {
-    return createStaticQuery(experienceKeys.types(), experiencesApi.getTypes);
+    return createStaticQuery(experienceKeys.types(), ({ signal }) => experiencesApi.getTypes(signal));
 }
 
 export function useExperienceStats() {
-    return createStaticQuery(experienceKeys.stats(), experiencesApi.getStats);
+    return createStaticQuery(experienceKeys.stats(), ({ signal }) => experiencesApi.getStats(signal));
 }
 
 export function useCurrentExperience() {
-    return createDetailQuery(experienceKeys.current(), experiencesApi.getCurrent);
+    return createDetailQuery(experienceKeys.current(), ({ signal }) => experiencesApi.getCurrent(signal));
 }
 
 export function useExperienceTimeline() {
-    return createStaticQuery(experienceKeys.timeline(), experiencesApi.getTimeline);
+    return createStaticQuery(experienceKeys.timeline(), ({ signal }) => experiencesApi.getTimeline(signal));
 }
 
 const typeMutations = createSubResourceMutations<

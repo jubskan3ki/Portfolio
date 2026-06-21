@@ -94,6 +94,7 @@
                 label="Site officiel"
                 type="url"
                 placeholder="https://vuejs.org"
+                :error="errors.website"
             />
 
             <BaseInput
@@ -101,6 +102,7 @@
                 v-model="form.website_label"
                 label="Libellé du site"
                 placeholder="Ex: Documentation"
+                :maxlength="50"
             />
         </div>
 
@@ -111,6 +113,7 @@
                 label="Dépôt GitHub"
                 type="url"
                 placeholder="https://github.com/vuejs/core"
+                :error="errors.github"
             />
 
             <BaseInput
@@ -118,6 +121,7 @@
                 v-model="form.github_label"
                 label="Libellé GitHub"
                 placeholder="Ex: Code source"
+                :maxlength="50"
             />
         </div>
 
@@ -209,6 +213,7 @@
         findItemByIdOrName,
         linesToArray,
         arrayToLines,
+        isValidHttpUrl,
     } from '@/composables/forms/useFormUtils';
     import { generateSlug } from '@/composables/forms/useSlugGenerator';
     import { useAlert } from '@/composables/ui/useAlert';
@@ -290,8 +295,16 @@
             if (!values.category) {
                 errs.category = 'La catégorie est requise';
             }
-            if (values.proficiency < 0 || values.proficiency > 100) {
+            if (!Number.isFinite(values.proficiency)) {
+                errs.proficiency = 'La maîtrise est requise (0 à 100)';
+            } else if (values.proficiency < 0 || values.proficiency > 100) {
                 errs.proficiency = 'La maîtrise doit être entre 0 et 100';
+            }
+            if (!isValidHttpUrl(values.website)) {
+                errs.website = 'URL invalide (http:// ou https:// attendu)';
+            }
+            if (!isValidHttpUrl(values.github)) {
+                errs.github = 'URL invalide (http:// ou https:// attendu)';
             }
             return errs;
         },

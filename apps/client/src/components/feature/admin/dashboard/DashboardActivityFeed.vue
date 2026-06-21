@@ -31,6 +31,8 @@
 </template>
 
 <script setup lang="ts">
+    import { onMounted, ref } from 'vue';
+
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { ADMIN_ROUTES } from '@/config/routes';
 
@@ -54,9 +56,22 @@
         return ACTIVITY_ICONS[type] || 'activity';
     };
 
+    // "now" n'est posé qu'au montage client : SSR et première hydratation rendent la date
+    // absolue déterministe (zéro mismatch), puis on bascule en relatif après mount.
+    const now = ref<number | null>(null);
+    onMounted(() => {
+        now.value = Date.now();
+    });
+
+    const absoluteDate = (date: Date): string =>
+        date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'Europe/Paris' });
+
     const formatRelativeDate = (date: Date): string => {
-        const now = new Date();
-        const diff = now.getTime() - date.getTime();
+        if (now.value === null) {
+            return absoluteDate(date);
+        }
+
+        const diff = now.value - date.getTime();
         const minutes = Math.floor(diff / 60000);
         const hours = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
@@ -74,7 +89,7 @@
             return `Il y a ${days}j`;
         }
 
-        return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        return absoluteDate(date);
     };
 </script>
 

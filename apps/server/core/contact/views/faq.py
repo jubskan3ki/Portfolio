@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -24,6 +25,11 @@ class FAQViewSet(BaseAPIViewSet):
     throttle_classes = [ContactsThrottle]
     pagination_class = APIResponsePagination
 
+    def _get_base_queryset(self) -> QuerySet[FAQ]:
+        """Restreint aux FAQs publiees pour les anonymes (toutes actions, dont retrieve)."""
+        published_only = not self.request.user.is_authenticated
+        return FAQService.get_all(published_only=published_only)
+
     @extend_schema(
         summary="Liste des FAQs",
         description="Recupere la liste des FAQs publiees.",
@@ -32,9 +38,7 @@ class FAQViewSet(BaseAPIViewSet):
     )
     def list(self, request: Request, *_args: Any, **_kwargs: Any) -> Response:
         """Liste les FAQs publiees."""
-        published_only = not request.user.is_authenticated
-        queryset = FAQService.get_all(published_only=published_only)
-        return self.paginated_response(queryset)
+        return self.paginated_response(self.get_queryset())
 
     @extend_schema(
         summary="Details d'une FAQ",

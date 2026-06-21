@@ -1,4 +1,4 @@
-import { onMounted } from 'vue';
+import { onMounted, onScopeDispose } from 'vue';
 
 import type { UsePrefetchIdleReturn } from '@/types/composables/performance';
 
@@ -20,6 +20,9 @@ export function useIdlePrefetch(routes?: string[], idleTimeout?: number): UsePre
         }
     };
 
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+    let idleId: number | null = null;
+
     const startPrefetch = () => {
         if (!import.meta.client) {
             return;
@@ -27,23 +30,39 @@ export function useIdlePrefetch(routes?: string[], idleTimeout?: number): UsePre
 
         const scheduleTask = (callback: () => void) => {
             if ('requestIdleCallback' in window) {
-                window.requestIdleCallback(callback, { timeout });
+                idleId = window.requestIdleCallback(callback, { timeout });
             } else {
-                setTimeout(callback, 2000);
+                const t = setTimeout(callback, 2000);
+                timers.add(t);
             }
         };
 
         scheduleTask(() => {
             criticalRoutes.forEach((route, index) => {
-                setTimeout(() => {
+                const t = setTimeout(() => {
+                    timers.delete(t);
                     prefetchRoute(route);
                 }, index * ROUTE_PREFETCH_INTERVAL);
+                timers.add(t);
             });
         });
     };
 
+    const stopPrefetch = () => {
+        timers.forEach(clearTimeout);
+        timers.clear();
+        if (idleId !== null && import.meta.client && 'cancelIdleCallback' in window) {
+            window.cancelIdleCallback(idleId);
+            idleId = null;
+        }
+    };
+
     onMounted(() => {
         startPrefetch();
+    });
+
+    onScopeDispose(() => {
+        stopPrefetch();
     });
 
     return {

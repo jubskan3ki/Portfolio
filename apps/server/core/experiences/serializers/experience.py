@@ -6,7 +6,7 @@ from rest_framework import serializers
 from utils.serializers import ReadOnlySerializer
 from utils.serializers.fields import RelativeMediaFileField
 
-from ..models import Experience, ExperienceType
+from ..models import Experience, ExperienceType, get_date_order_error
 
 
 class ExperienceWriteSerializer(serializers.ModelSerializer):
@@ -54,8 +54,9 @@ class ExperienceWriteSerializer(serializers.ModelSerializer):
         if start_date and start_date > timezone.now().date():
             raise serializers.ValidationError({"start_date": "La date de debut ne peut pas etre dans le futur."})
 
-        if end_date and start_date and end_date < start_date:
-            raise serializers.ValidationError({"end_date": "La date de fin doit etre posterieure a la date de debut."})
+        date_order_error = get_date_order_error(start_date, end_date)
+        if date_order_error:
+            raise serializers.ValidationError({"end_date": date_order_error})
 
         return attrs
 
@@ -65,8 +66,8 @@ class ExperienceSerializer(serializers.ModelSerializer):
 
     type: serializers.StringRelatedField = serializers.StringRelatedField()
     logo = RelativeMediaFileField(read_only=True)
-    startDate = serializers.DateField(source="start_date")
-    endDate = serializers.DateField(source="end_date", required=False, allow_null=True)
+    startDate = serializers.DateField(source="start_date", read_only=True)
+    endDate = serializers.DateField(source="end_date", read_only=True)
     isCurrent = serializers.BooleanField(source="is_current", read_only=True)
 
     class Meta:

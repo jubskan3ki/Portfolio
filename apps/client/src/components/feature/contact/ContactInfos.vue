@@ -12,40 +12,20 @@
             </div>
 
             <div class="contact-infos__items">
-                <div v-if="address" class="contact-infos__item">
+                <div v-for="item in displayItems" :key="item.label" class="contact-infos__item">
                     <div class="contact-infos__icon">
-                        <BaseIcon name="map-pin" :size="20" />
+                        <BaseIcon :name="item.icon" :size="20" />
                     </div>
                     <div class="contact-infos__details">
-                        <span class="contact-infos__label">{{ addressTitle }}</span>
-                        <span class="contact-infos__value">{{ address }}</span>
-                    </div>
-                </div>
-
-                <div v-if="email" class="contact-infos__item">
-                    <div class="contact-infos__icon">
-                        <BaseIcon name="mail" :size="20" />
-                    </div>
-                    <div class="contact-infos__details">
-                        <span class="contact-infos__label">{{ emailTitle }}</span>
-                        <BaseLink :to="`mailto:${email}`" class="contact-infos__value contact-infos__value--link">
-                            {{ email }}
-                        </BaseLink>
-                    </div>
-                </div>
-
-                <div v-if="phone" class="contact-infos__item">
-                    <div class="contact-infos__icon">
-                        <BaseIcon name="phone" :size="20" />
-                    </div>
-                    <div class="contact-infos__details">
-                        <span class="contact-infos__label">{{ phoneTitle }}</span>
+                        <span class="contact-infos__label">{{ item.label }}</span>
                         <BaseLink
-                            :to="`tel:${phone.replace(/\s+/g, '')}`"
+                            v-if="item.href"
+                            :to="item.href"
                             class="contact-infos__value contact-infos__value--link"
                         >
-                            {{ phone }}
+                            {{ item.value }}
                         </BaseLink>
+                        <span v-else class="contact-infos__value">{{ item.value }}</span>
                     </div>
                 </div>
             </div>
@@ -72,33 +52,49 @@
 </template>
 
 <script setup lang="ts">
+    import { computed } from 'vue';
+
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseLink from '@/components/base/BaseLink.vue';
 
-    import type { ContactInfosProps } from '@/types/feature/contact';
+    import type { ContactInfoItem, ContactInfosProps } from '@/types/feature/contact';
 
-    withDefaults(defineProps<ContactInfosProps>(), {
+    // Pas de coordonnées codées en dur : les valeurs proviennent du consommateur (useSiteSettings).
+    const props = withDefaults(defineProps<ContactInfosProps>(), {
         title: 'Contactez-moi',
         subtitle: '',
         addressTitle: 'Localisation',
         emailTitle: 'Email',
         phoneTitle: 'Téléphone',
         socialTitle: 'Réseaux sociaux',
-        address: 'Paris, France',
-        email: 'contact@aitaddajuba.fr',
-        phone: '+33 6 95 21 71 97',
-        socialLinks: () => [
-            {
-                name: 'LinkedIn',
-                icon: 'linkedin',
-                url: 'https://www.linkedin.com/in/juba-aitadda/',
-            },
-            {
-                name: 'GitHub',
-                icon: 'github',
-                url: 'https://github.com/jubskan3ki',
-            },
-        ],
+        items: undefined,
+        address: '',
+        email: '',
+        phone: '',
+        socialLinks: () => [],
+    });
+
+    // `items` explicite prioritaire ; sinon on dérive la liste des champs address/email/phone.
+    const displayItems = computed<ContactInfoItem[]>(() => {
+        if (props.items?.length) {
+            return props.items;
+        }
+        const derived: ContactInfoItem[] = [];
+        if (props.address) {
+            derived.push({ icon: 'map-pin', label: props.addressTitle, value: props.address });
+        }
+        if (props.email) {
+            derived.push({ icon: 'mail', label: props.emailTitle, value: props.email, href: `mailto:${props.email}` });
+        }
+        if (props.phone) {
+            derived.push({
+                icon: 'phone',
+                label: props.phoneTitle,
+                value: props.phone,
+                href: `tel:${props.phone.replace(/\s+/g, '')}`,
+            });
+        }
+        return derived;
     });
 </script>
 
@@ -116,7 +112,6 @@
         border-radius: vars.$border-radius-xl;
         overflow: hidden;
 
-        // Dark glassmorphism
         background: linear-gradient(
             135deg,
             vars.$primary-dark 0%,
@@ -130,7 +125,6 @@
             padding: vars.$spacing-lg;
         }
 
-        // Decoration container
         &__decoration {
             position: absolute;
             inset: 0;
@@ -138,7 +132,6 @@
             pointer-events: none;
         }
 
-        // Floating orbs
         &__orb {
             position: absolute;
             border-radius: 50%;

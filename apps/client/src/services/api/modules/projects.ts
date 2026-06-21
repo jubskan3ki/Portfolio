@@ -43,15 +43,17 @@ export const projectKeys = {
 };
 
 export const projectsApi = {
-    getAll: (filters?: ProjectFilters): Promise<ProjectsResponse> =>
-        httpClient.get(API_ENDPOINTS.PROJECTS.BASE, filters as Record<string, unknown>),
+    getAll: (filters?: ProjectFilters, signal?: AbortSignal): Promise<ProjectsResponse> =>
+        httpClient.get(API_ENDPOINTS.PROJECTS.BASE, filters as Record<string, unknown>, signal),
 
-    getBySlug: (slug: string): Promise<ProjectDetail> => httpClient.get(API_ENDPOINTS.PROJECTS.DETAIL(slug)),
+    getBySlug: (slug: string, signal?: AbortSignal): Promise<ProjectDetail> =>
+        httpClient.get(API_ENDPOINTS.PROJECTS.DETAIL(slug), undefined, signal),
 
     getByCategory: (categorySlug: string, filters?: ProjectFilters): Promise<ProjectsResponse> =>
         httpClient.get(API_ENDPOINTS.PROJECTS.BY_CATEGORY(categorySlug), filters as Record<string, unknown>),
 
-    getFeatured: (limit = 6): Promise<Project[]> => httpClient.get(API_ENDPOINTS.PROJECTS.FEATURED, { limit }),
+    getFeatured: (limit = 6, signal?: AbortSignal): Promise<Project[]> =>
+        httpClient.get(API_ENDPOINTS.PROJECTS.FEATURED, { limit }, signal),
 
     create: (data: ProjectCreateData): Promise<ProjectDetail> => httpClient.post(API_ENDPOINTS.PROJECTS.BASE, data),
 
@@ -60,7 +62,8 @@ export const projectsApi = {
 
     delete: (slug: string): Promise<void> => httpClient.delete(API_ENDPOINTS.PROJECTS.DETAIL(slug)),
 
-    getCategories: (): Promise<ProjectCategoriesResponse> => httpClient.get(API_ENDPOINTS.PROJECTS.CATEGORIES),
+    getCategories: (signal?: AbortSignal): Promise<ProjectCategoriesResponse> =>
+        httpClient.get(API_ENDPOINTS.PROJECTS.CATEGORIES, undefined, signal),
 
     getCategory: (slug: string): Promise<ProjectCategory> =>
         httpClient.get(API_ENDPOINTS.PROJECTS.CATEGORY_DETAIL(slug)),
@@ -73,7 +76,8 @@ export const projectsApi = {
 
     deleteCategory: (slug: string): Promise<void> => httpClient.delete(API_ENDPOINTS.PROJECTS.CATEGORY_DETAIL(slug)),
 
-    getStatuses: (): Promise<ProjectStatusesResponse> => httpClient.get(API_ENDPOINTS.PROJECTS.STATUSES),
+    getStatuses: (signal?: AbortSignal): Promise<ProjectStatusesResponse> =>
+        httpClient.get(API_ENDPOINTS.PROJECTS.STATUSES, undefined, signal),
 
     getStatus: (id: number | string): Promise<ProjectStatus> =>
         httpClient.get(API_ENDPOINTS.PROJECTS.STATUS_DETAIL(id)),
@@ -88,7 +92,8 @@ export const projectsApi = {
 
     recordView: (slug: string): Promise<void> => httpClient.post(API_ENDPOINTS.PROJECTS.VIEW(slug), {}),
 
-    getStats: (): Promise<ProjectStats> => httpClient.get(API_ENDPOINTS.PROJECTS.STATS),
+    getStats: (signal?: AbortSignal): Promise<ProjectStats> =>
+        httpClient.get(API_ENDPOINTS.PROJECTS.STATS, undefined, signal),
 
     getAdminList: <T = unknown>(params: Record<string, unknown>): Promise<T> =>
         httpClient.get(API_ENDPOINTS.PROJECTS.BASE, params),
@@ -103,12 +108,15 @@ export const projectsApi = {
 export function useInfiniteProjects(filters?: MaybeRef<Omit<ProjectFilters, 'page'>>, itemsPerPage = 6) {
     return useInfiniteQuery({
         queryKey: computed(() => projectKeys.infinite(unref(filters))),
-        queryFn: ({ pageParam = 1 }) =>
-            projectsApi.getAll({
-                ...unref(filters),
-                page: pageParam,
-                limit: itemsPerPage,
-            }),
+        queryFn: ({ pageParam = 1, signal }) =>
+            projectsApi.getAll(
+                {
+                    ...unref(filters),
+                    page: pageParam,
+                    limit: itemsPerPage,
+                },
+                signal,
+            ),
         initialPageParam: 1,
         getNextPageParam: (lastPage) => {
             const { page, totalPages } = lastPage.pagination;
@@ -122,25 +130,25 @@ export function useInfiniteProjects(filters?: MaybeRef<Omit<ProjectFilters, 'pag
 export function useProject(slug: MaybeRef<string>) {
     return createDetailQuery(
         computed(() => projectKeys.detail(unref(slug))),
-        () => projectsApi.getBySlug(unref(slug)),
+        ({ signal }) => projectsApi.getBySlug(unref(slug), signal),
         { enabled: computed(() => !!unref(slug)) },
     );
 }
 
 export function useFeaturedProjects(limit = 6, options?: QueryOptions<Project[]>) {
-    return createStaticQuery(projectKeys.featured(), () => projectsApi.getFeatured(limit), options);
+    return createStaticQuery(projectKeys.featured(), ({ signal }) => projectsApi.getFeatured(limit, signal), options);
 }
 
 export function useProjectCategories() {
-    return createStaticQuery(projectKeys.categories(), projectsApi.getCategories);
+    return createStaticQuery(projectKeys.categories(), ({ signal }) => projectsApi.getCategories(signal));
 }
 
 export function useProjectStatuses() {
-    return createStaticQuery(projectKeys.statuses(), projectsApi.getStatuses);
+    return createStaticQuery(projectKeys.statuses(), ({ signal }) => projectsApi.getStatuses(signal));
 }
 
 export function useProjectStats() {
-    return createStaticQuery(projectKeys.stats(), projectsApi.getStats);
+    return createStaticQuery(projectKeys.stats(), ({ signal }) => projectsApi.getStats(signal));
 }
 
 const categoryMutations = createSubResourceMutations<
@@ -164,11 +172,13 @@ export function useRecordProjectView() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: projectsApi.recordView,
+        // Appel analytics silencieux : ne pas afficher de toast d'erreur global si le POST échoue
+        meta: { suppressGlobalError: true },
         onSuccess: (_, slug) => {
-            queryClient.invalidateQueries({
-                queryKey: projectKeys.detail(slug),
-                refetchType: 'active',
-            });
+            // Incrément optimiste du compteur affiché plutôt qu'un refetch complet du détail
+            queryClient.setQueryData<ProjectDetail>(projectKeys.detail(slug), (old) =>
+                old ? { ...old, views: (old.views ?? 0) + 1 } : old,
+            );
         },
     });
 }

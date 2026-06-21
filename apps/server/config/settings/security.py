@@ -38,7 +38,10 @@ else:
 
 for host in list(ALLOWED_HOSTS):
     if host not in ["localhost", "127.0.0.1", _ALL_INTERFACES, "*"] and "*" not in host:
-        CORS_ALLOWED_ORIGINS.extend([f"https://{host}", f"http://{host}"])
+        # Hors dev : HTTPS uniquement | ne pas autoriser une origine non-TLS.
+        CORS_ALLOWED_ORIGINS.append(f"https://{host}")
+        if DEBUG:
+            CORS_ALLOWED_ORIGINS.append(f"http://{host}")
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"]

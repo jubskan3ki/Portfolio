@@ -3,6 +3,7 @@
         <label :for="checkboxId" class="checkbox__container">
             <input
                 :id="checkboxId"
+                ref="inputRef"
                 v-model="model"
                 type="checkbox"
                 :name="name"
@@ -22,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, useId } from 'vue';
+    import { computed, ref, useId, watchEffect } from 'vue';
 
     import type { CheckboxProps } from '@/types/components/base';
 
@@ -36,9 +37,19 @@
         disabled: false,
         error: '',
         customClass: '',
+        indeterminate: false,
     });
 
     const model = defineModel<boolean>({ default: false });
+
+    const inputRef = ref<HTMLInputElement | null>(null);
+
+    // `indeterminate` n'est pas un attribut HTML : il doit être posé sur la propriété DOM.
+    watchEffect(() => {
+        if (inputRef.value) {
+            inputRef.value.indeterminate = props.indeterminate;
+        }
+    });
 
     const generatedId = useId();
     const checkboxId = computed(() => props.id || generatedId);
@@ -82,6 +93,19 @@
 
                 &::after {
                     opacity: 1;
+                }
+            }
+
+            &:indeterminate ~ .checkbox__checkmark {
+                background-color: vars.$primary-color;
+                border-color: vars.$primary-color;
+
+                &::after {
+                    opacity: 1;
+                    width: 10px;
+                    height: 0;
+                    border-width: 0 0 2px;
+                    transform: none;
                 }
             }
 

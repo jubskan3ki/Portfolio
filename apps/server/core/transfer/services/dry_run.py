@@ -31,6 +31,27 @@ def _resolve_model(module: str):
     return apps.get_model(app_label, model_name)
 
 
+def _preload_existing(model: Any, unique_fields: tuple[str, ...], records: list[dict[str, Any]]) -> dict[tuple, Any]:
+    """Pre-charge en une requete les instances existantes correspondant aux records.
+
+    Evite un SELECT par ligne : on collecte les cles uniques completes presentes dans
+    le fichier, on filtre en base sur le premier champ unique (borne le resultat) puis
+    on indexe par tuple de cle dans l'ordre de `unique_fields`.
+    """
+    keys = [
+        tuple(record.get(f) for f in unique_fields)
+        for record in records
+        if all(record.get(f) is not None for f in unique_fields)
+    ]
+    if not keys:
+        return {}
+
+    first_field = unique_fields[0]
+    first_values = {key[0] for key in keys}
+    queryset = model.objects.filter(**{f"{first_field}__in": first_values})
+    return {tuple(getattr(obj, f) for f in unique_fields): obj for obj in queryset}
+
+
 def _compute_diff(existing: Any, new_values: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Pour une instance existante, calcule les champs qui changeraient."""
     diff: dict[str, dict[str, Any]] = {}
@@ -71,6 +92,8 @@ def dry_run_import(file: UploadedFile, module: str) -> dict[str, Any]:
     valid_count, errors = DataValidator.validate_batch(module, records)
     error_by_index = {e.get("index"): e for e in errors if isinstance(e, dict) and "index" in e}
 
+    existing_by_key = _preload_existing(model, unique_fields, records)
+
     with transaction.atomic():
         sid = transaction.savepoint()
         for idx, record in enumerate(records):
@@ -83,11 +106,8 @@ def dry_run_import(file: UploadedFile, module: str) -> dict[str, Any]:
                 would_skip.append({"index": idx, "reason": "missing_unique_field", "record": record})
                 continue
 
-            try:
-                existing = model.objects.filter(**lookup).first()
-            except Exception as exc:  # pragma: no cover
-                validation_errors.append({"index": idx, "record": record, "error": str(exc)})
-                continue
+            key = tuple(record.get(f) for f in unique_fields)
+            existing = existing_by_key.get(key)
 
             if existing is None:
                 would_create.append({"index": idx, "record": record})

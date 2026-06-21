@@ -18,6 +18,13 @@ class JWTCookieAuthentication(BaseAuthentication):
     Rejette le token si la session associee (claim `session_id`) n'existe
     plus dans le SessionManager, afin qu'une revocation cote admin deconnecte
     immediatement l'appareil concerne.
+
+    SECURITE CSRF : cette classe herite de BaseAuthentication (et non de
+    SessionAuthentication), donc DRF n'applique PAS de verification CSRF sur
+    les requetes mutantes authentifiees par ce cookie. La protection repose
+    sur le cookie `SameSite=Strict` (AUTH_COOKIE_SAMESITE) : un site tiers ne
+    peut pas declencher de requete cross-site portant le cookie. Toute
+    modification de SameSite doit s'accompagner d'une protection CSRF explicite.
     """
 
     def authenticate(self, request):

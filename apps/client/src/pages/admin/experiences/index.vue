@@ -51,6 +51,8 @@
                 :name="typed(item).isCurrent ? 'check-circle' : 'circle'"
                 :size="16"
                 :class="typed(item).isCurrent ? 'text-success' : 'text-muted'"
+                :aria-label="typed(item).isCurrent ? 'Actuel' : 'Terminé'"
+                role="img"
             />
         </template>
     </AdminListPage>

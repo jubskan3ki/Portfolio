@@ -33,15 +33,14 @@ class ViewLogManager(models.Manager["ViewLog"]):
             defaults={"count": 1},
         )
         if not created:
+            # F() = increment atomique SQL sans refresh_from_db (eviter un SELECT sur ce chemin chaud).
             obj.count = models.F("count") + 1
             obj.save(update_fields=["count"])
-            obj.refresh_from_db()
         logger.debug(
-            "ViewLog: type=%s, id=%s, created=%s, count=%s",
+            "ViewLog: type=%s, id=%s, created=%s",
             content_type,
             content_id,
             created,
-            obj.count,
         )
         return obj
 

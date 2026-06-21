@@ -82,7 +82,6 @@
                             :hydrate-on-visible="{ rootMargin: '300px' }"
                             :experiences="professionalExperiences"
                             :limit="3"
-                            compact
                         />
                         <template #fallback>
                             <div class="home-section-placeholder" :style="{ minHeight: '420px' }" />
@@ -141,8 +140,6 @@
                         :hydrate-on-visible="{ rootMargin: '300px' }"
                         :limit="10"
                         autoplay
-                        :slides-per-view="6"
-                        show-level
                     />
                     <template #fallback>
                         <div class="home-section-placeholder" :style="{ minHeight: '280px' }" />
@@ -210,20 +207,17 @@
                         </ClientOnly>
                     </div>
                     <div class="contact-wrapper__info">
-                        <ClientOnly>
-                            <LazyContactInfos
-                                :hydrate-on-visible="{ rootMargin: '200px' }"
-                                title="Mes coordonnées"
-                                subtitle="Discutons de vos besoins et objectifs"
-                                :address="contactAddress"
-                                :email="contactEmail"
-                                :phone="contactPhone"
-                                :social-links="socialMediaLinks"
-                            />
-                            <template #fallback>
-                                <div class="home-section-placeholder" :style="{ minHeight: '480px' }" />
-                            </template>
-                        </ClientOnly>
+                        <!-- Données issues de useSiteSettings (useAsyncData, dispo en SSR) : rendu serveur
+                             pour le SEO/contenu, hydratation différée à la visibilité (pas de ClientOnly). -->
+                        <LazyContactInfos
+                            :hydrate-on-visible="{ rootMargin: '200px' }"
+                            title="Mes coordonnées"
+                            subtitle="Discutons de vos besoins et objectifs"
+                            :address="contactAddress"
+                            :email="contactEmail"
+                            :phone="contactPhone"
+                            :social-links="socialMediaLinks"
+                        />
                     </div>
                 </div>
             </div>
@@ -330,6 +324,10 @@
         if (shouldDisableParallax.value) {
             return;
         }
+        // Évite une double boucle RAF / double abonnement (boot + visibilitychange concurrents).
+        if (animationId) {
+            return;
+        }
         rebuildShapeRender();
         if (!shapeRender.length) {
             return;
@@ -357,20 +355,30 @@
         }
     };
 
+    let bootHandle: ReturnType<typeof setTimeout> | number | undefined;
+
     onMounted(() => {
         const boot = () => {
+            bootHandle = undefined;
             pageReady.value = true;
             startParallax();
         };
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(boot, { timeout: 1500 });
+            bootHandle = requestIdleCallback(boot, { timeout: 1500 });
         } else {
-            setTimeout(boot, 300);
+            bootHandle = setTimeout(boot, 300);
         }
         document.addEventListener('visibilitychange', handleVisibilityChange);
     });
 
     onBeforeUnmount(() => {
+        if (bootHandle !== undefined) {
+            if ('requestIdleCallback' in window) {
+                cancelIdleCallback(bootHandle as number);
+            } else {
+                clearTimeout(bootHandle);
+            }
+        }
         stopParallax();
         document.removeEventListener('visibilitychange', handleVisibilityChange);
     });

@@ -6,9 +6,11 @@
         </div>
 
         <div class="empty-state__content">
-            <component :is="titleTag" class="empty-state__title">{{ title }}</component>
-            <p v-if="description" class="empty-state__description">
-                {{ description }}
+            <component :is="titleTag" class="empty-state__title">
+                <slot name="title">{{ title }}</slot>
+            </component>
+            <p v-if="$slots.description || description" class="empty-state__description">
+                <slot name="description">{{ description }}</slot>
             </p>
         </div>
 

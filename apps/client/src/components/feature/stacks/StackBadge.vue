@@ -2,11 +2,11 @@
     <div
         class="stack-badge"
         :class="[`stack-badge--${size}`, { 'stack-badge--clickable': clickable }, customClass]"
-        role="button"
-        tabindex="0"
+        :role="clickable ? 'button' : undefined"
+        :tabindex="clickable ? 0 : undefined"
         @click="handleClick"
-        @keydown.enter="handleClick"
-        @keydown.space.prevent="handleClick"
+        @keydown.enter="clickable && handleClick()"
+        @keydown.space.prevent="clickable && handleClick()"
     >
         <StackLogo :stack="stack" :size="logoSize" class="stack-badge__icon" />
 

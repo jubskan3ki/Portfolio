@@ -18,7 +18,7 @@
                 <p v-else-if="field.hint" class="form-field__hint">{{ field.hint }}</p>
             </div>
         </slot>
-        <slot name="actions"></slot>
+        <slot name="actions" :loading="loading" :submit="handleSubmit"></slot>
     </form>
 </template>
 
@@ -33,6 +33,7 @@
         id: '',
         customClass: '',
         fields: () => [],
+        loading: false,
     });
 
     const emit = defineEmits<{
@@ -45,6 +46,10 @@
     const formClasses = computed(() => ['form', props.customClass]);
 
     const handleSubmit = (event: Event) => {
+        // Garde anti double-soumission : ignore tout submit tant qu'une requête est en cours.
+        if (props.loading) {
+            return;
+        }
         emit('submit', event);
     };
 </script>

@@ -46,11 +46,11 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 
 CELERY_BEAT_SCHEDULE = {
     "retry-failed-webhook-deliveries": {
-        "task": "core.webhooks.tasks.retry_failed_webhook_deliveries",
+        "task": "webhooks.retry_failed_deliveries",
         "schedule": 300.0,
     },
     "cleanup-old-webhook-deliveries": {
-        "task": "core.webhooks.tasks.cleanup_old_webhook_deliveries",
+        "task": "webhooks.cleanup_old_deliveries",
         "schedule": 86400.0,
     },
     "cleanup-old-transfer-jobs": {

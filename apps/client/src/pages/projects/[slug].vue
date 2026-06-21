@@ -69,7 +69,7 @@
                             <div class="features-grid">
                                 <div
                                     v-for="(feature, index) in currentProject.features"
-                                    :key="feature"
+                                    :key="index"
                                     class="feature-item"
                                 >
                                     <span class="feature-item__number">{{ String(index + 1).padStart(2, '0') }}</span>
@@ -204,7 +204,7 @@
 
 <script setup lang="ts">
     import { useQueryClient } from '@tanstack/vue-query';
-    import { computed, onMounted, ref, resolveComponent, unref, watch } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref, resolveComponent, unref, watch } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import BaseImage from '@/components/base/BaseImage.vue';
@@ -287,12 +287,25 @@
 
     // Stacks (deep links de la sidebar, sous la ligne de flottaison) : fetch différé à l'idle pour ne pas concurrencer l'hydratation.
     const stacksFetchEnabled = ref(false);
+    let stacksTrigger: ReturnType<typeof setTimeout> | number | undefined;
     onMounted(() => {
-        const trigger = () => { stacksFetchEnabled.value = true; };
+        const trigger = () => {
+            stacksTrigger = undefined;
+            stacksFetchEnabled.value = true;
+        };
         if (typeof requestIdleCallback === 'function') {
-            requestIdleCallback(trigger, { timeout: 2000 });
+            stacksTrigger = requestIdleCallback(trigger, { timeout: 2000 });
         } else {
-            setTimeout(trigger, 1500);
+            stacksTrigger = setTimeout(trigger, 1500);
+        }
+    });
+    onBeforeUnmount(() => {
+        if (stacksTrigger !== undefined) {
+            if (typeof requestIdleCallback === 'function') {
+                cancelIdleCallback(stacksTrigger as number);
+            } else {
+                clearTimeout(stacksTrigger);
+            }
         }
     });
     const { data: allStacks } = useFeaturedStacks(100, {
@@ -304,18 +317,23 @@
 
     const { announceNavigation } = useAnnounce();
 
-    // SEO side effects (JSON-LD schema, meta tags) are driven by the watch.
+    // SEO + Schema.org enregistrés une seule fois au premier projet non-null
+    // (les helpers unhead empilent sinon à chaque émission : loading->data, refetch).
+    let seoRegistered = false;
     watch(
         currentProject,
         (project) => {
             if (project) {
-                useProjectSeo(project);
-                useBreadcrumbSeo({
-                    meta: {
-                        title: project.title,
-                        category: project.category || undefined,
-                    },
-                });
+                if (!seoRegistered) {
+                    seoRegistered = true;
+                    useProjectSeo(project);
+                    useBreadcrumbSeo({
+                        meta: {
+                            title: project.title,
+                            category: project.category || undefined,
+                        },
+                    });
+                }
                 announceNavigation(`Projet: ${project.title}`);
             }
         },

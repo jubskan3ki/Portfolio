@@ -1,21 +1,24 @@
 import type { Chart, ChartConfiguration, ChartData, ChartOptions, ChartType } from 'chart.js';
 import type { Ref } from 'vue';
-import { nextTick, onUnmounted, ref } from 'vue';
+import { nextTick, onUnmounted, ref, shallowRef } from 'vue';
 import type { UseChartLifecycleOptions, UseChartLifecycleReturn } from '@/types/composables/ui';
 
 const waitForCanvas = (
     canvasRef: Ref<HTMLCanvasElement | null>,
+    isCancelled: () => boolean,
     maxAttempts = 10,
     delay = 50,
 ): Promise<HTMLCanvasElement | null> => {
     const poll = (attempt: number): Promise<HTMLCanvasElement | null> =>
         nextTick().then(() => {
-            if (canvasRef.value?.isConnected) {
+            if (isCancelled() || canvasRef.value?.isConnected) {
                 return canvasRef.value;
             }
             if (attempt >= maxAttempts) {
                 return canvasRef.value;
             }
+            // La chaîne s'arrête au prochain tour via le garde isCancelled() en
+            // tête de poll : au plus un setTimeout résiduel après destruction.
             return new Promise<HTMLCanvasElement | null>((resolve) => {
                 setTimeout(() => resolve(poll(attempt + 1)), delay);
             });
@@ -28,7 +31,7 @@ export function useChartLifecycle<T extends ChartType = ChartType>(
 ): UseChartLifecycleReturn<T> {
     const { type, defaultOptions = {} } = options;
 
-    const chart = ref<Chart<T> | null>(null) as Ref<Chart<T> | null>;
+    const chart = shallowRef<Chart<T> | null>(null) as Ref<Chart<T> | null>;
     const canvasRef = ref<HTMLCanvasElement | null>(null);
     const isUpdating = ref(false);
     const isInitialized = ref(false);
@@ -66,7 +69,7 @@ export function useChartLifecycle<T extends ChartType = ChartType>(
                 isInitialized.value = false;
             }
 
-            const canvas = await waitForCanvas(canvasRef);
+            const canvas = await waitForCanvas(canvasRef, () => isDestroyed);
 
             if (!canvas || isDestroyed) {
                 return false;

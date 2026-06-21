@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { computed, ref, watch, useSlots } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useProgressTimer } from '@/composables/ui/useProgressTimer';
@@ -76,11 +76,13 @@
 
     const iconName = computed(() => ICON_MAP[props.type || 'info']);
 
+    const slots = useSlots();
+
     const toastClasses = computed(() => [
         'toast',
         `toast--${props.type}`,
         {
-            'toast--with-action': true,
+            'toast--with-action': !!slots.action,
         },
         props.customClass,
     ]);
@@ -92,7 +94,7 @@
     };
 
     const timer = useProgressTimer({
-        duration: props.duration,
+        duration: () => props.duration,
         autoStart: props.autoClose,
         onComplete: dismiss,
     });

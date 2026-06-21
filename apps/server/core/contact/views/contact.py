@@ -23,7 +23,11 @@ from ..doc import (
     TAGS_CONTACT,
 )
 from ..models import Contact
-from ..serializers import ContactResponseSerializer, ContactSerializer
+from ..serializers import (
+    ContactAdminWriteSerializer,
+    ContactResponseSerializer,
+    ContactSerializer,
+)
 from ..services import ContactService
 from ..throttles import ContactsThrottle
 
@@ -34,6 +38,11 @@ class ContactViewSet(BaseAPIViewSet):
     """API endpoint pour les soumissions de contact."""
 
     serializer_class = ContactSerializer
+    # create (POST public) reste sur serializer_class ; seul l'update admin change de serializer.
+    serializer_classes = {
+        "update": ContactAdminWriteSerializer,
+        "partial_update": ContactAdminWriteSerializer,
+    }
     throttle_classes = [ContactsThrottle]
     lookup_field = "pk"
 
@@ -48,11 +57,17 @@ class ContactViewSet(BaseAPIViewSet):
 
         - Admin: voit tous les contacts
         - Anonymous: ne voit rien (create seulement)
+
+        Pour la liste, on utilise le queryset allege de ContactService.get_all()
+        (.only(...)) qui ne charge pas les gros TextField message/response_message.
+        Le detail garde le queryset complet (le serializer expose message).
         """
         user = self.request.user
-        if user and user.is_authenticated and user.is_staff:
-            return Contact.objects.all().order_by("-created_at")
-        return Contact.objects.none()
+        if not (user and user.is_authenticated and user.is_staff):
+            return Contact.objects.none()
+        if self.action == "list":
+            return ContactService.get_all()
+        return Contact.objects.all().order_by("-created_at")
 
     @extend_schema(
         summary="Liste des soumissions",
@@ -102,9 +117,9 @@ class ContactViewSet(BaseAPIViewSet):
     @extend_schema(
         summary="Mettre a jour une soumission",
         description="Met a jour une soumission de contact (admin uniquement).",
-        request=ContactSerializer,
+        request=ContactAdminWriteSerializer,
         responses={
-            200: ContactSerializer,
+            200: ContactAdminWriteSerializer,
             400: RESPONSE_400,
             401: RESPONSE_401,
             403: RESPONSE_403,
@@ -119,9 +134,9 @@ class ContactViewSet(BaseAPIViewSet):
     @extend_schema(
         summary="Mettre a jour partiellement une soumission",
         description="Met a jour partiellement une soumission de contact (admin uniquement).",
-        request=ContactSerializer,
+        request=ContactAdminWriteSerializer,
         responses={
-            200: ContactSerializer,
+            200: ContactAdminWriteSerializer,
             400: RESPONSE_400,
             401: RESPONSE_401,
             403: RESPONSE_403,

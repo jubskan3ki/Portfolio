@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, ref } from 'vue';
+    import { computed, onBeforeUnmount, ref } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import { useProgressTimer } from '@/composables/ui/useProgressTimer';
@@ -66,16 +66,24 @@
         }
     };
 
+    let closeTimer: ReturnType<typeof setTimeout> | null = null;
+
     const close = () => {
         timer.stop();
         isClosing.value = true;
-        setTimeout(() => emit('close', props.alert.id), 300);
+        closeTimer = setTimeout(() => emit('close', props.alert.id), 300);
     };
 
     const timer = useProgressTimer({
         duration: props.alert.timeout || 5000,
         autoStart: props.alert.autoClose !== false,
         onComplete: close,
+    });
+
+    onBeforeUnmount(() => {
+        if (closeTimer) {
+            clearTimeout(closeTimer);
+        }
     });
 </script>
 

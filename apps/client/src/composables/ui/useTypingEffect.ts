@@ -11,12 +11,22 @@ export function useTypingEffect(texts: string[], options: UseTypingEffectOptions
     let currentIndex = 0;
     let isDeleting = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let bootHandle: ReturnType<typeof setTimeout> | number | null = null;
+    let bootViaIdle = false;
     let running = false;
 
     const clear = () => {
         if (timer) {
             clearTimeout(timer);
             timer = null;
+        }
+        if (bootHandle !== null) {
+            if (bootViaIdle) {
+                cancelIdleCallback(bootHandle as number);
+            } else {
+                clearTimeout(bootHandle);
+            }
+            bootHandle = null;
         }
     };
 
@@ -61,15 +71,17 @@ export function useTypingEffect(texts: string[], options: UseTypingEffectOptions
 
     onMounted(() => {
         const boot = () => {
+            bootHandle = null;
             if (enabled && !enabled.value) {
                 return;
             }
             start();
         };
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => boot());
+            bootViaIdle = true;
+            bootHandle = requestIdleCallback(() => boot());
         } else {
-            setTimeout(boot, startDelay);
+            bootHandle = setTimeout(boot, startDelay);
         }
     });
 

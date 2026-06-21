@@ -123,16 +123,27 @@
         observer.observe(heroRef.value);
     };
 
+    let bootHandle: ReturnType<typeof setTimeout> | number | undefined;
+
     onMounted(() => {
         // Différé à l'idle : laisse l'hydratation et le first paint finir avant les animations infinies (gain TBT).
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(startHeroAnimations, { timeout: 1500 });
+            bootHandle = requestIdleCallback(startHeroAnimations, { timeout: 1500 });
         } else {
-            setTimeout(startHeroAnimations, 300);
+            bootHandle = setTimeout(startHeroAnimations, 300);
         }
     });
 
-    onBeforeUnmount(() => observer?.disconnect());
+    onBeforeUnmount(() => {
+        if (bootHandle !== undefined) {
+            if ('requestIdleCallback' in window) {
+                cancelIdleCallback(bootHandle as number);
+            } else {
+                clearTimeout(bootHandle);
+            }
+        }
+        observer?.disconnect();
+    });
 </script>
 
 <style lang="scss" scoped>

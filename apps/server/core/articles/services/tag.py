@@ -17,9 +17,13 @@ class TagService(BaseService["Tag"]):
 
     @classmethod
     def get_by_name(cls, name: str) -> Tag:
-        """Recupere un tag d'article par son nom."""
+        """Recupere un tag d'article par son nom.
+
+        Annote published_count + view_count_sum pour que le detail expose les bons
+        compteurs (sinon les proprietes article_count/total_view_count retombent a 0).
+        """
         try:
-            return cls.model.objects.get(name__iexact=name)
+            return cls.model.objects.with_article_count().with_view_count_sum().get(name__iexact=name)
         except ObjectDoesNotExist as exc:
             cls._get_logger().warning("Tag non trouve: name=%s", name)
             raise NotFoundError(f"Tag '{name}' non trouve.", details={"name": name}) from exc

@@ -32,8 +32,8 @@
                         </div>
                         <ul class="search-global__results" role="listbox">
                             <li
-                                v-for="(q, idx) in recentQueries"
-                                :key="`recent-q-${idx}`"
+                                v-for="q in recentQueries"
+                                :key="`recent-q-${q}`"
                                 class="search-global__quickitem"
                                 tabindex="-1"
                                 role="option"
@@ -198,8 +198,6 @@
         return groupedResults.value.filter((g) => g.type === activeFilter.value);
     });
 
-    const filteredFlatResults = computed(() => filteredGroups.value.flatMap((g) => g.results));
-
     const toggleFilter = (type: string) => {
         activeFilter.value = activeFilter.value === type ? null : (type as SearchResultType);
     };
@@ -210,7 +208,10 @@
     };
 
     const isResultSelected = (result: SearchResult) => {
-        const idx = filteredFlatResults.value.findIndex((r) => r.id === result.id && r.type === result.type);
+        // selectedIndex est piloté par navigateUp/Down et setSelectedByResult sur
+        // flatResults (non filtré) ; le surlignage doit utiliser le même espace
+        // d'index, sinon il diverge de la sélection quand un filtre est actif.
+        const idx = flatResults.value.findIndex((r) => r.id === result.id && r.type === result.type);
         return idx === selectedIndex.value;
     };
 

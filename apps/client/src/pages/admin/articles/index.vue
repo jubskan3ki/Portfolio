@@ -62,7 +62,8 @@
                     variant="ghost"
                     size="icon"
                     class="action-btn--disabled"
-                    title="Deja publie"
+                    title="Déjà publié"
+                    aria-label="Déjà publié"
                     disabled
                 >
                     <template #icon-left>
@@ -75,6 +76,7 @@
                     size="icon"
                     class="action-btn--publish"
                     title="Publier"
+                    aria-label="Publier"
                     :loading="publishingId === typed(item).id"
                     @click="togglePublish(item)"
                 >

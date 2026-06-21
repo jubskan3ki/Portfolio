@@ -130,6 +130,9 @@ export interface ArticleCardProps {
     showTags?: boolean;
     maxTags?: number;
     eager?: boolean;
+    showFooter?: boolean;
+    showStats?: boolean;
+    readMoreText?: string;
 }
 
 export interface ArticleCarouselProps {
@@ -165,7 +168,6 @@ export interface ArticleListProps {
     showPagination?: boolean;
     cardHoverable?: boolean;
     cardFlat?: boolean;
-    cardBordered?: boolean;
     excerptLength?: number;
     showFooter?: boolean;
     showStats?: boolean;

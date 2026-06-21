@@ -4,13 +4,13 @@ from typing import Any
 
 from django.db.models import Count, Q, QuerySet, Sum
 from django.db.models.functions import Coalesce
-from django.utils import timezone
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from utils.api import BaseAPIViewSet
 
+from ..managers import published_filter
 from ..models import Tag
 from ..serializers.tag import TagSerializer
 from ..services.tag import TagService
@@ -52,8 +52,7 @@ class TagViewSet(BaseAPIViewSet):
         """
         qs = super().get_queryset()
         if self.action in ("list", "retrieve"):
-            now = timezone.now()
-            published_filter = Q(articles__is_published=True, articles__published_date__lte=now)
+            count_filter = published_filter("articles__")
 
             if self.action == "list":
                 category = self.request.query_params.get("category")
@@ -61,19 +60,19 @@ class TagViewSet(BaseAPIViewSet):
                     category_filter = Q(articles__category__slug=category)
                     if category.isdigit():
                         category_filter |= Q(articles__category_id=int(category))
-                    published_filter &= category_filter
+                    count_filter &= category_filter
                 search = self.request.query_params.get("search")
                 if search:
-                    published_filter &= (
+                    count_filter &= (
                         Q(articles__title__icontains=search)
                         | Q(articles__excerpt__icontains=search)
                         | Q(articles__content__icontains=search)
                     )
 
             qs = qs.annotate(
-                published_count=Count("articles", filter=published_filter, distinct=True),
+                published_count=Count("articles", filter=count_filter, distinct=True),
                 view_count_sum=Coalesce(
-                    Sum("articles__view_count", filter=published_filter),
+                    Sum("articles__view_count", filter=count_filter),
                     0,
                 ),
             )
@@ -91,8 +90,7 @@ class TagViewSet(BaseAPIViewSet):
     )
     def list(self, request, *args, **kwargs):
         """Récupère la liste des tags d'articles."""
-        # Pas de cache_page: la reponse varie par is_staff (admin voit les vides)
-        # et doit refleter immediatement chaque publication d'article.
+        # Pas de cache_page : la reponse varie par is_staff et doit refleter immediatement chaque publication.
         return super().list(request, *args, **kwargs)
 
     @extend_schema(

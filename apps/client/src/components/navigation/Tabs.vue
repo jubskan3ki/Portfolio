@@ -1,6 +1,6 @@
 <template>
     <div :class="tabsClasses" role="tablist" :aria-orientation="vertical ? 'vertical' : 'horizontal'">
-        <div ref="navRef" :class="navClasses">
+        <div ref="navRef" :class="navClasses" @keydown="onTablistKeydown">
             <TabsItem
                 v-for="tab in tabs"
                 :id="tab.id"
@@ -129,6 +129,46 @@
         updateIndicator();
     };
 
+    const onTablistKeydown = (event: KeyboardEvent) => {
+        const nextKey = props.vertical ? 'ArrowDown' : 'ArrowRight';
+        const prevKey = props.vertical ? 'ArrowUp' : 'ArrowLeft';
+        if (![nextKey, prevKey, 'Home', 'End'].includes(event.key)) {
+            return;
+        }
+
+        const enabledIndexes = props.tabs.reduce<number[]>((acc, tab, index) => {
+            if (!tab.disabled) {
+                acc.push(index);
+            }
+            return acc;
+        }, []);
+        if (enabledIndexes.length === 0) {
+            return;
+        }
+
+        event.preventDefault();
+        const currentPos = enabledIndexes.indexOf(activeTabIndex.value);
+        let targetIndex: number;
+        if (event.key === 'Home') {
+            targetIndex = enabledIndexes[0] as number;
+        } else if (event.key === 'End') {
+            targetIndex = enabledIndexes[enabledIndexes.length - 1] as number;
+        } else {
+            const dir = event.key === nextKey ? 1 : -1;
+            const nextPos = (currentPos + dir + enabledIndexes.length) % enabledIndexes.length;
+            targetIndex = enabledIndexes[nextPos] as number;
+        }
+
+        const targetTab = props.tabs[targetIndex];
+        if (targetTab) {
+            setActiveTab(targetTab.id);
+            nextTick(() => {
+                const buttons = navRef.value?.querySelectorAll<HTMLElement>('.tabs-item__tab');
+                buttons?.[targetIndex]?.focus();
+            });
+        }
+    };
+
     const updateIndicator = async () => {
         if (props.vertical || !props.showIndicator || !navRef.value) {
             return;
@@ -162,12 +202,19 @@
     );
 
     watch(
-        () => props.tabs,
+        // Clé dérivée légère (identité + contenu rendu) plutôt qu'un deep watch sur tout l'objet :
+        // l'indicateur ne dépend que de ce qui change sa largeur/position.
+        () => props.tabs.map((tab) => `${tab.id}:${tab.label}:${tab.icon ?? ''}:${tab.badge?.text ?? ''}`).join('|'),
         async () => {
+            // Ré-amorce la sélection si l'onglet actif n'existe plus (ou pas encore) :
+            // cas des tabs chargés en asynchrone après le montage avec activeTab vide.
+            const activeExists = props.tabs.some((tab) => tab.id === activeTab.value);
+            if (!activeExists) {
+                activeTab.value = props.modelValue || getDefaultActiveTab();
+            }
             await nextTick();
             updateIndicator();
         },
-        { deep: true },
     );
 
     onMounted(async () => {

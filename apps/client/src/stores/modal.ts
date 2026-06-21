@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 import { TIMEOUTS } from '@/config/constants';
-import { lockBodyOverflow, resetBodyOverflow, unlockBodyOverflow } from '@/services/utils/dom';
+import { lockBodyOverflow, unlockBodyOverflow } from '@/services/utils/dom';
 import { TimeoutManager } from '@/services/utils/timeoutManager';
 
 import type { ModalOptions, ModalState } from '@/types/stores/modal';
@@ -63,7 +63,12 @@ export const useModalStore = defineStore('modal', () => {
 
     function cleanup(): void {
         closeTimeouts.clearAll();
-        resetBodyOverflow();
+        // Décrément symétrique du lock posé dans open(), au lieu d'écraser le
+        // compteur partagé (resetBodyOverflow déverrouillerait les autres modales).
+        if (visible.value) {
+            unlockBodyOverflow();
+            visible.value = false;
+        }
     }
 
     return {

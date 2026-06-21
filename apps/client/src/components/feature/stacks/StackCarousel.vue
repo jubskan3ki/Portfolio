@@ -7,7 +7,7 @@
         error-message="Une erreur est survenue lors du chargement des technologies."
         empty-title="Aucune technologie"
         empty-description="Aucune technologie n'est disponible pour le moment."
-        :slides-desktop="4"
+        :slides-desktop="slidesPerView"
         :autoplay="autoplay"
         show-dots
     >
@@ -34,6 +34,7 @@
     const props = withDefaults(defineProps<Props>(), {
         limit: 10,
         autoplay: true,
+        slidesPerView: 4,
     });
 
     const { data, isLoading, isError } = useFeaturedStacks(props.limit);

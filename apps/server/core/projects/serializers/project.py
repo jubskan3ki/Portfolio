@@ -61,6 +61,25 @@ class ProjectWriteSerializer(serializers.ModelSerializer[Project]):
             "date": {"required": False},
         }
 
+    def validate(self, attrs):
+        """Rejette la presence simultanee de long_description et longDescription.
+
+        Les deux ciblent la meme source (long_description) ; en accepter deux en
+        entree masquerait silencieusement l'une des valeurs. On controle les cles
+        brutes recues (initial_data) car DRF les fusionne avant validate.
+        """
+        initial = getattr(self, "initial_data", {})
+        if isinstance(initial, dict) and "long_description" in initial and "longDescription" in initial:
+            raise serializers.ValidationError(
+                {
+                    "longDescription": (
+                        "Ne pas fournir a la fois 'long_description' et 'longDescription' "
+                        "(meme champ) ; choisir une seule cle."
+                    )
+                }
+            )
+        return attrs
+
     def validate_technologies(self, value):
         """Valide que technologies est une liste de strings."""
         return validate_string_list(value, item_label="technologie")
@@ -128,4 +147,4 @@ class ProjectDetailSerializer(serializers.ModelSerializer[Project]):
             "features",
             "links",
         )
-        read_only_fields = ("id", "slug", "view")
+        read_only_fields = ("id", "slug", "views")

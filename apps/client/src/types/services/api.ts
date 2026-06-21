@@ -33,6 +33,8 @@ export interface FetchOptions {
     skipRefresh?: boolean;
     transformResponse?: boolean;
     transformRequest?: boolean;
+    /** Signal d'annulation (ex: AbortSignal fourni par Vue Query) propagé jusqu'au fetch */
+    signal?: AbortSignal;
     /** @internal récursion max pour éviter boucle infinie */
     _depth?: number;
 }

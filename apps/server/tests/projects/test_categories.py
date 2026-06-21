@@ -47,6 +47,18 @@ class TestGetProjectCategory:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_get_category_detail_exposes_count(self, api_client: APIClient) -> None:
+        """Le detail expose le vrai nombre de projets (regression: renvoyait 0)."""
+        from tests.factories import ProjectCategoryFactory, ProjectFactory
+
+        category = ProjectCategoryFactory()
+        ProjectFactory.create_batch(3, category=category)
+
+        response = cast(Response, api_client.get(f"{self.URL}{category.slug}/"))
+
+        assert response.status_code == status.HTTP_200_OK
+        assert cast(dict[str, Any], response.data)["count"] == 3
+
 
 @pytest.mark.django_db
 class TestProjectsByCategory:

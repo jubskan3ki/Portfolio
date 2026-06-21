@@ -105,6 +105,7 @@
             :min="1"
             placeholder="5"
             hint="Durée de lecture estimée en minutes"
+            :error="errors.read_time"
         />
 
         <BaseSwitch v-model="form.is_published" :label="form.is_published ? 'Publié' : 'Brouillon'" />
@@ -229,6 +230,10 @@
             }
             if (!values.content?.trim()) {
                 errs.content = 'Le contenu est requis';
+            }
+            // read_time = PositiveIntegerField côté backend : empêche NaN (champ vidé) et valeurs < 1.
+            if (!Number.isFinite(values.read_time) || !Number.isInteger(values.read_time) || values.read_time < 1) {
+                errs.read_time = 'Le temps de lecture doit être un entier positif';
             }
             return errs;
         },

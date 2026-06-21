@@ -113,32 +113,29 @@
         }
     });
 
-    // Update chart when distribution changes (after initial mount)
-    watch(
-        () => props.distribution,
-        async (newVal, oldVal) => {
-            if (!isMounted.value) {
-                return;
-            }
-
-            // Skip if data hasn't really changed
-            if (oldVal && JSON.stringify(newVal) === JSON.stringify(oldVal)) {
-                return;
-            }
-
-            // Only proceed if we have real data
-            if (!hasRealData.value) {
-                return;
-            }
-
-            if (isInitialized.value) {
-                updateData(getChartData());
-            } else {
-                await initChart(getChartData());
-            }
-        },
-        { deep: true },
+    // Signature légère : ne change que si une valeur affichée change. Évite le deep watch
+    // + le JSON.stringify(newVal)===JSON.stringify(oldVal) qui sérialisait tout le tableau à chaque tick.
+    const distributionSignature = computed(() =>
+        (props.distribution ?? []).map((item) => `${item.label}:${item.count}:${item.color}`).join('|'),
     );
+
+    // Update chart when distribution changes (after initial mount)
+    watch(distributionSignature, async () => {
+        if (!isMounted.value) {
+            return;
+        }
+
+        // Only proceed if we have real data
+        if (!hasRealData.value) {
+            return;
+        }
+
+        if (isInitialized.value) {
+            updateData(getChartData());
+        } else {
+            await initChart(getChartData());
+        }
+    });
 </script>
 
 <style lang="scss" scoped>

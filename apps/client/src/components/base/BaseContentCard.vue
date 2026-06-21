@@ -47,7 +47,7 @@
                 </span>
             </div>
 
-            <div class="content-card__footer">
+            <div v-if="showFooter" class="content-card__footer">
                 <slot name="footer-left"></slot>
                 <slot name="footer-right">
                     <BaseIcon name="arrow-right" :size="16" class="content-card__arrow" />
@@ -78,6 +78,7 @@
         maxTags: 3,
         transitionKey: '',
         eager: false,
+        showFooter: true,
     });
 
     const NuxtLink = resolveComponent('NuxtLink');
@@ -142,7 +143,6 @@
         }
     }
 
-    // Visual
     .content-card__visual {
         position: relative;
         aspect-ratio: 16 / 10;
@@ -199,7 +199,6 @@
         border-radius: vars.$border-radius-sm;
     }
 
-    // Content
     .content-card__content {
         flex: 1;
         display: flex;
@@ -230,7 +229,6 @@
         @include mix.truncate(2);
     }
 
-    // Tags
     .content-card__tags {
         display: flex;
         flex-wrap: wrap;
@@ -252,7 +250,6 @@
         }
     }
 
-    // Footer
     .content-card__footer {
         display: flex;
         align-items: center;
@@ -271,7 +268,6 @@
             opacity 0.2s ease;
     }
 
-    // Reduced motion
     @media (prefers-reduced-motion: reduce) {
         .content-card {
             transition: none;
@@ -286,7 +282,6 @@
         }
     }
 
-    // Responsive
     @include mix.responsive(mobile) {
         .content-card__content {
             padding: vars.$spacing-sm;

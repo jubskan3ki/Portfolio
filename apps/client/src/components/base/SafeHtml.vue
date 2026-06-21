@@ -8,6 +8,7 @@
 </template>
 
 <script setup lang="ts">
+    // SÉCURITÉ : ce composant n'assainit PAS le HTML ; `html` DOIT déjà être sûr côté appelant.
     withDefaults(
         defineProps<{
             html: string;

@@ -17,6 +17,23 @@ export function arrayToLines(items: string[] | null | undefined): string {
     return Array.isArray(items) ? items.join('\n') : '';
 }
 
+/**
+ * Valide une URL http(s) (aligné sur les URLField/URLDictField du backend).
+ * Une chaîne vide est considérée comme valide (le champ est optionnel) :
+ * la présence/absence est gérée séparément par les règles `required`.
+ */
+export function isValidHttpUrl(value: string | null | undefined): boolean {
+    if (!value || !value.trim()) {
+        return true;
+    }
+    try {
+        const url = new URL(value.trim());
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
 export function useImagePreview(): UseImagePreviewReturn {
     const previewImage = ref('');
 

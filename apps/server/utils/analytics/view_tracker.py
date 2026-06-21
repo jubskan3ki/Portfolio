@@ -74,7 +74,17 @@ class ViewTracker:
         if not count:
             return 0
 
-        cache.delete(key)
+        # decr atomique (DECRBY) du montant lu plutot que get+delete : tout
+        # increment concurrent survenu entre le get et ce decr est preserve
+        # (le buffer ne tombe pas a zero, il garde le reliquat) au lieu d'etre
+        # perdu par un delete aveugle.
+        try:
+            remaining = cache.decr(key, count)
+        except ValueError:
+            # Cle expiree/absente entre-temps : rien a flusher de fiable.
+            remaining = 0
+        if remaining <= 0:
+            cache.delete(key)
 
         if count > 0:
             cls._update_db(content_type, object_id, count)

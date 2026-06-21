@@ -17,6 +17,7 @@ import type {
 import type { SessionsResponse } from '@/types/feature/admin';
 import { createKeys, httpClient } from '../core';
 import { createRealtimeQuery } from '../core/query';
+import { refreshTokenManager } from '../core/token';
 
 export const authKeys = {
     ...createKeys('auth'),
@@ -112,6 +113,8 @@ export function useLogin() {
     return useMutation({
         mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
         onSuccess: (data) => {
+            // Repart d'un état refresh propre: efface le cooldown d'une session précédente échouée
+            refreshTokenManager.reset();
             if (data.user) {
                 authStore.setUser(data.user);
             }
@@ -128,6 +131,7 @@ export function useLogout() {
         onSettled: () => {
             authStore.clearAuth();
             queryClient.clear();
+            refreshTokenManager.reset();
         },
     });
 }

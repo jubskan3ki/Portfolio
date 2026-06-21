@@ -4,7 +4,7 @@ from functools import reduce
 from operator import or_
 from typing import Any
 
-from django.db.models import Prefetch, Q, QuerySet
+from django.db.models import Q, QuerySet
 from django.db.models.fields import TextField
 from django.db.models.functions import Cast
 
@@ -28,14 +28,8 @@ class StackService(BaseService["Stack"]):
 
     @classmethod
     def _get_detail_queryset(cls) -> QuerySet[Stack]:
-        """Retourne le queryset pour les details avec prefetch."""
-        return Stack.objects.select_related("category").prefetch_related(
-            "resources",
-            Prefetch(
-                "relationships",
-                queryset=StackRelationship.objects.select_related("to_stack", "to_stack__category"),
-            ),
-        )
+        """Retourne le queryset pour les details avec prefetch (source unique : manager)."""
+        return Stack.objects.with_detail()
 
     @classmethod
     def get_by_category(cls, category_name: str) -> QuerySet[Stack]:
@@ -44,22 +38,24 @@ class StackService(BaseService["Stack"]):
         return cls._get_base_queryset().filter(category__name__iexact=category_name)
 
     @classmethod
-    def get_related(cls, stack: Stack) -> list[dict[str, Any]]:
-        """Recupere les stacks associees a une stack."""
+    def get_related(cls, stack: Stack) -> tuple[list[Stack], dict[Any, str]]:
+        """Recupere les stacks associees a une stack.
+
+        Retourne les Stack cibles et la map {pk: relationship_type} attendue par
+        RelatedStackSerializer (source unique du dict de sortie). NULL-safe :
+        category est gere par le serializer (StringRelatedField).
+        """
         relationships = StackRelationship.objects.filter(from_stack=stack).select_related(
             "to_stack", "to_stack__category"
         )
 
-        return [
-            {
-                "name": rel.to_stack.name,
-                "slug": rel.to_stack.slug,
-                "logo": rel.to_stack.logo.url if rel.to_stack.logo else None,
-                "category": rel.to_stack.category.name,
-                "relationship": rel.relationship_type,
-            }
-            for rel in relationships
-        ]
+        related_stacks: list[Stack] = []
+        relationship_map: dict[Any, str] = {}
+        for rel in relationships:
+            related_stacks.append(rel.to_stack)
+            relationship_map[rel.to_stack.pk] = rel.relationship_type
+
+        return related_stacks, relationship_map
 
     @classmethod
     def get_projects_for_stack(cls, stack: Stack) -> QuerySet:

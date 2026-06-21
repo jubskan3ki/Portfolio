@@ -143,7 +143,7 @@
 
 <script setup lang="ts">
     import { useQueryClient } from '@tanstack/vue-query';
-    import { computed, unref, watch } from 'vue';
+    import { computed, onBeforeUnmount, unref, watch } from 'vue';
 
     import BaseSelect from '@/components/base/BaseSelect.vue';
     import ArticleCard from '@/components/feature/blog/ArticleCard.vue';
@@ -198,7 +198,7 @@
                 }),
                 queryClient.prefetchQuery({
                     queryKey: articleKeys.categories(),
-                    queryFn: articlesApi.getCategories,
+                    queryFn: ({ signal }) => articlesApi.getCategories(signal),
                 }),
                 queryClient.prefetchQuery({
                     queryKey: articleKeys.tags(initialTagsFilters),
@@ -337,6 +337,13 @@
             prefetchTimers.delete(slug);
         }
     };
+
+    onBeforeUnmount(() => {
+        for (const timer of prefetchTimers.values()) {
+            clearTimeout(timer);
+        }
+        prefetchTimers.clear();
+    });
 
     watch(
         articles,

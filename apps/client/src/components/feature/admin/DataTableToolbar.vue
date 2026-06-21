@@ -5,18 +5,17 @@
                 v-model="searchQuery"
                 :placeholder="searchPlaceholder"
                 class="data-table-toolbar__search"
-                @search="handleSearch"
                 @clear="clearSearch"
             />
 
             <div v-if="filters.length" class="data-table-toolbar__filters">
                 <div v-for="filter in filters" :key="filter.key" class="data-table-toolbar__filter">
                     <BaseSelect
-                        v-model="activeFilters[filter.key]"
+                        :model-value="activeFilters[filter.key] ?? ''"
                         :options="[{ value: '', label: filter.label }, ...filter.options]"
                         :aria-label="filter.label"
                         size="sm"
-                        @update:model-value="handleFilterChange"
+                        @update:model-value="(value) => handleFilterChange(filter.key, value)"
                     />
                 </div>
             </div>
@@ -43,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, reactive, watch } from 'vue';
+    import { ref, computed, watch } from 'vue';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
@@ -74,30 +73,22 @@
     }>();
 
     const searchQuery = ref('');
-    const activeFilters = reactive<Record<string, string>>({ ...props.activeFilters });
 
-    const handleSearch = (query: string) => {
+    // Relaie la saisie au parent ; le debounce est géré en aval par useDataList/useSearch.
+    watch(searchQuery, (query) => {
         emit('search', query);
-    };
+    });
+
+    // Composant contrôlé : source de vérité = props.activeFilters, aucune copie locale.
+    const activeFilters = computed(() => props.activeFilters);
 
     const clearSearch = () => {
-        emit('search', '');
+        searchQuery.value = '';
     };
 
-    const handleFilterChange = () => {
-        emit('filter', { ...activeFilters });
+    const handleFilterChange = (key: string, value: string | number) => {
+        emit('filter', { ...props.activeFilters, [key]: String(value) });
     };
-
-    // Sync with parent activeFilters
-    watch(
-        () => props.activeFilters,
-        (newFilters) => {
-            if (newFilters) {
-                Object.assign(activeFilters, newFilters);
-            }
-        },
-        { deep: true },
-    );
 </script>
 
 <style lang="scss" scoped>

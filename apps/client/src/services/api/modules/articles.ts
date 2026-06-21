@@ -41,9 +41,9 @@ export const articleKeys = {
 
 export const articlesApi = {
     // Backend articles: sortBy/sortDirection + tags CSV (pas django-filter standard)
-    getAll: (filters?: ArticleFilters): Promise<ArticlesResponse> => {
+    getAll: (filters?: ArticleFilters, signal?: AbortSignal): Promise<ArticlesResponse> => {
         if (!filters) {
-            return httpClient.get(API_ENDPOINTS.ARTICLES.BASE);
+            return httpClient.get(API_ENDPOINTS.ARTICLES.BASE, undefined, signal);
         }
 
         const params: Record<string, unknown> = {};
@@ -77,14 +77,17 @@ export const articlesApi = {
             params.tags = filters.tags.join(',');
         }
 
-        return httpClient.get(API_ENDPOINTS.ARTICLES.BASE, params);
+        return httpClient.get(API_ENDPOINTS.ARTICLES.BASE, params, signal);
     },
 
-    getBySlug: (slug: string): Promise<ArticleDetail> => httpClient.get(API_ENDPOINTS.ARTICLES.DETAIL(slug)),
+    getBySlug: (slug: string, signal?: AbortSignal): Promise<ArticleDetail> =>
+        httpClient.get(API_ENDPOINTS.ARTICLES.DETAIL(slug), undefined, signal),
 
-    getFeatured: (): Promise<Article[]> => httpClient.get(API_ENDPOINTS.ARTICLES.FEATURED),
+    getFeatured: (signal?: AbortSignal): Promise<Article[]> =>
+        httpClient.get(API_ENDPOINTS.ARTICLES.FEATURED, undefined, signal),
 
-    getPopular: (limit = 5): Promise<Article[]> => httpClient.get(API_ENDPOINTS.ARTICLES.POPULAR, { limit }),
+    getPopular: (limit = 5, signal?: AbortSignal): Promise<Article[]> =>
+        httpClient.get(API_ENDPOINTS.ARTICLES.POPULAR, { limit }, signal),
 
     getByCategory: async (categorySlug: string): Promise<Article[]> => {
         const response: ArticlesResponse = await httpClient.get(API_ENDPOINTS.ARTICLES.BY_CATEGORY(categorySlug));
@@ -96,16 +99,21 @@ export const articlesApi = {
         return response.data;
     },
 
-    getRelated: (slug: string): Promise<Article[]> => httpClient.get(API_ENDPOINTS.ARTICLES.RELATED(slug)),
+    getRelated: (slug: string, signal?: AbortSignal): Promise<Article[]> =>
+        httpClient.get(API_ENDPOINTS.ARTICLES.RELATED(slug), undefined, signal),
 
     recordView: (slug: string): Promise<void> => httpClient.post(API_ENDPOINTS.ARTICLES.VIEW(slug), {}),
 
-    getRecent: async (limit = 5): Promise<Article[]> => {
-        const response = await httpClient.get<ArticlesResponse>(API_ENDPOINTS.ARTICLES.BASE, {
-            limit,
-            sortBy: 'date',
-            sortDirection: 'desc',
-        });
+    getRecent: async (limit = 5, signal?: AbortSignal): Promise<Article[]> => {
+        const response = await httpClient.get<ArticlesResponse>(
+            API_ENDPOINTS.ARTICLES.BASE,
+            {
+                limit,
+                sortBy: 'date',
+                sortDirection: 'desc',
+            },
+            signal,
+        );
         return response.data ?? [];
     },
 
@@ -116,7 +124,8 @@ export const articlesApi = {
 
     delete: (slug: string): Promise<void> => httpClient.delete(API_ENDPOINTS.ARTICLES.DETAIL(slug)),
 
-    getCategories: (): Promise<Category[]> => httpClient.get(API_ENDPOINTS.ARTICLES.CATEGORIES),
+    getCategories: (signal?: AbortSignal): Promise<Category[]> =>
+        httpClient.get(API_ENDPOINTS.ARTICLES.CATEGORIES, undefined, signal),
 
     getCategory: (slug: string): Promise<Category> => httpClient.get(API_ENDPOINTS.ARTICLES.CATEGORY_DETAIL(slug)),
 
@@ -128,7 +137,7 @@ export const articlesApi = {
 
     deleteCategory: (slug: string): Promise<void> => httpClient.delete(API_ENDPOINTS.ARTICLES.CATEGORY_DETAIL(slug)),
 
-    getTags: (filters?: { category?: string; search?: string }): Promise<Tag[]> => {
+    getTags: (filters?: { category?: string; search?: string }, signal?: AbortSignal): Promise<Tag[]> => {
         const params: Record<string, unknown> = {};
         if (filters?.category) {
             params.category = filters.category;
@@ -136,7 +145,7 @@ export const articlesApi = {
         if (filters?.search) {
             params.search = filters.search;
         }
-        return httpClient.get(API_ENDPOINTS.ARTICLES.TAGS, params);
+        return httpClient.get(API_ENDPOINTS.ARTICLES.TAGS, params, signal);
     },
 
     getTag: (name: string): Promise<Tag> => httpClient.get(API_ENDPOINTS.ARTICLES.TAG_DETAIL(name)),
@@ -164,7 +173,7 @@ export const articlesApi = {
 export function useArticles(filters?: MaybeRef<ArticleFilters>) {
     return createListQuery(
         computed(() => articleKeys.list(unref(filters))),
-        () => articlesApi.getAll(unref(filters)),
+        ({ signal }) => articlesApi.getAll(unref(filters), signal),
         {
             placeholderData: (prev: ArticlesResponse | undefined) => prev,
         },
@@ -174,7 +183,7 @@ export function useArticles(filters?: MaybeRef<ArticleFilters>) {
 export function useArticle(slug: MaybeRef<string>) {
     return createDetailQuery(
         computed(() => articleKeys.detail(unref(slug))),
-        () => articlesApi.getBySlug(unref(slug)),
+        ({ signal }) => articlesApi.getBySlug(unref(slug), signal),
         {
             enabled: computed(() => !!unref(slug)),
         },
@@ -182,15 +191,15 @@ export function useArticle(slug: MaybeRef<string>) {
 }
 
 export function usePopularArticles(limit = 5) {
-    return createStaticQuery(articleKeys.popular(limit), () => articlesApi.getPopular(limit));
+    return createStaticQuery(articleKeys.popular(limit), ({ signal }) => articlesApi.getPopular(limit, signal));
 }
 
 export function useRecentArticles(limit = 5, options?: QueryOptions<Article[]>) {
-    return createListQuery(articleKeys.recent(limit), () => articlesApi.getRecent(limit), options);
+    return createListQuery(articleKeys.recent(limit), ({ signal }) => articlesApi.getRecent(limit, signal), options);
 }
 
 export function useArticleCategories() {
-    return createStaticQuery(articleKeys.categories(), articlesApi.getCategories, {
+    return createStaticQuery(articleKeys.categories(), ({ signal }) => articlesApi.getCategories(signal), {
         select: (data: Category[] | { data: Category[] }) => (Array.isArray(data) ? data : data.data),
     });
 }
@@ -198,7 +207,7 @@ export function useArticleCategories() {
 export function useArticleTags(filters?: MaybeRef<{ category?: string; search?: string } | undefined>) {
     return createStaticQuery(
         computed(() => articleKeys.tags(unref(filters))),
-        () => articlesApi.getTags(unref(filters)),
+        ({ signal }) => articlesApi.getTags(unref(filters), signal),
         {
             select: (data: Tag[] | { data: Tag[] }) => (Array.isArray(data) ? data : data.data),
         },
@@ -208,7 +217,7 @@ export function useArticleTags(filters?: MaybeRef<{ category?: string; search?: 
 export function useRelatedArticles(slug: MaybeRef<string>) {
     return createStaticQuery(
         computed(() => articleKeys.related(unref(slug))),
-        () => articlesApi.getRelated(unref(slug)),
+        ({ signal }) => articlesApi.getRelated(unref(slug), signal),
         {
             enabled: computed(() => !!unref(slug)),
         },
@@ -219,11 +228,13 @@ export function useRecordArticleView() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: articlesApi.recordView,
+        // Appel analytics silencieux : ne pas afficher de toast d'erreur global si le POST échoue
+        meta: { suppressGlobalError: true },
         onSuccess: (_, slug) => {
-            queryClient.invalidateQueries({
-                queryKey: articleKeys.detail(slug),
-                refetchType: 'active',
-            });
+            // Incrément optimiste du compteur affiché plutôt qu'un refetch complet du détail
+            queryClient.setQueryData<ArticleDetail>(articleKeys.detail(slug), (old) =>
+                old ? { ...old, views: (old.views ?? 0) + 1 } : old,
+            );
         },
     });
 }

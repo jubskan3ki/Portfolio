@@ -7,6 +7,20 @@ from django.db import models
 from django.utils import timezone
 
 
+def published_filter(prefix: str = "") -> models.Q:
+    """Construit la condition ORM "article publie" reutilisable.
+
+    Source unique du predicat : is_published=True ET (published_date NULL ou
+    <= maintenant). `prefix` permet de cibler une relation inverse (ex:
+    "articles__"). Coherent avec ArticleService._is_published (predicat applicatif).
+    """
+    now = timezone.now()
+    return models.Q(**{f"{prefix}is_published": True}) & (
+        models.Q(**{f"{prefix}published_date__isnull": True})
+        | models.Q(**{f"{prefix}published_date__lte": now})
+    )
+
+
 class CategoryQuerySet(models.QuerySet):
     """QuerySet personnalise pour les categories d'articles."""
 
@@ -15,11 +29,7 @@ class CategoryQuerySet(models.QuerySet):
         return self.annotate(
             published_count=models.Count(
                 "articles",
-                filter=models.Q(articles__is_published=True)
-                & (
-                    models.Q(articles__published_date__isnull=True)
-                    | models.Q(articles__published_date__lte=timezone.now())
-                ),
+                filter=published_filter("articles__"),
             )
         )
 
@@ -56,11 +66,7 @@ class TagQuerySet(models.QuerySet):
         return self.annotate(
             published_count=models.Count(
                 "articles",
-                filter=models.Q(articles__is_published=True)
-                & (
-                    models.Q(articles__published_date__isnull=True)
-                    | models.Q(articles__published_date__lte=timezone.now())
-                ),
+                filter=published_filter("articles__"),
             )
         )
 
@@ -69,11 +75,7 @@ class TagQuerySet(models.QuerySet):
         return self.annotate(
             view_count_sum=models.Sum(
                 "articles__view_count",
-                filter=models.Q(articles__is_published=True)
-                & (
-                    models.Q(articles__published_date__isnull=True)
-                    | models.Q(articles__published_date__lte=timezone.now())
-                ),
+                filter=published_filter("articles__"),
             )
         )
 
@@ -115,14 +117,13 @@ class ArticleQuerySet(models.QuerySet):
     def published(self) -> ArticleQuerySet:
         """Filtre les articles publies (exclut les soft-deleted).
 
-        Coherent avec ArticleService._is_published : un article `is_published=True`
-        sans `published_date` (NULL) est considere publie. Seul un `published_date`
+        Source ORM du predicat de publication (via published_filter). Coherent
+        avec ArticleService._is_published : un article `is_published=True` sans
+        `published_date` (NULL) est considere publie. Seul un `published_date`
         FUTUR (article programme) reste masque.
         """
-        now = timezone.now()
         return self.filter(
-            models.Q(published_date__isnull=True) | models.Q(published_date__lte=now),
-            is_published=True,
+            published_filter(),
             deleted_at__isnull=True,
         )
 
@@ -172,14 +173,12 @@ class ArticleQuerySet(models.QuerySet):
         if not query or not query.strip():
             return self.none()
 
-        # Vecteur de recherche avec poids differents (A = highest, D = lowest)
         search_vector = (
             SearchVector("title", weight="A", config=language)
             + SearchVector("excerpt", weight="B", config=language)
             + SearchVector("content", weight="C", config=language)
         )
 
-        # Query de recherche avec configuration de langue
         search_query = SearchQuery(query, config=language)
 
         return (

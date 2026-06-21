@@ -10,8 +10,8 @@
 
         <div class="contact-faq__list">
             <details
-                v-for="(item, idx) in items"
-                :key="idx"
+                v-for="item in items"
+                :key="item.question"
                 class="contact-faq__item"
                 :name="group ? 'contact-faq' : undefined"
             >

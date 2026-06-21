@@ -84,6 +84,16 @@
                 </div>
             </template>
             <EmptyState
+                v-else-if="isError"
+                icon="alert-circle"
+                title="Erreur de chargement"
+                description="Impossible de charger l'activité récente. Veuillez réessayer."
+                action-text="Réessayer"
+                action-icon="refresh-cw"
+                size="md"
+                @action="refresh"
+            />
+            <EmptyState
                 v-else
                 icon="inbox"
                 title="Aucune activité"
@@ -148,6 +158,7 @@
     const {
         data: activitiesData,
         isLoading,
+        isError,
         isFetching: isRefreshing,
     } = useQuery({
         queryKey: statsKeys.history(HISTORY_LIMIT),

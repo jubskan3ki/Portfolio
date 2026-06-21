@@ -106,7 +106,6 @@ export interface NavItem {
 
 export interface NavbarItemProps {
     item: NavItem;
-    index: number;
     isActive: boolean;
 }
 

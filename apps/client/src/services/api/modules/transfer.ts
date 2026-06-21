@@ -48,7 +48,8 @@ export const transferApi = {
         return httpClient.uploadForm(API_ENDPOINTS.TRANSFER.IMPORT_BULK, formData);
     },
 
-    getJobs: (): Promise<TransferJobsResponse> => httpClient.get(API_ENDPOINTS.TRANSFER.JOBS),
+    getJobs: (signal?: AbortSignal): Promise<TransferJobsResponse> =>
+        httpClient.get(API_ENDPOINTS.TRANSFER.JOBS, undefined, signal),
 
     getExportJob: (jobId: string): Promise<ExportJob> => httpClient.get(API_ENDPOINTS.TRANSFER.EXPORT_JOB(jobId)),
 

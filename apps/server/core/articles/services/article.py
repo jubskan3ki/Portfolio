@@ -180,10 +180,32 @@ class ArticleService(BaseService["Article"]):
 
     @staticmethod
     def _is_published(article: Article) -> bool:
-        """Verifie si un article est publie."""
+        """Verifie si un article est publie.
+
+        Predicat applicatif equivalent a ArticleQuerySet.published (source ORM) :
+        is_published=True ET (published_date NULL ou <= maintenant).
+        """
         if not article.is_published:
             return False
         return not (article.published_date and article.published_date > timezone.now())
+
+    @staticmethod
+    def _stamp_publication(
+        data: dict[str, Any],
+        *,
+        is_published: bool,
+        current_date: Any,
+    ) -> None:
+        """Pose published_date quand l'article passe a publie sans date fournie.
+
+        Un article publie sans published_date disparait des listes publiques
+        (cf. ArticleQuerySet.published) : on re-stampe a `current_date`. Une date
+        deja fournie (y compris future, article programme) n'est jamais ecrasee.
+        Mute data en place. `is_published` et `current_date` sont resolus par
+        l'appelant (create part de False, update part de l'etat existant).
+        """
+        if is_published and not current_date:
+            data["published_date"] = timezone.now()
 
     @classmethod
     @transaction.atomic
@@ -191,9 +213,11 @@ class ArticleService(BaseService["Article"]):
         """Cree un nouvel article avec gestion automatique de la date de publication."""
         tags_data = data.pop("tags", None)
 
-        is_published = data.get("is_published", False)
-        if is_published and not data.get("published_date"):
-            data["published_date"] = timezone.now()
+        cls._stamp_publication(
+            data,
+            is_published=data.get("is_published", False),
+            current_date=data.get("published_date"),
+        )
 
         article = Article.objects.create(**data)
 
@@ -211,11 +235,11 @@ class ArticleService(BaseService["Article"]):
         article = cls.get_by_id(obj_id, published_only=False)
         tags_data = data.pop("tags", None)
 
-        is_published = data.get("is_published", article.is_published)
-        # Un article publié sans published_date disparaît des listes publiques (cf. ArticleQuerySet.published) : on re-stampe ; une date future est préservée.
-        resulting_date = data.get("published_date", article.published_date)
-        if is_published and not resulting_date:
-            data["published_date"] = timezone.now()
+        cls._stamp_publication(
+            data,
+            is_published=data.get("is_published", article.is_published),
+            current_date=data.get("published_date", article.published_date),
+        )
 
         apply_update(article, data, partial=partial)
         article.save()

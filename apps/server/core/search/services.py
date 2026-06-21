@@ -22,7 +22,9 @@ HEADLINE_OPTIONS = "StartSel=<mark>, StopSel=</mark>, MaxFragments=2, MaxWords=2
 VALID_TYPES: tuple[str, ...] = ("all", "articles", "projects", "stacks", "experiences")
 SEARCHABLE_TYPES: tuple[str, ...] = ("articles", "projects", "stacks", "experiences")
 
-MIN_QUERY_LENGTH = 2
+MIN_QUERY_LENGTH = 1
+
+SHORT_QUERY_MAX_LENGTH = 2
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,7 @@ class SearchService:
             "headline_field": "excerpt",
             "fallback_fields": ("title", "excerpt"),
             "url_template": "/blog/{slug}",
+            "select_related": ("category",),
         },
         "projects": {
             "model": Project,
@@ -58,6 +61,7 @@ class SearchService:
             "headline_field": "description",
             "fallback_fields": ("title", "description", "long_description"),
             "url_template": "/projects/{slug}",
+            "select_related": ("category",),
         },
         "stacks": {
             "model": Stack,
@@ -66,6 +70,7 @@ class SearchService:
             "headline_field": "description",
             "fallback_fields": ("name", "description", "content"),
             "url_template": "/stacks/{slug}",
+            "select_related": ("category",),
         },
         "experiences": {
             "model": Experience,
@@ -74,6 +79,7 @@ class SearchService:
             "headline_field": "description",
             "fallback_fields": ("title", "company", "description"),
             "url_template": "/experiences/{id}",
+            "select_related": ("type",),
         },
     }
 
@@ -106,16 +112,19 @@ class SearchService:
 
     def _search_type(self, type_name: str) -> list[SearchResult]:
         config = self.CONFIGS[type_name]
-        queryset = self._get_base_queryset(type_name, config["model"])
+        queryset = self._get_base_queryset(type_name, config)
 
-        if self.is_postgres():
+        if self.is_postgres() and len(self.query) > SHORT_QUERY_MAX_LENGTH:
             return self._search_postgres(type_name, config, queryset)
         return self._search_fallback(type_name, config, queryset)
 
-    def _get_base_queryset(self, type_name: str, model: type[Model]) -> QuerySet:
+    def _get_base_queryset(self, type_name: str, config: dict[str, Any]) -> QuerySet:
+        model: type[Model] = config["model"]
         queryset = model._default_manager.all()
         if type_name == "articles" and not (self.user and getattr(self.user, "is_staff", False)):
             queryset = queryset.filter(is_published=True)
+        if config.get("select_related"):
+            queryset = queryset.select_related(*config["select_related"])
         return queryset
 
     def _search_postgres(

@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed, onMounted, ref } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
     import type { SectionBackgroundProps } from '@/types/components/ui';
 
@@ -26,18 +26,30 @@
     const bubblesReady = ref(false);
     const showBubbles = computed(() => hasBubbleVariant.value && bubblesReady.value);
 
+    let idleId: number | null = null;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
     onMounted(() => {
         if (!hasBubbleVariant.value) {
             return;
         }
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
+            idleId = requestIdleCallback(() => {
                 bubblesReady.value = true;
             });
         } else {
-            setTimeout(() => {
+            fallbackTimer = setTimeout(() => {
                 bubblesReady.value = true;
             }, 200);
+        }
+    });
+
+    onBeforeUnmount(() => {
+        if (idleId !== null && 'cancelIdleCallback' in window) {
+            cancelIdleCallback(idleId);
+        }
+        if (fallbackTimer) {
+            clearTimeout(fallbackTimer);
         }
     });
 </script>

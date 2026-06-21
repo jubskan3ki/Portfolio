@@ -3,7 +3,8 @@ import { onMounted, onUnmounted } from 'vue';
 let globalAnnouncer: HTMLElement | null = null;
 let announcerRefCount = 0;
 
-function getOrCreateAnnouncer(): HTMLElement | null {
+// Crée le nœud DOM sans toucher au refcount (lecture seule du singleton).
+function ensureAnnouncerNode(): HTMLElement | null {
     if (typeof document === 'undefined') {
         return null;
     }
@@ -20,8 +21,15 @@ function getOrCreateAnnouncer(): HTMLElement | null {
         document.body.appendChild(globalAnnouncer);
     }
 
-    announcerRefCount++;
     return globalAnnouncer;
+}
+
+function acquireAnnouncer(): HTMLElement | null {
+    const node = ensureAnnouncerNode();
+    if (node) {
+        announcerRefCount++;
+    }
+    return node;
 }
 
 function releaseAnnouncer() {
@@ -35,23 +43,31 @@ function releaseAnnouncer() {
 
 export function useAnnounce() {
     let announcer: HTMLElement | null = null;
+    let pendingTimer: ReturnType<typeof setTimeout> | null = null;
+    // announce() ne doit pas re-bumper le refcount (sinon le nœud #sr-announcer fuit).
+    let acquired = false;
 
     onMounted(() => {
-        announcer = getOrCreateAnnouncer();
+        announcer = acquireAnnouncer();
+        acquired = true;
     });
 
     const announce = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
         if (!announcer) {
-            announcer = getOrCreateAnnouncer();
+            announcer = ensureAnnouncerNode();
         }
 
         if (announcer) {
             announcer.setAttribute('aria-live', priority);
             announcer.textContent = '';
-            setTimeout(() => {
+            if (pendingTimer) {
+                clearTimeout(pendingTimer);
+            }
+            pendingTimer = setTimeout(() => {
                 if (announcer) {
                     announcer.textContent = message;
                 }
+                pendingTimer = null;
             }, 100);
         }
     };
@@ -79,7 +95,15 @@ export function useAnnounce() {
     };
 
     onUnmounted(() => {
-        releaseAnnouncer();
+        if (pendingTimer) {
+            clearTimeout(pendingTimer);
+            pendingTimer = null;
+        }
+        // Ne libère que si cette instance a acquis (évite la sur-décrémentation).
+        if (acquired) {
+            releaseAnnouncer();
+            acquired = false;
+        }
     });
 
     return {

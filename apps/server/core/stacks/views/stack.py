@@ -4,7 +4,6 @@ from typing import Any
 
 from django.db.models import QuerySet
 from drf_spectacular.utils import OpenApiResponse, extend_schema
-from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -17,7 +16,12 @@ from utils.pagination import APIResponsePagination
 from ..doc import RESPONSE_400, RESPONSE_404, STACK_LIST_PARAMS, TAGS_STACKS
 from ..filters import StackFilter
 from ..models import Stack
-from ..serializers import StackDetailSerializer, StackListSerializer, StackWriteSerializer
+from ..serializers import (
+    RelatedStackSerializer,
+    StackDetailSerializer,
+    StackListSerializer,
+    StackWriteSerializer,
+)
 from ..services.stack import StackService
 from ..throttles import StacksThrottle
 
@@ -27,7 +31,8 @@ class StackViewSet(BaseAPIViewSet):
 
     queryset = Stack.objects.all()
     serializer_class = StackDetailSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # Permissions gérées par AdminWritePermissionMixin : lecture publique,
+    # écriture réservée à l'admin (get_permissions).
     throttle_classes = (StacksThrottle,)
     pagination_class = APIResponsePagination
     filterset_class = StackFilter
@@ -44,7 +49,9 @@ class StackViewSet(BaseAPIViewSet):
     }
 
     def _get_base_queryset(self) -> QuerySet[Stack]:
-        """Retourne les stacks avec relations pre-chargees."""
+        """Queryset adapte a l'action : prefetch lourd seulement pour le detail."""
+        if self.action == "retrieve":
+            return Stack.objects.with_detail()
         return Stack.objects.with_related()
 
     @extend_schema(
@@ -138,8 +145,13 @@ class StackViewSet(BaseAPIViewSet):
     def related(self, _request: Request, slug: str = "") -> Response:
         """Stacks associees."""
         stack = StackService.get_by_slug(slug)
-        related = StackService.get_related(stack)
-        return Response(related)
+        related_stacks, relationship_map = StackService.get_related(stack)
+        serializer = RelatedStackSerializer(
+            related_stacks,
+            many=True,
+            context={"relationships": relationship_map},
+        )
+        return Response(serializer.data)
 
     @extend_schema(
         summary="Projets utilisant cette stack",

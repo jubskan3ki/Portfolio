@@ -11,16 +11,22 @@ class StackQuerySet(models.QuerySet):
     """QuerySet personnalise pour les stacks."""
 
     def with_related(self) -> StackQuerySet:
-        """Charge les relations FK et prefetch les ressources."""
+        """Charge la categorie (FK) pour les listes."""
+        return self.select_related("category")
+
+    def with_detail(self) -> StackQuerySet:
+        """Charge la categorie + prefetch ressources et relations pour le detail.
+
+        Source unique du prefetch des relations, reutilisee par le ViewSet (retrieve)
+        et par StackService._get_detail_queryset.
+        """
         from .models import StackRelationship
 
         return self.select_related("category").prefetch_related(
             "resources",
             models.Prefetch(
                 "relationships",
-                queryset=StackRelationship.objects.select_related(
-                    "to_stack__category",
-                ),
+                queryset=StackRelationship.objects.select_related("to_stack", "to_stack__category"),
             ),
         )
 

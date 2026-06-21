@@ -1,9 +1,10 @@
 import type { MaybeRef } from 'vue';
-import { computed, ref, toValue } from 'vue';
+import { computed, onScopeDispose, ref, toValue } from 'vue';
 import type { UseShareReturn } from '@/types/composables/ui';
 
 export function useShare(title: MaybeRef<string>): UseShareReturn {
     const linkCopied = ref(false);
+    let resetTimer: ReturnType<typeof setTimeout> | null = null;
 
     const shareUrl = computed(() => {
         if (import.meta.client) {
@@ -28,13 +29,23 @@ export function useShare(title: MaybeRef<string>): UseShareReturn {
         try {
             await navigator.clipboard.writeText(shareUrl.value);
             linkCopied.value = true;
-            setTimeout(() => {
+            if (resetTimer) {
+                clearTimeout(resetTimer);
+            }
+            resetTimer = setTimeout(() => {
                 linkCopied.value = false;
+                resetTimer = null;
             }, 2000);
         } catch {
             /* noop */
         }
     };
+
+    onScopeDispose(() => {
+        if (resetTimer) {
+            clearTimeout(resetTimer);
+        }
+    });
 
     return { shareUrl, linkCopied, shareOn, copyLink };
 }

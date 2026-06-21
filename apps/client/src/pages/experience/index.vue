@@ -181,11 +181,11 @@
             }),
             queryClient.prefetchQuery({
                 queryKey: experienceKeys.types(),
-                queryFn: experiencesApi.getTypes,
+                queryFn: ({ signal }) => experiencesApi.getTypes(signal),
             }),
             queryClient.prefetchQuery({
                 queryKey: experienceKeys.stats(),
-                queryFn: experiencesApi.getStats,
+                queryFn: ({ signal }) => experiencesApi.getStats(signal),
             }),
             queryClient.prefetchQuery({
                 queryKey: stackKeys.featured(100),
@@ -321,7 +321,9 @@
     const hasError = computed(() => experiencesError.value || typesError.value);
     const hasAnyData = computed(() => (experiences.value?.length ?? 0) > 0);
 
-    const topSkills = computed(() => stats.value?.topSkills ?? []);
+    const topSkills = computed(() =>
+        (stats.value?.topTechnologies ?? []).map((t) => ({ skill: t.name, count: t.level })),
+    );
 
     const { data: allStacksData } = useFeaturedStacks(100);
     const skillStackMap = computed(() => {

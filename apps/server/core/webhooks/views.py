@@ -3,6 +3,7 @@
 import uuid
 from typing import TYPE_CHECKING, Any, cast
 
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -75,6 +76,23 @@ class WebhookViewSet(BaseAPIViewSet):
                 "status_code": delivery.response_status,
                 "duration_ms": delivery.duration_ms,
             },
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(
+        description=(
+            "Revele le secret HMAC du webhook (reserve admin). Necessaire au "
+            "recepteur pour verifier la signature des requetes entrantes."
+        ),
+        request=None,
+        responses={200: OpenApiResponse(description="Secret HMAC du webhook")},
+    )
+    @action(detail=True, methods=["post"])
+    def reveal_secret(self, _request: Request, **_kwargs: Any) -> Response:
+        """Retourne le secret HMAC du webhook (scoped par created_by via get_object)."""
+        webhook = cast(Webhook, self.get_object())
+        return Response(
+            {"secret": webhook.secret},
             status=status.HTTP_200_OK,
         )
 

@@ -52,9 +52,9 @@ class WebhookSerializer(serializers.ModelSerializer):
         return round((obj.successful_deliveries / obj.total_deliveries) * 100, 2)
 
     def create(self, validated_data: dict) -> Webhook:
-        """Cree un webhook avec l'utilisateur courant."""
-        validated_data["created_by"] = self.context["request"].user
-        validated_data["events"] = list(validated_data["events"])
+        """Cree un webhook (created_by est fourni par la vue via perform_create)."""
+        if "events" in validated_data:
+            validated_data["events"] = list(validated_data["events"])
         return super().create(validated_data)
 
     def update(self, instance: Webhook, validated_data: dict) -> Webhook:

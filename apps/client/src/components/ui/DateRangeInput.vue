@@ -3,6 +3,8 @@
         class="date-range-picker__trigger"
         role="button"
         tabindex="0"
+        aria-haspopup="dialog"
+        :aria-expanded="isOpen"
         @click="$emit('toggle')"
         @keydown.enter="$emit('toggle')"
         @keydown.space.prevent="$emit('toggle')"

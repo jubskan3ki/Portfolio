@@ -38,7 +38,7 @@
         </header>
 
         <p v-if="stack.description && !compact" class="stack-card__description">
-            {{ truncateText(stack.description, descriptionLength) }}
+            {{ truncatedDescription }}
         </p>
 
         <div v-if="displayedTags.length > 0" class="stack-card__tags">
@@ -85,6 +85,8 @@
     defineEmits<{
         click: [];
     }>();
+
+    const truncatedDescription = computed(() => truncateText(props.stack.description ?? '', props.descriptionLength));
 
     // Tags
     const tagInfo = computed(() => sliceTags(props.stack.tags, 3));

@@ -53,3 +53,12 @@ if _env_overrides is not None:
     for _attr in dir(_env_overrides):
         if not _attr.startswith("_"):
             globals()[_attr] = getattr(_env_overrides, _attr)
+
+# REST_FRAMEWORK/LOGGING sont construits dans les modules de base ; les envs/*.py n'exposent que des deltas, câblés ici.
+_throttle_override = globals().get("REST_FRAMEWORK_DEFAULT_THROTTLE_RATES_OVERRIDE")
+if _throttle_override:
+    globals()["REST_FRAMEWORK"]["DEFAULT_THROTTLE_RATES"].update(_throttle_override)
+
+_root_log_level = globals().get("LOGGING_LEVEL_ROOT")
+if _root_log_level:
+    globals()["LOGGING"]["root"]["level"] = _root_log_level

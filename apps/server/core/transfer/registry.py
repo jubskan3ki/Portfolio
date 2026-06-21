@@ -27,7 +27,7 @@ MODULE_REGISTRY: dict[str, dict[str, Any]] = {
         "serializer_module": "core.stacks.serializers",
         "serializer_name": "StackDetailSerializer",
         "select_related": ["category"],
-        "prefetch_related": ["resources"],
+        "prefetch_related": ["resources", "relationships__to_stack__category"],
         "required_fields": ["name", "category", "description", "level"],
     },
     "experiences": {

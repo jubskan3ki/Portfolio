@@ -39,6 +39,9 @@ class InteractionService:
             ) from exc
 
         increment_view_count(project)
-        project.refresh_from_db(fields=["view_count"])
+        # increment_view_count fait un UPDATE atomique (F()) sans relire l'objet.
+        # On reflete l'increment en memoire au lieu d'un SELECT (refresh_from_db) :
+        # le compteur en base reste exact, on economise une requete par vue.
+        project.view_count += 1
         ViewLog.objects.log_view("project", project.id)
         return project

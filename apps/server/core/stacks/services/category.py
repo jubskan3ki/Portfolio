@@ -48,6 +48,9 @@ class CategoryService(BaseService["StackCategory"]):
     def get_by_name(cls, name: str) -> StackCategory:
         """Recupere une categorie par nom.
 
+        Annote stacks_count pour que le detail expose le bon compteur (sinon
+        get_count retombait a 0 via le manager nu).
+
         Args:
             name: Nom de la categorie.
 
@@ -58,7 +61,7 @@ class CategoryService(BaseService["StackCategory"]):
             NotFoundError: Si la categorie n'existe pas.
         """
         try:
-            return cls.model.objects.get(name__iexact=name)
+            return cls.model.objects.annotate(stacks_count=Count("stacks")).get(name__iexact=name)
         except ObjectDoesNotExist as exc:
             cls._get_logger().warning("Categorie non trouvee: name=%s", name)
             raise NotFoundError(

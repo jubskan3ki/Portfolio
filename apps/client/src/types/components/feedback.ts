@@ -1,7 +1,7 @@
 // Types for Feedback components
 
 import type { Alert } from '@/types/stores/alert';
-import type { ButtonVariant } from './base';
+import type { ButtonVariant, RouteObject } from './base';
 
 export type { Alert, ButtonVariant };
 
@@ -116,6 +116,10 @@ export interface ErrorMessageProps {
     message?: string;
     showIcon?: boolean;
     customClass?: string;
+    // Lien d'action optionnel (ex. retour à la liste) affiché sous le message.
+    actionText?: string;
+    // Aligné sur BaseButton/BaseLink : accepte une string ou un objet route typé (ROUTES.*).
+    to?: string | RouteObject;
 }
 
 // QueryStateHandler

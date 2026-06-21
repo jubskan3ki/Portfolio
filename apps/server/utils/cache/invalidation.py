@@ -4,24 +4,46 @@ import logging
 from typing import Any
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 
 from utils.cache.keys import CacheKeys
 
 logger = logging.getLogger("core.cache")
 
+# Prefixe des reponses mises en cache par ConditionalCacheMiddleware.
+# Garde synchronise avec middlewares.cache.CACHE_KEY_PREFIX.
+API_CACHE_PREFIX = "api_cache"
+
+# Modele -> endpoint public dont le cache HTTP (middleware) doit etre purge.
+# Permet aux mutations passant par l'admin (chemin non cacheable, donc ignore
+# par l'invalidation par path du middleware) d'invalider quand meme l'api_cache.
+API_CACHE_PATHS: dict[str, str] = {
+    "Article": "/api/articles/",
+    "Category": "/api/articles/",
+    "Tag": "/api/articles/",
+    "Project": "/api/projects/",
+    "ProjectCategory": "/api/projects/",
+    "Stack": "/api/stacks/",
+    "StackCategory": "/api/stacks/",
+    "StackResource": "/api/stacks/",
+    "Experience": "/api/experiences/",
+    "ExperienceType": "/api/experiences/",
+}
+
 
 def invalidate_cache(pattern: str) -> int:
-    """Requiert django-redis delete_pattern; sinon no-op."""
+    """Requiert django-redis delete_pattern; sinon no-op (loggue)."""
     try:
         if hasattr(cache, "delete_pattern"):
             count = cache.delete_pattern(pattern)
             logger.info("Invalidated %d cache keys matching: %s", count, pattern)
             return count
     except Exception as e:
-        logger.warning("delete_pattern failed: %s", e)
+        logger.warning("delete_pattern failed for %s: %s", pattern, e)
+        return 0
 
-    logger.debug("Using fallback cache invalidation for: %s", pattern)
+    logger.warning("Cache backend sans delete_pattern: invalidation ignoree pour %s", pattern)
     return 0
 
 
@@ -52,6 +74,13 @@ def invalidate_model_cache(model_name: str) -> None:
         invalidate_cache(f"*cache_page.{prefix}*")
         invalidate_cache(f"*cache_header.{prefix}*")
 
+    # Purge aussi le cache HTTP du middleware (ConditionalCacheMiddleware) pour
+    # que les mutations admin invalident l'api_cache public, pas seulement le
+    # cache service-layer (cf. invalidation par signal = source de verite unique).
+    api_path = API_CACHE_PATHS.get(model_name)
+    if api_path:
+        invalidate_cache(f"{API_CACHE_PREFIX}:{api_path}*")
+
 
 VIEW_CACHE_PREFIXES: dict[str, list[str]] = {
     "Article": [
@@ -80,11 +109,27 @@ def clear_all_cache() -> None:
 
 
 def _on_model_save(sender: type, **_kwargs: Any) -> None:
-    invalidate_model_cache(sender.__name__)
+    from utils.signals import bulk_mode_active
+
+    # Import en masse : invalidation par-objet desactivee ; l'appelant invalide
+    # en bloc apres l'import via invalidate_model_cache (cf. utils.signals).
+    if bulk_mode_active():
+        return
+    # on_commit: n'invalide qu'apres COMMIT pour eviter qu'une lecture
+    # concurrente repeuple le cache avec les anciennes donnees (et pour ne
+    # rien invalider si la transaction rollback). Hors transaction, le callback
+    # s'execute immediatement.
+    name = sender.__name__
+    transaction.on_commit(lambda: invalidate_model_cache(name))
 
 
 def _on_model_delete(sender: type, **_kwargs: Any) -> None:
-    invalidate_model_cache(sender.__name__)
+    from utils.signals import bulk_mode_active
+
+    if bulk_mode_active():
+        return
+    name = sender.__name__
+    transaction.on_commit(lambda: invalidate_model_cache(name))
 
 
 def register_cache_invalidation(model: type) -> None:

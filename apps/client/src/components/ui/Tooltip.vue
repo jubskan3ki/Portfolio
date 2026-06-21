@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
     import { useThrottleFn } from '@vueuse/core';
-    import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
+    import { nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 
     import type { TooltipProps } from '@/types/components/ui';
 
@@ -183,14 +183,41 @@
         }
     }, 16);
 
+    let repositionListenersAttached = false;
+
+    const attachRepositionListeners = () => {
+        if (repositionListenersAttached) {
+            return;
+        }
+        repositionListenersAttached = true;
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('scroll', handleScroll, true);
+    };
+
+    const detachRepositionListeners = () => {
+        if (!repositionListenersAttached) {
+            return;
+        }
+        repositionListenersAttached = false;
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('scroll', handleScroll, true);
+    };
+
+    // N'attache les listeners globaux de repositionnement que pendant l'affichage,
+    // pour ne pas garder un scroll(capture) actif par instance montée mais cachée.
+    watch(isVisible, (visible) => {
+        if (visible) {
+            attachRepositionListeners();
+        } else {
+            detachRepositionListeners();
+        }
+    });
+
     onMounted(() => {
         if (props.trigger === 'click') {
             document.addEventListener('click', handleClickOutside);
             triggerRef.value?.addEventListener('click', handleClickTrigger);
         }
-
-        window.addEventListener('resize', handleResize);
-        window.addEventListener('scroll', handleScroll, true);
     });
 
     onBeforeUnmount(() => {
@@ -199,8 +226,7 @@
             triggerRef.value?.removeEventListener('click', handleClickTrigger);
         }
 
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('scroll', handleScroll, true);
+        detachRepositionListeners();
 
         if (showTimer) {
             clearTimeout(showTimer);

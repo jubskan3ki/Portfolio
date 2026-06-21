@@ -255,6 +255,12 @@ class ImportViewSet(viewsets.ViewSet):
         request_data = cast(MultiValueDict, request.data)
         modules = request_data.getlist("modules")
 
+        if not files:
+            return Response(
+                {"error": "Aucun fichier fourni"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if len(files) != len(modules):
             return Response(
                 {"error": "Le nombre de fichiers doit correspondre au nombre de modules"},
@@ -263,6 +269,16 @@ class ImportViewSet(viewsets.ViewSet):
 
         jobs: list[dict[str, Any]] = []
         for file, module in zip(files, modules, strict=True):
+            validation_error = validate_import_file(file)
+            if validation_error:
+                jobs.append(
+                    {
+                        "module": module,
+                        "filename": file.name,
+                        "error": validation_error,
+                    }
+                )
+                continue
             try:
                 job = ImporterService.create_import_job(
                     user=request.user,
@@ -271,7 +287,10 @@ class ImportViewSet(viewsets.ViewSet):
                 )
                 job = ImporterService.execute_import(job=job, file=file)
                 jobs.append(ImportJobSerializer(job).data)
-            except (ValueError, DatabaseError, OperationalError) as e:
+            except (ValueError, TypeError, KeyError, DatabaseError, OperationalError) as e:
+                # On isole l'echec d'un fichier (parsing, FK, DB) pour ne pas
+                # tuer tout le batch ; les autres fichiers continuent.
+                logger.warning("Echec import bulk pour %s (%s): %s", file.name, module, e)
                 jobs.append(
                     {
                         "module": module,
@@ -280,4 +299,18 @@ class ImportViewSet(viewsets.ViewSet):
                     }
                 )
 
-        return Response({"imports": jobs}, status=status.HTTP_201_CREATED)
+        # Status code derive du resultat : 201 si tout a reussi, 400 si tout a
+        # echoue, 207 (Multi-Status) si partiel. Un job serialise en FAILED
+        # compte aussi comme echec.
+        def _ok(entry: dict[str, Any]) -> bool:
+            return "error" not in entry and entry.get("status") != ImportJob.Status.FAILED
+
+        success = sum(1 for j in jobs if _ok(j))
+        if success == 0:
+            code = status.HTTP_400_BAD_REQUEST
+        elif success < len(jobs):
+            code = status.HTTP_207_MULTI_STATUS
+        else:
+            code = status.HTTP_201_CREATED
+
+        return Response({"imports": jobs}, status=code)

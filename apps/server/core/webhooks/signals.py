@@ -61,9 +61,17 @@ def get_payload(instance) -> dict:
 
 def dispatch_save_webhook(sender, instance, created, **_kwargs):
     """Dispatch un webhook lors de la creation/mise a jour d'un modele."""
+    from utils.signals import bulk_mode_active
+
+    # Import en masse : pas de webhook par-objet (cf. utils.signals).
+    if bulk_mode_active():
+        return
+
     model_label = get_model_label(sender)
 
-    events = MODEL_EVENT_MAPPING[model_label]
+    events = MODEL_EVENT_MAPPING.get(model_label)
+    if not events:
+        return
     action = "created" if created else "updated"
 
     if action not in events:
@@ -80,11 +88,16 @@ def dispatch_save_webhook(sender, instance, created, **_kwargs):
 
 def dispatch_delete_webhook(sender, instance, **_kwargs):
     """Dispatch un webhook lors de la suppression d'un modele."""
+    from utils.signals import bulk_mode_active
+
+    # Import en masse : pas de webhook par-objet (cf. utils.signals).
+    if bulk_mode_active():
+        return
+
     model_label = get_model_label(sender)
 
-    events = MODEL_EVENT_MAPPING[model_label]
-
-    if "deleted" not in events:
+    events = MODEL_EVENT_MAPPING.get(model_label)
+    if not events or "deleted" not in events:
         return
 
     event_type = events["deleted"]

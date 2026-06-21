@@ -223,11 +223,11 @@
             }),
             queryClient.prefetchQuery({
                 queryKey: stackKeys.categories(),
-                queryFn: stacksApi.getCategories,
+                queryFn: ({ signal }) => stacksApi.getCategories(signal),
             }),
             queryClient.prefetchQuery({
                 queryKey: stackKeys.stats(),
-                queryFn: stacksApi.getStats,
+                queryFn: ({ signal }) => stacksApi.getStats(signal),
             }),
         ]);
         return true;
@@ -290,19 +290,13 @@
         isSearchMode,
     });
 
-    // Schema.org ItemList pour rich results
+    // Schema.org ItemList pour rich results : appel unique au setup. Le composable
+    // suit déjà la liste de façon réactive (itemListElement est un getter), donc
+    // pas de watch, sinon chaque changement empile un nouveau bloc ItemList.
     const stackListItems = computed(() =>
         (allStacks.value ?? []).map((s) => ({ name: s.name, url: `/stacks/${s.slug}`, image: s.logo })),
     );
-    watch(
-        stackListItems,
-        (items) => {
-            if (items.length) {
-                useItemListSeo({ items: stackListItems });
-            }
-        },
-        { immediate: true },
-    );
+    useItemListSeo({ items: stackListItems });
 
     const navigateToStack = (slug: string) => {
         router.push(`${ROUTES.STACKS.path}/${slug}`);

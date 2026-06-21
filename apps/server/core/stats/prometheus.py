@@ -8,10 +8,8 @@ remonte des donnees identiques quel que soit le worker gunicorn qui repond).
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
 from collections.abc import Iterator
 from datetime import timedelta
-from statistics import fmean
 
 from django.utils import timezone
 from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
@@ -23,14 +21,6 @@ WINDOW_MINUTES = 5
 RATINGS = ("good", "needs-improvement", "poor")
 
 
-def _percentile(values: list[float], percentile: int) -> float:
-    if not values:
-        return 0.0
-    sorted_values = sorted(values)
-    index = round((len(sorted_values) - 1) * (percentile / 100))
-    return float(sorted_values[index])
-
-
 class WebVitalsCollector(Collector):
     """Expose les percentiles + ratings Web Vitals sur la fenetre glissante."""
 
@@ -38,22 +28,15 @@ class WebVitalsCollector(Collector):
 
     def collect(self) -> Iterator[GaugeMetricFamily | CounterMetricFamily]:
         from .models import WebVitalEvent
+        from .services.web_vitals import WebVitalsService
 
         since = timezone.now() - timedelta(minutes=WINDOW_MINUTES)
 
         try:
-            events = list(WebVitalEvent.objects.filter(created_at__gte=since).values("metric_name", "value", "rating"))
+            summary = WebVitalsService._summarize_queryset(WebVitalEvent.objects.filter(created_at__gte=since))
         except Exception:
             logger.exception("WebVitalsCollector: failed to query events")
             return
-
-        values_by_metric: dict[str, list[float]] = defaultdict(list)
-        ratings_count: dict[tuple[str, str], int] = defaultdict(int)
-
-        for event in events:
-            metric_name = str(event["metric_name"])
-            values_by_metric[metric_name].append(float(event["value"]))
-            ratings_count[(metric_name, str(event["rating"]))] += 1
 
         p75 = GaugeMetricFamily(
             "web_vitals_p75",
@@ -76,15 +59,13 @@ class WebVitalsCollector(Collector):
             labels=["metric", "rating"],
         )
 
-        for metric_name, values in values_by_metric.items():
-            p75.add_metric([metric_name], _percentile(values, 75))
-            p95.add_metric([metric_name], _percentile(values, 95))
-            mean_metric.add_metric([metric_name], float(fmean(values)) if values else 0.0)
-
-        observed_metrics = set(values_by_metric.keys())
-        for metric_name in observed_metrics:
+        for row in summary:
+            metric_name = row["metric_name"]
+            p75.add_metric([metric_name], row["p75"] or 0.0)
+            p95.add_metric([metric_name], row["p95"] or 0.0)
+            mean_metric.add_metric([metric_name], row["mean"] or 0.0)
             for rating in RATINGS:
-                events_total.add_metric([metric_name, rating], float(ratings_count.get((metric_name, rating), 0)))
+                events_total.add_metric([metric_name, rating], float(row["ratings"].get(rating, 0)))
 
         yield p75
         yield p95

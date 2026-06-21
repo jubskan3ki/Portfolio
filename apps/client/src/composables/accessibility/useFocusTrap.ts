@@ -46,6 +46,9 @@ export function useFocusTrap(containerRef: Ref<HTMLElement | null>) {
     };
 
     const activate = () => {
+        if (isActive.value) {
+            return;
+        }
         previousActiveElement = document.activeElement;
         isActive.value = true;
         document.addEventListener('keydown', handleKeyDown);

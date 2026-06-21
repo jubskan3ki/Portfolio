@@ -9,7 +9,8 @@ export const statsKeys = {
 };
 
 export const statsApi = {
-    getOverview: (): Promise<DashboardOverview> => httpClient.get(API_ENDPOINTS.STATS.OVERVIEW),
+    getOverview: (signal?: AbortSignal): Promise<DashboardOverview> =>
+        httpClient.get(API_ENDPOINTS.STATS.OVERVIEW, undefined, signal),
 
     getActivity: <T = unknown>(limit?: number): Promise<T> =>
         httpClient.get(`${API_ENDPOINTS.STATS.ACTIVITY}${limit ? `?limit=${limit}` : ''}`),
@@ -18,5 +19,5 @@ export const statsApi = {
 };
 
 export function useDashboardOverview() {
-    return createRealtimeQuery(statsKeys.overview(), statsApi.getOverview);
+    return createRealtimeQuery(statsKeys.overview(), ({ signal }) => statsApi.getOverview(signal));
 }

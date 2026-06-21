@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { computed, toValue, watch } from 'vue';
 
 import { PAGINATION, TIMEOUTS } from '@/config/constants';
@@ -46,21 +46,22 @@ export function useDataList<
         filters: externalFilters ? toValue(externalFilters) : undefined,
     }));
 
-    const reactiveQueryKey = computed(
-        () =>
-            [
-                ...queryKey,
-                pagination.currentPage.value,
-                pagination.perPage.value,
-                sorting.orderingParam.value,
-                search.debouncedQuery.value,
-            ] as const,
-    );
+    // Typé `readonly unknown[]` : le tuple variadic avec le générique TFilters ne satisfait pas
+    // la contrainte MaybeRefDeep de vue-query (l'inférence d'overload échouait en cascade).
+    const reactiveQueryKey = computed<readonly unknown[]>(() => [
+        ...queryKey,
+        pagination.currentPage.value,
+        pagination.perPage.value,
+        sorting.orderingParam.value,
+        search.debouncedQuery.value,
+        // Filtres dans la clé, sinon un changement seul sert le cache périmé (pas de refetch).
+        externalFilters ? toValue(externalFilters) : undefined,
+    ]);
 
     const query = useQuery({
         queryKey: reactiveQueryKey,
-        queryFn: () => queryFn(queryParams.value),
-        placeholderData: (previousData) => previousData,
+        queryFn: ({ signal }) => queryFn(queryParams.value, signal),
+        placeholderData: keepPreviousData,
         staleTime,
     });
 

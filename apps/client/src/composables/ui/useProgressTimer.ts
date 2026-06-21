@@ -4,10 +4,11 @@ import type { UseProgressTimerOptions, UseProgressTimerReturn } from '@/types/co
 
 export function useProgressTimer(options: UseProgressTimerOptions): UseProgressTimerReturn {
     const { duration, onComplete, autoStart = false, stepTime = 10 } = options;
+    const getDuration = () => (typeof duration === 'function' ? duration() : duration);
 
     const progress = ref(100);
     const isRunning = ref(false);
-    const remainingTime = ref(duration);
+    const remainingTime = ref(getDuration());
 
     let timer: ReturnType<typeof setTimeout> | null = null;
     let progressInterval: ReturnType<typeof setInterval> | null = null;
@@ -37,7 +38,7 @@ export function useProgressTimer(options: UseProgressTimerOptions): UseProgressT
             onComplete?.();
         }, remainingTime.value);
 
-        const decrement = (100 / duration) * stepTime;
+        const decrement = (100 / getDuration()) * stepTime;
         progressInterval = setInterval(() => {
             progress.value = Math.max(0, progress.value - decrement);
         }, stepTime);
@@ -78,7 +79,7 @@ export function useProgressTimer(options: UseProgressTimerOptions): UseProgressT
         clearTimers();
         isRunning.value = false;
         progress.value = 100;
-        remainingTime.value = duration;
+        remainingTime.value = getDuration();
     };
 
     const stop = () => {
@@ -86,7 +87,7 @@ export function useProgressTimer(options: UseProgressTimerOptions): UseProgressT
         isRunning.value = false;
     };
 
-    if (autoStart) {
+    if (autoStart && import.meta.client) {
         start();
     }
 

@@ -54,7 +54,7 @@
     const cancel = (id: string) => store.stop(id);
 
     const getStyle = (loader: LoaderItem): Record<string, string> => {
-        if (!loader.targetSelector) {
+        if (!import.meta.client || !loader.targetSelector) {
             return {};
         }
 

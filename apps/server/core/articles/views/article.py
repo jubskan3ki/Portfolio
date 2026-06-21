@@ -37,7 +37,6 @@ class ArticleViewSet(BaseAPIViewSet):
 
     queryset = Article.objects.published_with_related()
     serializer_class = ArticleDetailSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     throttle_classes = [ArticlesThrottle]
     pagination_class = APIResponsePagination
     filterset_class = ArticleFilter

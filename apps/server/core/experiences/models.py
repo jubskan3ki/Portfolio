@@ -12,6 +12,7 @@ from django.utils.timezone import now
 
 from utils.images import MAX_SIZE_SMALL
 from utils.models import OptimizeImageMixin
+from utils.security.svg import sanitize_svg_upload
 from utils.upload import make_upload_to
 from utils.validators import validate_image_upload
 
@@ -20,7 +21,6 @@ from .managers import ExperienceManager, ExperienceTypeManager
 if TYPE_CHECKING:
     from django.db.models import QuerySet
 
-    # Type alias for related managers
     RelatedManager = QuerySet
 
 
@@ -40,6 +40,17 @@ def _get_year(date_field: Any) -> int | None:
 def _get_month(date_field: Any) -> int | None:
     """Retourne le mois d'un champ date Django."""
     return date_field.month if date_field else None
+
+
+def get_date_order_error(start_date: date | None, end_date: date | None) -> str | None:
+    """Source unique de verite pour la coherence des dates d'experience.
+
+    Reutilise par Experience.clean() (admin/shell) et par le serializer (API)
+    pour eviter de dupliquer la regle metier. Retourne le message d'erreur ou None.
+    """
+    if end_date and start_date and end_date < start_date:
+        return "La date de fin ne peut pas preceder la date de debut."
+    return None
 
 
 class ExperienceType(models.Model):
@@ -109,6 +120,7 @@ class Experience(OptimizeImageMixin, models.Model):
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Surcharge de save pour mettre a jour automatiquement le champ period."""
+        sanitize_svg_upload(self.logo)  # anti-XSS : nettoie un logo SVG uploade
         if self.start_date:
             start_str = _format_date(self.start_date, "%b %Y")
             end_str = "Present" if not self.end_date else _format_date(self.end_date, "%b %Y")
@@ -118,8 +130,9 @@ class Experience(OptimizeImageMixin, models.Model):
     def clean(self) -> None:
         """Valide la coherence des dates."""
         super().clean()
-        if self.end_date and self.start_date and self.end_date < self.start_date:
-            raise ValidationError({"end_date": "La date de fin ne peut pas preceder la date de debut."})
+        error = get_date_order_error(self.start_date, self.end_date)
+        if error:
+            raise ValidationError({"end_date": error})
 
     @property
     def year(self) -> int | None:

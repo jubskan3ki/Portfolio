@@ -45,10 +45,11 @@ export const stackKeys = {
 };
 
 export const stacksApi = {
-    getAll: (filters?: StackFilters): Promise<PaginatedResponse<Stack>> =>
-        httpClient.get(API_ENDPOINTS.STACKS.BASE, filters as Record<string, unknown>),
+    getAll: (filters?: StackFilters, signal?: AbortSignal): Promise<PaginatedResponse<Stack>> =>
+        httpClient.get(API_ENDPOINTS.STACKS.BASE, filters as Record<string, unknown>, signal),
 
-    getBySlug: (slug: string): Promise<StackDetail> => httpClient.get(API_ENDPOINTS.STACKS.DETAIL(slug)),
+    getBySlug: (slug: string, signal?: AbortSignal): Promise<StackDetail> =>
+        httpClient.get(API_ENDPOINTS.STACKS.DETAIL(slug), undefined, signal),
 
     getByCategory: async (categoryName: string, filters?: StackFilters): Promise<Stack[]> => {
         const response: PaginatedResponse<Stack> = await httpClient.get(
@@ -67,7 +68,8 @@ export const stacksApi = {
 
     delete: (slug: string): Promise<void> => httpClient.delete(API_ENDPOINTS.STACKS.DETAIL(slug)),
 
-    getCategories: (): Promise<StackCategory[]> => httpClient.get(API_ENDPOINTS.STACKS.CATEGORIES),
+    getCategories: (signal?: AbortSignal): Promise<StackCategory[]> =>
+        httpClient.get(API_ENDPOINTS.STACKS.CATEGORIES, undefined, signal),
 
     getCategory: (name: string): Promise<StackCategory> => httpClient.get(API_ENDPOINTS.STACKS.CATEGORY_DETAIL(name)),
 
@@ -93,23 +95,33 @@ export const stacksApi = {
 
     deleteResource: (id: number | string): Promise<void> => httpClient.delete(API_ENDPOINTS.STACKS.RESOURCE_DETAIL(id)),
 
-    getStats: (): Promise<StackStats> => httpClient.get(API_ENDPOINTS.STACKS.STATS),
+    getStats: (signal?: AbortSignal): Promise<StackStats> =>
+        httpClient.get(API_ENDPOINTS.STACKS.STATS, undefined, signal),
 
-    getProjects: async (slug: string): Promise<Project[]> => {
-        const response: PaginatedResponse<Project> = await httpClient.get(API_ENDPOINTS.STACKS.PROJECTS(slug));
+    getProjects: async (slug: string, signal?: AbortSignal): Promise<Project[]> => {
+        const response: PaginatedResponse<Project> = await httpClient.get(
+            API_ENDPOINTS.STACKS.PROJECTS(slug),
+            undefined,
+            signal,
+        );
         return response.data;
     },
 
-    getArticles: async (slug: string): Promise<Article[]> => {
-        const response: PaginatedResponse<Article> = await httpClient.get(API_ENDPOINTS.STACKS.ARTICLES(slug));
+    getArticles: async (slug: string, signal?: AbortSignal): Promise<Article[]> => {
+        const response: PaginatedResponse<Article> = await httpClient.get(
+            API_ENDPOINTS.STACKS.ARTICLES(slug),
+            undefined,
+            signal,
+        );
         return response.data;
     },
 
-    getFeatured: async (limit = 10): Promise<Stack[]> => {
-        const response = await httpClient.get<PaginatedResponse<Stack>>(API_ENDPOINTS.STACKS.BASE, { limit } as Record<
-            string,
-            unknown
-        >);
+    getFeatured: async (limit = 10, signal?: AbortSignal): Promise<Stack[]> => {
+        const response = await httpClient.get<PaginatedResponse<Stack>>(
+            API_ENDPOINTS.STACKS.BASE,
+            { limit } as Record<string, unknown>,
+            signal,
+        );
         return response.data ?? [];
     },
 
@@ -126,7 +138,7 @@ export const stacksApi = {
 export function useStacks(filters?: MaybeRef<StackFilters>) {
     return createListQuery(
         computed(() => stackKeys.list(unref(filters))),
-        () => stacksApi.getAll(unref(filters)),
+        ({ signal }) => stacksApi.getAll(unref(filters), signal),
         { placeholderData: (prev: PaginatedResponse<Stack> | undefined) => prev },
     );
 }
@@ -134,21 +146,21 @@ export function useStacks(filters?: MaybeRef<StackFilters>) {
 export function useStack(slug: MaybeRef<string>) {
     return createDetailQuery(
         computed(() => stackKeys.detail(unref(slug))),
-        () => stacksApi.getBySlug(unref(slug)),
+        ({ signal }) => stacksApi.getBySlug(unref(slug), signal),
         { enabled: computed(() => !!unref(slug)) },
     );
 }
 
 export function useFeaturedStacks(limit = 10, options?: QueryOptions<Stack[]>) {
-    return createListQuery(stackKeys.featured(limit), () => stacksApi.getFeatured(limit), options);
+    return createListQuery(stackKeys.featured(limit), ({ signal }) => stacksApi.getFeatured(limit, signal), options);
 }
 
 export function useStackCategories() {
-    return createStaticQuery(stackKeys.categories(), stacksApi.getCategories);
+    return createStaticQuery(stackKeys.categories(), ({ signal }) => stacksApi.getCategories(signal));
 }
 
 export function useStackStats() {
-    return createStaticQuery(stackKeys.stats(), stacksApi.getStats);
+    return createStaticQuery(stackKeys.stats(), ({ signal }) => stacksApi.getStats(signal));
 }
 
 const categoryMutations = createSubResourceMutations<
@@ -171,7 +183,7 @@ export const useCreateStackCategory = categoryMutations.useCreate;
 export function useStackProjects(slug: MaybeRef<string>) {
     return createListQuery(
         computed(() => stackKeys.projects(unref(slug))),
-        () => stacksApi.getProjects(unref(slug)),
+        ({ signal }) => stacksApi.getProjects(unref(slug), signal),
         { enabled: computed(() => !!unref(slug)) },
     );
 }
@@ -179,7 +191,7 @@ export function useStackProjects(slug: MaybeRef<string>) {
 export function useStackArticles(slug: MaybeRef<string>) {
     return createListQuery(
         computed(() => stackKeys.articles(unref(slug))),
-        () => stacksApi.getArticles(unref(slug)),
+        ({ signal }) => stacksApi.getArticles(unref(slug), signal),
         { enabled: computed(() => !!unref(slug)) },
     );
 }

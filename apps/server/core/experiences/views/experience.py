@@ -4,7 +4,6 @@ import logging
 
 from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
-from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -28,7 +27,7 @@ class ExperienceViewSet(BaseAPIViewSet):
 
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # Permissions via AdminWritePermissionMixin : lecture publique, ecriture admin.
     throttle_classes = (ExperienceThrottle,)
     pagination_class = APIResponsePagination
     filterset_class = ExperienceFilter

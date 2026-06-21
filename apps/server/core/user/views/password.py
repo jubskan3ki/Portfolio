@@ -117,11 +117,17 @@ class ChangePasswordView(APIView):
         serializer.is_valid(raise_exception=True)
         data = cast(dict[str, Any], serializer.validated_data)
 
+        # session_id du JWT courant : conserve l'appareil courant connecte,
+        # les autres sessions/tokens sont revoques.
+        auth = getattr(request, "auth", None)
+        current_session_id = str(auth.get("session_id")) if auth and auth.get("session_id") else None
+
         try:
             PasswordService.change_password(
                 user=request.user,
                 old_password=data["old_password"],
                 new_password=data["new_password"],
+                except_session_id=current_session_id,
             )
         except PermissionDenied as e:
             return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)

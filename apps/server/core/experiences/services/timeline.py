@@ -37,17 +37,18 @@ class TimelineService:
         Returns:
             Nombre total d'annees d'experience.
         """
-        experiences = Experience.objects.all().order_by("start_date")
+        experiences = list(Experience.objects.order_by("start_date"))
 
-        if not experiences.exists():
+        if not experiences:
             return 0.0
 
+        today = now().date()
         total_months = 0
         current_period_end: date | None = None
 
         for exp in experiences:
             start = exp.start_date
-            end = exp.end_date or now().date()
+            end = exp.end_date or today
 
             if current_period_end is None or start > current_period_end:
                 total_months += exp.duration_months

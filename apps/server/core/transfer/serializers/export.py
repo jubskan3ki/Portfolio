@@ -31,6 +31,17 @@ class ExportRequestSerializer(ReadOnlySerializer):
         help_text="Filtres optionnels pour l'export",
     )
 
+    # Cles de pagination/format a exclure des filtres d'export.
+    _NON_FILTER_KEYS = frozenset({"export_format", "format", "page", "page_size"})
+
+    @classmethod
+    def build_filters(cls, query_params: dict[str, str]) -> dict[str, str]:
+        """Extrait les filtres d'export depuis les query params.
+
+        Exclut les cles de pagination et de format qui ne sont pas des filtres.
+        """
+        return {k: v for k, v in query_params.items() if k not in cls._NON_FILTER_KEYS}
+
 
 class ExportJobSerializer(serializers.ModelSerializer):
     """Serializer pour les jobs d'export."""

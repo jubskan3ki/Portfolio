@@ -87,6 +87,10 @@ export function useSwiper(options: UseSwiperOptions) {
     };
 
     const startAutoplay = () => {
+        // Évite d'empiler deux intervals (toggle autoplay rapide) : on repart toujours propre.
+        if (autoplayTimer) {
+            return;
+        }
         const slidesToShow = props.slidesToShow ?? 1;
         if (props.autoplay && props.slides > slidesToShow) {
             autoplayTimer = window.setInterval(() => {

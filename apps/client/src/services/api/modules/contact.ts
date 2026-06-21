@@ -33,10 +33,10 @@ export const contactKeys = {
 export const contactApi = {
     submitForm: (data: ContactForm): Promise<ContactResponse> => httpClient.post(API_ENDPOINTS.CONTACT.BASE, data),
 
-    getFaqs: (): Promise<FAQ[]> => httpClient.get(API_ENDPOINTS.CONTACT.FAQS),
+    getFaqs: (signal?: AbortSignal): Promise<FAQ[]> => httpClient.get(API_ENDPOINTS.CONTACT.FAQS, undefined, signal),
 
-    getInfo: (): Promise<ContactInfo | null> =>
-        httpClient.get<ContactInfo[]>(API_ENDPOINTS.CONTACT.INFO).then((list) => list[0] ?? null),
+    getInfo: (signal?: AbortSignal): Promise<ContactInfo | null> =>
+        httpClient.get<ContactInfo[]>(API_ENDPOINTS.CONTACT.INFO, undefined, signal).then((list) => list[0] ?? null),
 
     getMessages: async (filters?: ContactMessagesFilters): Promise<ContactMessage[]> => {
         const response = await httpClient.get<{ data: ContactMessage[] }>(
@@ -74,19 +74,19 @@ export const contactApi = {
 
     getStats: (): Promise<ContactStats> => httpClient.get(API_ENDPOINTS.CONTACT.STATS),
 
-    getAdminMessages: <T = unknown>(params: Record<string, unknown>): Promise<T> =>
-        httpClient.get(API_ENDPOINTS.CONTACT.BASE, params),
+    getAdminMessages: <T = unknown>(params: Record<string, unknown>, signal?: AbortSignal): Promise<T> =>
+        httpClient.get(API_ENDPOINTS.CONTACT.BASE, params, signal),
 
     markAsRead: (id: number | string): Promise<ContactMessage> =>
         httpClient.patch(API_ENDPOINTS.CONTACT.DETAIL(id), { isRead: true }),
 };
 
 export function useFaqs() {
-    return createStaticQuery(contactKeys.faqs(), contactApi.getFaqs);
+    return createStaticQuery(contactKeys.faqs(), ({ signal }) => contactApi.getFaqs(signal));
 }
 
 export function useContactInfo(options?: QueryOptions<ContactInfo>) {
-    return createStaticQuery(contactKeys.info(), contactApi.getInfo, options);
+    return createStaticQuery(contactKeys.info(), ({ signal }) => contactApi.getInfo(signal), options);
 }
 
 export function useContactInfoUpsert() {

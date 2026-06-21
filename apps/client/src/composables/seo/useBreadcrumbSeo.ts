@@ -51,12 +51,14 @@ export function useBreadcrumbSeo(options?: BreadcrumbSeoOptions): BreadcrumbSeoR
 
     useSchemaOrg([
         defineBreadcrumb({
-            itemListElement: items.value.map((item, index) => ({
-                '@type': 'ListItem' as const,
-                position: index + 1,
-                name: item.label,
-                item: `${SITE_URL}${item.to}`,
-            })),
+            // Getter réactif : le JSON-LD se recalcule au changement de route (navigation client SPA).
+            itemListElement: () =>
+                items.value.map((item, index) => ({
+                    '@type': 'ListItem' as const,
+                    position: index + 1,
+                    name: item.label,
+                    item: `${SITE_URL}${item.to}`,
+                })),
         }),
     ]);
 

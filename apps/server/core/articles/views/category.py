@@ -2,8 +2,7 @@
 
 from typing import Any
 
-from django.db.models import Count, Q, QuerySet
-from django.utils import timezone
+from django.db.models import QuerySet
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -48,13 +47,7 @@ class CategoryViewSet(BaseAPIViewSet):
         """
         qs = super().get_queryset()
         if self.action in ("list", "retrieve"):
-            now = timezone.now()
-            qs = qs.annotate(
-                published_count=Count(
-                    "articles",
-                    filter=Q(articles__is_published=True, articles__published_date__lte=now),
-                )
-            )
+            qs = qs.with_article_count()
             if not self.request.user.is_staff:
                 qs = qs.filter(published_count__gt=0)
             if self.action == "list":
@@ -69,8 +62,7 @@ class CategoryViewSet(BaseAPIViewSet):
     )
     def list(self, request, *args, **kwargs):
         """Récupère la liste des catégories d'articles."""
-        # Pas de cache_page: la reponse varie par is_staff (admin voit les vides)
-        # et doit refleter immediatement chaque publication d'article.
+        # Pas de cache_page : la reponse varie par is_staff et doit refleter immediatement chaque publication.
         return super().list(request, *args, **kwargs)
 
     @extend_schema(

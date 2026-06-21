@@ -3,9 +3,9 @@
         <header class="exp-card__header">
             <figure class="exp-card__logo">
                 <BaseImage
-                    v-if="logo"
+                    v-if="experience.logo"
                     :src="resolvedLogo"
-                    :alt="`Logo ${company}`"
+                    :alt="`Logo ${experience.company}`"
                     :width="48"
                     :height="48"
                     object-fit="contain"
@@ -16,17 +16,17 @@
             </figure>
 
             <div class="exp-card__info">
-                <h3 class="exp-card__title">{{ title }}</h3>
+                <h3 class="exp-card__title">{{ experience.title }}</h3>
                 <p class="exp-card__company">
-                    <span>{{ company }}</span>
-                    <span v-if="location" class="exp-card__location">
+                    <span>{{ experience.company }}</span>
+                    <span v-if="experience.location" class="exp-card__location">
                         <BaseIcon name="map-pin" :size="12" />
-                        {{ location }}
+                        {{ experience.location }}
                     </span>
                 </p>
             </div>
 
-            <time class="exp-card__date" :class="{ 'exp-card__date--current': isCurrent }" :datetime="startDate">
+            <time class="exp-card__date" :class="{ 'exp-card__date--current': isCurrent }" :datetime="experience.startDate">
                 <span v-if="isCurrent" class="exp-card__pulse"></span>
                 <span class="exp-card__date-text">{{ formattedPeriod }}</span>
             </time>
@@ -68,13 +68,6 @@
     import type { ExperienceCardProps } from '@/types/feature/experience';
 
     const props = withDefaults(defineProps<ExperienceCardProps>(), {
-        logo: '',
-        location: '',
-        endDate: '',
-        period: '',
-        description: '',
-        skills: () => [],
-        achievements: () => [],
         dateFormat: 'MMM yyyy',
         currentText: 'Présent',
     });
@@ -90,9 +83,14 @@
         smoothing: 0.06,
     });
 
-    const resolvedLogo = computed(() => resolveMediaUrl(props.logo));
+    const resolvedLogo = computed(() => resolveMediaUrl(props.experience.logo));
 
-    const isCurrent = computed(() => !props.endDate);
+    const isCurrent = computed(() => !props.experience.endDate);
+
+    // Priorité aux technologies (champ structuré) avec repli sur skills (champ libre).
+    const resolvedSkills = computed(() =>
+        props.experience.technologies?.length ? props.experience.technologies : props.experience.skills,
+    );
 
     const formatDate = (date: string): string => {
         if (!date) {
@@ -103,20 +101,20 @@
     };
 
     const formattedPeriod = computed(() => {
-        if (props.period) {
-            return props.period;
+        if (props.experience.period) {
+            return props.experience.period;
         }
-        const start = formatDate(props.startDate);
-        const end = props.endDate ? formatDate(props.endDate) : props.currentText;
+        const start = formatDate(props.experience.startDate);
+        const end = props.experience.endDate ? formatDate(props.experience.endDate) : props.currentText;
         return `${start} | ${end}`;
     });
 
     // Blank lines split paragraphs; single newlines become <br>. Inline markdown rendered per paragraph.
     const descriptionParagraphs = computed(() => {
-        if (!props.description) {
+        if (!props.experience.description) {
             return [];
         }
-        return props.description
+        return props.experience.description
             .split(/\n\s*\n/)
             .map((p) => p.trim())
             .filter(Boolean)
@@ -124,13 +122,8 @@
     });
 
     const skillsList = computed((): string[] => {
-        if (Array.isArray(props.skills)) {
-            return props.skills.map(String);
-        }
-        if (typeof props.skills === 'string' && props.skills.trim()) {
-            return props.skills.split(',').map((s) => s.trim());
-        }
-        return [];
+        const skills = resolvedSkills.value;
+        return Array.isArray(skills) ? skills.map(String) : [];
     });
 
     const displayedSkills = computed(() => skillsList.value.slice(0, MAX_SKILLS));
@@ -138,16 +131,8 @@
     const hiddenSkillsCount = computed(() => Math.max(0, skillsList.value.length - MAX_SKILLS));
 
     const achievementsList = computed((): string[] => {
-        if (Array.isArray(props.achievements)) {
-            return props.achievements.map(String);
-        }
-        if (typeof props.achievements === 'string' && props.achievements.trim()) {
-            return props.achievements
-                .split('\n')
-                .map((s) => s.trim())
-                .filter(Boolean);
-        }
-        return [];
+        const achievements = props.experience.achievements;
+        return Array.isArray(achievements) ? achievements.map(String) : [];
     });
 
     const displayedAchievements = computed(() => achievementsList.value.slice(0, MAX_ACHIEVEMENTS));

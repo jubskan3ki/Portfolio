@@ -31,7 +31,7 @@
             <div v-if="!preview" class="file-upload__placeholder">
                 <BaseIcon :name="placeholderIcon" :size="32" class="file-upload__icon" />
                 <p class="file-upload__text">{{ placeholderText }}</p>
-                <small class="file-upload__hint">{{ hint }}</small>
+                <small class="file-upload__hint">{{ displayHint }}</small>
             </div>
 
             <div v-else class="file-upload__preview">
@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, watch } from 'vue';
+    import { ref, computed, watch, onBeforeUnmount } from 'vue';
 
     import BaseIcon from '@/components/base/BaseIcon.vue';
 
@@ -65,7 +65,7 @@
         error: '',
         placeholderIcon: 'image',
         placeholderText: 'Cliquez ou glissez une image',
-        hint: 'PNG, JPG jusqu\'à 5MB',
+        hint: '',
         previewAlt: 'Aperçu',
         removeLabel: 'Supprimer l\'image',
     });
@@ -79,7 +79,19 @@
     const fileInputRef = ref<HTMLInputElement | null>(null);
     const isDragging = ref(false);
 
+    // Trace de la dernière object URL locale pour la révoquer sans dépendre du parent.
+    let createdObjectUrl: string | null = null;
+
+    const revokeCreatedObjectUrl = () => {
+        if (createdObjectUrl) {
+            URL.revokeObjectURL(createdObjectUrl);
+            createdObjectUrl = null;
+        }
+    };
+
     const ariaLabel = computed(() => (props.preview ? 'Modifier l\'image' : 'Ajouter une image'));
+
+    const displayHint = computed(() => props.hint || `PNG, JPG jusqu'à ${props.maxSize}MB`);
 
     const uploadClasses = computed(() => [
         'file-upload',
@@ -98,14 +110,12 @@
     };
 
     const validateFile = (file: File): boolean => {
-        // Check size
         const maxSizeBytes = props.maxSize * 1024 * 1024;
         if (file.size > maxSizeBytes) {
             emit('error', `Le fichier dépasse la taille maximale de ${props.maxSize}MB`);
             return false;
         }
 
-        // Check type
         if (props.accept && props.accept !== '*') {
             const acceptedTypes = props.accept.split(',').map((t) => t.trim());
             const fileType = file.type;
@@ -136,7 +146,10 @@
         }
 
         emit('update:modelValue', file);
+        // Révoque l'éventuelle URL précédente avant d'en créer une nouvelle.
+        revokeCreatedObjectUrl();
         const previewUrl = URL.createObjectURL(file);
+        createdObjectUrl = previewUrl;
         emit('update:preview', previewUrl);
     };
 
@@ -171,6 +184,7 @@
     };
 
     const handleRemove = () => {
+        revokeCreatedObjectUrl();
         emit('update:modelValue', null);
         emit('update:preview', '');
         if (fileInputRef.value) {
@@ -178,15 +192,17 @@
         }
     };
 
-    // Cleanup preview URL on unmount
+    // Révoque l'object URL si le parent remplace preview par une autre valeur.
     watch(
         () => props.preview,
-        (newVal, oldVal) => {
-            if (oldVal && oldVal.startsWith('blob:') && oldVal !== newVal) {
-                URL.revokeObjectURL(oldVal);
+        (newVal) => {
+            if (createdObjectUrl && createdObjectUrl !== newVal) {
+                revokeCreatedObjectUrl();
             }
         },
     );
+
+    onBeforeUnmount(revokeCreatedObjectUrl);
 </script>
 
 <style lang="scss" scoped>

@@ -4,9 +4,9 @@ import json
 import logging
 import re
 import secrets
-import time
 
 from django.conf import settings
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 
@@ -14,10 +14,11 @@ from utils.network import get_client_ip
 
 logger = logging.getLogger("django.security")
 
-# Admin login rate limiting: max attempts per IP within window
+# Admin login rate limiting: max attempts per IP within window.
+# Compteur stocké dans Redis (TTL = fenêtre) : borné en mémoire et partagé
+# entre tous les workers, contrairement à un dict module-level par process.
 _ADMIN_LOGIN_MAX_ATTEMPTS = 5
 _ADMIN_LOGIN_WINDOW = 300  # 5 minutes
-_admin_login_attempts: dict[str, list[float]] = {}
 
 BLOCKED_IPS: set[str] = getattr(settings, "BLOCKED_IPS", set())
 BLOCKED_USER_AGENTS: set[str] = getattr(settings, "BLOCKED_USER_AGENTS", {"BadBot", "MaliciousScraper", "Pykek"})
@@ -55,15 +56,41 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
         response["X-Frame-Options"] = "DENY"
         response["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        response["X-XSS-Protection"] = "1; mode=block"
+        # X-XSS-Protection: 0 = recommandation moderne (le filtre XSS legacy des
+        # navigateurs introduisait lui-meme des vulns ; on s'appuie sur la CSP).
+        response["X-XSS-Protection"] = "0"
 
         if not settings.DEBUG:
             response["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         if hasattr(request, "csp_nonce"):
-            response["Content-Security-Policy"] = f"script-src 'self' 'nonce-{request.csp_nonce}'"
+            response["Content-Security-Policy"] = self._build_csp(request.csp_nonce)
 
         return response
+
+    @staticmethod
+    def _build_csp(nonce: str) -> str:
+        """Construit une CSP restrictive.
+
+        script-src reste limite a 'self' + nonce (pas d'unsafe-inline). style-src
+        garde 'unsafe-inline' pour ne pas casser les styles inline de l'admin
+        Django (risque XSS via CSS marginal compare aux scripts). Les directives
+        structurelles (object/base/frame-ancestors) verrouillent le reste.
+        """
+        return "; ".join(
+            [
+                "default-src 'self'",
+                f"script-src 'self' 'nonce-{nonce}'",
+                "style-src 'self' 'unsafe-inline'",
+                "img-src 'self' data:",
+                "font-src 'self'",
+                "connect-src 'self'",
+                "object-src 'none'",
+                "base-uri 'none'",
+                "frame-ancestors 'none'",
+                "form-action 'self'",
+            ]
+        )
 
 
 class SecurityMiddleware(MiddlewareMixin):
@@ -73,20 +100,26 @@ class SecurityMiddleware(MiddlewareMixin):
         """Validate incoming requests."""
         ip = get_client_ip(request)
 
-        # Rate limit admin login attempts
-        if request.path == "/admin/login/" and request.method == "POST":
-            now = time.monotonic()
-            attempts = _admin_login_attempts.get(ip, [])
-            attempts = [t for t in attempts if now - t < _ADMIN_LOGIN_WINDOW]
-            if len(attempts) >= _ADMIN_LOGIN_MAX_ATTEMPTS:
+        # Rate limit admin login attempts (compteur Redis avec TTL = fenêtre).
+        # Django admin est monté sur /django-admin/ (cf. config/urls.py) ; /admin/
+        # est la SPA Nuxt et ne touche jamais ce backend. On vise donc le vrai
+        # chemin de login, sinon le brute-force Django admin n'est pas limité.
+        if request.path == "/django-admin/login/" and request.method == "POST":
+            cache_key = f"admin_login_attempts:{ip}"
+            attempts = cache.get_or_set(cache_key, 0, _ADMIN_LOGIN_WINDOW)
+            if attempts >= _ADMIN_LOGIN_MAX_ATTEMPTS:
                 logger.warning("Admin login rate limited: %s", ip)
                 msg = "Too many attempts. Try again later."
                 return JsonResponse(
                     {"errors": [{"code": "rate_limited", "message": msg}]},
                     status=429,
                 )
-            attempts.append(now)
-            _admin_login_attempts[ip] = attempts
+            try:
+                # incr préserve le TTL posé par get_or_set (fenêtre fixe).
+                cache.incr(cache_key)
+            except ValueError:
+                # La clé a expiré entre get_or_set et incr : on repart à 1.
+                cache.set(cache_key, 1, _ADMIN_LOGIN_WINDOW)
 
         if ip in BLOCKED_IPS:
             logger.warning("Blocked IP: %s", ip)

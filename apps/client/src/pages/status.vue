@@ -2,7 +2,13 @@
     <main class="status-page">
         <header class="status-header">
             <h1>Status</h1>
-            <div v-if="data" class="status-banner" :style="{ background: statusColor(overallStatus) }">
+            <div
+                v-if="data"
+                class="status-banner"
+                role="status"
+                aria-live="polite"
+                :style="{ background: statusColor(overallStatus) }"
+            >
                 {{ statusLabel(overallStatus) }}
             </div>
         </header>
@@ -18,14 +24,14 @@
                 <div class="metric">
                     <span class="metric-label">Disponibilité 30 j</span>
                     <span class="metric-value">
-                        {{ data.uptime_30d_pct !== null ? data.uptime_30d_pct.toFixed(3) + ' %' : '|' }}
+                        {{ data.uptime_30d_pct !== null ? data.uptime_30d_pct.toFixed(3) + ' %' : 'N/A' }}
                     </span>
                     <span class="metric-target">SLO {{ (data.slo_targets.availability * 100).toFixed(1) }} %</span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">Disponibilité 24 h</span>
                     <span class="metric-value">
-                        {{ data.uptime_1d_pct !== null ? data.uptime_1d_pct.toFixed(3) + ' %' : '|' }}
+                        {{ data.uptime_1d_pct !== null ? data.uptime_1d_pct.toFixed(3) + ' %' : 'N/A' }}
                     </span>
                 </div>
                 <div class="metric">
@@ -34,7 +40,7 @@
                         {{
                             data.latency_p95_seconds !== null
                                 ? (data.latency_p95_seconds * 1000).toFixed(0) + ' ms'
-                                : '|'
+                                : 'N/A'
                         }}
                     </span>
                     <span class="metric-target">
@@ -58,12 +64,12 @@
                 <h2>Incidents récents</h2>
                 <p v-if="data.incidents.length === 0" class="incidents-empty">Aucun incident enregistré récemment.</p>
                 <ul v-else>
-                    <li v-for="(incident, i) in data.incidents" :key="i">
+                    <li v-for="incident in incidents" :key="incident.key">
                         <span class="incident-name">{{ incident.name }}</span>
                         <span class="incident-severity" :class="'severity-' + incident.severity">
                             {{ incident.severity }}
                         </span>
-                        <time>{{ new Date(incident.started_at).toLocaleString('fr-FR') }}</time>
+                        <time>{{ incident.startedAtLabel }}</time>
                     </li>
                 </ul>
             </section>
@@ -91,6 +97,22 @@
     const statusColor = (s: string) =>
         ({ green: '#16a34a', amber: '#f59e0b', red: '#dc2626', unknown: '#6b7280' })[s] || '#6b7280';
 
+    // Formatter unique (zéro recréation par rendu) + timeZone fixe : rendu déterministe
+    // serveur/client, donc pas de mismatch d'hydratation lié au fuseau.
+    const incidentDateFormatter = new Intl.DateTimeFormat('fr-FR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+        timeZone: 'Europe/Paris',
+    });
+
+    const incidents = computed(() =>
+        (data.value?.incidents ?? []).map((incident) => ({
+            ...incident,
+            key: `${incident.name}-${incident.started_at}`,
+            startedAtLabel: incidentDateFormatter.format(new Date(incident.started_at)),
+        })),
+    );
+
     const overallStatus = computed(() => {
         if (!data.value) {
             return 'unknown';
@@ -116,7 +138,8 @@
 
     // Auto-refresh every 60s on client side.
     if (import.meta.client) {
-        setInterval(() => refresh(), 60_000);
+        const intervalId = setInterval(() => refresh(), 60_000);
+        onScopeDispose(() => clearInterval(intervalId));
     }
 </script>
 

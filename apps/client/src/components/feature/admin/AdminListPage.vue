@@ -27,13 +27,12 @@
             @bulk-delete="onBulkDelete"
         >
             <template #toolbar-actions>
-                <BaseButton variant="outline" size="icon" @click="refresh">
+                <BaseButton variant="outline" size="icon" aria-label="Rafraîchir" @click="refresh">
                     <BaseIcon name="refresh-cw" :size="16" />
                 </BaseButton>
                 <slot name="toolbar-extra"></slot>
             </template>
 
-            <!-- Forward all cell-* slots -->
             <template v-for="col in columns" :key="col.key" #[`cell-${col.key}`]="slotProps">
                 <slot :name="`cell-${col.key}`" v-bind="slotProps">
                     {{ slotProps.value }}
@@ -104,7 +103,6 @@
         bulkDeleteTitle: 'Supprimer la sélection ?',
     });
 
-    // SEO - noindex for admin pages
     useSeo({
         title: props.seoTitle,
         description: props.seoDescription,
@@ -116,7 +114,7 @@
 
     const dataList = useDataList<T>({
         queryKey: props.queryKey,
-        queryFn: props.queryFn as (params: ListParams) => Promise<never>,
+        queryFn: props.queryFn as (params: ListParams, signal?: AbortSignal) => Promise<never>,
         defaultSort: props.defaultSort,
         defaultSortOrder: props.defaultSortOrder,
         sortFieldMap: props.sortFieldMap,
@@ -142,7 +140,6 @@
 
     const { items, isLoading, pagination, deletion, bulkDeletion, refresh } = dataList;
 
-    // Delete confirmation messages
     const deleteItemMessage = computed(() => {
         const item = deletion?.itemToDelete.value;
         if (!item || !props.deleteMessage) {
@@ -159,7 +156,6 @@
         return `Cette action est irréversible. ${count} élément(s) seront supprimés.`;
     });
 
-    // Navigation handlers
     const onView = (item: DataItem) => {
         if (props.viewRoute) {
             const typed = props.typeGuard(item);
@@ -181,7 +177,6 @@
         bulkDeletion?.confirm(typedItems);
     };
 
-    // Expose for parent component access (deletion/bulkDeletion needed when overriding #actions slot)
     defineExpose({ refresh, items, selection: dataList.selection, deletion, bulkDeletion });
 </script>
 

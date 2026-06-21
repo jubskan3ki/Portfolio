@@ -9,8 +9,11 @@ from datetime import timedelta
 from typing import Any
 
 import requests
+from django.core.exceptions import ValidationError
 from django.db import connection, models, transaction
 from django.utils import timezone
+
+from utils.validators import validate_webhook_url
 
 from ..models import Webhook, WebhookDelivery
 
@@ -49,13 +52,38 @@ class WebhookDispatcher:
     }
 
     @classmethod
+    def create_deliveries(
+        cls,
+        event_type: str,
+        payload: dict[str, Any],
+        event_id: uuid.UUID | None = None,
+    ) -> list[WebhookDelivery]:
+        """Cree les livraisons PENDING pour un evenement, sans rien envoyer.
+
+        Sert au fan-out : la creation (DB) est isolee de l'envoi (HTTP), confie
+        a une tache Celery par livraison.
+
+        Returns:
+            Liste des livraisons creees
+        """
+        if event_id is None:
+            event_id = uuid.uuid4()
+
+        webhooks = list(Webhook.objects.for_event(event_type))
+        return cls._create_pending_deliveries(webhooks, event_id, event_type, payload)
+
+    @classmethod
     def dispatch(
         cls,
         event_type: str,
         payload: dict[str, Any],
         event_id: uuid.UUID | None = None,
     ) -> list[WebhookDelivery]:
-        """Dispatch un evenement a tous les webhooks abonnes.
+        """Dispatch synchrone : cree les livraisons puis les envoie en serie.
+
+        Conserve pour les appels directs (tests, commandes). Le chemin de
+        production passe par create_deliveries + fan-out Celery (une tache par
+        livraison) afin qu'un endpoint lent ou en echec n'impacte pas les autres.
 
         Args:
             event_type: Type d'evenement (ex: article.created)
@@ -65,11 +93,7 @@ class WebhookDispatcher:
         Returns:
             Liste des livraisons creees
         """
-        if event_id is None:
-            event_id = uuid.uuid4()
-
-        webhooks = list(Webhook.objects.for_event(event_type))
-        deliveries = cls._create_pending_deliveries(webhooks, event_id, event_type, payload)
+        deliveries = cls.create_deliveries(event_type, payload, event_id)
 
         # HTTP sends run outside the transaction: holding an advisory lock across
         # blocking network I/O would serialize concurrent dispatches unnecessarily.
@@ -161,16 +185,20 @@ class WebhookDispatcher:
         delivery.response_body = response_body[:1000]
         delivery.delivered_at = timezone.now()
         delivery.duration_ms = duration_ms
-        delivery.save(
-            update_fields=[
-                "status",
-                "response_status",
-                "response_body",
-                "delivered_at",
-                "duration_ms",
-            ]
-        )
-        cls._increment_webhook_stats(delivery.webhook, success=True)
+        # save() du delivery + incrementation des compteurs dans la meme
+        # transaction : un crash entre les deux laisserait sinon le delivery
+        # marque succes mais les stats du webhook non mises a jour.
+        with transaction.atomic():
+            delivery.save(
+                update_fields=[
+                    "status",
+                    "response_status",
+                    "response_body",
+                    "delivered_at",
+                    "duration_ms",
+                ]
+            )
+            cls._increment_webhook_stats(delivery.webhook, success=True)
 
     @classmethod
     def _mark_delivery_failed(
@@ -193,17 +221,18 @@ class WebhookDispatcher:
         else:
             delivery.status = WebhookDelivery.Status.FAILED
 
-        delivery.save(
-            update_fields=[
-                "attempts",
-                "response_status",
-                "response_body",
-                "duration_ms",
-                "status",
-                "next_retry_at",
-            ]
-        )
-        cls._increment_webhook_stats(delivery.webhook, success=False)
+        with transaction.atomic():
+            delivery.save(
+                update_fields=[
+                    "attempts",
+                    "response_status",
+                    "response_body",
+                    "duration_ms",
+                    "status",
+                    "next_retry_at",
+                ]
+            )
+            cls._increment_webhook_stats(delivery.webhook, success=False)
 
     @staticmethod
     def _increment_webhook_stats(webhook: Webhook, *, success: bool) -> None:
@@ -227,6 +256,17 @@ class WebhookDispatcher:
             True si succes, False sinon
         """
         webhook = delivery.webhook
+
+        # Anti-SSRF a l'envoi : l'URL est validee a la creation, mais la
+        # resolution DNS peut avoir change depuis (rebinding / DNS qui pointe
+        # desormais en interne). On revalide juste avant l'appel reseau.
+        try:
+            validate_webhook_url(webhook.url)
+        except ValidationError as exc:
+            logger.warning("Webhook URL refusee (anti-SSRF): %s -> %s", webhook.url, exc)
+            cls._mark_delivery_failed(delivery, None, "URL refusee (anti-SSRF)", 0)
+            return False
+
         now = timezone.now()
         payload_json = json.dumps(
             {
@@ -253,11 +293,15 @@ class WebhookDispatcher:
         start_time = time.perf_counter()
 
         try:
+            # allow_redirects=False : un endpoint ne doit pas pouvoir rediriger
+            # la livraison vers une cible interne (169.254.169.254, etc.), ce qui
+            # contournerait la validation anti-SSRF de l'URL configuree.
             response = requests.post(
                 webhook.url,
                 data=payload_json,
                 headers=headers,
                 timeout=cls.TIMEOUT,
+                allow_redirects=False,
             )
             duration_ms = int((time.perf_counter() - start_time) * 1000)
 
@@ -348,15 +392,43 @@ class WebhookDispatcher:
             Nombre de livraisons retentees
         """
         now = timezone.now()
+        # Filtre webhook__is_active en SQL : evite de charger des livraisons
+        # rattachees a des webhooks desactives pour les ignorer ensuite.
         deliveries = WebhookDelivery.objects.filter(
             status=WebhookDelivery.Status.RETRYING,
             next_retry_at__lte=now,
+            webhook__is_active=True,
         ).select_related("webhook")
 
         count = 0
         for delivery in deliveries:
-            if delivery.webhook.is_active:
-                cls.send_delivery(delivery)
-                count += 1
+            cls.send_delivery(delivery)
+            count += 1
 
+        return count
+
+    @classmethod
+    def enqueue_due_retries(cls) -> int:
+        """Enfile une tache d'envoi par livraison RETRYING due.
+
+        Fan-out du retry periodique : chaque envoi HTTP est isole dans sa propre
+        tache Celery, evitant qu'un lot volumineux ne sature une unique tache
+        Beat (et ne depasse son soft_time_limit).
+
+        Returns:
+            Nombre de livraisons enfilees
+        """
+        from ..tasks import send_webhook_delivery
+
+        now = timezone.now()
+        due_ids = WebhookDelivery.objects.filter(
+            status=WebhookDelivery.Status.RETRYING,
+            next_retry_at__lte=now,
+            webhook__is_active=True,
+        ).values_list("pk", flat=True)
+
+        count = 0
+        for delivery_id in due_ids:
+            send_webhook_delivery.delay(str(delivery_id))
+            count += 1
         return count

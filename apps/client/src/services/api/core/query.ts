@@ -1,3 +1,4 @@
+import type { QueryFunction } from '@tanstack/vue-query';
 import { useQuery } from '@tanstack/vue-query';
 import type { MaybeRef } from 'vue';
 import { computed, unref } from 'vue';
@@ -15,7 +16,7 @@ const QUERY_PRESETS: Record<QueryPreset, { staleTime: number; refetchInterval?: 
 function createQuery<TData, TSelect = TData>(
     preset: QueryPreset,
     queryKey: MaybeRef<readonly unknown[]>,
-    queryFn: () => Promise<TData>,
+    queryFn: QueryFunction<TData>,
     options?: QueryOptions<TData, TSelect>,
 ) {
     return useQuery({
@@ -28,24 +29,24 @@ function createQuery<TData, TSelect = TData>(
 
 export const createListQuery = <TData, TSelect = TData>(
     queryKey: MaybeRef<readonly unknown[]>,
-    queryFn: () => Promise<TData>,
+    queryFn: QueryFunction<TData>,
     options?: QueryOptions<TData, TSelect>,
 ) => createQuery<TData, TSelect>('list', queryKey, queryFn, options);
 
 export const createDetailQuery = <TData, TSelect = TData>(
     queryKey: MaybeRef<readonly unknown[]>,
-    queryFn: () => Promise<TData>,
+    queryFn: QueryFunction<TData>,
     options?: QueryOptions<TData, TSelect>,
 ) => createQuery<TData, TSelect>('detail', queryKey, queryFn, options);
 
 export const createStaticQuery = <TData, TSelect = TData>(
     queryKey: MaybeRef<readonly unknown[]>,
-    queryFn: () => Promise<TData>,
+    queryFn: QueryFunction<TData>,
     options?: QueryOptions<TData, TSelect>,
 ) => createQuery<TData, TSelect>('static', queryKey, queryFn, options);
 
 export const createRealtimeQuery = <TData, TSelect = TData>(
     queryKey: MaybeRef<readonly unknown[]>,
-    queryFn: () => Promise<TData>,
+    queryFn: QueryFunction<TData>,
     options?: QueryOptions<TData, TSelect>,
 ) => createQuery<TData, TSelect>('realtime', queryKey, queryFn, options);

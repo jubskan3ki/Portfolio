@@ -8,6 +8,8 @@ from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from utils.network import get_client_ip
+
 logger = logging.getLogger("security")
 
 
@@ -47,7 +49,7 @@ class ThrottledAnonymousCreate(AllowAnonymousCreate):
     """AllowAnonymousCreate with IP abuse detection | blocks after threshold."""
 
     ABUSE_THRESHOLD = 20
-    BLOCK_DURATION = 86400  # 24h
+    BLOCK_DURATION = 86400
 
     def has_permission(self, request: Request, view: APIView) -> bool:
         if request.method == "POST":
@@ -62,11 +64,8 @@ class ThrottledAnonymousCreate(AllowAnonymousCreate):
         return super().has_permission(request, view)
 
     def _get_client_ip(self, request: Request) -> str:
-        """Get client IP from request."""
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            return x_forwarded_for.split(",")[0].strip()
-        return request.META.get("REMOTE_ADDR", "unknown")
+        """Get client IP from request (proxy-safe, voir utils.network)."""
+        return get_client_ip(request) or "unknown"
 
     def _is_blocked_ip(self, request: Request) -> bool:
         """Check if IP is blocked due to abuse."""
@@ -77,8 +76,7 @@ class ThrottledAnonymousCreate(AllowAnonymousCreate):
     @classmethod
     def record_abuse(cls, request: Request) -> None:
         """Record abuse from IP; atomic incr() prevents race conditions."""
-        ip_header = request.META.get("HTTP_X_FORWARDED_FOR")
-        ip = ip_header.split(",")[0].strip() if ip_header else request.META.get("REMOTE_ADDR", "unknown")
+        ip = get_client_ip(request) or "unknown"
 
         abuse_key = f"abuse_count:{ip}"
 

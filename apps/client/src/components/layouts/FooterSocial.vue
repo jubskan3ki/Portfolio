@@ -8,6 +8,7 @@
                     :to="social.url"
                     external
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="footer-social__link"
                     :aria-label="`Suivre sur ${social.name}`"
                 >

@@ -1,5 +1,5 @@
 <template>
-    <li :class="itemClasses" role="none" @mouseenter="emit('mouseenter', index)" @mouseleave="emit('mouseleave')">
+    <li :class="itemClasses" role="none">
         <NuxtLink :to="item.path" :class="linkClasses" :aria-current="isActive ? 'page' : undefined" role="menuitem">
             <span v-if="item.icon" class="navbar-item__icon" aria-hidden="true">
                 <BaseIcon :name="item.icon" :size="16" />
@@ -22,11 +22,6 @@
     type Props = NavbarItemProps;
 
     const props = defineProps<Props>();
-
-    const emit = defineEmits<{
-        mouseenter: [index: number];
-        mouseleave: [];
-    }>();
 
     const itemClasses = computed(() => [
         'navbar-item',

@@ -12,6 +12,7 @@ from django.db import models
 from django.utils import timezone
 
 from utils.models import AutoSlugMixin
+from utils.security.svg import sanitize_svg_upload
 from utils.upload import make_upload_to
 
 from .managers import (
@@ -166,6 +167,11 @@ class Stack(AutoSlugMixin, models.Model):
 
     def __str__(self) -> str:
         return str(self.name)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Assainit un logo SVG uploade (anti-XSS) avant la sauvegarde."""
+        sanitize_svg_upload(self.logo)
+        super().save(*args, **kwargs)
 
     @property
     def experience_months(self) -> int:

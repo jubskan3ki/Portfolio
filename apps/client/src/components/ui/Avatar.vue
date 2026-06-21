@@ -29,7 +29,7 @@
             class="avatar__status"
             :class="[`avatar__status--${status}`]"
             :aria-label="statusLabel"
-            role="status"
+            role="img"
         ></span>
 
         <div v-if="$slots.badge" class="avatar__badge">

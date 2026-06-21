@@ -50,12 +50,13 @@
                 </div>
                 <div class="image-item__info">
                     <input
-                        v-model="img.key"
+                        :value="img.key"
                         type="text"
                         class="image-item__key"
                         :placeholder="img.file.name"
                         title="Clé d'image (utilisée dans le JSON)"
                         aria-label="Clé d'image"
+                        @input="$emit('updateImageKey', { index, value: ($event.target as HTMLInputElement).value })"
                     />
                     <small class="image-item__size">{{ formatFileSize(img.file.size) }}</small>
                 </div>
@@ -92,6 +93,7 @@
     const emit = defineEmits<{
         addImages: [files: File[]];
         removeImage: [index: number];
+        updateImageKey: [payload: { index: number; value: string }];
     }>();
 
     const isDraggingImages = ref(false);

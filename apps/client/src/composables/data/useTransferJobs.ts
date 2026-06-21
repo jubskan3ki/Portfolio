@@ -17,11 +17,13 @@ export function useTransferJobs() {
         refetch: refetchJobs,
     } = useQuery({
         queryKey: TRANSFER_QUERY_KEYS.jobs,
-        queryFn: async (): Promise<TransferJob[]> => {
-            const response = (await transferApi.getJobs()) as unknown as
-                | { results?: Array<ExportJob | ImportJob> }
-                | Array<ExportJob | ImportJob>;
-            const raw = Array.isArray(response) ? response : (response.results ?? []);
+        queryFn: async ({ signal }): Promise<TransferJob[]> => {
+            // Le backend renvoie { exports, imports } : on fusionne et on trie par date décroissante.
+            const response = await transferApi.getJobs(signal);
+            const raw = [...(response.exports ?? []), ...(response.imports ?? [])] as unknown as Array<
+                ExportJob | ImportJob
+            >;
+            raw.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
             return raw.slice(0, 10).map((job): TransferJob => {
                 const type = inferJobType(job);

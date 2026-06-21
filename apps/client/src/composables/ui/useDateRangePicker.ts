@@ -64,7 +64,14 @@ export function useDateRangePicker({
         }
     };
 
+    const handleEscape = (event: KeyboardEvent) => {
+        if (isOpen.value && event.key === 'Escape') {
+            cancel();
+        }
+    };
+
     useEventListener(document, 'click', handleClickOutside);
+    useEventListener(document, 'keydown', handleEscape);
 
     onMounted(() => {
         selection.initializeDefaultRange();

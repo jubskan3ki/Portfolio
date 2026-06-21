@@ -6,6 +6,7 @@
             type="button"
             class="search-filters__btn"
             :class="[`search-filters__btn--${group.type}`, { 'is-active': activeFilter === group.type }]"
+            :aria-pressed="activeFilter === group.type"
             @click="$emit('toggle', group.type)"
         >
             <BaseIcon :name="group.icon" :size="14" />

@@ -22,7 +22,7 @@
             @bulk-delete="handleBulkDelete"
         >
             <template #toolbar-actions>
-                <BaseButton variant="outline" size="icon" @click="refresh">
+                <BaseButton variant="outline" size="icon" aria-label="Rafraîchir" @click="refresh">
                     <BaseIcon name="refresh-cw" :size="16" />
                 </BaseButton>
             </template>
@@ -66,13 +66,16 @@
                 <div
                     v-if="showViewModal"
                     class="modal-overlay"
-                    role="button"
-                    tabindex="0"
-                    aria-label="Fermer"
                     @click="showViewModal = false"
-                    @keydown.enter="showViewModal = false"
                 >
-                    <div class="modal-content modal-content--lg" @click.stop>
+                    <div
+                        ref="modalRef"
+                        class="modal-content modal-content--lg"
+                        role="dialog"
+                        aria-modal="true"
+                        :aria-label="selectedMessage?.subject || 'Message'"
+                        @click.stop
+                    >
                         <div class="message-detail">
                             <div class="message-detail__header">
                                 <h2>{{ selectedMessage?.subject }}</h2>
@@ -151,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { nextTick, ref, watch } from 'vue';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
@@ -160,6 +163,7 @@
     import ConfirmDialog from '@/components/feedback/ConfirmDialog.vue';
     import Badge from '@/components/ui/Badge.vue';
     import { useEscapeKey } from '@/composables';
+    import { useFocusTrap } from '@/composables/accessibility/useFocusTrap';
     import { useDataList } from '@/composables/data/useDataList';
     import { useSeo } from '@/composables/seo/useSeo';
     import { useAlert } from '@/composables/ui/useAlert';
@@ -171,12 +175,10 @@
     import type { ListParams, BulkDeleteResult } from '@/types/composables';
     import type { AdminMessage, DataItem, PaginatedResponse } from '@/types/feature/admin';
 
-    /** Type-safe cast for template use */
     const typed = (item: DataItem) => asAdminMessage(item);
 
     definePageMeta({ layout: 'admin', title: 'Messages' });
 
-    // SEO - noindex for admin pages
     useSeo({
         title: 'Gestion des Messages',
         description: 'Administration des messages de contact',
@@ -185,17 +187,25 @@
 
     const { error: showError, success: showSuccess } = useAlert();
 
-    // View modal state (separate from delete modal)
     const showViewModal = ref(false);
     const selectedMessage = ref<AdminMessage | null>(null);
+    const modalRef = ref<HTMLElement | null>(null);
 
-    // Close modal on Escape (auto cleanup)
     useEscapeKey(
         () => {
             showViewModal.value = false;
         },
         { enabled: showViewModal },
     );
+
+    const { activate: activateFocusTrap, deactivate: deactivateFocusTrap } = useFocusTrap(modalRef);
+    watch(showViewModal, (open) => {
+        if (open) {
+            nextTick(() => activateFocusTrap());
+        } else {
+            deactivateFocusTrap();
+        }
+    });
 
     const columns = [
         { key: 'sender', label: 'Expéditeur', width: '25%' },
@@ -215,7 +225,6 @@
         },
     ];
 
-    // Utilisation du composable generique useDataList
     const {
         items: messages,
         isLoading,
@@ -227,7 +236,7 @@
         refresh,
     } = useDataList<AdminMessage>({
         queryKey: ['admin', 'messages'],
-        queryFn: (params: ListParams) => {
+        queryFn: (params: ListParams, signal?: AbortSignal) => {
             const queryParams: Record<string, unknown> = {
                 page: params.page,
                 page_size: params.pageSize,
@@ -236,7 +245,7 @@
             if (params.search) {
                 queryParams.search = params.search;
             }
-            return contactApi.getAdminMessages<PaginatedResponse<AdminMessage>>(queryParams);
+            return contactApi.getAdminMessages<PaginatedResponse<AdminMessage>>(queryParams, signal);
         },
         defaultSort: 'created_at',
         defaultSortOrder: 'desc',
@@ -274,7 +283,6 @@
             .slice(0, 2);
     };
 
-    // Format date avec heure pour les messages
     const formatMessageDate = (date: unknown) => {
         if (!date) {
             return '';
@@ -282,7 +290,6 @@
         return formatDate(String(date), 'D MMM YYYY à HH:mm');
     };
 
-    // Handlers pour le DataTable
     const handleSort = (key: string, order: 'asc' | 'desc') => {
         sorting.setSort(key, order);
     };
@@ -292,7 +299,6 @@
             search.setSearch(payload.search);
         }
         if (payload.filters !== undefined) {
-            // Filters are handled via URL params or separate state
             refresh();
         }
     };
@@ -320,11 +326,10 @@
                 await contactApi.markAsRead(String(message.id));
                 message.isRead = true;
             } catch {
-                // Echec silencieux | le marquage comme lu est non-critique
+                // Echec silencieux : le marquage comme lu est non-critique
             }
         }
 
-        // Afficher la modale seulement après avoir marqué comme lu
         selectedMessage.value = message;
         showViewModal.value = true;
     };

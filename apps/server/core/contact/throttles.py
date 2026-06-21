@@ -26,16 +26,14 @@ class ContactsThrottle(BaseModuleThrottle):
     write_rate = "5/hour"
 
     def get_cache_key(self, request: Request, _view: APIView) -> str:
-        """Genere une cle de cache incluant l'email pour les POST."""
+        """Genere une cle de cache basee sur l'identite reseau du client.
+
+        L'email (controle par le client) n'entre PAS dans la cle : sinon
+        l'attaquant obtient un quota neuf par email et contourne la limite
+        par IP. La limite 5/h reste ainsi appliquee par IP.
+        """
         ident = self.get_ident(request)
         rate_type = "read" if request.method in {"GET", "HEAD", "OPTIONS"} else "write"
-
-        if request.method == "POST" and hasattr(request, "data"):
-            data = cast(dict[str, Any], request.data)
-            email = data.get("email", "")
-            if email:
-                return f"throttle_{self.scope}_{rate_type}_{ident}_{email}"
-
         return f"throttle_{self.scope}_{rate_type}_{ident}"
 
     def allow_request(self, request: Request, view: APIView) -> bool:
@@ -67,8 +65,14 @@ class ContactsThrottle(BaseModuleThrottle):
         )
 
         abuse_key = f"contact_abuse:{ip}"
-        count: int = cache.get(abuse_key, 0) + 1
-        cache.set(abuse_key, count, 86400)
+        # incr atomique (fenetre fixe 24h au premier add) plutot qu'un get+set racy qui perd des increments sous burst.
+        cache.add(abuse_key, 0, 86400)
+        try:
+            count = cache.incr(abuse_key)
+        except ValueError:
+            # Cle expiree entre add et incr : on repart a 1.
+            cache.set(abuse_key, 1, 86400)
+            count = 1
 
         if count >= 10:
             logger.error(

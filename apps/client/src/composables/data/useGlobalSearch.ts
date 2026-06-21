@@ -40,12 +40,12 @@ export function useGlobalSearch(options: UseGlobalSearchOptions = {}) {
         error: queryError,
     } = useQuery({
         queryKey: computed(() => searchKeys.unified(queryParams.value)),
-        queryFn: async (): Promise<SearchResult[]> => {
+        queryFn: async ({ signal }): Promise<SearchResult[]> => {
             const params = queryParams.value;
             if (params.q.length < SEARCH_DEFAULTS.MIN_QUERY_LENGTH) {
                 return [];
             }
-            const response = await searchApi.query(params);
+            const response = await searchApi.query(params, signal);
             return (response.data ?? []).map(mapToUiResult(mode));
         },
         enabled: computed(() => queryParams.value.q.length >= SEARCH_DEFAULTS.MIN_QUERY_LENGTH),

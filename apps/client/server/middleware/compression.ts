@@ -47,6 +47,19 @@ export default defineEventHandler((event) => {
     const url = event.node.req.url ?? '';
     if (url.startsWith('/api/') || url.startsWith('/__nuxt_error')) return;
 
+    // Assets statiques : non-HTML, déjà compressés (compressPublicAssets) et servis par nginx en prod.
+    // On court-circuite avant d'intercepter res.write/end pour ne pas bufferiser des bundles en mémoire.
+    if (
+        url.startsWith('/_nuxt/')
+        || url.startsWith('/_ipx/')
+        || url.startsWith('/_fonts/')
+        || url.startsWith('/fonts/')
+        || url.startsWith('/images/')
+        || url.endsWith('.svg')
+    ) {
+        return;
+    }
+
     const res = event.node.res;
     const originalWrite = res.write;
     const originalEnd = res.end;

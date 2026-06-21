@@ -1,21 +1,25 @@
-<!--
-  ArticleActiveFilters.vue
-  Composant pour afficher et gérer les filtres actifs
--->
 <template>
     <Card v-if="hasActiveFilters" class="article-active-filters">
         <h3 class="article-active-filters__title">{{ title }}</h3>
         <div class="article-active-filters__chips">
             <div v-if="activeCategory" class="article-active-filters__chip">
                 <span class="article-active-filters__chip-text">{{ getCategoryName(activeCategory) }}</span>
-                <button class="article-active-filters__chip-remove" @click="removeCategory">
+                <button
+                    class="article-active-filters__chip-remove"
+                    :aria-label="`Retirer le filtre ${getCategoryName(activeCategory)}`"
+                    @click="removeCategory"
+                >
                     <BaseIcon name="close" :size="14" />
                 </button>
             </div>
 
             <div v-for="tag in activeTags" :key="`tag-${tag}`" class="article-active-filters__chip">
                 <span class="article-active-filters__chip-text">{{ getTagName(tag) }}</span>
-                <button class="article-active-filters__chip-remove" @click="removeTag(tag)">
+                <button
+                    class="article-active-filters__chip-remove"
+                    :aria-label="`Retirer le filtre ${getTagName(tag)}`"
+                    @click="removeTag(tag)"
+                >
                     <BaseIcon name="close" :size="14" />
                 </button>
             </div>
@@ -54,19 +58,15 @@
         return props.activeCategory || (props.activeTags && props.activeTags.length > 0);
     });
 
-    // Type guard pour vérifier si un objet a une propriété name
     const hasName = (obj: unknown): obj is { name: string } => {
         return obj !== null && typeof obj === 'object' && 'name' in obj;
     };
 
-    // Obtenir le nom de la catégorie à partir de son ID
     const getCategoryName = (categoryId: string | number | object): string => {
-        // Si c'est déjà un objet avec une propriété name, utiliser directement
         if (hasName(categoryId)) {
             return categoryId.name;
         }
 
-        // Sinon, chercher dans les catégories
         const category = props.categories.find(
             (c) => (c.id && c.id === categoryId) || (c.slug && c.slug === categoryId),
         );
@@ -74,13 +74,11 @@
         return category ? category.name : String(categoryId);
     };
 
-    // Obtenir le nom du tag à partir de son ID
     const getTagName = (tagId: string | number): string => {
         const tag = props.tags.find((t) => t.id === tagId);
         return tag ? tag.name : String(tagId);
     };
 
-    // Actions
     const removeCategory = () => {
         emit('removeCategory');
     };

@@ -2,10 +2,8 @@
     <div class="error-page" ref="pageRef">
         <a href="#error-main" class="skip-link">Aller au contenu principal</a>
 
-        <!-- Background dots -->
         <div class="error-page__dots"></div>
 
-        <!-- Floating shapes with parallax -->
         <div class="error-page__shapes">
             <span
                 v-for="shape in shapes"
@@ -23,14 +21,11 @@
             />
         </div>
 
-        <!-- Orbs -->
         <div class="error-page__orb error-page__orb--1"></div>
         <div class="error-page__orb error-page__orb--2"></div>
 
-        <!-- Content -->
         <main id="error-main" class="error-page__content">
             <div class="error-page__card">
-                <!-- Error code with bug -->
                 <div class="error-page__hero">
                     <span class="error-page__code">{{ statusCode }}</span>
                     <div class="error-page__bug">
@@ -38,13 +33,10 @@
                     </div>
                 </div>
 
-                <!-- Title -->
                 <h1 class="error-page__title">{{ errorTitle }}</h1>
 
-                <!-- Message -->
                 <p class="error-page__message">{{ errorMessage }}</p>
 
-                <!-- Actions -->
                 <div class="error-page__actions">
                     <BaseButton :to="ROUTES.HOME.path" variant="primary" size="lg">
                         <BaseIcon name="home" size="sm" />
@@ -56,7 +48,6 @@
                     </BaseButton>
                 </div>
 
-                <!-- Links -->
                 <nav class="error-page__nav">
                     <BaseLink :to="ROUTES.PROJECTS.path">Projets</BaseLink>
                     <BaseLink :to="ROUTES.BLOG.path">Blog</BaseLink>
@@ -75,7 +66,6 @@
     import BaseLink from '@/components/base/BaseLink.vue';
     import { ROUTES } from '@/config/routes';
 
-    // Props
     const props = withDefaults(
         defineProps<{
             error?: { statusCode?: number; statusMessage?: string };
@@ -93,10 +83,9 @@
     const pageRef = ref<HTMLElement | null>(null);
     const shapeRefs = ref<Map<number, HTMLElement>>(new Map());
 
-    // Status code | SSR-safe (no client-only query param logic to avoid hydration mismatch)
+    // SSR-safe : pas de logique client (query param) pour éviter le hydration mismatch.
     const statusCode = computed(() => props.error?.statusCode || 404);
 
-    // Error config
     const errors: Record<number, { title: string; message: string }> = {
         400: { title: 'Requête invalide', message: 'La syntaxe de la requête est incorrecte.' },
         401: { title: 'Non autorisé', message: 'Authentification requise.' },
@@ -109,7 +98,6 @@
     const errorTitle = computed(() => errors[statusCode.value]?.title || 'Erreur');
     const errorMessage = computed(() => errors[statusCode.value]?.message || 'Une erreur est survenue.');
 
-    // Icons for each error type (Lucide icons)
     const errorIcons: Record<number, string> = {
         400: 'bug',
         401: 'shield-alert',
@@ -121,7 +109,6 @@
 
     const currentIcon = computed(() => errorIcons[statusCode.value] ?? 'bug');
 
-    // Shapes
     const shapes = [
         { id: 1, type: 'circle', size: 60, x: 5, y: 10, depth: 20, opacity: 0.4 },
         { id: 2, type: 'square', size: 40, x: 85, y: 15, depth: 35, opacity: 0.3 },
@@ -135,7 +122,6 @@
         if (el) shapeRefs.value.set(id, el);
     };
 
-    // Parallax
     let targetX = 0;
     let targetY = 0;
     let currentX = 0;
@@ -198,17 +184,26 @@
         }
     };
 
+    let bootHandle: ReturnType<typeof setTimeout> | number | undefined;
+
     onMounted(() => {
         prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => startParallax());
+            bootHandle = requestIdleCallback(() => startParallax());
         } else {
-            setTimeout(() => startParallax(), 300);
+            bootHandle = setTimeout(() => startParallax(), 300);
         }
         document.addEventListener('visibilitychange', handleVisibilityChange);
     });
 
     onBeforeUnmount(() => {
+        if (bootHandle !== undefined) {
+            if ('requestIdleCallback' in window) {
+                cancelIdleCallback(bootHandle as number);
+            } else {
+                clearTimeout(bootHandle);
+            }
+        }
         stopParallax();
         document.removeEventListener('visibilitychange', handleVisibilityChange);
     });

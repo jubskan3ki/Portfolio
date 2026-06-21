@@ -1,12 +1,15 @@
 import { useDebounceFn } from '@vueuse/core';
 import type { Ref } from 'vue';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, toRaw, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { TIMEOUTS } from '@/config/constants';
 import { filterPresets } from '@/config/filterPresets';
 
 import type { FilterFieldConfig, UseFiltersOptions } from '@/types/composables/data';
+
+// structuredClone(toRaw(...)) au lieu de JSON : plus rapide, sans conversion en string.
+const snapshot = <V>(value: V): V => structuredClone(toRaw(value));
 
 function isFilterActive(value: unknown, defaultValue: unknown): boolean {
     if (Array.isArray(value)) {
@@ -60,6 +63,7 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
                 if (Array.isArray(defaultValue)) {
                     // Supports ?tags=Vue&tags=React and ?tags=Vue,React
                     if (Array.isArray(queryValue)) {
+
                         (filters.value as Record<string, unknown>)[key] = queryValue.map(String);
                     } else if (typeof queryValue === 'string' && queryValue.includes(',')) {
                         (filters.value as Record<string, unknown>)[key] = queryValue
@@ -110,21 +114,29 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
     const syncUrlDebounced = useDebounceFn(syncUrlNow, urlSync.debounceMs);
 
     const syncDebouncedFiltersNow = () => {
-        debouncedFilters.value = JSON.parse(JSON.stringify(filters.value));
+        debouncedFilters.value = snapshot(filters.value);
     };
     const syncDebouncedFiltersDelayed = useDebounceFn(syncDebouncedFiltersNow, searchDebounceMs);
 
+    // Snapshot précédent maintenu à la main : on ne sérialise qu'au déclenchement réel
+    // du watch (et non à chaque tick réactif comme le ferait une source getter JSON).
+    let previousFilters = snapshot(filters.value);
+
     watch(
-        () => JSON.parse(JSON.stringify(filters.value)) as T,
-        (newFilters, oldFilters) => {
-            const changedKeys = Object.keys(newFilters as Record<string, unknown>).filter((key) => {
-                const oldValue = (oldFilters as Record<string, unknown> | undefined)?.[key];
-                const newValue = (newFilters as Record<string, unknown>)[key];
+        filters,
+        (current) => {
+            const newFilters = current as Record<string, unknown>;
+            const oldFilters = previousFilters as Record<string, unknown>;
+            const changedKeys = Object.keys(newFilters).filter((key) => {
+                const oldValue = oldFilters[key];
+                const newValue = newFilters[key];
                 if (Array.isArray(oldValue) && Array.isArray(newValue)) {
                     return oldValue.length !== newValue.length || oldValue.some((v, i) => v !== newValue[i]);
                 }
                 return oldValue !== newValue;
             });
+
+            previousFilters = snapshot(current) as T;
 
             if (changedKeys.length === 0) {
                 return;
@@ -146,6 +158,7 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
                 syncDebouncedFiltersDelayed();
             }
         },
+        { deep: true },
     );
 
     if (pagination.enabled) {
@@ -153,7 +166,7 @@ export function useFilters<T extends Record<string, unknown>>(options: UseFilter
     }
 
     syncFromUrl();
-    debouncedFilters.value = JSON.parse(JSON.stringify(filters.value));
+    debouncedFilters.value = snapshot(filters.value);
 
     const hasActiveFilters = computed(() => {
         return Object.entries(filters.value as Record<string, unknown>).some(([key, value]) =>

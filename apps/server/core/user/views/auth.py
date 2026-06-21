@@ -4,7 +4,6 @@ import logging
 import uuid
 from typing import Any, cast
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import DatabaseError, IntegrityError
@@ -16,6 +15,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from utils.exceptions import AuthenticationError
 from utils.security import (
     SessionManager,
     clear_auth_cookies,
@@ -158,50 +158,9 @@ class AdminRefreshView(APIView):
             )
 
         try:
-            refresh_token = RefreshToken(refresh_token_str)
-
-            token_session_id = refresh_token.get("session_id")
-            token_user_id = refresh_token.get("user_id")
-
-            if not token_session_id or not token_user_id:
-                response = Response({"detail": "Session invalide"}, status=status.HTTP_401_UNAUTHORIZED)
-                return clear_auth_cookies(response)
-
-            if not SessionManager(token_user_id).is_session_valid(str(token_session_id)):
-                logger.info("Refresh refuse: session %s revoquee", str(token_session_id)[:8])
-                response = Response({"detail": "Session revoquee"}, status=status.HTTP_401_UNAUTHORIZED)
-                return clear_auth_cookies(response)
-
-            new_access_token = str(refresh_token.access_token)
-            new_refresh_token = None
-
-            simple_jwt_settings = getattr(settings, "SIMPLE_JWT", {})
-            if simple_jwt_settings.get("ROTATE_REFRESH_TOKENS", False):
-                if simple_jwt_settings.get("BLACKLIST_AFTER_ROTATION", False):
-                    try:
-                        refresh_token.blacklist()
-                    except AttributeError:
-                        logger.exception(
-                            "Token blacklist method unavailable - "
-                            "check rest_framework_simplejwt.token_blacklist is in INSTALLED_APPS"
-                        )
-                    except TokenError:
-                        logger.exception("Failed to blacklist rotated refresh token")
-                user_id = refresh_token.get("user_id")
-                user = User.objects.get(id=user_id)
-                new_refresh = RefreshToken.for_user(user)
-
-                if token_session_id:
-                    new_refresh["session_id"] = token_session_id
-                    new_refresh.access_token["session_id"] = token_session_id
-
-                new_refresh_token = str(new_refresh)
-
-        except User.DoesNotExist:
-            response = Response({"detail": "Utilisateur introuvable"}, status=status.HTTP_401_UNAUTHORIZED)
-            return clear_auth_cookies(response)
-        except TokenError:
-            response = Response({"detail": "Token invalide ou expire"}, status=status.HTTP_401_UNAUTHORIZED)
+            result = AdminService.refresh_session(refresh_token_str)
+        except AuthenticationError as exc:
+            response = Response({"detail": str(exc.detail)}, status=status.HTTP_401_UNAUTHORIZED)
             return clear_auth_cookies(response)
         except (ValueError, TypeError):
             response = Response({"detail": "Format invalide"}, status=status.HTTP_400_BAD_REQUEST)
@@ -211,6 +170,9 @@ class AdminRefreshView(APIView):
                 {"detail": "Erreur lors du rafraichissement"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+        new_access_token = result["access"]
+        new_refresh_token = result["refresh"]
 
         response = Response({"detail": "Token rafraichi"}, status=status.HTTP_200_OK)
         if new_refresh_token:

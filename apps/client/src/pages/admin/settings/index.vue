@@ -236,7 +236,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, reactive, computed, onMounted, watch } from 'vue';
+    import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseDivider from '@/components/base/BaseDivider.vue';
@@ -252,6 +252,7 @@
     import { authApi, useUpdateProfile, useUploadProfileAvatar, useLogout } from '@/services/api/modules/auth';
     import { useContactInfo, useContactInfoUpsert } from '@/services/api/modules/contact';
     import { formatDate } from '@/services/utils/date';
+    import { parseError } from '@/services/utils/errors';
     import { useAuthStore } from '@/stores/auth';
 
     definePageMeta({ layout: 'admin', title: 'Parametres' });
@@ -274,11 +275,9 @@
     const showCurrentPassword = ref(false);
     const showNewPassword = ref(false);
 
-    // Messages
     const profileMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
     const passwordMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    // Forms
     const profileForm = reactive({
         firstName: '',
         lastName: '',
@@ -302,7 +301,7 @@
         confirmPassword: '',
     });
 
-    // Contact info query + upsert mutation (pilote le footer public)
+    // Pilote le footer public
     const { data: contactInfo } = useContactInfo();
     const contactInfoMutation = useContactInfoUpsert();
 
@@ -361,16 +360,32 @@
 
     const triggerAvatarUpload = () => avatarInput.value?.click();
 
+    const messageTimers = new Map<object, ReturnType<typeof setTimeout>>();
+
     const showMessage = (
         msgRef: typeof profileMessage | typeof passwordMessage,
         type: 'success' | 'error',
         text: string,
     ) => {
         msgRef.value = { type, text };
-        setTimeout(() => {
-            msgRef.value = null;
-        }, 3000);
+        // Remplace tout timer en cours pour ce message (évite qu'un ancien efface un message récent).
+        const existing = messageTimers.get(msgRef);
+        if (existing) {
+            clearTimeout(existing);
+        }
+        messageTimers.set(
+            msgRef,
+            setTimeout(() => {
+                msgRef.value = null;
+                messageTimers.delete(msgRef);
+            }, 3000),
+        );
     };
+
+    onBeforeUnmount(() => {
+        messageTimers.forEach((timer) => clearTimeout(timer));
+        messageTimers.clear();
+    });
 
     const handleAvatarChange = (event: Event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
@@ -439,9 +454,11 @@
             passwordForm.currentPassword = '';
             passwordForm.newPassword = '';
             passwordForm.confirmPassword = '';
-            showMessage(passwordMessage, 'success', 'Mot de passe modifie');
-        } catch {
-            showMessage(passwordMessage, 'error', 'Mot de passe incorrect');
+            showMessage(passwordMessage, 'success', 'Mot de passe modifié');
+        } catch (err) {
+            const { status, message } = parseError(err);
+            const feedback = status === 400 || status === 401 ? 'Mot de passe incorrect' : message;
+            showMessage(passwordMessage, 'error', feedback);
         } finally {
             isChangingPassword.value = false;
         }

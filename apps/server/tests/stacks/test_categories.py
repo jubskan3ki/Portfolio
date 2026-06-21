@@ -47,6 +47,18 @@ class TestGetStackCategory:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_get_category_detail_exposes_count(self, api_client: APIClient) -> None:
+        """Le detail expose le vrai nombre de stacks (regression: renvoyait 0)."""
+        from tests.factories import StackCategoryFactory, StackFactory
+
+        category = StackCategoryFactory()
+        StackFactory.create_batch(2, category=category)
+
+        response = cast(Response, api_client.get(f"{self.URL}{category.name}/"))
+
+        assert response.status_code == status.HTTP_200_OK
+        assert cast(dict[str, Any], response.data)["count"] == 2
+
 
 @pytest.mark.django_db
 class TestStacksByCategory:

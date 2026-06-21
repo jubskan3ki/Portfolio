@@ -1,25 +1,34 @@
 <template>
     <slot v-if="!isError"></slot>
-    <div v-else class="query-error" :class="errorClasses">
-        <div class="query-error__content">
-            <div class="query-error__icon-wrapper">
-                <div class="query-error__icon-bg"></div>
-                <BaseIcon :name="errorConfig.icon" :size="40" class="query-error__icon" />
-            </div>
+    <slot
+        v-else
+        name="error"
+        :error-type="errorType"
+        :error-config="errorConfig"
+        :http-status="httpStatus"
+        :retry="handleRetry"
+    >
+        <div class="query-error" :class="errorClasses">
+            <div class="query-error__content">
+                <div class="query-error__icon-wrapper">
+                    <div class="query-error__icon-bg"></div>
+                    <BaseIcon :name="errorConfig.icon" :size="40" class="query-error__icon" />
+                </div>
 
-            <h4 class="query-error__title">{{ errorConfig.title }}</h4>
-            <p class="query-error__message">{{ errorConfig.message }}</p>
+                <h4 class="query-error__title">{{ errorConfig.title }}</h4>
+                <p class="query-error__message">{{ errorConfig.message }}</p>
 
-            <div v-if="showRetry" class="query-error__actions">
-                <BaseButton variant="outline" size="sm" @click="handleRetry">
-                    <template #icon-left>
-                        <BaseIcon name="refresh-cw" :size="14" />
-                    </template>
-                    Réessayer
-                </BaseButton>
+                <div v-if="showRetry" class="query-error__actions">
+                    <BaseButton variant="outline" size="sm" @click="handleRetry">
+                        <template #icon-left>
+                            <BaseIcon name="refresh-cw" :size="14" />
+                        </template>
+                        Réessayer
+                    </BaseButton>
+                </div>
             </div>
         </div>
-    </div>
+    </slot>
 </template>
 
 <script setup lang="ts">

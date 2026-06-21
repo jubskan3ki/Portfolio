@@ -38,7 +38,8 @@ class ProjectViewSet(BaseAPIViewSet):
 
     queryset = Project.objects.select_related("category", "status")
     serializer_class = ProjectDetailSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # Permissions gérées par AdminWritePermissionMixin : lecture publique,
+    # écriture réservée à l'admin (get_permissions).
     throttle_classes = [ProjectsThrottle]
     pagination_class = APIResponsePagination
     filterset_class = ProjectFilter

@@ -23,7 +23,7 @@ export interface ListParams<TFilters = Record<string, unknown>> {
 export interface UseDataListOptions<T, TFilters extends Record<string, unknown> = Record<string, unknown>> {
     // Vue Query configuration
     queryKey: string[];
-    queryFn: (params: ListParams<TFilters>) => Promise<PaginatedResponse<T>>;
+    queryFn: (params: ListParams<TFilters>, signal?: AbortSignal) => Promise<PaginatedResponse<T>>;
 
     // Configuration
     defaultSort?: string;

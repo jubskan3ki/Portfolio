@@ -74,6 +74,7 @@
     import AppLogo from '@/components/ui/AppLogo.vue';
     import { useEscapeKey, useResponsive } from '@/composables';
     import { isActiveRoute, navigationItems } from '@/config/navBar';
+    import { lockBodyOverflow, unlockBodyOverflow } from '@/services/utils/dom';
 
     import type { MobileMenuProps } from '@/types/components/navigation';
 
@@ -134,10 +135,10 @@
             }
 
             if (newValue) {
-                document.body.style.overflow = 'hidden';
+                lockBodyOverflow();
                 document.addEventListener('click', handleClickOutside);
             } else {
-                document.body.style.overflow = '';
+                unlockBodyOverflow();
                 document.removeEventListener('click', handleClickOutside);
             }
         },
@@ -147,7 +148,7 @@
         isMounted.value = true;
 
         if (props.isOpen) {
-            document.body.style.overflow = 'hidden';
+            lockBodyOverflow();
             document.addEventListener('click', handleClickOutside);
         }
     });
@@ -155,7 +156,11 @@
     onBeforeUnmount(() => {
         if (import.meta.client) {
             document.removeEventListener('click', handleClickOutside);
-            document.body.style.overflow = '';
+            // Ne libérer le scroll-lock que si on l'avait verrouillé, pour ne pas
+            // décrémenter le compteur partagé sous une autre modale ouverte.
+            if (props.isOpen) {
+                unlockBodyOverflow();
+            }
         }
     });
 </script>

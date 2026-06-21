@@ -1,7 +1,14 @@
 <template>
     <slot v-if="!error"></slot>
-    <div
+    <slot
         v-else
+        name="error"
+        :error="error"
+        :error-type="errorType"
+        :message="displayMessage"
+        :retry="handleRetry"
+    >
+    <div
         class="error-boundary"
         :class="boundaryClasses"
         role="alert"
@@ -25,6 +32,7 @@
                     v-if="showRetry"
                     :variant="variant === 'inline' ? 'ghost' : 'primary'"
                     :size="actionSize"
+                    :aria-label="variant === 'inline' ? 'Réessayer' : undefined"
                     @click="handleRetry"
                 >
                     <template #icon-left>
@@ -58,6 +66,7 @@
             </details>
         </div>
     </div>
+    </slot>
 </template>
 
 <script setup lang="ts">
@@ -129,15 +138,12 @@
         return icons[errorType.value];
     });
 
-    const displayMessage = computed(() => {
-        if (props.fallbackMessage) {
-            return props.fallbackMessage;
-        }
-        if (error.value?.message) {
-            return error.value.message;
-        }
-        return 'Une erreur inattendue s\'est produite.';
-    });
+    // Message destiné à l'utilisateur : on privilégie le fallback maîtrisé plutôt que
+    // d'exposer le message brut d'erreur (susceptible de fuiter des détails internes).
+    // Le message technique reste consultable dans le bloc « Détails techniques ».
+    const displayMessage = computed(
+        () => props.fallbackMessage || 'Une erreur inattendue s\'est produite.',
+    );
 
     // Size-based computeds
     const iconSize = computed(() => {

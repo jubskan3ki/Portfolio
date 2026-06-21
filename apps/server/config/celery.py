@@ -5,14 +5,11 @@ import os
 
 from celery import Celery
 from celery.signals import setup_logging, task_failure, worker_ready
-from django.db import connection
+from django.db import DatabaseError, connection
 from kombu.exceptions import ConnectionError as KombuConnectionError
 from kombu.exceptions import OperationalError
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-
-# OTel trace-context: opentelemetry-instrumentation-celery injects W3C traceparent
-# via before_task_publish/task_prerun signals (activated in celery-entrypoint.sh).
 
 app = Celery("portfolio")
 app.config_from_object("django.conf:settings", namespace="CELERY")
@@ -53,7 +50,9 @@ def worker_ready_handler(sender, **_kwargs):
 
 @task_failure.connect
 def handle_task_failure(task_id=None, exception=None, **_kwargs):
-    logger.exception("Task %s failed: %s", task_id, exception)
+    # exc_info=exception : le signal s'execute hors bloc except, donc
+    # logger.exception() (qui lit sys.exc_info()) ne capturerait pas la trace.
+    logger.error("Task %s failed: %s", task_id, exception, exc_info=exception)
 
 
 @app.task(bind=True, ignore_result=True)
@@ -67,7 +66,9 @@ def health_check(self):
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
-    except (OSError, ValueError, TypeError, AttributeError) as e:
+    except (DatabaseError, OSError) as e:
+        # DatabaseError couvre OperationalError/InterfaceError (DB down/injoignable),
+        # le cas que ce health check doit precisement signaler sans planter.
         return {"status": "unhealthy", "error": str(e)}
     else:
         return {"status": "healthy", "task_id": self.request.id}

@@ -38,7 +38,6 @@
                             :article="article"
                             :hoverable="cardHoverable"
                             :flat="cardFlat"
-                            :bordered="cardBordered"
                             :excerpt-length="excerptLength"
                             :show-footer="showFooter"
                             :show-stats="showStats"
@@ -90,7 +89,6 @@
         showPagination: true,
         cardHoverable: true,
         cardFlat: false,
-        cardBordered: false,
         excerptLength: 150,
         showFooter: true,
         showStats: true,
@@ -161,7 +159,6 @@
                 grid-gap: vars.$spacing-md;
             }
 
-            // Animations staggered
             &--animated {
                 .article-list__item {
                     opacity: 0;
@@ -185,7 +182,6 @@
             margin-top: vars.$spacing-lg;
         }
 
-        /* Variante liste */
         &--list {
             .article-list__grid {
                 grid-template-columns: 1fr;
@@ -193,7 +189,6 @@
         }
     }
 
-    // Animation keyframes
     @keyframes fadeInUp {
         from {
             opacity: 0;

@@ -132,13 +132,23 @@ export interface ContactSocialLink {
     url: string;
 }
 
+export interface ContactInfoItem {
+    icon: string;
+    label: string;
+    value: string;
+    // Lien optionnel (mailto:, tel:, https:...) : si présent, la valeur est rendue cliquable.
+    href?: string;
+}
+
 export interface ContactInfosProps {
     title?: string;
     subtitle?: string;
+    socialTitle?: string;
+    // Liste unifiée des coordonnées. Si fournie, elle prend le pas sur address/email/phone.
+    items?: ContactInfoItem[];
     addressTitle?: string;
     emailTitle?: string;
     phoneTitle?: string;
-    socialTitle?: string;
     address?: string;
     email?: string;
     phone?: string;

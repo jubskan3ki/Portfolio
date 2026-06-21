@@ -156,6 +156,8 @@ export interface CheckboxProps {
     disabled?: boolean;
     error?: string;
     customClass?: string;
+    // État partiel (ex. case « tout sélectionner ») : appliqué impérativement sur l'input.
+    indeterminate?: boolean;
 }
 
 // Single Radio Item
@@ -238,6 +240,8 @@ export interface FormProps {
     id?: string;
     customClass?: string;
     fields?: FormFieldProps[];
+    // Bloque la soumission pendant une requête en cours (anti double-soumission).
+    loading?: boolean;
 }
 
 // BaseBadge
@@ -322,6 +326,8 @@ export interface BaseContentCardProps {
     maxTags?: number;
     transitionKey?: string;
     eager?: boolean;
+    // Masque le pied de carte (et donc les slots footer-*) quand false.
+    showFooter?: boolean;
 }
 
 // BaseTextarea

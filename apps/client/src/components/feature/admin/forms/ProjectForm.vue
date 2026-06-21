@@ -115,6 +115,7 @@
                 label="URL Démo"
                 type="url"
                 placeholder="https://demo.example.com"
+                :error="errors.demo_url"
             />
 
             <BaseInput
@@ -123,6 +124,7 @@
                 label="URL GitHub"
                 type="url"
                 placeholder="https://github.com/user/repo"
+                :error="errors.github_url"
             />
         </div>
 
@@ -132,6 +134,7 @@
             label="URL Documentation"
             type="url"
             placeholder="https://docs.example.com"
+            :error="errors.documentation_url"
         />
 
         <BaseFileUpload
@@ -196,6 +199,7 @@
         mapToIds,
         linesToArray,
         arrayToLines,
+        isValidHttpUrl,
     } from '@/composables/forms/useFormUtils';
     import { generateSlug } from '@/composables/forms/useSlugGenerator';
     import { useAlert } from '@/composables/ui/useAlert';
@@ -287,6 +291,15 @@
             }
             if (!values.category) {
                 errs.category = 'La catégorie est requise';
+            }
+            if (!isValidHttpUrl(values.demo_url)) {
+                errs.demo_url = 'URL invalide (http:// ou https:// attendu)';
+            }
+            if (!isValidHttpUrl(values.github_url)) {
+                errs.github_url = 'URL invalide (http:// ou https:// attendu)';
+            }
+            if (!isValidHttpUrl(values.documentation_url)) {
+                errs.documentation_url = 'URL invalide (http:// ou https:// attendu)';
             }
             return errs;
         },

@@ -324,18 +324,24 @@
 
     const breadcrumbItems = ref<BreadcrumbSeoItem[]>([]);
 
+    // SEO + Schema.org enregistrés une seule fois au premier stack non-null
+    // (les helpers unhead empilent sinon à chaque émission : loading->data, refetch).
+    let seoRegistered = false;
     watch(
         currentStack,
         (stack) => {
             if (stack) {
-                useStackSeo(stack);
-                const { items } = useBreadcrumbSeo({
-                    meta: {
-                        title: stack.name,
-                        category: stack.category || undefined,
-                    },
-                });
-                breadcrumbItems.value = items.value;
+                if (!seoRegistered) {
+                    seoRegistered = true;
+                    useStackSeo(stack);
+                    const { items } = useBreadcrumbSeo({
+                        meta: {
+                            title: stack.name,
+                            category: stack.category || undefined,
+                        },
+                    });
+                    breadcrumbItems.value = items.value;
+                }
                 announceNavigation(`Stack: ${stack.name}`);
             }
         },

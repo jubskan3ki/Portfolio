@@ -84,6 +84,7 @@
                     <ProjectCard
                         v-for="(project, index) in allProjects"
                         :key="project.id"
+                        v-memo="[project.id]"
                         :project="project"
                         :style="{ '--i': index }"
                         class="projects-grid__item"
@@ -189,11 +190,11 @@
             }),
             queryClient.prefetchQuery({
                 queryKey: projectKeys.categories(),
-                queryFn: projectsApi.getCategories,
+                queryFn: ({ signal }) => projectsApi.getCategories(signal),
             }),
             queryClient.prefetchQuery({
                 queryKey: projectKeys.stats(),
-                queryFn: projectsApi.getStats,
+                queryFn: ({ signal }) => projectsApi.getStats(signal),
             }),
         ]);
         return true;
@@ -223,19 +224,13 @@
     // Fetch déclenché par filtres uniquement (hors pagination infinie)
     const isFilterFetching = computed(() => isFetching.value && !isFetchingNextPage.value && hasProjects.value);
 
-    // Schema.org ItemList pour rich results
+    // Schema.org ItemList pour rich results : appel unique au setup. Le composable
+    // suit déjà la liste de façon réactive (itemListElement est un getter), donc
+    // pas de watch, sinon chaque changement empile un nouveau bloc ItemList.
     const projectListItems = computed(() =>
         allProjects.value.map((p) => ({ name: p.title, url: `/projects/${p.slug}`, image: p.image })),
     );
-    watch(
-        projectListItems,
-        (items) => {
-            if (items.length) {
-                useItemListSeo({ items: projectListItems });
-            }
-        },
-        { immediate: true },
-    );
+    useItemListSeo({ items: projectListItems });
 
     const categoryOptions = computed<SelectOption[]>(() => {
         const cats = (categoriesData.value?.data ?? []) as ProjectCategory[];

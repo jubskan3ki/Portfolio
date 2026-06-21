@@ -44,15 +44,16 @@ class TestStackServiceGetRelated:
     """Tests pour StackService.get_related."""
 
     def test_returns_empty_list_when_no_relations(self) -> None:
-        """Retourne une liste vide si pas de relations."""
+        """Retourne des collections vides si pas de relations."""
         stack = StackFactory()
 
-        result = StackService.get_related(stack)
+        related_stacks, relationship_map = StackService.get_related(stack)
 
-        assert result == []
+        assert related_stacks == []
+        assert relationship_map == {}
 
     def test_returns_related_stacks(self) -> None:
-        """Retourne les stacks lies."""
+        """Retourne les stacks lies et la map des types de relation."""
         from core.stacks.models import StackRelationship
 
         stack_a = StackFactory(name="React")
@@ -60,14 +61,15 @@ class TestStackServiceGetRelated:
         StackRelationship.objects.create(
             from_stack=stack_a,
             to_stack=stack_b,
-            relationship_type="uses",
+            relationship_type="dependency",
         )
 
-        result = StackService.get_related(stack_a)
+        related_stacks, relationship_map = StackService.get_related(stack_a)
 
-        assert len(result) >= 1
-        names = [r["name"] for r in result]
+        assert len(related_stacks) >= 1
+        names = [s.name for s in related_stacks]
         assert "TypeScript" in names
+        assert relationship_map[stack_b.pk] == "dependency"
 
 
 @pytest.mark.django_db

@@ -41,8 +41,8 @@
 
             <div class="data-table-pagination__pages">
                 <button
-                    v-for="page in visiblePages"
-                    :key="page"
+                    v-for="(page, idx) in visiblePages"
+                    :key="typeof page === 'number' ? `p${page}` : `gap-${idx}`"
                     class="data-table-pagination__page"
                     :class="{ 'data-table-pagination__page--active': page === currentPage }"
                     :disabled="page === '...'"

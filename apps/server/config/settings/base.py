@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import cast
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -20,8 +21,21 @@ env = environ.Env(
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = cast(str, env("DJANGO_SECRET_KEY"))
-DEBUG = cast(bool, env.bool("DJANGO_DEBUG"))
+
+# DEBUG (calculé plus bas depuis DJANGO_ENV) doit être figé ICI, avant tout import dépendant ; les envs/*.py ne doivent pas le surcharger.
+DJANGO_ENV = env("DJANGO_ENV", default="dev").lower()
+if DJANGO_ENV not in {"dev", "staging", "prod"}:
+    raise ImproperlyConfigured(f"DJANGO_ENV={DJANGO_ENV!r} invalide. Attendu: dev, staging, prod.")
+
+# DJANGO_DEBUG INTERDIT hors dev : évite de désactiver silencieusement HSTS, cookies secure et headers de sécurité en prod.
+DEBUG = env.bool("DJANGO_DEBUG", default=(DJANGO_ENV == "dev"))
+if DJANGO_ENV != "dev" and DEBUG:
+    raise ImproperlyConfigured(f"DJANGO_DEBUG=True est interdit avec DJANGO_ENV={DJANGO_ENV!r}.")
+
 ENABLE_DEBUG_TOOLBAR = DEBUG and cast(bool, env.bool("ENABLE_DEBUG_TOOLBAR"))
+
+# Proxys de confiance en amont : extraction de l'IP client depuis X-Forwarded-For (voir utils.network).
+NUM_PROXIES = env.int("NUM_PROXIES", default=1)
 ALLOWED_HOSTS = cast(list, env.list("ALLOWED_HOSTS"))
 _ALL_INTERFACES = "0" + ".0" * 3
 if DEBUG and _ALL_INTERFACES not in ALLOWED_HOSTS:
@@ -72,7 +86,6 @@ INSTALLED_APPS = [
     "core.status.apps.StatusConfig",
 ]
 
-# Public status page queries Prometheus + Alertmanager (C7).
 PROMETHEUS_INTERNAL_URL = env("PROMETHEUS_INTERNAL_URL", default="http://prometheus:9090")
 ALERTMANAGER_URL = env("ALERTMANAGER_URL", default="http://alertmanager:9093")
 
@@ -81,6 +94,8 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "middlewares.correlation.CorrelationIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    # Placé tôt : rejette avant session/auth/cache pour ne pas payer leur coût et valider aussi les réponses servies depuis le cache.
+    *(["middlewares.security.SecurityMiddleware"] if not DEBUG else []),
     "middlewares.auth.RequestLoggingMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -93,14 +108,7 @@ MIDDLEWARE = [
     "middlewares.cache.ConditionalCacheMiddleware",
     *(["debug_toolbar.middleware.DebugToolbarMiddleware"] if ENABLE_DEBUG_TOOLBAR else []),
     *(["middlewares.query_stats.QueryStatsMiddleware"] if DEBUG else []),
-    *(
-        [
-            "middlewares.security.SecurityHeadersMiddleware",
-            "middlewares.security.SecurityMiddleware",
-        ]
-        if not DEBUG
-        else []
-    ),
+    *(["middlewares.security.SecurityHeadersMiddleware"] if not DEBUG else []),
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
@@ -146,8 +154,8 @@ DEVICE_TRACKING_ENABLED = True
 
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5_242_880  # 5 MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5_242_880  # 5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5_242_880
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5_242_880
 
 
 def show_toolbar(request) -> bool:
@@ -195,4 +203,4 @@ if ENABLE_DEBUG_TOOLBAR:
     }
 
 ALLOWED_AVATAR_EXTENSIONS = ("jpg", "jpeg", "png", "webp")
-MAX_AVATAR_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_AVATAR_SIZE = 5 * 1024 * 1024

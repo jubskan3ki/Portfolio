@@ -73,6 +73,7 @@
                 type="date"
                 :disabled="form.is_current"
                 :hint="form.is_current ? 'Non applicable (poste actuel)' : ''"
+                :error="errors.end_date"
             />
         </div>
 
@@ -216,6 +217,18 @@
             }
             if (!values.start_date) {
                 errs.start_date = 'La date de début est requise';
+            } else if (values.start_date > new Date().toISOString().slice(0, 10)) {
+                // Experience.clean() backend : start_date ne peut pas être dans le futur.
+                errs.start_date = 'La date de début ne peut pas être dans le futur';
+            }
+            // Experience.clean() backend : end_date >= start_date (sauf poste en cours).
+            if (
+                !values.is_current
+                && values.end_date
+                && values.start_date
+                && values.end_date < values.start_date
+            ) {
+                errs.end_date = 'La date de fin doit être postérieure à la date de début';
             }
             if (!values.description?.trim()) {
                 errs.description = 'La description est requise';

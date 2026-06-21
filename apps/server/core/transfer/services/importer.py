@@ -1,4 +1,4 @@
-"""Service d'import de donnees utilisant le Strategy Pattern."""
+"""Service d'import de donnees (Strategy Pattern)."""
 
 import csv
 import io
@@ -12,6 +12,9 @@ from django.core.files.uploadedfile import UploadedFile
 from django.db import DatabaseError, IntegrityError, OperationalError, models, transaction
 from django.utils import timezone
 
+from utils.cache.invalidation import invalidate_model_cache
+from utils.signals import bulk_import_mode
+
 from ..models import ImportJob
 from .strategies import CsvImportStrategy, ImportStrategy, JsonImportStrategy, XlsxImportStrategy
 from .validators import DataValidator
@@ -20,8 +23,6 @@ logger = logging.getLogger("core.transfer")
 
 
 class ImporterService:
-    """Service pour l'import de donnees utilisant le Strategy Pattern."""
-
     _strategies: list[ImportStrategy] = [
         JsonImportStrategy(),
         CsvImportStrategy(),
@@ -30,7 +31,6 @@ class ImporterService:
 
     SUPPORTED_MODULES = ["articles", "projects", "stacks", "experiences"]
 
-    # Structure: module -> field_name -> (app_label, model_name, lookup_field)
     FK_MAPPINGS: dict[str, dict[str, tuple[str, str, str]]] = {
         "articles": {
             "category": ("articles", "Category", "name"),
@@ -56,17 +56,15 @@ class ImporterService:
         "experiences": {},
     }
 
-    # str pour champ unique, tuple pour cle composee (update_or_create)
     UNIQUE_FIELDS: dict[str, str | tuple[str, ...]] = {
         "articles": "slug",
         "projects": "slug",
         "stacks": "slug",
-        "experiences": ("title", "company"),  # Cle composee pour eviter les doublons
+        "experiences": ("title", "company"),
     }
 
     @classmethod
     def _get_strategy(cls, filename: str) -> ImportStrategy:
-        """Get the appropriate strategy for the given filename."""
         for strategy in cls._strategies:
             if strategy.can_handle(filename):
                 return strategy
@@ -75,19 +73,16 @@ class ImporterService:
 
     @classmethod
     def detect_format(cls, filename: str) -> str:
-        """Detecte le format du fichier."""
         strategy = cls._get_strategy(filename)
         return strategy.format_name
 
     @classmethod
     def validate_module(cls, module: str) -> None:
-        """Valide que le module est supporte."""
         if module not in cls.SUPPORTED_MODULES:
             raise ValueError(f"Module '{module}' non supporte. Modules valides: {cls.SUPPORTED_MODULES}")
 
     @classmethod
     def parse_file(cls, file: UploadedFile) -> tuple[list[dict[str, Any]], str]:
-        """Parse le fichier uploade via la strategie appropriee; retourne (records, format)."""
         file.seek(0)
         filename = file.name or "unknown"
         strategy = cls._get_strategy(filename)
@@ -102,7 +97,6 @@ class ImporterService:
         except json.JSONDecodeError as e:
             raise ValueError(f"Fichier JSON invalide: {e}") from e
 
-        # Accepte liste plate ou enveloppe {"data": [...]}
         if isinstance(data, list):
             return data
         if isinstance(data, dict) and "data" in data:
@@ -178,7 +172,6 @@ class ImporterService:
         module: str,
         limit: int = 5,
     ) -> dict[str, Any]:
-        """Preview les donnees avant import: preview_data, columns, total_records, validation_errors."""
         cls.validate_module(module)
 
         records, file_format = cls.parse_file(file)
@@ -204,7 +197,6 @@ class ImporterService:
         module: str,
         file: UploadedFile,
     ) -> ImportJob:
-        """Cree un job d'import."""
         cls.validate_module(module)
         filename = file.name or "unknown"
         file_format = cls.detect_format(filename)
@@ -233,7 +225,6 @@ class ImporterService:
         update_existing: bool = False,
         images: dict[str, UploadedFile] | None = None,
     ) -> ImportJob:
-        """Execute l'import de donnees."""
         job.status = ImportJob.Status.VALIDATING
         job.save(update_fields=["status"])
 
@@ -270,25 +261,34 @@ class ImporterService:
 
             image_field = cls.IMAGE_FIELDS.get(job.module)
 
-            for i, record in enumerate(records, start=1):
-                try:
-                    # Savepoint par enregistrement pour isoler les rollbacks
-                    with transaction.atomic():
-                        cleaned_data = DataValidator.clean_data(record, job.module)
-                        cls._import_record(
-                            model_class,
-                            cleaned_data,
-                            job.module,
-                            update_existing=update_existing,
-                            images=images,
-                            image_field=image_field,
-                        )
-                        success_count += 1
-                except (IntegrityError, ValueError, TypeError, KeyError, AttributeError) as e:
-                    logger.warning("Erreur import ligne %d: %s", i, str(e))
-                    import_errors.append({"row": i, "field": "general", "message": str(e)})
+            # Cache FK/M2M partage par le job : evite de re-SELECT le meme objet par ligne.
+            relation_cache: dict[tuple[str, str, str, Any], Any] = {}
 
-                processed_count += 1
+            # Mode bulk : desactive les signaux par-objet (surcout proportionnel aux lignes), cache invalide une fois apres la boucle.
+            with bulk_import_mode():
+                for i, record in enumerate(records, start=1):
+                    try:
+                        # Savepoint par enregistrement pour isoler les rollbacks.
+                        with transaction.atomic():
+                            cleaned_data = DataValidator.clean_data(record, job.module)
+                            cls._import_record(
+                                model_class,
+                                cleaned_data,
+                                job.module,
+                                update_existing=update_existing,
+                                images=images,
+                                image_field=image_field,
+                                relation_cache=relation_cache,
+                            )
+                            success_count += 1
+                    except (IntegrityError, ValueError, TypeError, KeyError, AttributeError) as e:
+                        logger.warning("Erreur import ligne %d: %s", i, str(e))
+                        import_errors.append({"row": i, "field": "general", "message": str(e)})
+
+                    processed_count += 1
+
+            if success_count > 0:
+                invalidate_model_cache(model_class.__name__)
 
             job.success_count = success_count
             job.processed_records = processed_count
@@ -327,16 +327,16 @@ class ImporterService:
         update_existing: bool,
         images: dict[str, UploadedFile] | None = None,
         image_field: str | None = None,
+        relation_cache: dict[tuple[str, str, str, Any], Any] | None = None,
     ) -> Any:
         if image_field and image_field in data:
             image_key = data.get(image_field)
             if isinstance(image_key, str) and images and image_key in images:
                 data[image_field] = images[image_key]
             elif isinstance(image_key, str):
-                # Evite SuspiciousFileOperation si le chemin est absolu (/media/...)
+                # Evite SuspiciousFileOperation si le chemin est absolu (/media/...).
                 data.pop(image_field, None)
 
-        # get_fields() inclut les reverse relations non assignables; on les exclut via auto_created.
         model_field_names = {
             f.name
             for f in model_class._meta.get_fields()
@@ -344,10 +344,10 @@ class ImporterService:
         }
         data = {k: v for k, v in data.items() if k in model_field_names}
 
-        data = cls._resolve_foreign_keys(data, module)
+        data = cls._resolve_foreign_keys(data, module, relation_cache)
 
         m2m_fields = cls._extract_m2m_fields(data, model_class)
-        m2m_fields = cls._resolve_m2m_fields(m2m_fields, module)
+        m2m_fields = cls._resolve_m2m_fields(m2m_fields, module, relation_cache)
 
         unique_fields = cls.UNIQUE_FIELDS.get(module, "id")
 
@@ -365,7 +365,7 @@ class ImporterService:
 
             if update_existing and all_values_present:
                 defaults = {k: v for k, v in data.items() if k not in unique_fields}
-                # select_related(None) pour eviter FOR UPDATE sur outer joins nullable
+                # select_related(None) evite FOR UPDATE sur outer joins nullable.
                 qs = manager.all().select_related(None)
                 instance, _ = qs.update_or_create(
                     **unique_lookup,
@@ -379,7 +379,6 @@ class ImporterService:
 
             if update_existing and unique_value:
                 defaults = {k: v for k, v in data.items() if k != unique_fields}
-                # select_related(None) pour eviter FOR UPDATE sur outer joins nullable
                 qs = manager.all().select_related(None)
                 instance, _ = qs.update_or_create(
                     **{unique_fields: unique_value},
@@ -396,17 +395,45 @@ class ImporterService:
 
         return instance
 
+    @staticmethod
+    def _cache_get(
+        relation_cache: dict[tuple[str, str, str, Any], Any] | None,
+        cache_key: tuple[str, str, str, Any],
+    ) -> Any:
+        if relation_cache is None:
+            return None
+        return relation_cache.get(cache_key)
+
+    @staticmethod
+    def _cache_put(
+        relation_cache: dict[tuple[str, str, str, Any], Any] | None,
+        cache_key: tuple[str, str, str, Any],
+        obj: Any,
+    ) -> None:
+        # Ne cacher que des objets lus en base : un objet cree puis annule par rollback de savepoint laisserait une reference fantome.
+        if relation_cache is not None:
+            relation_cache[cache_key] = obj
+
     @classmethod
-    def _resolve_foreign_keys(cls, data: dict[str, Any], module: str) -> dict[str, Any]:
-        """Resout les cles etrangeres."""
+    def _resolve_foreign_keys(
+        cls,
+        data: dict[str, Any],
+        module: str,
+        relation_cache: dict[tuple[str, str, str, Any], Any] | None = None,
+    ) -> dict[str, Any]:
         mappings = cls.FK_MAPPINGS.get(module, {})
         resolved = dict(data)
 
         for field, (app_label, model_name, lookup_field) in mappings.items():
             if field in resolved and resolved[field] is not None:
                 value = resolved[field]
-                # Si c'est deja un objet, ne pas le resoudre
                 if not isinstance(value, str | int):
+                    continue
+
+                cache_key = (app_label, model_name, lookup_field, value)
+                cached = cls._cache_get(relation_cache, cache_key)
+                if cached is not None:
+                    resolved[field] = cached
                     continue
 
                 try:
@@ -417,22 +444,19 @@ class ImporterService:
 
                 try:
                     obj = model.objects.get(**{lookup_field: value})
-                    resolved[field] = obj
+                    cls._cache_put(relation_cache, cache_key, obj)
                 except model.DoesNotExist:
-                    # Create if it doesn't exist
                     logger.info("Creation de %s avec %s=%s", model_name, lookup_field, value)
-                    # Build creation data - include name if model has it
                     create_data = {lookup_field: value}
                     if hasattr(model, "name") and lookup_field != "name":
                         create_data["name"] = value
                     obj = model.objects.create(**create_data)
-                    resolved[field] = obj
+                resolved[field] = obj
 
         return resolved
 
     @classmethod
     def _extract_m2m_fields(cls, data: dict[str, Any], model_class: type[models.Model]) -> dict[str, list]:
-        """Extrait et supprime les champs M2M de data."""
         m2m_fields = {}
         m2m_field_names = [f.name for f in model_class._meta.get_fields() if f.many_to_many and not f.auto_created]
 
@@ -445,8 +469,12 @@ class ImporterService:
         return m2m_fields
 
     @classmethod
-    def _resolve_m2m_fields(cls, m2m_fields: dict[str, list | Any], module: str) -> dict[str, list | Any]:
-        """Resout les valeurs M2M en objets de base de donnees."""
+    def _resolve_m2m_fields(
+        cls,
+        m2m_fields: dict[str, list | Any],
+        module: str,
+        relation_cache: dict[tuple[str, str, str, Any], Any] | None = None,
+    ) -> dict[str, list | Any]:
         mappings = cls.M2M_MAPPINGS.get(module, {})
         resolved: dict[str, list | Any] = {}
 
@@ -455,7 +483,7 @@ class ImporterService:
                 resolved[field_name] = values
                 continue
 
-            # Si pas de mapping, garder les valeurs telles quelles (supposees etre des PKs)
+            # Sans mapping, garder les valeurs telles quelles (supposees etre des PKs).
             if field_name not in mappings:
                 resolved[field_name] = values
                 continue
@@ -470,20 +498,23 @@ class ImporterService:
 
             resolved_values = []
             for value in values:
-                # Si c'est deja un int (PK), l'utiliser directement
                 if isinstance(value, int):
                     resolved_values.append(value)
                     continue
 
-                # Sinon, chercher ou creer l'objet par le lookup_field
+                cache_key = (app_label, model_name, lookup_field, value)
+                cached = cls._cache_get(relation_cache, cache_key)
+                if cached is not None:
+                    resolved_values.append(cached.pk)
+                    continue
+
                 try:
                     obj = model.objects.get(**{lookup_field: value})
-                    resolved_values.append(obj.pk)
+                    cls._cache_put(relation_cache, cache_key, obj)
                 except model.DoesNotExist:
-                    # Creer l'objet s'il n'existe pas
                     logger.info("Creation de %s avec %s=%s", model_name, lookup_field, value)
                     obj = model.objects.create(**{lookup_field: value})
-                    resolved_values.append(obj.pk)
+                resolved_values.append(obj.pk)
 
             resolved[field_name] = resolved_values
 

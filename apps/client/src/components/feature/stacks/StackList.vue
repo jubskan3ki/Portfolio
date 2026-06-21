@@ -65,8 +65,6 @@
                             :stack="stack"
                             :hoverable="cardHoverable"
                             :flat="cardFlat"
-                            :bordered="cardBordered"
-                            :show-level="showStackLevel"
                             :description-length="descriptionLength"
                             @click="handleStackClick(stack)"
                         />
@@ -115,7 +113,6 @@
         clickableItems: false,
         cardHoverable: true,
         cardFlat: false,
-        cardBordered: false,
         descriptionLength: 200,
         customClass: '',
     });

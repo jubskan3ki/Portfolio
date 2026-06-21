@@ -25,8 +25,18 @@ class WebhooksConfig(AppConfig):
         save_models = [Article, Project, Experience, Stack, Contact]
         delete_models = [Article, Project, Experience]
 
+        # dispatch_uid evite les doubles connexions (reload, ready() ré-appelé)
+        # qui provoqueraient un double dispatch de chaque event.
         for model in save_models:
-            post_save.connect(dispatch_save_webhook, sender=model)
+            post_save.connect(
+                dispatch_save_webhook,
+                sender=model,
+                dispatch_uid=f"webhook_save_{model.__name__}",
+            )
 
         for model in delete_models:
-            post_delete.connect(dispatch_delete_webhook, sender=model)
+            post_delete.connect(
+                dispatch_delete_webhook,
+                sender=model,
+                dispatch_uid=f"webhook_delete_{model.__name__}",
+            )

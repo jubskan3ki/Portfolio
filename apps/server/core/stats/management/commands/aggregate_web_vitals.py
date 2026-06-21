@@ -12,36 +12,16 @@ from __future__ import annotations
 
 import json
 import logging
-from collections import defaultdict
 from datetime import timedelta
-from statistics import fmean
-from typing import Any, TypedDict
+from typing import Any
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from core.stats.models import WebVitalEvent
+from core.stats.services.web_vitals import WebVitalsService
 
 logger = logging.getLogger("core.stats")
-
-RATINGS = ("good", "needs-improvement", "poor")
-
-
-class _MetricSummary(TypedDict):
-    metric_name: str
-    count: int
-    mean: float
-    p75: float | None
-    p95: float | None
-    ratings: dict[str, int]
-
-
-def _percentile(values: list[float], percentile: int) -> float | None:
-    if not values:
-        return None
-    sorted_values = sorted(values)
-    index = round((len(sorted_values) - 1) * (percentile / 100))
-    return float(sorted_values[index])
 
 
 class Command(BaseCommand):
@@ -76,31 +56,9 @@ class Command(BaseCommand):
         if retention_days is not None and retention_days < days:
             raise CommandError("--retention-days doit etre >= --days.")
 
-        since = timezone.now() - timedelta(days=days)
-        events = list(WebVitalEvent.objects.filter(created_at__gte=since).values("metric_name", "value", "rating"))
-
-        values_by_metric: dict[str, list[float]] = defaultdict(list)
-        ratings_by_metric: dict[str, dict[str, int]] = defaultdict(lambda: dict.fromkeys(RATINGS, 0))
-        for event in events:
-            metric_name = str(event["metric_name"])
-            values_by_metric[metric_name].append(float(event["value"]))
-            rating = str(event["rating"])
-            if rating in ratings_by_metric[metric_name]:
-                ratings_by_metric[metric_name][rating] += 1
-
-        metrics_summary: list[_MetricSummary] = []
-        for metric_name in sorted(values_by_metric.keys()):
-            values = values_by_metric[metric_name]
-            metrics_summary.append(
-                {
-                    "metric_name": metric_name,
-                    "count": len(values),
-                    "mean": round(float(fmean(values)), 2),
-                    "p75": _percentile(values, 75),
-                    "p95": _percentile(values, 95),
-                    "ratings": ratings_by_metric[metric_name],
-                }
-            )
+        summary = WebVitalsService.summary(days)
+        metrics_summary = summary["metrics"]
+        total_events = summary["total_events"]
 
         purged = 0
         if retention_days is not None:
@@ -109,7 +67,7 @@ class Command(BaseCommand):
 
         payload = {
             "window_days": days,
-            "total_events": len(events),
+            "total_events": total_events,
             "purged": purged,
             "retention_days": retention_days,
             "metrics": metrics_summary,
@@ -118,7 +76,7 @@ class Command(BaseCommand):
         logger.info(
             "aggregate_web_vitals window=%dd events=%d purged=%d",
             days,
-            len(events),
+            total_events,
             purged,
         )
 
@@ -126,7 +84,7 @@ class Command(BaseCommand):
             self.stdout.write(json.dumps(payload, indent=2, sort_keys=True))
             return
 
-        self.stdout.write(self.style.SUCCESS(f"Web Vitals rollup ({days}d) : {len(events)} events, {purged} purged"))
+        self.stdout.write(self.style.SUCCESS(f"Web Vitals rollup ({days}d) : {total_events} events, {purged} purged"))
         if not metrics_summary:
             self.stdout.write("  (aucune metrique)")
             return

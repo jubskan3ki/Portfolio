@@ -3,7 +3,12 @@
         <div class="contact-form-wrapper__dots contact-form-wrapper__dots--top"></div>
         <div class="contact-form-wrapper__dots contact-form-wrapper__dots--bottom"></div>
 
-        <BaseForm :form-id="fixedFormId" :form-custom-class="`contact-form ${customClass}`" @submit="submitForm">
+        <BaseForm
+            :id="fixedFormId"
+            :custom-class="`contact-form ${customClass}`"
+            :loading="isSubmitting"
+            @submit="submitForm"
+        >
             <template #fields>
                 <div v-if="title || $slots.header" class="contact-form__header">
                     <slot name="header">
@@ -13,7 +18,8 @@
                 </div>
 
                 <div class="contact-form__body">
-                    <BaseFormField id="name" label="Nom" :error="errors.name" required>
+                    <!-- ARIA (aria-invalid/aria-describedby/role=alert) porté par le contrôle interne ; ne pas dupliquer sur BaseFormField. -->
+                    <BaseFormField id="name" label="Nom" required>
                         <BaseInput
                             id="name"
                             v-model="form.name"
@@ -30,7 +36,7 @@
                         </BaseInput>
                     </BaseFormField>
 
-                    <BaseFormField id="email" label="Email" :error="errors.email" required>
+                    <BaseFormField id="email" label="Email" required>
                         <BaseInput
                             id="email"
                             v-model="form.email"
@@ -48,20 +54,18 @@
                         </BaseInput>
                     </BaseFormField>
 
-                    <BaseFormField id="subject" label="Sujet" :error="errors.subject">
+                    <BaseFormField id="subject" label="Sujet">
                         <BaseSelect
                             id="subject"
                             v-model="form.subject"
                             placeholder="Sélectionnez un sujet"
                             aria-label="Sujet du message"
                             :disabled="isSubmitting"
-                            :error="errors.subject"
                             :options="subjectOptions"
-                            @blur="validateField('subject')"
                         />
                     </BaseFormField>
 
-                    <BaseFormField id="message" label="Message" :error="errors.message" required>
+                    <BaseFormField id="message" label="Message" required>
                         <BaseTextarea
                             id="message"
                             v-model="form.message"
@@ -165,7 +169,7 @@
     const form = reactive({
         name: '',
         email: '',
-        subject: '' as 'general' | 'project' | 'job' | 'other' | '',
+        subject: '' as 'general' | 'project' | 'job' | 'feedback' | 'other' | '',
         message: '',
         privacyPolicy: false,
     });
@@ -186,6 +190,9 @@
                     errors.name = 'Le nom est requis';
                 } else if (form.name.length < 2) {
                     errors.name = 'Le nom doit comporter au moins 2 caractères';
+                } else if (form.name.length > 100) {
+                    // Aligné sur Contact.name = CharField(max_length=100) côté backend.
+                    errors.name = 'Le nom ne peut pas dépasser 100 caractères';
                 } else {
                     errors.name = undefined;
                 }
@@ -204,6 +211,9 @@
                     errors.message = 'Le message est requis';
                 } else if (form.message.length < 10) {
                     errors.message = 'Le message doit comporter au moins 10 caractères';
+                } else if (form.message.length > 1000) {
+                    // Aligné sur :maxlength="1000" (contournable) et le backend.
+                    errors.message = 'Le message ne peut pas dépasser 1000 caractères';
                 } else {
                     errors.message = undefined;
                 }
@@ -277,7 +287,6 @@
         );
     });
 
-    // Form submission
     const submitForm = async () => {
         if (!validate()) {
             return;
@@ -289,10 +298,10 @@
 
         try {
             const response = await submitContactMutation.mutateAsync({
-                name: form.name,
-                email: form.email,
+                name: form.name.trim(),
+                email: form.email.trim(),
                 subject: form.subject || 'general',
-                message: form.message,
+                message: form.message.trim(),
             });
 
             formStatus.type = 'success';
@@ -321,7 +330,6 @@
     .contact-form-wrapper {
         position: relative;
 
-        /* Decorative dots */
         &__dots {
             position: absolute;
             width: 100px;
@@ -425,7 +433,6 @@
         }
     }
 
-    /* Transitions */
     .fade-enter-active,
     .fade-leave-active {
         transition: opacity 0.3s ease;

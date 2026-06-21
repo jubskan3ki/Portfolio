@@ -6,6 +6,7 @@ from typing import Any, TypedDict
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.db.models import Manager, Model
 from django.db.models.signals import post_delete, post_save, pre_save
 
@@ -87,6 +88,11 @@ def get_audit_context() -> AuditContext:
 
 def _should_audit(instance: Model) -> bool:
     """Check if this model instance should be audited."""
+    from utils.signals import bulk_mode_active
+
+    # Import en masse : audit par-objet desactive (cf. utils.signals).
+    if bulk_mode_active():
+        return False
     model_name = instance.__class__.__name__
     return model_name in AUDITED_MODELS
 
@@ -95,44 +101,6 @@ def _get_manager(model_class: type[Model]) -> Manager[Model]:
     """Get the model's default manager with proper typing."""
     manager: Manager[Model] = model_class._default_manager
     return manager
-
-
-def _get_model_changes(instance: Model) -> dict[str, dict[str, str | int | float | bool | None]]:
-    """
-    Get the changes made to a model instance.
-
-    Returns dict of {field_name: {"old": old_value, "new": new_value}}
-    """
-    changes: dict[str, dict[str, str | int | float | bool | None]] = {}
-
-    if not instance.pk:
-        return changes
-
-    try:
-        old_instance = _get_manager(instance.__class__).get(pk=instance.pk)
-    except ObjectDoesNotExist:
-        return changes
-
-    for field in instance._meta.fields:
-        field_name = field.name
-
-        if field_name in IGNORED_FIELDS:
-            continue
-
-        old_value = getattr(old_instance, field_name, None)
-        new_value = getattr(instance, field_name, None)
-
-        if hasattr(field, "remote_field") and field.remote_field:
-            old_value = getattr(old_value, "pk", None) if old_value else None
-            new_value = getattr(new_value, "pk", None) if new_value else None
-
-        if old_value != new_value:
-            changes[field_name] = {
-                "old": _serialize_value(old_value),
-                "new": _serialize_value(new_value),
-            }
-
-    return changes
 
 
 def _serialize_value(value: object) -> str | int | float | bool | None:
@@ -152,27 +120,40 @@ def _store_old_values(sender: type[Model], instance: Model, **kwargs: object) ->
     if not _should_audit(instance):
         return
 
-    # Variable pour attribute name (requis par mypy + ruff simultanement).
     audit_attr = "_audit_old_values"
 
-    if instance.pk:
-        try:
+    # Fail-open : le SELECT est isole dans un savepoint pour qu'une erreur DB n'empoisonne pas la transaction metier.
+    try:
+        if instance.pk:
             tracked_fields = [f.name for f in instance._meta.fields if f.name not in IGNORED_FIELDS]
-            old = _get_manager(sender).only(*tracked_fields).get(pk=instance.pk)
+            with transaction.atomic():
+                old = _get_manager(sender).only(*tracked_fields).get(pk=instance.pk)
             old_values: dict[str, Any] = {f: getattr(old, f) for f in tracked_fields}
             setattr(instance, audit_attr, old_values)
-        except ObjectDoesNotExist:
+        else:
             setattr(instance, audit_attr, {})
-    else:
+    except ObjectDoesNotExist:
+        setattr(instance, audit_attr, {})
+    except Exception:
+        logger.exception("Audit: capture des anciennes valeurs echouee pour %s", instance.__class__.__name__)
         setattr(instance, audit_attr, {})
 
 
 def _log_save(sender: type[Model], instance: Model, *, created: bool, **kwargs: object) -> None:
-    """Log create/update operations."""
+    """Log create/update operations (fail-open : ne propage jamais)."""
     del sender, kwargs
     if not _should_audit(instance):
         return
+    # savepoint imbrique : sur PostgreSQL un echec d'insert empoisonnerait sinon toute la transaction metier malgre le try/except.
+    try:
+        with transaction.atomic():
+            _do_log_save(instance, created=created)
+    except Exception:
+        logger.exception("Audit: enregistrement save echoue pour %s:%s", instance.__class__.__name__, instance.pk)
 
+
+def _do_log_save(instance: Model, *, created: bool) -> None:
+    """Construit et persiste l'entree d'audit pour un save."""
     model_name = instance.__class__.__name__
     context = get_audit_context()
 
@@ -232,11 +213,19 @@ def _log_save(sender: type[Model], instance: Model, *, created: bool, **kwargs: 
 
 
 def _log_delete(sender: type[Model], instance: Model, **kwargs: object) -> None:
-    """Log delete operations."""
+    """Log delete operations (fail-open : ne propage jamais)."""
     del sender, kwargs
     if not _should_audit(instance):
         return
+    try:
+        with transaction.atomic():
+            _do_log_delete(instance)
+    except Exception:
+        logger.exception("Audit: enregistrement delete echoue pour %s:%s", instance.__class__.__name__, instance.pk)
 
+
+def _do_log_delete(instance: Model) -> None:
+    """Construit et persiste l'entree d'audit pour un delete."""
     model_name = instance.__class__.__name__
     context = get_audit_context()
 

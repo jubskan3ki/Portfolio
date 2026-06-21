@@ -12,16 +12,17 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Version
 from .serializers import VersionSerializer
-from .services import UnknownModelError, VersionNotFoundError, _resolve_model, restore_version
-
-
-def _get_model_or_400(model_name: str):
-    try:
-        return _resolve_model(model_name)
-    except UnknownModelError:
-        return None
+from .services import (
+    ObjectNotFoundError,
+    UnknownModelError,
+    UnsupportedModelError,
+    VersionNotFoundError,
+    list_trashed,
+    list_versions,
+    restore_version,
+    untrash,
+)
 
 
 @extend_schema(
@@ -46,7 +47,7 @@ class VersionListView(APIView):
                 {"detail": "model et object_id sont requis."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        versions = Version.objects.filter(content_type=model_name, object_id=object_id).order_by("-version_number")
+        versions = list_versions(model_name, object_id)
         return Response(VersionSerializer(versions, many=True).data)
 
 
@@ -98,16 +99,16 @@ class TrashListView(APIView):
         model_name = request.query_params.get("model")
         if not model_name:
             return Response({"detail": "model requis."}, status=status.HTTP_400_BAD_REQUEST)
-        model = _get_model_or_400(model_name)
-        if model is None:
+        try:
+            trashed = list_trashed(model_name)
+        except UnknownModelError:
             return Response({"detail": f"Modele inconnu : {model_name}"}, status=status.HTTP_400_BAD_REQUEST)
-        if not hasattr(model, "all_objects"):
+        except UnsupportedModelError:
             return Response(
                 {"detail": f"Modele {model_name} ne supporte pas le soft-delete."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        trashed = model.all_objects.filter(deleted_at__isnull=False).values("pk", "deleted_at", "deleted_by_id")
-        return Response(list(trashed))
+        return Response(trashed)
 
 
 @extend_schema(
@@ -129,15 +130,13 @@ class UntrashView(APIView):
                 {"detail": "model et object_id sont requis."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        model = _get_model_or_400(model_name)
-        if model is None or not hasattr(model, "all_objects"):
+        try:
+            instance: Any = untrash(model_name, object_id)
+        except (UnknownModelError, UnsupportedModelError):
             return Response(
                 {"detail": f"Modele {model_name} invalide ou sans soft-delete."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        try:
-            instance: Any = model.all_objects.get(pk=object_id)
-        except model.DoesNotExist:
+        except ObjectNotFoundError:
             return Response({"detail": "Objet introuvable."}, status=status.HTTP_404_NOT_FOUND)
-        instance.restore()
         return Response({"restored": True, "id": instance.pk})

@@ -1,4 +1,4 @@
-import { getBaseUrl } from '@/config/api';
+import { getBaseUrl, HTTP_CONFIG } from '@/config/api';
 
 import { createApiError } from './errors';
 import type { HttpMethod } from './fetch';
@@ -12,8 +12,8 @@ import {
 } from './fetch';
 
 export const httpClient = {
-    get<T>(endpoint: string, params?: Record<string, unknown>): Promise<T> {
-        return fetchApi<T>(endpoint, 'GET', undefined, params);
+    get<T>(endpoint: string, params?: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
+        return fetchApi<T>(endpoint, 'GET', undefined, params, { signal });
     },
 
     post<T>(endpoint: string, data?: unknown): Promise<T> {
@@ -41,7 +41,7 @@ export const httpClient = {
         const url = buildUrl(endpoint);
         const requestInit = await runRequestInterceptors({ method, credentials: 'include', body: formData }, url);
 
-        const response = await fetchWithTimeout(url, requestInit);
+        const response = await fetchWithTimeout(url, requestInit, HTTP_CONFIG.UPLOAD_TIMEOUT);
 
         // skipRefresh=true sur retry: max 1 refresh auth, empêche récursion
         if (!skipRefresh && (await handleAuthRefresh(response, endpoint))) {
@@ -62,7 +62,7 @@ export const httpClient = {
             url,
         );
 
-        const response = await fetchWithTimeout(url, requestInit);
+        const response = await fetchWithTimeout(url, requestInit, HTTP_CONFIG.DOWNLOAD_TIMEOUT);
 
         // skipRefresh=true sur retry: max 1 refresh auth, empêche récursion
         if (!skipRefresh && (await handleAuthRefresh(response, endpoint))) {

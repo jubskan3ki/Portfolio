@@ -19,8 +19,8 @@ export const searchKeys = {
 
 export const searchApi = {
     // FTS PostgreSQL multi-entité + ranking + french_unaccent
-    query: (params: UnifiedSearchParams): Promise<UnifiedSearchResponse> =>
-        httpClient.get(API_ENDPOINTS.SEARCH.BASE, params as unknown as Record<string, unknown>),
+    query: (params: UnifiedSearchParams, signal?: AbortSignal): Promise<UnifiedSearchResponse> =>
+        httpClient.get(API_ENDPOINTS.SEARCH.BASE, params as unknown as Record<string, unknown>, signal),
 };
 
 export function useUnifiedSearch(
@@ -29,7 +29,7 @@ export function useUnifiedSearch(
 ) {
     return createListQuery(
         computed(() => searchKeys.unified(unref(params))),
-        () => searchApi.query(unref(params)),
+        ({ signal }) => searchApi.query(unref(params), signal),
         {
             enabled: options?.enabled,
             staleTime: options?.staleTime,

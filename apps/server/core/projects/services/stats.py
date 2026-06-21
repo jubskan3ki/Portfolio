@@ -74,10 +74,8 @@ class StatsService:
 
         projects_by_category = ProjectCategory.objects.annotate(count=Count("projects")).values("name", "count", "slug")
 
-        most_viewed = (
-            Project.objects.select_related("category")
-            .order_by("-view_count")[:5]
-            .values("title", "view_count", "slug", "category__name")
+        most_viewed = Project.objects.order_by("-view_count")[:5].values(
+            "title", "view_count", "slug", "category__name"
         )
 
         projects_by_year = (

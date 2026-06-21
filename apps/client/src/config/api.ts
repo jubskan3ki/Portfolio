@@ -4,6 +4,10 @@ export const HTTP_CONFIG = {
     DEFAULT_TIMEOUT: 5000,
     // SSR: timeout court pour ne pas bloquer le render
     SSR_TIMEOUT: 1500,
+    // Upload (images jusqu'à 5 Mo) et download (ZIP d'export) : le timeout 5s par défaut
+    // avorterait un transfert légitime sur connexion lente.
+    UPLOAD_TIMEOUT: 60000,
+    DOWNLOAD_TIMEOUT: 120000,
 } as const;
 
 export const defaultRequestInit: RequestInit = {

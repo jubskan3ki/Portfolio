@@ -21,6 +21,10 @@
             </slot>
         </div>
 
+        <!--
+            État vide : le slot `empty` (override total) a TOUJOURS priorité sur les props
+            `emptyTitle`/`emptyDescription`/`emptyIcon`, qui ne servent qu'au rendu par défaut.
+        -->
         <div v-else-if="empty" class="query-state-handler__state">
             <slot name="empty">
                 <EmptyState :title="emptyTitle" :description="emptyDescription" :icon="emptyIcon" :icon-size="48">

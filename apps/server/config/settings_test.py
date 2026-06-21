@@ -1,6 +1,7 @@
 """Test settings for pytest."""
 
 import os
+import tempfile
 
 # django-environ reads env at settings import | must be set first.
 os.environ.setdefault("JWT_SECRET_ACCESS_KEY", "test-secret-key-for-testing-only")
@@ -72,6 +73,8 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+MEDIA_ROOT = tempfile.mkdtemp(prefix="portfolio_test_media_")
 
 MIDDLEWARE = [m for m in _BASE_MIDDLEWARE if "csrf" not in m.lower() and "debug_toolbar" not in m.lower()]
 INSTALLED_APPS = [app for app in _BASE_INSTALLED_APPS if app != "debug_toolbar"]

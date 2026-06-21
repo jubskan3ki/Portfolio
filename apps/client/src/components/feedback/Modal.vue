@@ -34,6 +34,10 @@
                         </button>
                     </div>
 
+                    <!--
+                        Corps : priorité content (texte, mode store) > component (composant dynamique,
+                        mode store) > slot par défaut (usage en composition). Ces voies sont exclusives.
+                    -->
                     <div class="modal__body">
                         <p v-if="options.content">{{ options.content }}</p>
                         <component
@@ -45,7 +49,7 @@
                         <slot v-else></slot>
                     </div>
 
-                    <div v-if="$slots.footer || options.showFooter" class="modal__footer">
+                    <div v-if="$slots.footer" class="modal__footer">
                         <slot name="footer"></slot>
                     </div>
                 </div>

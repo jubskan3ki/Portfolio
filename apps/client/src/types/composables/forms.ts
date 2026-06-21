@@ -123,10 +123,10 @@ export interface UseFormReturn<TForm extends Record<string, unknown>, TEntity> {
     // Mode
     isEditMode: ComputedRef<boolean>;
 
-    isLoading: Ref<boolean>;
+    isLoading: ComputedRef<boolean>;
     isSubmitting: Ref<boolean>;
-    pageError: Ref<string>;
-    entity: Ref<TEntity | null>;
+    pageError: ComputedRef<string>;
+    entity: ComputedRef<TEntity | null>;
 
     // Form
     form: UnwrapRef<TForm>;

@@ -63,6 +63,18 @@ class TestGetCategory:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_get_category_detail_exposes_published_count(self, api_client: APIClient) -> None:
+        """Le detail expose le vrai nombre d'articles publies (regression: renvoyait 0)."""
+        from tests.factories import ArticleCategoryFactory, ArticleFactory
+
+        category = ArticleCategoryFactory()
+        ArticleFactory.create_batch(2, category=category, is_published=True)
+
+        response = cast(Response, api_client.get(f"{self.URL}{category.slug}/"))
+
+        assert response.status_code == status.HTTP_200_OK
+        assert cast(dict[str, Any], response.data)["count"] == 2
+
 
 @pytest.mark.django_db
 class TestArticlesByCategory:

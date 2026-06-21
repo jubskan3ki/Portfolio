@@ -21,7 +21,7 @@ const SEARCH_TYPE_ORDER: SearchResultType[] = ['article', 'project', 'stack', 'e
 
 export const SEARCH_DEFAULTS = {
     DEBOUNCE_MS: 300,
-    MIN_QUERY_LENGTH: 2,
+    MIN_QUERY_LENGTH: 1,
     PAGE_SIZE: 5,
     STALE_TIME_MS: 1000 * 60 * 2,
 } as const;

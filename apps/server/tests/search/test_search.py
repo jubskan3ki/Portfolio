@@ -37,9 +37,9 @@ class TestSearchEndpoint:
         response = cast(Response, api_client.get(URL))
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_rejects_short_query(self, api_client: APIClient) -> None:
+    def test_accepts_single_char_query(self, api_client: APIClient) -> None:
         response = cast(Response, api_client.get(f"{URL}?q=a"))
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_200_OK
 
     def test_rejects_invalid_type(self, api_client: APIClient) -> None:
         response = cast(Response, api_client.get(f"{URL}?q=django&type=invalid"))
@@ -169,7 +169,7 @@ class TestSearchService:
     """Tests unitaires du SearchService (couvre les deux chemins : PG + fallback)."""
 
     def test_query_too_short_returns_empty(self) -> None:
-        results = SearchService(query="a", types=["all"]).run()
+        results = SearchService(query="", types=["all"]).run()
         assert results == []
 
     def test_query_exactly_min_length(self) -> None:
@@ -222,8 +222,8 @@ class TestSearchService:
 class TestMinLengthConstant:
     """Contrat sur la longueur minimale."""
 
-    def test_min_length_is_at_least_2(self) -> None:
-        assert MIN_QUERY_LENGTH >= 2
+    def test_min_length_allows_single_char(self) -> None:
+        assert MIN_QUERY_LENGTH == 1
 
 
 # Tests PostgreSQL-only : executes en prod / en CI avec Postgres, skippes sur SQLite.

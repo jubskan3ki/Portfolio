@@ -1,7 +1,7 @@
-"""Dev overrides."""
+"""Dev overrides.
 
-DEBUG = True
-ENABLE_DEBUG_TOOLBAR = True
+DEBUG/ENABLE_DEBUG_TOOLBAR sont figés dans base.py à partir de DJANGO_ENV.
+"""
 
 REST_FRAMEWORK_DEFAULT_THROTTLE_RATES_OVERRIDE = {
     "anon": "1000/minute",
