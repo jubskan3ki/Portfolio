@@ -106,7 +106,7 @@ class SecurityMiddleware(MiddlewareMixin):
         # chemin de login, sinon le brute-force Django admin n'est pas limité.
         if request.path == "/django-admin/login/" and request.method == "POST":
             cache_key = f"admin_login_attempts:{ip}"
-            attempts = cache.get_or_set(cache_key, 0, _ADMIN_LOGIN_WINDOW)
+            attempts = cache.get_or_set(cache_key, 0, _ADMIN_LOGIN_WINDOW) or 0
             if attempts >= _ADMIN_LOGIN_MAX_ATTEMPTS:
                 logger.warning("Admin login rate limited: %s", ip)
                 msg = "Too many attempts. Try again later."

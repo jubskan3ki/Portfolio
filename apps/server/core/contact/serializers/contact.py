@@ -73,9 +73,7 @@ class ContactAdminWriteSerializer(serializers.ModelSerializer):
         """Valide que le statut fait partie des valeurs autorisees."""
         allowed = {choice[0] for choice in Contact.STATUS_CHOICES}
         if value not in allowed:
-            raise serializers.ValidationError(
-                f"Statut invalide. Valeurs autorisees : {', '.join(sorted(allowed))}."
-            )
+            raise serializers.ValidationError(f"Statut invalide. Valeurs autorisees : {', '.join(sorted(allowed))}.")
         return value
 
 

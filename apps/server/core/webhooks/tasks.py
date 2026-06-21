@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
     autoretry_for=(OperationalError,),
     retry_backoff=True,
 )
-def dispatch_webhook_event(
-    event_type: str, payload: dict[str, Any], event_id: str | None = None
-) -> dict[str, Any]:
+def dispatch_webhook_event(event_type: str, payload: dict[str, Any], event_id: str | None = None) -> dict[str, Any]:
     """Cree les livraisons d'un evenement puis fan-out l'envoi HTTP.
 
     Cette tache ne fait que du travail DB (creation des livraisons PENDING) puis

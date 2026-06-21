@@ -43,7 +43,7 @@ _URI_ATTR_LOCALNAMES = {"href", "src"}
 _SAFE_DATA_PREFIXES = ("data:image/png", "data:image/jpeg", "data:image/gif", "data:image/webp")
 
 
-def _localname(tag: str) -> str:
+def _localname(tag: object) -> str:
     if not isinstance(tag, str):
         return ""
     return tag.rsplit("}", 1)[-1].lower()

@@ -306,6 +306,7 @@ class ImportViewSet(viewsets.ViewSet):
             return "error" not in entry and entry.get("status") != ImportJob.Status.FAILED
 
         success = sum(1 for j in jobs if _ok(j))
+        code: int
         if success == 0:
             code = status.HTTP_400_BAD_REQUEST
         elif success < len(jobs):

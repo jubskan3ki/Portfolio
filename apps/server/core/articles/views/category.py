@@ -1,6 +1,6 @@
 """Vues pour les catégories d'articles."""
 
-from typing import Any
+from typing import Any, cast
 
 from django.db.models import QuerySet
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from utils.api import BaseAPIViewSet
 
+from ..managers import CategoryQuerySet
 from ..models import Category
 from ..serializers.category import CategorySerializer
 from ..services.category import CategoryService
@@ -45,7 +46,7 @@ class CategoryViewSet(BaseAPIViewSet):
         - Public: exclut les catégories sans article publié (published_count > 0).
         - list: tri par published_count DESC, puis name.
         """
-        qs = super().get_queryset()
+        qs = cast(CategoryQuerySet, super().get_queryset())
         if self.action in ("list", "retrieve"):
             qs = qs.with_article_count()
             if not self.request.user.is_staff:

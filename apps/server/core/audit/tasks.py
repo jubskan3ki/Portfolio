@@ -23,9 +23,8 @@ def cleanup_old_audit_logs(days: int | None = None) -> dict[str, int]:
     Returns:
         dict avec deleted_count.
     """
-    from utils.locks import single_run_lock
-
     from core.audit.models import AuditLog
+    from utils.locks import single_run_lock
 
     retention = days if days is not None else getattr(settings, "AUDIT_LOG_RETENTION_DAYS", DEFAULT_RETENTION_DAYS)
 

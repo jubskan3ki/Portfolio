@@ -1,6 +1,6 @@
 """Serializers pour les stacks techniques."""
 
-from typing import Any
+from typing import Any, cast
 
 from rest_framework import serializers
 
@@ -114,11 +114,14 @@ class StackDetailSerializer(serializers.ModelSerializer):
             related_stacks.append(rel.to_stack)
             relationship_map[rel.to_stack.pk] = rel.relationship_type
 
-        return RelatedStackSerializer(
-            related_stacks,
-            many=True,
-            context={"relationships": relationship_map},
-        ).data
+        return cast(
+            list[dict[str, Any]],
+            RelatedStackSerializer(
+                related_stacks,
+                many=True,
+                context={"relationships": relationship_map},
+            ).data,
+        )
 
 
 class StackWriteSerializer(serializers.ModelSerializer):

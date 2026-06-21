@@ -26,6 +26,5 @@ def _scheduled_task_names() -> list[str]:
 def test_beat_schedule_task_is_registered(task_name: str) -> None:
     """Chaque tache planifiee doit exister dans le registre Celery."""
     assert task_name in app.tasks, (
-        f"Tache Beat '{task_name}' absente du registre Celery. "
-        "Verifier le name= du @shared_task correspondant."
+        f"Tache Beat '{task_name}' absente du registre Celery. " "Verifier le name= du @shared_task correspondant."
     )

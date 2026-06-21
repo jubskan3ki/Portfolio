@@ -16,8 +16,7 @@ def published_filter(prefix: str = "") -> models.Q:
     """
     now = timezone.now()
     return models.Q(**{f"{prefix}is_published": True}) & (
-        models.Q(**{f"{prefix}published_date__isnull": True})
-        | models.Q(**{f"{prefix}published_date__lte": now})
+        models.Q(**{f"{prefix}published_date__isnull": True}) | models.Q(**{f"{prefix}published_date__lte": now})
     )
 
 
