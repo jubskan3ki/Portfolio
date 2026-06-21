@@ -128,21 +128,23 @@
 
                     <div v-else :key="contentKey" class="stacks-content">
                         <template v-if="showSections">
-                            <StackCategorySlider
+                            <LazyStackCategorySlider
                                 v-for="section in stackSections"
                                 :key="section.key"
                                 :label="section.label"
                                 :icon="section.icon"
                                 :stacks="section.stacks"
+                                hydrate-on-visible
                                 @navigate="navigateToStack"
                             />
                         </template>
 
                         <template v-else-if="!isSearchMode && activeCategory !== 'all'">
-                            <StackCategorySlider
+                            <LazyStackCategorySlider
                                 :label="activeCategoryLabel"
                                 :icon="activeCategoryIcon"
                                 :stacks="filteredStacks"
+                                hydrate-on-visible
                                 @navigate="navigateToStack"
                             />
                         </template>
@@ -176,16 +178,13 @@
 
 <script setup lang="ts">
     import { useQueryClient } from '@tanstack/vue-query';
-    import { computed, defineAsyncComponent, ref, watch, onMounted, nextTick } from 'vue';
+    import { computed, ref, watch, onMounted, nextTick } from 'vue';
     import { useRouter } from 'vue-router';
 
     import BaseButton from '@/components/base/BaseButton.vue';
     import BaseIcon from '@/components/base/BaseIcon.vue';
     import StatCard from '@/components/feature/home/StatCard.vue';
     import StackCard from '@/components/feature/stacks/StackCard.vue';
-    const StackCategorySlider = defineAsyncComponent(
-        () => import('@/components/feature/stacks/StackCategorySlider.vue'),
-    );
     import EmptyState from '@/components/feedback/EmptyState.vue';
     import Main from '@/components/layouts/Main.vue';
     import SkeletonList from '@/components/loaders/SkeletonList.vue';
